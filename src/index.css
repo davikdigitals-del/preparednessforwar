@@ -1,0 +1,219 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Sora:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* British Blue & White Brand Colors */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    
+    /* British Blue Primary - Preparedness for War Brand */
+    --primary: 217 91% 35%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 217 91% 95%;
+    --secondary-foreground: 217 91% 35%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 217 91% 95%;
+    --accent-foreground: 217 91% 35%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 217 91% 35%;
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 217 91% 35%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 91% 95%;
+    --sidebar-accent-foreground: 217 91% 35%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217 91% 35%;
+
+    /* Category colors */
+    --cat-emergency: 0 84% 60%;
+    --cat-survival: 142 70% 35%;
+    --cat-health: 200 80% 45%;
+    --cat-directives: 217 91% 35%;
+    --cat-supplies: 38 92% 50%;
+    --cat-resources: 270 60% 50%;
+    --cat-education: 160 60% 40%;
+    --cat-community: 330 70% 50%;
+
+    /* Additional tokens */
+    --alert: 0 84% 60%;
+    --alert-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 10%;
+    --success: 142 71% 35%;
+    --success-foreground: 0 0% 100%;
+    --info: 217 91% 35%;
+    --info-foreground: 0 0% 100%;
+    --header: 0 0% 100%;
+    --header-foreground: 222 47% 11%;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 15%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 15%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 217 91% 90%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 91% 20%;
+    --accent-foreground: 217 91% 90%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 217 91% 55%;
+    --sidebar-background: 222 47% 15%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 217 91% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 217 91% 90%;
+    --sidebar-border: 217 33% 20%;
+    --sidebar-ring: 217 91% 55%;
+
+    /* Category colors */
+    --cat-emergency: 0 84% 60%;
+    --cat-survival: 142 70% 45%;
+    --cat-health: 200 80% 55%;
+    --cat-directives: 217 91% 55%;
+    --cat-supplies: 38 92% 60%;
+    --cat-resources: 270 60% 60%;
+    --cat-education: 160 60% 50%;
+    --cat-community: 330 70% 60%;
+
+    /* Additional tokens */
+    --alert: 0 84% 60%;
+    --alert-foreground: 0 0% 100%;
+    --warning: 38 92% 60%;
+    --warning-foreground: 0 0% 10%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --info: 217 91% 55%;
+    --info-foreground: 0 0% 100%;
+    --header: 222 47% 11%;
+    --header-foreground: 210 40% 98%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-white text-foreground antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif;
+    @apply font-bold;
+  }
+  
+  /* Euronews-style container */
+  .container {
+    @apply mx-auto px-4;
+    max-width: 1280px;
+  }
+}
+
+@layer components {
+  .section-label {
+    @apply font-sans text-xs font-bold uppercase tracking-widest;
+  }
+  .article-headline {
+    @apply font-bold leading-tight;
+  }
+  .article-standfirst {
+    @apply font-sans text-muted-foreground leading-relaxed;
+  }
+  .category-pill {
+    @apply inline-flex items-center px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide;
+  }
+  .card-news {
+    @apply bg-card border border-border overflow-hidden transition-shadow hover:shadow-md;
+  }
+  .sidebar-module {
+    @apply bg-card border border-border p-4;
+  }
+  /* Section divider accent */
+  .section-accent {
+    @apply border-l-4 border-primary pl-3;
+  }
+}
+
+@layer utilities {
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-4 {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.2s ease-out;
+}
+
+*:focus-visible {
+  @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+}
+
+::selection {
+  @apply bg-primary/20 text-foreground;
+}

@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: preparedness-for-war
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: bun install && bun run build
+    startCommand: bun run preview
+    envVars:
+      - key: NODE_VERSION
+        value: 20.11.0
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
