@@ -81,7 +81,8 @@ export default function AdminLoginPage() {
     console.log("Creating admin account for:", regEmail);
 
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
+      // Step 1: Sign up the user
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: regEmail,
         password: regPassword,
         options: {
@@ -97,43 +98,57 @@ export default function AdminLoginPage() {
         return;
       }
 
-      console.log("Account created, signing in to set admin role...");
-
-      // Mark the new account as admin immediately
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: regEmail,
-        password: regPassword,
-      });
-      
-      if (signInError || !signInData?.user) {
-        console.error("Sign in error:", signInError);
-        setRegError("Account created but couldn't sign in. Please use the Login tab.");
+      if (!signUpData?.user) {
+        setRegError("Account creation failed. Please try again.");
         setRegLoading(false);
         return;
       }
 
-      console.log("Signed in, setting admin role...");
+      console.log("Account created, waiting for auth to settle...");
+      
+      // Wait for auth lock to release
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Set admin role - ALL accounts created via /admin-login are admins
-      await supabase.from("profiles").upsert(
+      console.log("Setting admin role...");
+
+      // Step 2: Set admin role using the user ID from signup
+      const userId = signUpData.user.id;
+      
+      const { error: profileError } = await supabase.from("profiles").upsert(
         {
-          id: signInData.user.id,
+          id: userId,
           email: regEmail,
           name: regName,
           country: "GB",
-          is_admin: true,  // ✅ Always admin for /admin-login registrations
-          role: "admin",   // ✅ Always admin for /admin-login registrations
+          is_admin: true,
+          role: "admin",
         },
         { onConflict: "id" }
       );
+
+      if (profileError) {
+        console.error("Profile error:", profileError);
+      }
       
-      await supabase.from("user_roles").upsert(
-        { user_id: signInData.user.id, role: "admin" },
+      const { error: roleError } = await supabase.from("user_roles").upsert(
+        { user_id: userId, role: "admin" },
         { onConflict: "user_id,role" }
       );
+
+      if (roleError) {
+        console.error("Role error:", roleError);
+      }
       
       console.log("Admin role set, signing out...");
+      
+      // Wait before signing out
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Step 3: Sign out to clear the session
       await supabase.auth.signOut();
+      
+      // Wait for signout to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       setRegLoading(false);
       setTab("login");
@@ -141,9 +156,9 @@ export default function AdminLoginPage() {
       setPassword(regPassword);
       setError("✅ Admin account created successfully! Please sign in below.");
       console.log("Registration complete, switched to login tab");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Registration exception:", error);
-      setRegError("An error occurred during registration. Please try again.");
+      setRegError(error?.message || "An error occurred during registration. Please try again.");
       setRegLoading(false);
     }
   };
