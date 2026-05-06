@@ -28,6 +28,9 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   adminLogin: (email: string, password: string) => Promise<boolean>;
   signup: (data: { email: string; password: string; name: string; country: string }) => Promise<boolean>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
+  signInWithDiscord: () => Promise<void>;
   logout: () => void;
   notifications: AppNotification[];
   markNotificationRead: (id: string) => Promise<void>;
@@ -211,25 +214,78 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const adminLogin = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error || !data.user) return false;
-
-    const uid = data.user.id;
-
-    // Mark this user as admin
     try {
-      await ensureUserBootstrap(data.user, { isAdmin: true });
-    } catch { /* ignore */ }
-
-    // Ensure admin role in user_roles
-    try {
-      await supabase.from("user_roles").upsert(
-        { user_id: uid, role: "admin" },
-        { onConflict: "user_id,role" }
+      console.log("Admin login attempt for:", email);
+      
+      // Add timeout to prevent hanging
+      const loginPromise = supabase.auth.signInWithPassword({ email, password });
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Login timeout")), 10000)
       );
-    } catch { /* ignore */ }
+      
+      const { data, error } = await Promise.race([loginPromise, timeoutPromise]) as any;
+      
+      if (error || !data.user) {
+        console.error("Admin login failed:", error);
+        return false;
+      }
 
-    return true;
+      const uid = data.user.id;
+      console.log("Admin login - User authenticated:", uid);
+
+      // Mark this user as admin in profiles (with timeout)
+      try {
+        const profilePromise = supabase.from("profiles").upsert(
+          {
+            id: uid,
+            email: data.user.email || "",
+            name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "Admin",
+            country: data.user.user_metadata?.country || "GB",
+            is_admin: true,
+            role: "admin",
+          },
+          { onConflict: "id" }
+        );
+        
+        const profileTimeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Profile update timeout")), 5000)
+        );
+        
+        await Promise.race([profilePromise, profileTimeout]);
+        console.log("Admin profile updated successfully");
+      } catch (err) {
+        console.warn("Profile update error (non-critical):", err);
+        // Continue even if profile update fails
+      }
+
+      // Ensure admin role in user_roles (with timeout)
+      try {
+        const rolePromise = supabase.from("user_roles").upsert(
+          { user_id: uid, role: "admin" },
+          { onConflict: "user_id,role" }
+        );
+        
+        const roleTimeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Role update timeout")), 5000)
+        );
+        
+        await Promise.race([rolePromise, roleTimeout]);
+        console.log("Admin role updated successfully");
+      } catch (err) {
+        console.warn("Role update error (non-critical):", err);
+        // Continue even if role update fails
+      }
+
+      // Force refresh the user state
+      const built = await buildUser(data.user);
+      setUser(built);
+
+      console.log("Admin login successful, user role:", built.role, "isAdmin:", built.role === "admin");
+      return true;
+    } catch (error) {
+      console.error("Admin login exception:", error);
+      return false;
+    }
   };
 
   const signup = async (data: { email: string; password: string; name: string; country: string }) => {
@@ -256,10 +312,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return true;
   };
 
+  const signInWithGoogle = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+  };
+
+  const signInWithApple = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "apple",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+  };
+
+  const signInWithDiscord = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "discord",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+  };
+
   const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setNotifications([]);
+    try {
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+      
+      // Clear local state immediately
+      setUser(null);
+      setNotifications([]);
+      
+      console.log("Logout successful");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Clear state anyway
+      setUser(null);
+      setNotifications([]);
+    }
   };
 
   const markNotificationRead = async (id: string) => {
@@ -291,6 +386,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         adminLogin,
         signup,
+        signInWithGoogle,
+        signInWithApple,
+        signInWithDiscord,
         logout,
         notifications,
         markNotificationRead,

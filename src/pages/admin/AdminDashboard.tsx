@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import {
   FileText,
   AlertTriangle,
@@ -31,38 +31,70 @@ export default function AdminDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      // Load stats
-      const [postsRes, alertsRes, mediaRes, libraryRes] = await Promise.all([
+      setLoading(true);
+      
+      // Add timeout to prevent hanging
+      const dataPromise = Promise.all([
         supabase.from("posts").select("status, is_premium", { count: "exact" }),
         supabase.from("alerts").select("is_active", { count: "exact" }),
         supabase.from("media_items").select("id", { count: "exact" }),
         supabase.from("library_items").select("id", { count: "exact" }),
       ]);
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Dashboard load timeout")), 8000)
+      );
+      
+      const [postsRes, alertsRes, mediaRes, libraryRes] = await Promise.race([
+        dataPromise,
+        timeoutPromise
+      ]) as any;
 
       const posts = postsRes.data || [];
       const alerts = alertsRes.data || [];
 
       setStats({
         totalPosts: posts.length,
-        publishedPosts: posts.filter((p) => p.status === "published").length,
-        draftPosts: posts.filter((p) => p.status === "draft").length,
-        premiumPosts: posts.filter((p) => p.is_premium).length,
+        publishedPosts: posts.filter((p: any) => p.status === "published").length,
+        draftPosts: posts.filter((p: any) => p.status === "draft").length,
+        premiumPosts: posts.filter((p: any) => p.is_premium).length,
         totalAlerts: alerts.length,
-        activeAlerts: alerts.filter((a) => a.is_active).length,
+        activeAlerts: alerts.filter((a: any) => a.is_active).length,
         totalMedia: mediaRes.count || 0,
         totalLibrary: libraryRes.count || 0,
       });
 
-      // Load recent posts
-      const { data: recent } = await supabase
+      // Load recent posts with timeout
+      const recentPromise = supabase
         .from("posts")
         .select("id, title, status, created_at, is_premium")
         .order("created_at", { ascending: false })
         .limit(5);
+        
+      const recentTimeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Recent posts timeout")), 5000)
+      );
+      
+      const { data: recent } = await Promise.race([
+        recentPromise,
+        recentTimeout
+      ]) as any;
 
       setRecentPosts(recent || []);
     } catch (error) {
       console.error("Error loading dashboard:", error);
+      // Set default values on error
+      setStats({
+        totalPosts: 0,
+        publishedPosts: 0,
+        draftPosts: 0,
+        premiumPosts: 0,
+        totalAlerts: 0,
+        activeAlerts: 0,
+        totalMedia: 0,
+        totalLibrary: 0,
+      });
+      setRecentPosts([]);
     } finally {
       setLoading(false);
     }

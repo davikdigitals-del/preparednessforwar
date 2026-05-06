@@ -127,8 +127,11 @@ export function SiteHeader() {
             </button>
             
             <Link to="/" className="flex items-center">
-              <div className="bg-primary px-4 py-2 rounded">
-                <span className="text-white font-black text-lg tracking-tight">
+              <div className="px-4 py-2 flex items-center gap-2">
+                <span className="text-blue-900 text-2xl font-black">
+                  PH
+                </span>
+                <span className="font-black text-xl tracking-tight text-gray-900">
                   preparedness<span className="font-light">for</span>war
                 </span>
               </div>

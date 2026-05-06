@@ -26,6 +26,7 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminPosts from "./pages/admin/AdminPosts";
 import AdminCategories from "./pages/admin/AdminCategories";
+import AdminSections from "./pages/admin/AdminSections";
 import AdminAlerts from "./pages/admin/AdminAlerts";
 import AdminMedia from "./pages/admin/AdminMedia";
 import AdminPodcastVideos from "./pages/admin/AdminPodcastVideos";
@@ -43,6 +44,7 @@ import AdminComments from "./pages/admin/AdminComments";
 import NewsletterPage from "./pages/NewsletterPage";
 import SubscribePage from "./pages/SubscribePage";
 import MemberSubscription from "./pages/MemberSubscription";
+import TagPage from "./pages/TagPage";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +63,7 @@ const App = () => (
                 <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="posts" element={<AdminPosts />} />
                 <Route path="categories" element={<AdminCategories />} />
+                <Route path="sections" element={<AdminSections />} />
                 <Route path="alerts" element={<AdminAlerts />} />
                 <Route path="banner" element={<AdminBanner />} />
                 <Route path="media" element={<AdminMedia />} />
@@ -94,6 +97,7 @@ const App = () => (
                 <Route path="/privacy" element={<LegalPage />} />
                 <Route path="/terms" element={<LegalPage />} />
                 <Route path="/disclaimer" element={<LegalPage />} />
+                <Route path="/tag/:tag" element={<TagPage />} />
                 <Route path="/:section" element={<SectionPage />} />
                 <Route path="/:section/:category" element={<SectionPage />} />
                 <Route path="/:section/:category/:id" element={<ArticlePage />} />

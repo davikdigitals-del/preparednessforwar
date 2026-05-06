@@ -304,8 +304,10 @@ export default function MemberSubscription() {
               )}
 
               <CardHeader>
-                <CardTitle className="text-center">
-                  <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+                <CardTitle className="text-center text-2xl font-bold mb-2">
+                  {plan.name}
+                </CardTitle>
+                <div className="text-center">
                   <div className="text-4xl font-bold text-primary">
                     {plan.currency === 'GBP' ? '£' : plan.currency === 'USD' ? '$' : '€'}
                     {plan.price}
@@ -313,7 +315,7 @@ export default function MemberSubscription() {
                   <p className="text-sm text-muted-foreground mt-1">
                     per {plan.interval}
                   </p>
-                </CardTitle>
+                </div>
               </CardHeader>
 
               <CardContent className="space-y-4">

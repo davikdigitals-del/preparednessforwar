@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState<any[]>([]);
+  const [sections, setSections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
@@ -18,25 +19,58 @@ export default function AdminCategories() {
     name: "",
     slug: "",
     description: "",
+    section_id: "",
   });
 
   useEffect(() => {
-    fetchCategories();
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    console.log("AdminCategories: Loading data...");
+    setLoading(true);
+    
+    try {
+      const dataPromise = Promise.all([fetchCategories(), fetchSections()]);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Data load timeout")), 8000)
+      );
+      
+      await Promise.race([dataPromise, timeoutPromise]);
+      console.log("AdminCategories: Data loaded successfully");
+    } catch (error) {
+      console.error("AdminCategories: Error loading data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSections = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("sections")
+        .select("id, title, slug")
+        .eq("is_active", true)
+        .order("display_order");
+
+      if (error) throw error;
+      setSections(data || []);
+    } catch (error: any) {
+      console.error("Error fetching sections:", error);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
       const { data, error } = await supabase
         .from("categories")
-        .select("*, posts(count)")
+        .select("*, sections(title), posts(count)")
         .order("name");
 
       if (error) throw error;
       setCategories(data || []);
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -72,6 +106,7 @@ export default function AdminCategories() {
       name: category.name,
       slug: category.slug,
       description: category.description || "",
+      section_id: category.section_id || "",
     });
     setDialogOpen(true);
   };
@@ -96,6 +131,7 @@ export default function AdminCategories() {
       name: "",
       slug: "",
       description: "",
+      section_id: "",
     });
   };
 
@@ -123,6 +159,9 @@ export default function AdminCategories() {
                   Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Section
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Slug
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -139,13 +178,13 @@ export default function AdminCategories() {
             <tbody className="divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                     Loading...
                   </td>
                 </tr>
               ) : categories.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                     No categories found
                   </td>
                 </tr>
@@ -153,6 +192,11 @@ export default function AdminCategories() {
                 categories.map((category) => (
                   <tr key={category.id}>
                     <td className="px-6 py-4 font-medium">{category.name}</td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {category.sections?.title || "No Section"}
+                      </span>
+                    </td>
                     <td className="px-6 py-4 text-sm text-gray-500">{category.slug}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {category.description}
@@ -190,6 +234,27 @@ export default function AdminCategories() {
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="section_id">Section *</Label>
+              <select
+                id="section_id"
+                value={formData.section_id}
+                onChange={(e) => setFormData({ ...formData, section_id: e.target.value })}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select a section...</option>
+                {sections.map((section) => (
+                  <option key={section.id} value={section.id}>
+                    {section.title}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Categories must belong to a section
+              </p>
+            </div>
+
             <div>
               <Label htmlFor="name">Name</Label>
               <Input

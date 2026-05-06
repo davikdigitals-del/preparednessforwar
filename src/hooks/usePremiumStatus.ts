@@ -45,11 +45,18 @@ export function usePremiumStatus(): PremiumStatus {
         `)
         .eq("user_id", user.id)
         .eq("status", "active")
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== "PGRST116") {
-        // PGRST116 is "no rows returned" - not an error, just no subscription
-        console.error("Error checking premium status:", error);
+      if (error) {
+        // Log error but don't break the app
+        console.warn("Subscription check failed (table may not exist):", error.message);
+        setStatus({
+          isPremium: false,
+          loading: false,
+          subscription: null,
+          plan: null,
+        });
+        return;
       }
 
       const isPremium = !!subscription && subscription.status === "active";
@@ -61,7 +68,7 @@ export function usePremiumStatus(): PremiumStatus {
         plan: subscription?.subscription_plans || null,
       });
     } catch (error) {
-      console.error("Error checking premium status:", error);
+      console.warn("Error checking premium status:", error);
       setStatus({
         isPremium: false,
         loading: false,

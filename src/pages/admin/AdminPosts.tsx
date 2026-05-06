@@ -9,10 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Edit, Trash2, Search, Video } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/FileUpload";
+import { navSections, natoCountries } from "@/data/mockData";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function AdminPosts() {
   const [posts, setPosts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [sections, setSections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<any>(null);
@@ -23,31 +26,69 @@ export default function AdminPosts() {
     title: "",
     content: "",
     excerpt: "",
+    author: "",
+    section: "",
     category_id: "",
     image_url: "",
     video_url: "",
     is_premium: false,
     is_published: true,
+    country_codes: [] as string[],
   });
 
   useEffect(() => {
-    fetchPosts();
-    fetchCategories();
+    let cancelled = false;
+    
+    const loadData = async () => {
+      console.log("AdminPosts: Loading data...");
+      setLoading(true);
+      
+      try {
+        await Promise.all([
+          fetchPosts(),
+          fetchCategories(),
+          fetchSections()
+        ]);
+        
+        if (!cancelled) {
+          console.log("AdminPosts: Data loaded successfully");
+          setLoading(false);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error("AdminPosts: Error loading data:", error);
+          toast({ title: "Error", description: "Failed to load data. Please check your connection.", variant: "destructive" });
+          setLoading(false);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const fetchPosts = async () => {
     try {
+      console.log("Fetching posts...");
       const { data, error } = await supabase
         .from("posts")
-        .select("*, categories(name)")
-        .order("created_at", { ascending: false });
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100); // Limit to prevent slow queries
 
-      if (error) throw error;
-      setPosts(data || []);
+      if (error) {
+        console.error("Error fetching posts:", error);
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else {
+        console.log("Fetched posts:", data?.length || 0, "posts");
+        setPosts(data || []);
+      }
     } catch (error: any) {
+      console.error("Catch error:", error);
       toast({ title: "Error", description: error.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -55,11 +96,39 @@ export default function AdminPosts() {
     try {
       const { data, error } = await supabase
         .from("categories")
+        .select(`
+          *,
+          sections (
+            id,
+            title,
+            slug
+          )
+        `)
+        .order("title");
+
+      if (error) {
+        console.error("Error fetching categories:", error);
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else {
+        console.log("Fetched categories:", data);
+        setCategories(data || []);
+      }
+    } catch (error: any) {
+      console.error("Catch error:", error);
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const fetchSections = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("sections")
         .select("*")
-        .order("name");
+        .eq("is_active", true)
+        .order("display_order");
 
       if (error) throw error;
-      setCategories(data || []);
+      setSections(data || []);
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
@@ -97,11 +166,14 @@ export default function AdminPosts() {
       title: post.title,
       content: post.content,
       excerpt: post.excerpt || "",
+      author: post.author || "",
+      section: post.section || "",
       category_id: post.category_id,
       image_url: post.image_url || "",
       video_url: post.video_url || "",
       is_premium: post.is_premium,
       is_published: post.is_published,
+      country_codes: post.country_codes || [],
     });
     setDialogOpen(true);
   };
@@ -142,12 +214,24 @@ export default function AdminPosts() {
       title: "",
       content: "",
       excerpt: "",
+      author: "",
+      section: "",
       category_id: "",
       image_url: "",
       video_url: "",
       is_premium: false,
       is_published: true,
+      country_codes: [],
     });
+  };
+
+  const toggleCountry = (countryCode: string) => {
+    setFormData(prev => ({
+      ...prev,
+      country_codes: prev.country_codes.includes(countryCode)
+        ? prev.country_codes.filter(c => c !== countryCode)
+        : [...prev.country_codes, countryCode]
+    }));
   };
 
   const filteredPosts = posts.filter((post) =>
@@ -190,7 +274,10 @@ export default function AdminPosts() {
                   Title
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Category
+                  Author
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Section
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Status
@@ -206,14 +293,14 @@ export default function AdminPosts() {
             <tbody className="divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                     Loading...
                   </td>
                 </tr>
               ) : filteredPosts.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                    No posts found
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                    No posts found. Click "New Post" to create your first post.
                   </td>
                 </tr>
               ) : (
@@ -223,7 +310,10 @@ export default function AdminPosts() {
                       <div className="font-medium">{post.title}</div>
                       <div className="text-sm text-gray-500">{post.excerpt}</div>
                     </td>
-                    <td className="px-6 py-4 text-sm">{post.categories?.name}</td>
+                    <td className="px-6 py-4 text-sm">{post.author || "Unknown"}</td>
+                    <td className="px-6 py-4 text-sm">
+                      {sections.find(s => s.slug === post.section)?.title || post.section || "-"}
+                    </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 text-xs rounded-full ${post.is_published ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
                         {post.is_published ? "Published" : "Draft"}
@@ -285,24 +375,83 @@ export default function AdminPosts() {
             </div>
 
             <div>
-              <Label htmlFor="category">Category</Label>
-              <Select
-                value={formData.category_id}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, category_id: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="author">Author</Label>
+              <Input
+                id="author"
+                value={formData.author}
+                onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                placeholder="Author name"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="section">Section</Label>
+                <Select
+                  value={formData.section}
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, section: value, category_id: "" });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select section first" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sections.map((sec) => (
+                      <SelectItem key={sec.id} value={sec.slug}>
+                        {sec.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  value={formData.category_id}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, category_id: value })
+                  }
+                  disabled={!formData.section}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={formData.section ? "Select category" : "Select section first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {/* Group categories by section */}
+                    {formData.section && (
+                      <>
+                        {/* Show categories for selected section */}
+                        {categories
+                          .filter((cat) => cat.sections?.slug === formData.section)
+                          .map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              {cat.title || cat.name}
+                            </SelectItem>
+                          ))}
+                        
+                        {/* Show message if no categories found */}
+                        {categories.filter((cat) => cat.sections?.slug === formData.section).length === 0 && (
+                          <div className="px-2 py-6 text-center text-sm text-gray-500">
+                            No categories found for this section.
+                            <br />
+                            <a href="/admin/categories" className="text-primary hover:underline mt-2 inline-block">
+                              Create categories →
+                            </a>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+                {formData.section && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Showing categories for: <strong>{sections.find(s => s.slug === formData.section)?.title}</strong>
+                  </p>
+                )}
+              </div>
             </div>
 
             <div>
@@ -340,8 +489,38 @@ export default function AdminPosts() {
                 type="video"
                 currentUrl={formData.video_url}
                 onUrlChange={(url) => setFormData({ ...formData, video_url: url })}
-                label="Post Video (Optional)"
+                label="Post Video/Podcast (Optional)"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Upload a video file or paste a URL (YouTube, Vimeo, podcast link, etc.)
+              </p>
+            </div>
+
+            <div>
+              <Label className="mb-3 block">Available Countries</Label>
+              <div className="border rounded-lg p-4 max-h-48 overflow-y-auto bg-gray-50">
+                <div className="grid grid-cols-2 gap-2">
+                  {natoCountries.map((country) => (
+                    <div key={country.code} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`country-${country.code}`}
+                        checked={formData.country_codes.includes(country.code)}
+                        onCheckedChange={() => toggleCountry(country.code)}
+                      />
+                      <label
+                        htmlFor={`country-${country.code}`}
+                        className="text-sm cursor-pointer flex items-center gap-1"
+                      >
+                        <span>{country.flag}</span>
+                        <span>{country.name}</span>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Select countries where this post will be visible. Leave empty for all countries.
+              </p>
             </div>
 
             <div className="flex gap-4">
@@ -353,7 +532,7 @@ export default function AdminPosts() {
                     setFormData({ ...formData, is_premium: e.target.checked })
                   }
                 />
-                <span className="text-sm">Premium Content</span>
+                <span className="text-sm">⭐ Premium Content</span>
               </label>
 
               <label className="flex items-center gap-2">

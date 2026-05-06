@@ -24,8 +24,27 @@ export default function AdminAlerts() {
   });
 
   useEffect(() => {
-    fetchAlerts();
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    console.log("AdminAlerts: Loading data...");
+    setLoading(true);
+    
+    try {
+      const dataPromise = fetchAlerts();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Data load timeout")), 8000)
+      );
+      
+      await Promise.race([dataPromise, timeoutPromise]);
+      console.log("AdminAlerts: Data loaded successfully");
+    } catch (error) {
+      console.error("AdminAlerts: Error loading data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchAlerts = async () => {
     try {
@@ -38,8 +57,6 @@ export default function AdminAlerts() {
       setAlerts(data || []);
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
     }
   };
 

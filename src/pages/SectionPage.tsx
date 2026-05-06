@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import { useEffect } from "react";
 import { navSections } from "@/data/mockData";
 import { PostCard } from "@/components/PostCard";
 import { SidebarModules } from "@/components/SidebarModules";
@@ -24,6 +25,16 @@ const SectionPage = () => {
     sectionData?.title ||
     section?.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()) ||
     "Section";
+
+  // Set page title
+  useEffect(() => {
+    document.title = `${pageTitle} | Preparedness For War`;
+    
+    // Reset title when leaving page
+    return () => {
+      document.title = "Preparedness For War - Latest News & Updates";
+    };
+  }, [pageTitle]);
 
   return (
     <div className="bg-white min-h-screen">

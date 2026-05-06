@@ -25,21 +25,61 @@ import {
 } from "lucide-react";
 
 export default function AdminLayout() {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
+    // Wait for auth to finish loading
+    if (authLoading) {
+      return;
+    }
+
+    // If no user, redirect to login
     if (!user) {
       navigate("/admin-login");
+      setIsChecking(false);
+      return;
     }
-  }, [user, navigate]);
+    
+    // Check if user is actually an admin
+    if (!isAdmin) {
+      console.warn("Non-admin user attempted to access admin panel");
+      navigate("/");
+      setIsChecking(false);
+      return;
+    }
+
+    // User is authenticated and is admin
+    setIsChecking(false);
+  }, [user, isAdmin, authLoading, navigate]);
 
   const handleSignOut = async () => {
-    await logout();
-    navigate("/admin-login");
+    try {
+      await logout();
+      // Small delay to ensure state updates
+      await new Promise(resolve => setTimeout(resolve, 100));
+      navigate("/admin-login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Navigate anyway
+      navigate("/admin-login");
+    }
   };
+
+  // Show loading state while checking authentication
+  if (authLoading || isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading admin portal...</p>
+        </div>
+      </div>
+    );
+  }
 
   const menuSections = [
     {
@@ -54,6 +94,7 @@ export default function AdminLayout() {
       items: [
         { icon: FileText, label: "Posts", path: "/admin/posts" },
         { icon: FolderOpen, label: "Categories", path: "/admin/categories" },
+        { icon: BookOpen, label: "Sections", path: "/admin/sections" },
         { icon: FileText, label: "Pages", path: "/admin/pages" },
         { icon: BookOpen, label: "Encyclopaedia", path: "/admin/encyclopaedia" },
       ],
@@ -98,7 +139,7 @@ export default function AdminLayout() {
     return location.pathname.startsWith(path);
   };
 
-  if (!user) {
+  if (!user || !isAdmin) {
     return null;
   }
 

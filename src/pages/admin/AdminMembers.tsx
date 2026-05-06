@@ -49,9 +49,27 @@ export default function AdminMembers() {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchMembers();
-    fetchPlans();
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    console.log("AdminMembers: Loading data...");
+    setLoading(true);
+    
+    try {
+      const dataPromise = Promise.all([fetchMembers(), fetchPlans()]);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Data load timeout")), 8000)
+      );
+      
+      await Promise.race([dataPromise, timeoutPromise]);
+      console.log("AdminMembers: Data loaded successfully");
+    } catch (error) {
+      console.error("AdminMembers: Error loading data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchMembers = async () => {
     try {
@@ -74,8 +92,6 @@ export default function AdminMembers() {
       setMembers(data || []);
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
     }
   };
 

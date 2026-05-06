@@ -30,6 +30,7 @@ export interface AdminPost {
   status: PostStatus;
   body: string;
   countryCodes: string[];
+  videoUrl?: string;
 }
 
 export interface MediaItem {
@@ -79,21 +80,22 @@ export interface BannerSettings {
 const mapPost = (p: DbPost & { country_codes?: string[] }): AdminPost => ({
   id: p.id,
   title: p.title,
-  standfirst: p.standfirst || "",
+  standfirst: p.standfirst || p.body?.substring(0, 200) || "",
   section: p.section,
   category: p.category,
   author: p.author,
-  publishedAt: p.published_at,
-  updatedAt: p.updated_at,
-  image: p.image || "",
+  publishedAt: p.published_at || p.created_at,
+  updatedAt: p.updated_at || p.created_at,
+  image: p.image_url || p.image || "",
   tags: p.tags || [],
-  viewCount: p.view_count,
+  viewCount: p.view_count || 0,
   readTime: p.read_time || "5 min",
   isPinned: p.is_pinned || false,
-  isPremium: (p as any).is_premium || false,
-  status: p.status as PostStatus,
-  body: p.body || "",
+  isPremium: p.is_premium || false,
+  status: (p.is_published ? "published" : p.status || "draft") as PostStatus,
+  body: p.content || p.body || "",
   countryCodes: p.country_codes || [],
+  videoUrl: p.video_url || undefined,
 });
 
 const mapMedia = (m: DbMediaItem & { country_codes?: string[] }): MediaItem => ({
@@ -184,22 +186,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [encEntries, setEncEntries] = useState<EncEntry[]>([]);
   const [banner, setBanner] = useState<BannerSettings>({ enabled: true, text: "", priority: "high" });
   const [loading, setLoading] = useState(true);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   const refreshPosts = useCallback(async () => {
-    // TEMPORARY: Use mock data for demo
-    const { mockPosts } = await import("@/data/mockData");
-    setPosts(mockPosts.map(p => ({
-      ...p,
-      isPremium: false,
-      status: "published" as PostStatus,
-      body: p.standfirst,
-      countryCodes: [],
-      updatedAt: p.publishedAt
-    })));
+    // Load posts from database
+    const { data } = await supabase
+      .from("posts")
+      .select("*")
+      .eq("is_published", true)
+      .order("published_at", { ascending: false });
     
-    // Original database fetch (commented out for demo)
-    // const { data } = await supabase.from("posts").select("*").order("published_at", { ascending: false });
-    // if (data) setPosts(data.map((row) => mapPost(row as DbPost & { country_codes?: string[] })));
+    if (data) {
+      setPosts(data.map((row) => mapPost(row as DbPost & { country_codes?: string[] })));
+    }
   }, []);
 
   const refreshAlerts = useCallback(async () => {
@@ -232,15 +231,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
+      
+      // Load only critical data first (posts and alerts for homepage)
       await Promise.all([
         refreshPosts(),
         refreshAlerts(),
+        refreshBanner(),
+      ]);
+      
+      setLoading(false);
+      setInitialLoadComplete(true);
+      
+      // Load remaining data in background
+      Promise.all([
         refreshMedia(),
         refreshLibrary(),
         refreshEncyclopaedia(),
-        refreshBanner(),
-      ]);
-      setLoading(false);
+      ]).catch(console.error);
     };
     fetchAll();
   }, [refreshAlerts, refreshBanner, refreshEncyclopaedia, refreshLibrary, refreshMedia, refreshPosts]);
@@ -316,7 +323,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     const nextViews = post.viewCount + 1;
     setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, viewCount: nextViews } : p)));
-    await supabase.from("posts").update({ view_count: nextViews }).eq("id", postId);
+    
+    try {
+      await supabase.from("posts").update({ view_count: nextViews }).eq("id", postId);
+    } catch (error) {
+      console.error("Error incrementing view count:", error);
+    }
   }, [posts]);
 
   const createAlert = async (alert: { text: string; priority: string }) => {

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Clock, Eye } from "lucide-react";
+import { Clock, Eye, Play } from "lucide-react";
 import type { Post } from "@/data/mockData";
 import { formatTimeAgo, navSections } from "@/data/mockData";
 
@@ -13,10 +13,25 @@ export function PostCard({ post, variant = "default" }: PostCardProps) {
   const sectionColor = section?.color || "category-emergency";
 
   if (variant === "hero") {
+    const hasVideo = (post as any).videoUrl || (post as any).video_url;
+    
     return (
       <Link to={`/${post.section}/${post.category}/${post.id}`} className="card-news group block">
         <div className="aspect-[16/9] bg-muted relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 to-transparent" />
+          {hasVideo && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-20 h-20 rounded-full bg-blue-900/90 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                <Play className="w-10 h-10 text-white fill-white ml-1" />
+              </div>
+            </div>
+          )}
+          {hasVideo && (
+            <div className="absolute top-4 right-4 px-3 py-1.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wide flex items-center gap-1.5">
+              <Play className="w-3.5 h-3.5 fill-white" />
+              Video
+            </div>
+          )}
           <div className="absolute bottom-0 left-0 right-0 p-6">
             <span className={`category-pill bg-${sectionColor} text-alert-foreground mb-2`}>
               {section?.title}
@@ -27,6 +42,12 @@ export function PostCard({ post, variant = "default" }: PostCardProps) {
               <span>{post.author}</span>
               <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{post.readTime}</span>
               <span>{formatTimeAgo(post.publishedAt)}</span>
+              {hasVideo && (
+                <span className="ml-auto flex items-center gap-1 text-white font-bold">
+                  <Play className="w-3.5 h-3.5 fill-white" />
+                  Watch Video
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -70,21 +91,46 @@ export function PostCard({ post, variant = "default" }: PostCardProps) {
     );
   }
 
-  // Default card
+  // Default card - Professional government design
+  const hasVideo = (post as any).videoUrl || (post as any).video_url;
+  
   return (
-    <Link to={`/${post.section}/${post.category}/${post.id}`} className="card-news group block">
-      <div className="aspect-[16/10] bg-muted" />
-      <div className="p-4">
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <Link to={`/${post.section}/${post.category}/${post.id}`} className="group block bg-white hover:shadow-md transition-all duration-300 border border-gray-200 hover:border-blue-900">
+      <div className="aspect-[16/10] bg-gray-100 overflow-hidden relative">
+        {post.image && (
+          <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        )}
+        {hasVideo && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
+            <div className="w-16 h-16 rounded-full bg-blue-900 flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+              <Play className="w-8 h-8 text-white fill-white ml-1" />
+            </div>
+          </div>
+        )}
+        {hasVideo && (
+          <div className="absolute top-3 right-3 px-2 py-1 bg-red-600 text-white text-xs font-bold uppercase tracking-wide flex items-center gap-1">
+            <Play className="w-3 h-3 fill-white" />
+            Video
+          </div>
+        )}
+      </div>
+      <div className="p-5">
+        <span className="inline-block px-3 py-1 bg-blue-900 text-white text-xs font-bold uppercase tracking-wide mb-3">
           {section?.title}
         </span>
-        <h3 className="article-headline text-base mt-1 line-clamp-2 group-hover:text-alert transition-colors">
+        <h3 className="font-display font-bold text-lg leading-snug line-clamp-2 text-gray-900 group-hover:text-blue-900 transition-colors mb-2">
           {post.title}
         </h3>
-        <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">{post.standfirst}</p>
-        <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
-          <span>{post.author}</span>
-          <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{post.readTime}</span>
+        <p className="text-sm text-gray-600 line-clamp-2 mb-4">{post.standfirst}</p>
+        <div className="flex items-center gap-4 text-xs text-gray-500 pt-3 border-t border-gray-100">
+          <span className="font-semibold text-gray-700">{post.author}</span>
+          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-blue-900" />{post.readTime}</span>
+          {hasVideo && (
+            <span className="ml-auto flex items-center gap-1 text-red-600 font-bold">
+              <Play className="w-3.5 h-3.5 fill-red-600" />
+              Watch
+            </span>
+          )}
         </div>
       </div>
     </Link>

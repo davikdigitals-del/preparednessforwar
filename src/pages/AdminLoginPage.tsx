@@ -43,16 +43,34 @@ export default function AdminLoginPage() {
     }
     
     setLoading(true);
-    const ok = await adminLogin(email, password);
-    setLoading(false);
-    if (ok) navigate("/admin");
-    else setError("Invalid admin credentials or no admin role on this account.");
+    console.log("Attempting admin login for:", email);
+    
+    try {
+      const ok = await adminLogin(email, password);
+      setLoading(false);
+      
+      if (ok) {
+        console.log("Admin login successful, navigating to /admin");
+        navigate("/admin");
+      } else {
+        console.error("Admin login returned false");
+        setError("Invalid admin credentials. Please check your email and password.");
+      }
+    } catch (error) {
+      console.error("Admin login error:", error);
+      setLoading(false);
+      setError("An error occurred during login. Please try again.");
+    }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegError("");
-    if (regPassword.length < 6) { setRegError("Password must be at least 6 characters."); return; }
+    
+    if (regPassword.length < 6) { 
+      setRegError("Password must be at least 6 characters."); 
+      return; 
+    }
     
     if (recaptchaEnabled && !regRecaptchaToken) {
       setRegError("Please complete the reCAPTCHA verification.");
@@ -60,51 +78,74 @@ export default function AdminLoginPage() {
     }
     
     setRegLoading(true);
+    console.log("Creating admin account for:", regEmail);
 
-    const { error } = await supabase.auth.signUp({
-      email: regEmail,
-      password: regPassword,
-      options: {
-        data: { name: regName },
-        emailRedirectTo: window.location.origin,
-      },
-    });
+    try {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: regEmail,
+        password: regPassword,
+        options: {
+          data: { name: regName },
+          emailRedirectTo: window.location.origin,
+        },
+      });
 
-    if (error) {
-      setRegError(error.message);
-      setRegLoading(false);
-      return;
-    }
+      if (signUpError) {
+        console.error("Sign up error:", signUpError);
+        setRegError(signUpError.message);
+        setRegLoading(false);
+        return;
+      }
 
-    // Mark the new account as admin immediately
-    const { data: signInData } = await supabase.auth.signInWithPassword({
-      email: regEmail,
-      password: regPassword,
-    });
-    if (signInData?.user) {
+      console.log("Account created, signing in to set admin role...");
+
+      // Mark the new account as admin immediately
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: regEmail,
+        password: regPassword,
+      });
+      
+      if (signInError || !signInData?.user) {
+        console.error("Sign in error:", signInError);
+        setRegError("Account created but couldn't sign in. Please use the Login tab.");
+        setRegLoading(false);
+        return;
+      }
+
+      console.log("Signed in, setting admin role...");
+
+      // Set admin role - ALL accounts created via /admin-login are admins
       await supabase.from("profiles").upsert(
         {
           id: signInData.user.id,
           email: regEmail,
           name: regName,
           country: "GB",
-          is_admin: true,
-          role: "admin",
+          is_admin: true,  // ✅ Always admin for /admin-login registrations
+          role: "admin",   // ✅ Always admin for /admin-login registrations
         },
         { onConflict: "id" }
       );
+      
       await supabase.from("user_roles").upsert(
         { user_id: signInData.user.id, role: "admin" },
         { onConflict: "user_id,role" }
       );
+      
+      console.log("Admin role set, signing out...");
       await supabase.auth.signOut();
-    }
 
-    setRegLoading(false);
-    setTab("login");
-    setEmail(regEmail);
-    setPassword(regPassword);
-    setRegError("Account created. Sign in now — first admin login is auto-bootstrapped if no admin exists.");
+      setRegLoading(false);
+      setTab("login");
+      setEmail(regEmail);
+      setPassword(regPassword);
+      setError("✅ Admin account created successfully! Please sign in below.");
+      console.log("Registration complete, switched to login tab");
+    } catch (error) {
+      console.error("Registration exception:", error);
+      setRegError("An error occurred during registration. Please try again.");
+      setRegLoading(false);
+    }
   };
 
   return (

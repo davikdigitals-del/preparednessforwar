@@ -1,4 +1,4 @@
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
@@ -9,13 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { User, Globe, BookOpen, Bell, Search, FileText, Shield, LogOut, Crown } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function MemberDashboard() {
   const { user, logout, notifications, markAllNotificationsRead, loading, isAdmin } = useAuth();
   const { publishedPosts } = useData();
   const { isPremium, plan: currentPlan } = usePremiumStatus();
   const [search, setSearch] = useState("");
+  const navigate = useNavigate();
 
   if (loading) return <div className="container py-16 text-center"><p className="text-muted-foreground">Loading...</p></div>;
   if (!user) return <Navigate to="/login" replace />;

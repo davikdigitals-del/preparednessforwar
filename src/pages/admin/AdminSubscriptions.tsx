@@ -61,7 +61,7 @@ export default function AdminSubscriptions() {
   });
 
   useEffect(() => {
-    fetchData();
+    loadData();
 
     // Set up real-time subscription for plans
     const plansChannel = supabase
@@ -101,8 +101,26 @@ export default function AdminSubscriptions() {
     };
   }, []);
 
-  const fetchData = async () => {
+  const loadData = async () => {
+    console.log("AdminSubscriptions: Loading data...");
     setLoading(true);
+    
+    try {
+      const dataPromise = fetchData();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Data load timeout")), 8000)
+      );
+      
+      await Promise.race([dataPromise, timeoutPromise]);
+      console.log("AdminSubscriptions: Data loaded successfully");
+    } catch (error) {
+      console.error("AdminSubscriptions: Error loading data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchData = async () => {
     try {
       // Fetch plans
       const { data: plansData, error: plansError } = await supabase
@@ -127,8 +145,6 @@ export default function AdminSubscriptions() {
       setSubscriptions(subsData || []);
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
     }
   };
 
