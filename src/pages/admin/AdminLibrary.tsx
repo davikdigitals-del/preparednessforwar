@@ -399,13 +399,18 @@ export default function AdminLibrary() {
             </div>
 
             <div>
-              <FileUpload
-                type="file"
-                currentUrl={formData.file_url}
-                onUrlChange={(url) => setFormData({ ...formData, file_url: url })}
-                label="Resource File (PDF, DOC, etc.)"
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.zip"
+              <Label htmlFor="file_url">Resource File URL</Label>
+              <Input
+                id="file_url"
+                type="url"
+                value={formData.file_url}
+                onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
+                placeholder="https://example.com/document.pdf"
+                required
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Paste a direct link to your PDF, DOC, or other file (e.g., from Google Drive, Dropbox, or your CDN)
+              </p>
             </div>
 
             <div>
