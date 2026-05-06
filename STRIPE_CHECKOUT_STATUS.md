@@ -119,7 +119,7 @@ supabase link --project-ref xfbmpjgcfohewejdzlfw
 supabase functions deploy create-payment-intent --no-verify-jwt
 
 # Set environment variables
-supabase secrets set STRIPE_SECRET_KEY=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
+supabase secrets set STRIPE_SECRET_KEY=your_stripe_secret_key_here
 ```
 
 ## Alternative: Test Without Backend

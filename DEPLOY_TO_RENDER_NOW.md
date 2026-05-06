@@ -108,13 +108,13 @@ Value: 6LfW3NgsAAAAAJg_iOTfx5Swt6bLqjqf0NWV0F3_
 #### Variable 4: Stripe Publishable Key
 ```
 Key: VITE_STRIPE_PUBLISHABLE_KEY
-Value: pk_live_51TSmrV6AEy5p66QTYUi2M7obDhCW8lgilg0ND05kzLk47m3pdaWYvjvfz7f4yvrVFH5mTn7ez2hHQBEQ31FQnzwT004ejGIVeA
+Value: your_stripe_publishable_key_here
 ```
 
 #### Variable 5: Stripe Secret Key
 ```
 Key: STRIPE_SECRET_KEY
-Value: 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
+Value: your_stripe_secret_key_here
 ```
 
 #### Variable 6: Node Version (Auto-added)
