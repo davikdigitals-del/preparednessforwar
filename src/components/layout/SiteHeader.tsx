@@ -1,12 +1,13 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, Search, User, Globe, Mail, X, Video, Newspaper, LogOut } from "lucide-react";
+import { Menu, Search, User, Globe, Mail, X, Video, Newspaper, LogOut, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { navSections } from "@/data/mockData";
 
 export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const { user, logout } = useAuth();
 
   const mainNavItems = [
@@ -194,25 +195,41 @@ export function SiteHeader() {
               </div>
             </div>
 
-            {/* Main Sections */}
+            {/* Main Navigation */}
             <div className="mb-4">
-              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Sections</h3>
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Main Navigation</h3>
               <nav className="space-y-1">
                 {mainNavItems.map((item) => {
                   const section = navSections.find(s => s.slug === item.section);
                   const hasCategories = section && section.categories.length > 0;
+                  const isExpanded = expandedSection === item.section;
 
                   return (
                     <div key={item.label}>
-                      <Link
-                        to={item.to}
-                        className="block px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
-                        onClick={() => !hasCategories && setMobileMenuOpen(false)}
-                      >
-                        {item.label}
-                      </Link>
-                      {hasCategories && (
-                        <div className="ml-3 mt-1 space-y-1 border-l-2 border-gray-200 pl-3">
+                      <div className="flex items-center justify-between">
+                        <Link
+                          to={item.to}
+                          className="flex-1 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
+                          onClick={() => !hasCategories && setMobileMenuOpen(false)}
+                        >
+                          {item.label}
+                        </Link>
+                        {hasCategories && (
+                          <button
+                            onClick={() => setExpandedSection(isExpanded ? null : item.section)}
+                            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                            aria-label={isExpanded ? "Collapse" : "Expand"}
+                          >
+                            {isExpanded ? (
+                              <ChevronUp className="w-4 h-4 text-gray-600" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-gray-600" />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                      {hasCategories && isExpanded && (
+                        <div className="ml-3 mt-1 space-y-1 border-l-2 border-gray-200 pl-3 animate-in slide-in-from-top-2 duration-200">
                           {section.categories.slice(0, 5).map((category) => (
                             <Link
                               key={category.slug}
@@ -229,7 +246,7 @@ export function SiteHeader() {
                               className="block px-3 py-1.5 text-xs text-primary font-medium hover:bg-gray-100 rounded-md transition-colors"
                               onClick={() => setMobileMenuOpen(false)}
                             >
-                              View all →
+                              View all {section.categories.length} categories →
                             </Link>
                           )}
                         </div>
