@@ -423,105 +423,187 @@ const Index = () => {
               })}
             </div>
 
-            {/* SECTION BLOCKS - All dynamic sections */}
+            {/* SECTION BLOCKS - Mobile: Euronews style | Desktop: Original */}
             {sections.map((section) => {
               const sectionPosts = sortedPosts.filter((p) => p.section === section.slug);
               
               if (sectionPosts.length === 0) return null;
 
-              // Get pinned posts for heroes (max 2)
+              // Get pinned posts for heroes (max 1 for mobile, 2 for desktop)
               const pinnedPosts = sectionPosts.filter(p => p.isPinned).slice(0, 2);
               
-              // Get regular posts for grid (exclude pinned, take 12)
+              // Get regular posts for grid (exclude pinned)
               const regularPosts = sectionPosts.filter(p => !p.isPinned).slice(0, 12);
               
-              // If we don't have 2 pinned posts, fill with newest regular posts
-              const heroPosts = [...pinnedPosts];
-              if (heroPosts.length < 2) {
-                const needed = 2 - heroPosts.length;
-                heroPosts.push(...regularPosts.slice(0, needed));
+              // Mobile: 1 hero, Desktop: 2 heroes
+              const mobileHero = pinnedPosts.length > 0 ? [pinnedPosts[0]] : [regularPosts[0]];
+              const desktopHeroes = [...pinnedPosts];
+              if (desktopHeroes.length < 2 && regularPosts.length > 0) {
+                const needed = 2 - desktopHeroes.length;
+                desktopHeroes.push(...regularPosts.slice(0, needed));
               }
               
               // Grid posts (skip the ones used as heroes if they weren't pinned)
-              const gridPosts = pinnedPosts.length >= 2 
+              const mobileGridPosts = pinnedPosts.length >= 1 
+                ? regularPosts.slice(0, 10)
+                : regularPosts.slice(1, 11);
+                
+              const desktopGridPosts = pinnedPosts.length >= 2 
                 ? regularPosts 
                 : regularPosts.slice(2 - pinnedPosts.length);
 
               return (
                 <div key={section.slug} className="mb-8">
-                  <h2 className="text-xl font-bold mb-4 border-b-2 border-primary pb-1.5">
+                  {/* Section Title */}
+                  <h2 className="text-xl md:text-2xl font-bold mb-4 pb-2 border-b-2 border-primary">
                     {section.title}
                   </h2>
                   
-                  {/* 2 HERO POSTS */}
-                  {heroPosts.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      {heroPosts.map((post) => (
+                  {/* MOBILE LAYOUT */}
+                  <div className="md:hidden">
+                    {/* 1 HERO POST - Image on top, text below */}
+                    {mobileHero[0] && (
+                      <div className="mb-4">
                         <Link
-                          key={post.id}
-                          to={`/${post.section}/${post.category}/${post.id}`}
-                          className="group"
+                          to={`/${mobileHero[0].section}/${mobileHero[0].category}/${mobileHero[0].id}`}
+                          className="group block"
                         >
-                          <div className="aspect-video bg-gray-200 overflow-hidden mb-2 relative">
-                            {post.image ? (
+                          <div className="aspect-video bg-gray-200 overflow-hidden mb-2 relative rounded-sm">
+                            {mobileHero[0].image ? (
                               <img 
-                                src={post.image} 
-                                alt={post.title} 
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                src={mobileHero[0].image} 
+                                alt={mobileHero[0].title} 
+                                className="w-full h-full object-cover" 
                               />
                             ) : (
                               <div className="w-full h-full bg-primary/10" />
                             )}
-                            {post.videoUrl && (
-                              <div className="absolute bottom-1.5 right-1.5 bg-primary rounded-full w-9 h-9 flex items-center justify-center">
-                                <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                            {mobileHero[0].videoUrl && (
+                              <div className="absolute bottom-2 right-2 bg-blue-600 rounded-full w-11 h-11 flex items-center justify-center shadow-lg">
+                                <Play className="w-5 h-5 text-white fill-white ml-0.5" />
                               </div>
                             )}
-                            {post.isPinned && (
-                              <div className="absolute top-1.5 left-1.5 bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                            {mobileHero[0].isPinned && (
+                              <div className="absolute top-2 left-2 bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded">
                                 FEATURED
                               </div>
                             )}
                           </div>
-                          <h3 className="text-sm font-bold leading-tight group-hover:text-primary transition-colors mb-1">
-                            {post.title}
+                          <span className="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide block">
+                            {section.title}
+                          </span>
+                          <h3 className="text-base font-bold leading-snug mb-1 text-gray-900 group-hover:text-primary transition-colors">
+                            {mobileHero[0].title}
                           </h3>
-                          <p className="text-xs text-gray-600 line-clamp-2">
-                            {post.standfirst}
-                          </p>
                         </Link>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {/* 12 GRID POSTS (3 rows × 4 columns) */}
-                  {gridPosts.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-                      {gridPosts.map((post) => (
+                      </div>
+                    )}
+                    
+                    {/* HORIZONTAL CARDS - Thumbnail left, text right */}
+                    <div className="space-y-4 mb-4">
+                      {mobileGridPosts.map((post) => (
                         <Link
                           key={post.id}
                           to={`/${post.section}/${post.category}/${post.id}`}
-                          className="group"
+                          className="group flex gap-3 pb-4 border-b border-gray-200 last:border-0"
                         >
-                          <div className="aspect-video bg-gray-200 overflow-hidden mb-1.5 relative">
+                          <div className="w-[140px] h-[100px] bg-gray-200 shrink-0 overflow-hidden relative rounded-sm">
                             {post.image ? (
                               <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full bg-primary/10" />
                             )}
                             {post.videoUrl && (
-                              <div className="absolute bottom-1 right-1 bg-primary rounded-full w-7 h-7 flex items-center justify-center">
-                                <Play className="w-2.5 h-2.5 text-white fill-white ml-0.5" />
+                              <div className="absolute bottom-2 right-2 bg-blue-600 rounded-full w-10 h-10 flex items-center justify-center shadow-md">
+                                <Play className="w-4 h-4 text-white fill-white ml-0.5" />
                               </div>
                             )}
                           </div>
-                          <h3 className="text-xs font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2">
-                            {post.title}
-                          </h3>
+                          <div className="flex-1 min-w-0 flex flex-col justify-center">
+                            <span className="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide">
+                              {section.title}
+                            </span>
+                            <h3 className="text-base font-bold leading-snug text-gray-900 group-hover:text-primary transition-colors line-clamp-3">
+                              {post.title}
+                            </h3>
+                          </div>
                         </Link>
                       ))}
                     </div>
-                  )}
+                  </div>
+
+                  {/* DESKTOP LAYOUT - Original */}
+                  <div className="hidden md:block">
+                    {/* 2 HERO POSTS */}
+                    {desktopHeroes.length > 0 && (
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        {desktopHeroes.map((post) => (
+                          <Link
+                            key={post.id}
+                            to={`/${post.section}/${post.category}/${post.id}`}
+                            className="group"
+                          >
+                            <div className="aspect-video bg-gray-200 overflow-hidden mb-2 relative">
+                              {post.image ? (
+                                <img 
+                                  src={post.image} 
+                                  alt={post.title} 
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-primary/10" />
+                              )}
+                              {post.videoUrl && (
+                                <div className="absolute bottom-1.5 right-1.5 bg-primary rounded-full w-9 h-9 flex items-center justify-center">
+                                  <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                                </div>
+                              )}
+                              {post.isPinned && (
+                                <div className="absolute top-1.5 left-1.5 bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                  FEATURED
+                                </div>
+                              )}
+                            </div>
+                            <h3 className="text-sm font-bold leading-tight group-hover:text-primary transition-colors mb-1">
+                              {post.title}
+                            </h3>
+                            <p className="text-xs text-gray-600 line-clamp-2">
+                              {post.standfirst}
+                            </p>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* 12 GRID POSTS (3 rows × 4 columns) */}
+                    {desktopGridPosts.length > 0 && (
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                        {desktopGridPosts.slice(0, 12).map((post) => (
+                          <Link
+                            key={post.id}
+                            to={`/${post.section}/${post.category}/${post.id}`}
+                            className="group"
+                          >
+                            <div className="aspect-video bg-gray-200 overflow-hidden mb-1.5 relative">
+                              {post.image ? (
+                                <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full bg-primary/10" />
+                              )}
+                              {post.videoUrl && (
+                                <div className="absolute bottom-1 right-1 bg-primary rounded-full w-7 h-7 flex items-center justify-center">
+                                  <Play className="w-2.5 h-2.5 text-white fill-white ml-0.5" />
+                                </div>
+                              )}
+                            </div>
+                            <h3 className="text-xs font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2">
+                              {post.title}
+                            </h3>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   
                   {/* VIEW ALL BUTTON */}
                   <div className="text-center">
