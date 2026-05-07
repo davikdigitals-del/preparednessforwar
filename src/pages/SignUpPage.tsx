@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ReCaptcha } from "@/components/ReCaptcha";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";import { ReCaptcha } from "@/components/ReCaptcha";
 import { Eye, EyeOff } from "lucide-react";
 import { FaGoogle, FaApple, FaDiscord } from "react-icons/fa";
 
@@ -89,15 +88,16 @@ export default function SignUpPage() {
             </div>
             <div>
               <Label>Your Country</Label>
-              <Select value={country} onValueChange={setCountry}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {natoCountries.map(c => (
-                    <SelectItem key={c.code} value={c.code}>{c.flag} {c.name}</SelectItem>
-                  ))}
-                  <SelectItem value="OTHER">🌍 Other (Non-NATO)</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                value={country}
+                onChange={e => setCountry(e.target.value)}
+                className="w-full h-10 px-3 py-2 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                {natoCountries.map(c => (
+                  <option key={c.code} value={c.code}>{c.flag} {c.name}</option>
+                ))}
+                <option value="OTHER">🌍 Other (Non-NATO)</option>
+              </select>
               <p className="text-xs text-muted-foreground mt-1">NATO country members see country-specific content</p>
             </div>
             
