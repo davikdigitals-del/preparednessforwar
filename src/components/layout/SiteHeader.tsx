@@ -71,15 +71,20 @@ export function SiteHeader() {
             
             <Link to="/" className="flex items-center">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="text-blue-900 text-xl sm:text-2xl font-black">
+                {/* Mobile: Just PH */}
+                <span className="text-blue-900 text-2xl font-black lg:hidden">
                   PH
                 </span>
-                <span className="font-black text-sm sm:text-xl tracking-tight text-gray-900">
-                  <span className="hidden sm:inline">preparedness</span>
-                  <span className="sm:hidden">prep</span>
-                  <span className="font-light">4</span>
-                  <span className="hidden sm:inline">war</span>
-                </span>
+                
+                {/* Desktop: Full logo */}
+                <div className="hidden lg:flex items-center gap-2">
+                  <span className="text-blue-900 text-2xl font-black">
+                    PH
+                  </span>
+                  <span className="font-black text-xl tracking-tight text-gray-900">
+                    preparedness<span className="font-light">for</span>war
+                  </span>
+                </div>
               </div>
             </Link>
           </div>
