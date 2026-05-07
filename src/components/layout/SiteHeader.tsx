@@ -143,168 +143,148 @@ export function SiteHeader() {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <>
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-black/50 lg:hidden z-40"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          
-          {/* Menu Panel */}
-          <div className="fixed inset-y-0 left-0 w-[85%] max-w-sm bg-white lg:hidden z-50 overflow-y-auto shadow-xl">
-            <div className="p-4">
-              {/* Mobile Menu Header */}
-              <div className="flex items-center justify-between mb-6 pb-4 border-b">
-                <span className="font-black text-lg text-gray-900">Menu</span>
-                <button 
+        <div className="lg:hidden bg-white border-b border-gray-200 shadow-lg">
+          <div className="container mx-auto px-4 py-4 max-h-[70vh] overflow-y-auto">
+            {/* Quick Links */}
+            <div className="mb-4">
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Quick Access</h3>
+              <div className="space-y-1">
+                <Link
+                  to="/library"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-2 hover:bg-gray-100 rounded-md transition-colors"
                 >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Quick Links */}
-              <div className="mb-6">
-                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Quick Access</h3>
-                <div className="space-y-1">
-                  <Link
-                    to="/library"
-                    className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Newspaper className="w-4 h-4" />
-                    Library
-                  </Link>
-                  <Link
-                    to="/encyclopaedia"
-                    className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Newspaper className="w-4 h-4" />
-                    Encyclopaedia
-                  </Link>
-                  <Link
-                    to="/media"
-                    className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Video className="w-4 h-4" />
-                    Media Hub
-                  </Link>
-                  <Link
-                    to="/countries"
-                    className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Globe className="w-4 h-4" />
-                    Countries
-                  </Link>
-                  <Link
-                    to="/newsletter"
-                    className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Mail className="w-4 h-4" />
-                    Newsletter
-                  </Link>
-                </div>
-              </div>
-
-              {/* Main Sections */}
-              <div className="mb-6">
-                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Sections</h3>
-                <nav className="space-y-1">
-                  {mainNavItems.map((item) => {
-                    const section = navSections.find(s => s.slug === item.section);
-                    const hasCategories = section && section.categories.length > 0;
-
-                    return (
-                      <div key={item.label}>
-                        <Link
-                          to={item.to}
-                          className="block px-3 py-2.5 text-sm font-semibold text-gray-900 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
-                          onClick={() => !hasCategories && setMobileMenuOpen(false)}
-                        >
-                          {item.label}
-                        </Link>
-                        {hasCategories && (
-                          <div className="ml-3 mt-1 space-y-1 border-l-2 border-gray-200 pl-3">
-                            {section.categories.slice(0, 5).map((category) => (
-                              <Link
-                                key={category.slug}
-                                to={`/${item.section}/${category.slug}`}
-                                className="block px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
-                                onClick={() => setMobileMenuOpen(false)}
-                              >
-                                {category.title}
-                              </Link>
-                            ))}
-                            {section.categories.length > 5 && (
-                              <Link
-                                to={item.to}
-                                className="block px-3 py-1.5 text-xs text-primary font-medium hover:bg-gray-100 rounded-md transition-colors"
-                                onClick={() => setMobileMenuOpen(false)}
-                              >
-                                View all →
-                              </Link>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </nav>
-              </div>
-              
-              {/* Mobile Auth Links */}
-              <div className="border-t border-gray-200 pt-4">
-                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Account</h3>
-                {user ? (
-                  <div className="space-y-1">
-                    <Link
-                      to="/dashboard"
-                      className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <User className="w-4 h-4" />
-                      Dashboard
-                    </Link>
-                    <button
-                      onClick={() => {
-                        logout();
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary rounded-md transition-colors text-left"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Logout
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Link
-                      to="/login"
-                      className="block w-full px-4 py-2.5 text-sm font-semibold text-center text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Log In
-                    </Link>
-                    <Link
-                      to="/signup"
-                      className="block w-full px-4 py-2.5 text-sm font-semibold text-center text-white bg-primary hover:bg-primary/90 rounded-md transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Sign Up
-                    </Link>
-                  </div>
-                )}
+                  <Newspaper className="w-4 h-4" />
+                  Library
+                </Link>
+                <Link
+                  to="/encyclopaedia"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Newspaper className="w-4 h-4" />
+                  Encyclopaedia
+                </Link>
+                <Link
+                  to="/media"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Video className="w-4 h-4" />
+                  Media Hub
+                </Link>
+                <Link
+                  to="/countries"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Globe className="w-4 h-4" />
+                  Countries
+                </Link>
+                <Link
+                  to="/newsletter"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Mail className="w-4 h-4" />
+                  Newsletter
+                </Link>
               </div>
             </div>
+
+            {/* Main Sections */}
+            <div className="mb-4">
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Sections</h3>
+              <nav className="space-y-1">
+                {mainNavItems.map((item) => {
+                  const section = navSections.find(s => s.slug === item.section);
+                  const hasCategories = section && section.categories.length > 0;
+
+                  return (
+                    <div key={item.label}>
+                      <Link
+                        to={item.to}
+                        className="block px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
+                        onClick={() => !hasCategories && setMobileMenuOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                      {hasCategories && (
+                        <div className="ml-3 mt-1 space-y-1 border-l-2 border-gray-200 pl-3">
+                          {section.categories.slice(0, 5).map((category) => (
+                            <Link
+                              key={category.slug}
+                              to={`/${item.section}/${category.slug}`}
+                              className="block px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
+                              onClick={() => setMobileMenuOpen(false)}
+                            >
+                              {category.title}
+                            </Link>
+                          ))}
+                          {section.categories.length > 5 && (
+                            <Link
+                              to={item.to}
+                              className="block px-3 py-1.5 text-xs text-primary font-medium hover:bg-gray-100 rounded-md transition-colors"
+                              onClick={() => setMobileMenuOpen(false)}
+                            >
+                              View all →
+                            </Link>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </nav>
+            </div>
+            
+            {/* Mobile Auth Links */}
+            <div className="border-t border-gray-200 pt-3">
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Account</h3>
+              {user ? (
+                <div className="space-y-1">
+                  <Link
+                    to="/dashboard"
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <User className="w-4 h-4" />
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-primary rounded-md transition-colors text-left"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Link
+                    to="/login"
+                    className="block w-full px-4 py-2 text-sm font-semibold text-center text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="block w-full px-4 py-2 text-sm font-semibold text-center text-white bg-primary hover:bg-primary/90 rounded-md transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
-        </>
+        </div>
       )}
     </header>
   );
