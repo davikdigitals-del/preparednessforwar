@@ -205,127 +205,362 @@ const Index = () => {
   return (
     <div className="bg-white min-h-screen">
       <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-          {/* LEFT COLUMN - Main Content */}
-          <div>
-            {/* HERO SECTION - Mobile: Euronews style (image top, text below) | Desktop: Original (text left, image right) */}
-            {heroPost && (
-              <>
-                {/* MOBILE HERO - Euronews style */}
-                <div className="mb-5 md:hidden">
-                  <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group block">
-                    {/* Hero Image */}
-                    <div className="aspect-[16/9] bg-gray-200 overflow-hidden relative mb-3 rounded-sm">
-                      {heroPost.image ? (
-                        <img
-                          src={heroPost.image}
-                          alt={heroPost.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-primary/10" />
-                      )}
-                      {heroPost.videoUrl && (
-                        <div className="absolute bottom-3 right-3 bg-blue-600 rounded-full w-12 h-12 flex items-center justify-center shadow-lg">
-                          <Play className="w-5 h-5 text-white fill-white ml-0.5" />
-                        </div>
-                      )}
+        {/* MOBILE LAYOUT - Single column with sections interspersed */}
+        <div className="lg:hidden">
+          {/* Hero Section */}
+          {heroPost && (
+            <div className="mb-5">
+              <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group block">
+                <div className="aspect-[16/9] bg-gray-200 overflow-hidden relative mb-3 rounded-sm">
+                  {heroPost.image ? (
+                    <img src={heroPost.image} alt={heroPost.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-primary/10" />
+                  )}
+                  {heroPost.videoUrl && (
+                    <div className="absolute bottom-3 right-3 bg-blue-600 rounded-full w-12 h-12 flex items-center justify-center shadow-lg">
+                      <Play className="w-5 h-5 text-white fill-white ml-0.5" />
                     </div>
-                    
-                    {/* Hero Text */}
-                    <h1 className="text-xl font-bold leading-tight mb-2 text-gray-900 group-hover:text-primary transition-colors">
-                      {heroPost.title}
-                    </h1>
-                    <p className="text-gray-600 text-sm leading-relaxed">
-                      {heroPost.standfirst}
-                    </p>
+                  )}
+                </div>
+                <h1 className="text-xl font-bold leading-tight mb-2 text-gray-900 group-hover:text-primary transition-colors">
+                  {heroPost.title}
+                </h1>
+                <p className="text-gray-600 text-sm leading-relaxed">{heroPost.standfirst}</p>
+              </Link>
+            </div>
+          )}
+
+          {/* Top Stories */}
+          <div className="space-y-4 mb-8">
+            {topStories.map((post) => {
+              const section = navSections.find((s) => s.slug === post.section);
+              return (
+                <Link key={post.id} to={`/${post.section}/${post.category}/${post.id}`} className="group flex gap-3 pb-4 border-b border-gray-200 last:border-0">
+                  <div className="w-[140px] h-[100px] bg-gray-200 shrink-0 overflow-hidden relative rounded-sm">
+                    {post.image ? (
+                      <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-primary/10" />
+                    )}
+                    {post.videoUrl && (
+                      <div className="absolute bottom-2 right-2 bg-blue-600 rounded-full w-10 h-10 flex items-center justify-center shadow-md">
+                        <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <span className="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide">{section?.title}</span>
+                    <h3 className="text-base font-bold leading-snug text-gray-900 group-hover:text-primary transition-colors line-clamp-3">{post.title}</h3>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Grid Stories */}
+          <div className="space-y-4 mb-8">
+            {gridStories.map((post) => {
+              const section = navSections.find((s) => s.slug === post.section);
+              return (
+                <Link key={post.id} to={`/${post.section}/${post.category}/${post.id}`} className="group flex gap-3 pb-4 border-b border-gray-200 last:border-0">
+                  <div className="w-[140px] h-[100px] bg-gray-200 shrink-0 overflow-hidden relative rounded-sm">
+                    {post.image ? (
+                      <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-primary/10" />
+                    )}
+                    {post.videoUrl && (
+                      <div className="absolute bottom-2 right-2 bg-blue-600 rounded-full w-10 h-10 flex items-center justify-center shadow-md">
+                        <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <span className="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide">{section?.title}</span>
+                    <h3 className="text-base font-bold leading-snug text-gray-900 group-hover:text-primary transition-colors line-clamp-3">{post.title}</h3>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* First 2 Sections on Mobile */}
+          {sections.slice(0, 2).map((section) => {
+            const sectionPosts = sortedPosts.filter((p) => p.section === section.slug);
+            if (sectionPosts.length === 0) return null;
+
+            const pinnedPosts = sectionPosts.filter(p => p.isPinned).slice(0, 1);
+            const regularPosts = sectionPosts.filter(p => !p.isPinned).slice(0, 12);
+            const mobileHero = pinnedPosts.length > 0 ? [pinnedPosts[0]] : [regularPosts[0]];
+            const mobileGridPosts = pinnedPosts.length >= 1 ? regularPosts.slice(0, 10) : regularPosts.slice(1, 11);
+
+            return (
+              <div key={section.slug} className="mb-8">
+                <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-primary">{section.title}</h2>
+                {mobileHero[0] && (
+                  <div className="mb-4">
+                    <Link to={`/${mobileHero[0].section}/${mobileHero[0].category}/${mobileHero[0].id}`} className="group block">
+                      <div className="aspect-video bg-gray-200 overflow-hidden mb-2 relative rounded-sm">
+                        {mobileHero[0].image ? (
+                          <img src={mobileHero[0].image} alt={mobileHero[0].title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-primary/10" />
+                        )}
+                        {mobileHero[0].videoUrl && (
+                          <div className="absolute bottom-2 right-2 bg-blue-600 rounded-full w-11 h-11 flex items-center justify-center shadow-lg">
+                            <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                          </div>
+                        )}
+                        {mobileHero[0].isPinned && (
+                          <div className="absolute top-2 left-2 bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded">FEATURED</div>
+                        )}
+                      </div>
+                      <span className="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide block">{section.title}</span>
+                      <h3 className="text-base font-bold leading-snug mb-1 text-gray-900 group-hover:text-primary transition-colors">{mobileHero[0].title}</h3>
+                    </Link>
+                  </div>
+                )}
+                <div className="space-y-4 mb-4">
+                  {mobileGridPosts.map((post) => (
+                    <Link key={post.id} to={`/${post.section}/${post.category}/${post.id}`} className="group flex gap-3 pb-4 border-b border-gray-200 last:border-0">
+                      <div className="w-[140px] h-[100px] bg-gray-200 shrink-0 overflow-hidden relative rounded-sm">
+                        {post.image ? (
+                          <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-primary/10" />
+                        )}
+                        {post.videoUrl && (
+                          <div className="absolute bottom-2 right-2 bg-blue-600 rounded-full w-10 h-10 flex items-center justify-center shadow-md">
+                            <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 flex flex-col justify-center">
+                        <span className="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide">{section.title}</span>
+                        <h3 className="text-base font-bold leading-snug text-gray-900 group-hover:text-primary transition-colors line-clamp-3">{post.title}</h3>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+                <div className="text-center">
+                  <Link to={`/${section.slug}`} className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white font-semibold px-5 py-2 rounded text-sm transition-colors">
+                    View All {section.title}
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </Link>
                 </div>
+              </div>
+            );
+          })}
 
-                {/* DESKTOP HERO - Original layout */}
-                <div className="hidden md:grid md:grid-cols-[2fr_1fr] gap-3 mb-4">
-                  {/* Large Story */}
-                  <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group">
-                    <h1 className="text-2xl font-bold leading-tight mb-2 group-hover:text-primary transition-colors">
-                      {heroPost.title}
-                    </h1>
-                    <p className="text-gray-600 text-sm leading-relaxed mb-2">
-                      {heroPost.standfirst}
-                    </p>
-                  </Link>
-
-                  {/* Hero Image */}
-                  <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group">
-                    <div className="aspect-[16/9] bg-gray-200 overflow-hidden relative">
-                      {heroPost.image ? (
-                        <img
-                          src={heroPost.image}
-                          alt={heroPost.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-primary/10" />
-                      )}
-                      {heroPost.videoUrl && (
-                        <div className="absolute bottom-2 right-2 bg-primary rounded-full w-10 h-10 flex items-center justify-center">
-                          <Play className="w-4 h-4 text-white fill-white ml-0.5" />
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                </div>
-              </>
-            )}
-
-            {/* TOP STORIES - Mobile: Horizontal cards | Desktop: 3 column grid */}
-            {/* MOBILE - Horizontal cards with thumbnail left */}
-            <div className="space-y-4 mb-8 md:hidden">
-              {topStories.map((post) => {
+          {/* Just In Sidebar - Mobile */}
+          <div className="bg-white border border-gray-200 mb-8">
+            <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+              <h2 className="font-bold text-sm">Just in</h2>
+            </div>
+            <div className="divide-y divide-gray-200 max-h-[600px] overflow-y-auto">
+              {justInPosts.map((post) => {
                 const section = navSections.find((s) => s.slug === post.section);
                 return (
-                  <Link
-                    key={post.id}
-                    to={`/${post.section}/${post.category}/${post.id}`}
-                    className="group flex gap-3 pb-4 border-b border-gray-200 last:border-0"
-                  >
-                    {/* Thumbnail - Square on left */}
-                    <div className="w-[140px] h-[100px] bg-gray-200 shrink-0 overflow-hidden relative rounded-sm">
-                      {post.image ? (
-                        <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-primary/10" />
-                      )}
-                      {post.videoUrl && (
-                        <div className="absolute bottom-2 right-2 bg-blue-600 rounded-full w-10 h-10 flex items-center justify-center shadow-md">
-                          <Play className="w-4 h-4 text-white fill-white ml-0.5" />
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Text content on right */}
-                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                      <span className="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide">
-                        {section?.title}
+                  <Link key={post.id} to={`/${post.section}/${post.category}/${post.id}`} className="block p-4 hover:bg-gray-50 transition-colors group">
+                    <div className="flex items-start gap-2 mb-2">
+                      <span className="text-xs text-gray-500 shrink-0">
+                        {new Date(post.publishedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                       </span>
-                      <h3 className="text-base font-bold leading-snug text-gray-900 group-hover:text-primary transition-colors line-clamp-3">
-                        {post.title}
-                      </h3>
+                      <span className="text-xs font-bold text-primary uppercase">{section?.title}</span>
                     </div>
+                    <h3 className="text-sm font-semibold leading-snug group-hover:text-primary transition-colors">{post.title}</h3>
                   </Link>
                 );
               })}
             </div>
+            <div className="p-4 border-t border-gray-200 text-center">
+              <Link to="/latest" className="text-sm text-primary font-semibold hover:underline">See more →</Link>
+            </div>
+          </div>
+
+          {/* Remaining Sections on Mobile - After Just In */}
+          {sections.slice(2).map((section) => {
+            const sectionPosts = sortedPosts.filter((p) => p.section === section.slug);
+            if (sectionPosts.length === 0) return null;
+
+            const pinnedPosts = sectionPosts.filter(p => p.isPinned).slice(0, 1);
+            const regularPosts = sectionPosts.filter(p => !p.isPinned).slice(0, 12);
+            const mobileHero = pinnedPosts.length > 0 ? [pinnedPosts[0]] : [regularPosts[0]];
+            const mobileGridPosts = pinnedPosts.length >= 1 ? regularPosts.slice(0, 10) : regularPosts.slice(1, 11);
+
+            return (
+              <div key={section.slug} className="mb-8">
+                <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-primary">{section.title}</h2>
+                {mobileHero[0] && (
+                  <div className="mb-4">
+                    <Link to={`/${mobileHero[0].section}/${mobileHero[0].category}/${mobileHero[0].id}`} className="group block">
+                      <div className="aspect-video bg-gray-200 overflow-hidden mb-2 relative rounded-sm">
+                        {mobileHero[0].image ? (
+                          <img src={mobileHero[0].image} alt={mobileHero[0].title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-primary/10" />
+                        )}
+                        {mobileHero[0].videoUrl && (
+                          <div className="absolute bottom-2 right-2 bg-blue-600 rounded-full w-11 h-11 flex items-center justify-center shadow-lg">
+                            <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                          </div>
+                        )}
+                        {mobileHero[0].isPinned && (
+                          <div className="absolute top-2 left-2 bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded">FEATURED</div>
+                        )}
+                      </div>
+                      <span className="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide block">{section.title}</span>
+                      <h3 className="text-base font-bold leading-snug mb-1 text-gray-900 group-hover:text-primary transition-colors">{mobileHero[0].title}</h3>
+                    </Link>
+                  </div>
+                )}
+                <div className="space-y-4 mb-4">
+                  {mobileGridPosts.map((post) => (
+                    <Link key={post.id} to={`/${post.section}/${post.category}/${post.id}`} className="group flex gap-3 pb-4 border-b border-gray-200 last:border-0">
+                      <div className="w-[140px] h-[100px] bg-gray-200 shrink-0 overflow-hidden relative rounded-sm">
+                        {post.image ? (
+                          <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-primary/10" />
+                        )}
+                        {post.videoUrl && (
+                          <div className="absolute bottom-2 right-2 bg-blue-600 rounded-full w-10 h-10 flex items-center justify-center shadow-md">
+                            <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 flex flex-col justify-center">
+                        <span className="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide">{section.title}</span>
+                        <h3 className="text-base font-bold leading-snug text-gray-900 group-hover:text-primary transition-colors line-clamp-3">{post.title}</h3>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+                <div className="text-center">
+                  <Link to={`/${section.slug}`} className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white font-semibold px-5 py-2 rounded text-sm transition-colors">
+                    View All {section.title}
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Videos Section - Mobile */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold mb-4">Latest Videos & Podcasts</h2>
+            <div className="grid grid-cols-2 gap-4">
+              {mediaItems.slice(0, 8).map((media) => (
+                <div key={media.id} className="bg-white rounded overflow-hidden border border-gray-200 hover:shadow-md transition-shadow">
+                  <button onClick={() => setActiveMedia(media)} className="group block w-full text-left">
+                    <div className="aspect-video bg-gray-900 overflow-hidden relative">
+                      {media.thumbnail ? (
+                        <img src={media.thumbnail} alt={media.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className={`w-full h-full ${media.type === 'video' ? 'bg-gradient-to-br from-blue-900 to-blue-700' : 'bg-gradient-to-br from-purple-900 to-purple-700'}`}>
+                          <div className="flex items-center justify-center h-full">
+                            {media.type === 'video' ? (
+                              <Video className="w-20 h-20 text-white/30" />
+                            ) : (
+                              <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center">
+                                <div className="w-10 h-10 rounded-full bg-white/40"></div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {media.isPremium && (
+                        <div className="absolute top-2 left-2 z-10">
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-primary text-white text-[10px] font-bold">
+                            <Crown className="w-2.5 h-2.5" />
+                            PREMIUM
+                          </span>
+                        </div>
+                      )}
+                      <div className="absolute bottom-2 right-2">
+                        <div className={`rounded-full w-9 h-9 flex items-center justify-center ${media.isPremium ? 'bg-primary' : 'bg-blue-600'}`}>
+                          {media.isPremium ? (
+                            <Lock className="w-4 h-4 text-white" />
+                          ) : (
+                            <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3 pb-2">
+                      <h3 className="font-bold text-xs leading-tight mb-2 text-gray-900 line-clamp-2 min-h-[32px] flex items-start gap-1.5">
+                        <span className="flex-1">{media.title}</span>
+                        {media.isPremium && <Crown className="w-3 h-3 text-primary flex-shrink-0 mt-0.5" />}
+                      </h3>
+                    </div>
+                  </button>
+                  <div className="px-3 pb-3">
+                    <button onClick={() => setActiveMedia(media)} className={`text-[10px] font-bold uppercase tracking-wide ${media.isPremium ? 'text-primary hover:text-primary/80' : 'text-blue-600 hover:text-blue-700'}`}>
+                      {media.isPremium ? (
+                        <span className="flex items-center gap-0.5">
+                          <Lock className="w-2.5 h-2.5" />
+                          UNLOCK
+                        </span>
+                      ) : (
+                        'MORE'
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="text-center mt-6">
+              <Link to="/media" className="inline-flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold px-5 py-2 rounded text-sm transition-colors">
+                View All Videos & Podcasts
+                <Play className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* DESKTOP LAYOUT - Original two-column layout */}
+        <div className="hidden lg:grid lg:grid-cols-[1fr_320px] gap-6">
+          {/* LEFT COLUMN - Main Content */}
+          <div>
+            {/* DESKTOP HERO - Original layout */}
+            {heroPost && (
+              <div className="grid grid-cols-[2fr_1fr] gap-3 mb-4">
+                <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group">
+                  <h1 className="text-2xl font-bold leading-tight mb-2 group-hover:text-primary transition-colors">
+                    {heroPost.title}
+                  </h1>
+                  <p className="text-gray-600 text-sm leading-relaxed mb-2">
+                    {heroPost.standfirst}
+                  </p>
+                </Link>
+                <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group">
+                  <div className="aspect-[16/9] bg-gray-200 overflow-hidden relative">
+                    {heroPost.image ? (
+                      <img src={heroPost.image} alt={heroPost.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <div className="w-full h-full bg-primary/10" />
+                    )}
+                    {heroPost.videoUrl && (
+                      <div className="absolute bottom-2 right-2 bg-primary rounded-full w-10 h-10 flex items-center justify-center">
+                        <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              </div>
+            )}
 
             {/* DESKTOP - 3 column grid */}
-            <div className="hidden md:grid md:grid-cols-3 gap-3 mb-6">
+            <div className="grid grid-cols-3 gap-3 mb-6">
               {topStories.map((post) => {
                 const section = navSections.find((s) => s.slug === post.section);
                 return (
-                  <Link
-                    key={post.id}
-                    to={`/${post.section}/${post.category}/${post.id}`}
-                    className="group"
-                  >
+                  <Link key={post.id} to={`/${post.section}/${post.category}/${post.id}`} className="group">
                     <div className="aspect-video bg-gray-200 overflow-hidden mb-1.5 relative">
                       {post.image ? (
                         <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
@@ -338,66 +573,19 @@ const Index = () => {
                         </div>
                       )}
                     </div>
-                    <span className="text-[10px] font-bold text-primary uppercase block mb-0.5">
-                      {section?.title}
-                    </span>
-                    <h3 className="text-xs font-bold leading-tight group-hover:text-primary transition-colors">
-                      {post.title}
-                    </h3>
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* GRID STORIES - Mobile: Horizontal cards | Desktop: 2 column grid */}
-            {/* MOBILE - Horizontal cards */}
-            <div className="space-y-4 mb-8 md:hidden">
-              {gridStories.map((post) => {
-                const section = navSections.find((s) => s.slug === post.section);
-                return (
-                  <Link
-                    key={post.id}
-                    to={`/${post.section}/${post.category}/${post.id}`}
-                    className="group flex gap-3 pb-4 border-b border-gray-200 last:border-0"
-                  >
-                    {/* Thumbnail - Square on left */}
-                    <div className="w-[140px] h-[100px] bg-gray-200 shrink-0 overflow-hidden relative rounded-sm">
-                      {post.image ? (
-                        <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-primary/10" />
-                      )}
-                      {post.videoUrl && (
-                        <div className="absolute bottom-2 right-2 bg-blue-600 rounded-full w-10 h-10 flex items-center justify-center shadow-md">
-                          <Play className="w-4 h-4 text-white fill-white ml-0.5" />
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Text content on right */}
-                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                      <span className="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide">
-                        {section?.title}
-                      </span>
-                      <h3 className="text-base font-bold leading-snug text-gray-900 group-hover:text-primary transition-colors line-clamp-3">
-                        {post.title}
-                      </h3>
-                    </div>
+                    <span className="text-[10px] font-bold text-primary uppercase block mb-0.5">{section?.title}</span>
+                    <h3 className="text-xs font-bold leading-tight group-hover:text-primary transition-colors">{post.title}</h3>
                   </Link>
                 );
               })}
             </div>
 
             {/* DESKTOP - 2 column grid */}
-            <div className="hidden md:grid md:grid-cols-2 gap-x-4 gap-y-3 mb-6">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3 mb-6">
               {gridStories.map((post) => {
                 const section = navSections.find((s) => s.slug === post.section);
                 return (
-                  <Link
-                    key={post.id}
-                    to={`/${post.section}/${post.category}/${post.id}`}
-                    className="group flex gap-2.5"
-                  >
+                  <Link key={post.id} to={`/${post.section}/${post.category}/${post.id}`} className="group flex gap-2.5">
                     <div className="w-28 h-20 bg-gray-200 shrink-0 overflow-hidden relative">
                       {post.image ? (
                         <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
@@ -411,194 +599,88 @@ const Index = () => {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-[10px] font-bold text-gray-500 uppercase block mb-0.5">
-                        {section?.title}
-                      </span>
-                      <h3 className="text-xs font-bold leading-tight group-hover:text-primary transition-colors line-clamp-3">
-                        {post.title}
-                      </h3>
+                      <span className="text-[10px] font-bold text-gray-500 uppercase block mb-0.5">{section?.title}</span>
+                      <h3 className="text-xs font-bold leading-tight group-hover:text-primary transition-colors line-clamp-3">{post.title}</h3>
                     </div>
                   </Link>
                 );
               })}
             </div>
 
-            {/* SECTION BLOCKS - Mobile: Euronews style | Desktop: Original */}
+            {/* SECTION BLOCKS - Desktop Original */}
             {sections.map((section) => {
               const sectionPosts = sortedPosts.filter((p) => p.section === section.slug);
-              
               if (sectionPosts.length === 0) return null;
 
-              // Get pinned posts for heroes (max 1 for mobile, 2 for desktop)
               const pinnedPosts = sectionPosts.filter(p => p.isPinned).slice(0, 2);
-              
-              // Get regular posts for grid (exclude pinned)
               const regularPosts = sectionPosts.filter(p => !p.isPinned).slice(0, 12);
-              
-              // Mobile: 1 hero, Desktop: 2 heroes
-              const mobileHero = pinnedPosts.length > 0 ? [pinnedPosts[0]] : [regularPosts[0]];
               const desktopHeroes = [...pinnedPosts];
               if (desktopHeroes.length < 2 && regularPosts.length > 0) {
                 const needed = 2 - desktopHeroes.length;
                 desktopHeroes.push(...regularPosts.slice(0, needed));
               }
-              
-              // Grid posts (skip the ones used as heroes if they weren't pinned)
-              const mobileGridPosts = pinnedPosts.length >= 1 
-                ? regularPosts.slice(0, 10)
-                : regularPosts.slice(1, 11);
-                
-              const desktopGridPosts = pinnedPosts.length >= 2 
-                ? regularPosts 
-                : regularPosts.slice(2 - pinnedPosts.length);
+              const desktopGridPosts = pinnedPosts.length >= 2 ? regularPosts : regularPosts.slice(2 - pinnedPosts.length);
 
               return (
                 <div key={section.slug} className="mb-8">
-                  {/* Section Title */}
-                  <h2 className="text-xl md:text-2xl font-bold mb-4 pb-2 border-b-2 border-primary">
-                    {section.title}
-                  </h2>
-                  
-                  {/* MOBILE LAYOUT */}
-                  <div className="md:hidden">
-                    {/* 1 HERO POST - Image on top, text below */}
-                    {mobileHero[0] && (
-                      <div className="mb-4">
-                        <Link
-                          to={`/${mobileHero[0].section}/${mobileHero[0].category}/${mobileHero[0].id}`}
-                          className="group block"
-                        >
-                          <div className="aspect-video bg-gray-200 overflow-hidden mb-2 relative rounded-sm">
-                            {mobileHero[0].image ? (
-                              <img 
-                                src={mobileHero[0].image} 
-                                alt={mobileHero[0].title} 
-                                className="w-full h-full object-cover" 
-                              />
+                  <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-primary">{section.title}</h2>
+                  {desktopHeroes.length > 0 && (
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      {desktopHeroes.map((post) => (
+                        <Link key={post.id} to={`/${post.section}/${post.category}/${post.id}`} className="group">
+                          <div className="aspect-video bg-gray-200 overflow-hidden mb-2 relative">
+                            {post.image ? (
+                              <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                             ) : (
                               <div className="w-full h-full bg-primary/10" />
                             )}
-                            {mobileHero[0].videoUrl && (
-                              <div className="absolute bottom-2 right-2 bg-blue-600 rounded-full w-11 h-11 flex items-center justify-center shadow-lg">
-                                <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                            {post.videoUrl && (
+                              <div className="absolute bottom-1.5 right-1.5 bg-primary rounded-full w-9 h-9 flex items-center justify-center">
+                                <Play className="w-4 h-4 text-white fill-white ml-0.5" />
                               </div>
                             )}
-                            {mobileHero[0].isPinned && (
-                              <div className="absolute top-2 left-2 bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                                FEATURED
-                              </div>
+                            {post.isPinned && (
+                              <div className="absolute top-1.5 left-1.5 bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded">FEATURED</div>
                             )}
                           </div>
-                          <span className="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide block">
-                            {section.title}
-                          </span>
-                          <h3 className="text-base font-bold leading-snug mb-1 text-gray-900 group-hover:text-primary transition-colors">
-                            {mobileHero[0].title}
-                          </h3>
+                          <h3 className="text-sm font-bold leading-tight group-hover:text-primary transition-colors mb-1">{post.title}</h3>
+                          <p className="text-xs text-gray-600 line-clamp-2">{post.standfirst}</p>
                         </Link>
-                      </div>
-                    )}
-                    
-                    {/* HORIZONTAL CARDS - Thumbnail left, text right */}
-                    <div className="space-y-4 mb-4">
-                      {mobileGridPosts.map((post) => (
-                        <Link
-                          key={post.id}
-                          to={`/${post.section}/${post.category}/${post.id}`}
-                          className="group flex gap-3 pb-4 border-b border-gray-200 last:border-0"
-                        >
-                          <div className="w-[140px] h-[100px] bg-gray-200 shrink-0 overflow-hidden relative rounded-sm">
+                      ))}
+                    </div>
+                  )}
+                  {desktopGridPosts.length > 0 && (
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                      {desktopGridPosts.slice(0, 12).map((post) => (
+                        <Link key={post.id} to={`/${post.section}/${post.category}/${post.id}`} className="group">
+                          <div className="aspect-video bg-gray-200 overflow-hidden mb-1.5 relative">
                             {post.image ? (
                               <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full bg-primary/10" />
                             )}
                             {post.videoUrl && (
-                              <div className="absolute bottom-2 right-2 bg-blue-600 rounded-full w-10 h-10 flex items-center justify-center shadow-md">
-                                <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                              <div className="absolute bottom-1 right-1 bg-primary rounded-full w-7 h-7 flex items-center justify-center">
+                                <Play className="w-2.5 h-2.5 text-white fill-white ml-0.5" />
                               </div>
                             )}
                           </div>
-                          <div className="flex-1 min-w-0 flex flex-col justify-center">
-                            <span className="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide">
-                              {section.title}
-                            </span>
-                            <h3 className="text-base font-bold leading-snug text-gray-900 group-hover:text-primary transition-colors line-clamp-3">
-                              {post.title}
-                            </h3>
-                          </div>
+                          <h3 className="text-xs font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2">{post.title}</h3>
                         </Link>
                       ))}
                     </div>
+                  )}
+                  <div className="text-center">
+                    <Link to={`/${section.slug}`} className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white font-semibold px-5 py-2 rounded text-sm transition-colors">
+                      View All {section.title}
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </Link>
                   </div>
-
-                  {/* DESKTOP LAYOUT - Original */}
-                  <div className="hidden md:block">
-                    {/* 2 HERO POSTS */}
-                    {desktopHeroes.length > 0 && (
-                      <div className="grid grid-cols-2 gap-4 mb-4">
-                        {desktopHeroes.map((post) => (
-                          <Link
-                            key={post.id}
-                            to={`/${post.section}/${post.category}/${post.id}`}
-                            className="group"
-                          >
-                            <div className="aspect-video bg-gray-200 overflow-hidden mb-2 relative">
-                              {post.image ? (
-                                <img 
-                                  src={post.image} 
-                                  alt={post.title} 
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-primary/10" />
-                              )}
-                              {post.videoUrl && (
-                                <div className="absolute bottom-1.5 right-1.5 bg-primary rounded-full w-9 h-9 flex items-center justify-center">
-                                  <Play className="w-4 h-4 text-white fill-white ml-0.5" />
-                                </div>
-                              )}
-                              {post.isPinned && (
-                                <div className="absolute top-1.5 left-1.5 bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                                  FEATURED
-                                </div>
-                              )}
-                            </div>
-                            <h3 className="text-sm font-bold leading-tight group-hover:text-primary transition-colors mb-1">
-                              {post.title}
-                            </h3>
-                            <p className="text-xs text-gray-600 line-clamp-2">
-                              {post.standfirst}
-                            </p>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {/* 12 GRID POSTS (3 rows × 4 columns) */}
-                    {desktopGridPosts.length > 0 && (
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-                        {desktopGridPosts.slice(0, 12).map((post) => (
-                          <Link
-                            key={post.id}
-                            to={`/${post.section}/${post.category}/${post.id}`}
-                            className="group"
-                          >
-                            <div className="aspect-video bg-gray-200 overflow-hidden mb-1.5 relative">
-                              {post.image ? (
-                                <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full bg-primary/10" />
-                              )}
-                              {post.videoUrl && (
-                                <div className="absolute bottom-1 right-1 bg-primary rounded-full w-7 h-7 flex items-center justify-center">
-                                  <Play className="w-2.5 h-2.5 text-white fill-white ml-0.5" />
-                                </div>
-                              )}
-                            </div>
-                            <h3 className="text-xs font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2">
-                              {post.title}
-                            </h3>
+                </div>
+              );
+            })}
                           </Link>
                         ))}
                       </div>
