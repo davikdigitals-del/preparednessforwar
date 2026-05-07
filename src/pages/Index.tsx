@@ -208,44 +208,116 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
           {/* LEFT COLUMN - Main Content */}
           <div>
-            {/* HERO SECTION */}
+            {/* HERO SECTION - Mobile: Euronews style (image top, text below) | Desktop: Original (text left, image right) */}
             {heroPost && (
-              <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-3 mb-4">
-                {/* Large Story */}
-                <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group">
-                  <h1 className="text-2xl font-bold leading-tight mb-2 group-hover:text-primary transition-colors">
-                    {heroPost.title}
-                  </h1>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-2">
-                    {heroPost.standfirst}
-                  </p>
-                </Link>
+              <>
+                {/* MOBILE HERO - Euronews style */}
+                <div className="mb-5 md:hidden">
+                  <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group block">
+                    {/* Hero Image */}
+                    <div className="aspect-[16/9] bg-gray-200 overflow-hidden relative mb-3 rounded-sm">
+                      {heroPost.image ? (
+                        <img
+                          src={heroPost.image}
+                          alt={heroPost.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-primary/10" />
+                      )}
+                      {heroPost.videoUrl && (
+                        <div className="absolute bottom-3 right-3 bg-blue-600 rounded-full w-12 h-12 flex items-center justify-center shadow-lg">
+                          <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Hero Text */}
+                    <h1 className="text-xl font-bold leading-tight mb-2 text-gray-900 group-hover:text-primary transition-colors">
+                      {heroPost.title}
+                    </h1>
+                    <p className="text-gray-600 text-sm leading-relaxed">
+                      {heroPost.standfirst}
+                    </p>
+                  </Link>
+                </div>
 
-                {/* Hero Image */}
-                <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group">
-                  <div className="aspect-[16/9] bg-gray-200 overflow-hidden relative">
-                    {heroPost.image ? (
-                      <img
-                        src={heroPost.image}
-                        alt={heroPost.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-primary/10" />
-                    )}
-                    {/* Only show play button if post has video_url */}
-                    {heroPost.videoUrl && (
-                      <div className="absolute bottom-2 right-2 bg-primary rounded-full w-10 h-10 flex items-center justify-center">
-                        <Play className="w-4 h-4 text-white fill-white ml-0.5" />
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              </div>
+                {/* DESKTOP HERO - Original layout */}
+                <div className="hidden md:grid md:grid-cols-[2fr_1fr] gap-3 mb-4">
+                  {/* Large Story */}
+                  <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group">
+                    <h1 className="text-2xl font-bold leading-tight mb-2 group-hover:text-primary transition-colors">
+                      {heroPost.title}
+                    </h1>
+                    <p className="text-gray-600 text-sm leading-relaxed mb-2">
+                      {heroPost.standfirst}
+                    </p>
+                  </Link>
+
+                  {/* Hero Image */}
+                  <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group">
+                    <div className="aspect-[16/9] bg-gray-200 overflow-hidden relative">
+                      {heroPost.image ? (
+                        <img
+                          src={heroPost.image}
+                          alt={heroPost.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-primary/10" />
+                      )}
+                      {heroPost.videoUrl && (
+                        <div className="absolute bottom-2 right-2 bg-primary rounded-full w-10 h-10 flex items-center justify-center">
+                          <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                </div>
+              </>
             )}
 
-            {/* 3 TOP STORIES */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+            {/* TOP STORIES - Mobile: Horizontal cards | Desktop: 3 column grid */}
+            {/* MOBILE - Horizontal cards with thumbnail left */}
+            <div className="space-y-4 mb-8 md:hidden">
+              {topStories.map((post) => {
+                const section = navSections.find((s) => s.slug === post.section);
+                return (
+                  <Link
+                    key={post.id}
+                    to={`/${post.section}/${post.category}/${post.id}`}
+                    className="group flex gap-3 pb-4 border-b border-gray-200 last:border-0"
+                  >
+                    {/* Thumbnail - Square on left */}
+                    <div className="w-[140px] h-[100px] bg-gray-200 shrink-0 overflow-hidden relative rounded-sm">
+                      {post.image ? (
+                        <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-primary/10" />
+                      )}
+                      {post.videoUrl && (
+                        <div className="absolute bottom-2 right-2 bg-blue-600 rounded-full w-10 h-10 flex items-center justify-center shadow-md">
+                          <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Text content on right */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <span className="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide">
+                        {section?.title}
+                      </span>
+                      <h3 className="text-base font-bold leading-snug text-gray-900 group-hover:text-primary transition-colors line-clamp-3">
+                        {post.title}
+                      </h3>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* DESKTOP - 3 column grid */}
+            <div className="hidden md:grid md:grid-cols-3 gap-3 mb-6">
               {topStories.map((post) => {
                 const section = navSections.find((s) => s.slug === post.section);
                 return (
@@ -260,7 +332,6 @@ const Index = () => {
                       ) : (
                         <div className="w-full h-full bg-primary/10" />
                       )}
-                      {/* Only show play button if post has video_url */}
                       {post.videoUrl && (
                         <div className="absolute bottom-1.5 right-1.5 bg-primary rounded-full w-8 h-8 flex items-center justify-center">
                           <Play className="w-3.5 h-3.5 text-white fill-white ml-0.5" />
@@ -278,8 +349,47 @@ const Index = () => {
               })}
             </div>
 
-            {/* GRID OF STORIES (2 columns side by side) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 mb-6">
+            {/* GRID STORIES - Mobile: Horizontal cards | Desktop: 2 column grid */}
+            {/* MOBILE - Horizontal cards */}
+            <div className="space-y-4 mb-8 md:hidden">
+              {gridStories.map((post) => {
+                const section = navSections.find((s) => s.slug === post.section);
+                return (
+                  <Link
+                    key={post.id}
+                    to={`/${post.section}/${post.category}/${post.id}`}
+                    className="group flex gap-3 pb-4 border-b border-gray-200 last:border-0"
+                  >
+                    {/* Thumbnail - Square on left */}
+                    <div className="w-[140px] h-[100px] bg-gray-200 shrink-0 overflow-hidden relative rounded-sm">
+                      {post.image ? (
+                        <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-primary/10" />
+                      )}
+                      {post.videoUrl && (
+                        <div className="absolute bottom-2 right-2 bg-blue-600 rounded-full w-10 h-10 flex items-center justify-center shadow-md">
+                          <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Text content on right */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <span className="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide">
+                        {section?.title}
+                      </span>
+                      <h3 className="text-base font-bold leading-snug text-gray-900 group-hover:text-primary transition-colors line-clamp-3">
+                        {post.title}
+                      </h3>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* DESKTOP - 2 column grid */}
+            <div className="hidden md:grid md:grid-cols-2 gap-x-4 gap-y-3 mb-6">
               {gridStories.map((post) => {
                 const section = navSections.find((s) => s.slug === post.section);
                 return (
@@ -294,7 +404,6 @@ const Index = () => {
                       ) : (
                         <div className="w-full h-full bg-primary/10" />
                       )}
-                      {/* Only show play button if post has video_url */}
                       {post.videoUrl && (
                         <div className="absolute bottom-1 right-1 bg-primary rounded-full w-7 h-7 flex items-center justify-center">
                           <Play className="w-2.5 h-2.5 text-white fill-white ml-0.5" />
