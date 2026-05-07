@@ -681,27 +681,6 @@ const Index = () => {
                 </div>
               );
             })}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* VIEW ALL BUTTON */}
-                  <div className="text-center">
-                    <Link
-                      to={`/${section.slug}`}
-                      className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white font-semibold px-5 py-2 rounded text-sm transition-colors"
-                    >
-                      View All {section.title}
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
 
             {/* VIDEO SECTION */}
             <div className="mb-8">
