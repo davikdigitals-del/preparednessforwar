@@ -77,27 +77,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let profile: any = null;
     let isAdmin = false;
 
-    try {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", supaUser.id)
-        .maybeSingle();
-      profile = data;
-    } catch { /* ignore */ }
+    // Try multiple times to get profile (handle race conditions)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", supaUser.id)
+          .maybeSingle();
+        
+        if (data && !error) {
+          profile = data;
+          break;
+        }
+        
+        if (attempt < 2) {
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
+      } catch (err) {
+        console.warn(`Profile fetch attempt ${attempt + 1} failed:`, err);
+      }
+    }
 
     // Check is_admin flag first (most reliable)
     if (profile?.is_admin === true) {
       isAdmin = true;
+      console.log("✅ Admin status confirmed from profile.is_admin");
+    } else if (profile?.role === "admin") {
+      isAdmin = true;
+      console.log("✅ Admin status confirmed from profile.role");
     } else {
+      // Fallback: check user_roles table
       try {
         const { data: roles } = await supabase
           .from("user_roles")
           .select("role")
           .eq("user_id", supaUser.id);
-        isAdmin = roles?.some((r: any) => r.role === "admin") ?? false;
-      } catch { /* ignore */ }
+        
+        if (roles?.some((r: any) => r.role === "admin")) {
+          isAdmin = true;
+          console.log("✅ Admin status confirmed from user_roles table");
+          
+          // Update profile to match
+          await supabase.from("profiles").update({
+            is_admin: true,
+            role: "admin"
+          }).eq("id", supaUser.id);
+        }
+      } catch (err) {
+        console.warn("Could not check user_roles:", err);
+      }
     }
+
+    console.log(`User ${supaUser.email} - isAdmin: ${isAdmin}, profile.is_admin: ${profile?.is_admin}, profile.role: ${profile?.role}`);
 
     return {
       id: supaUser.id,
@@ -136,7 +168,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session?.user?.email);
+      
       if (!session?.user) {
         setUser(null);
         setNotifications([]);
@@ -150,7 +184,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
+    // Initial session check
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log("Initial session check:", session?.user?.email);
+      
       if (!session?.user) {
         setLoading(false);
         return;
