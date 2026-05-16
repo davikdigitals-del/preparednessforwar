@@ -107,39 +107,60 @@ export default function AdminLoginPage() {
       console.log("Account created, waiting for auth to settle...");
       
       // Wait for auth lock to release
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       console.log("Setting admin role...");
 
       // Step 2: Set admin role using the user ID from signup
       const userId = signUpData.user.id;
       
-      const { error: profileError } = await supabase.from("profiles").upsert(
-        {
-          id: userId,
-          email: regEmail,
-          name: regName,
-          country: "GB",
-          is_admin: true,
-          role: "admin",
-        },
-        { onConflict: "id" }
-      );
+      // Try multiple times to ensure admin role is set
+      let profileSuccess = false;
+      let roleSuccess = false;
+      
+      for (let attempt = 0; attempt < 3; attempt++) {
+        console.log(`Setting admin role attempt ${attempt + 1}...`);
+        
+        // Set profile
+        const { error: profileError } = await supabase.from("profiles").upsert(
+          {
+            id: userId,
+            email: regEmail,
+            name: regName,
+            country: "GB",
+            is_admin: true,
+            role: "admin",
+          },
+          { onConflict: "id" }
+        );
 
-      if (profileError) {
-        console.error("Profile error:", profileError);
+        if (!profileError) {
+          console.log("Profile set successfully");
+          profileSuccess = true;
+        } else {
+          console.error(`Profile error (attempt ${attempt + 1}):`, profileError);
+        }
+        
+        // Set role
+        const { error: roleError } = await supabase.from("user_roles").upsert(
+          { user_id: userId, role: "admin" },
+          { onConflict: "user_id,role" }
+        );
+
+        if (!roleError) {
+          console.log("Role set successfully");
+          roleSuccess = true;
+        } else {
+          console.error(`Role error (attempt ${attempt + 1}):`, roleError);
+        }
+        
+        if (profileSuccess && roleSuccess) break;
+        
+        // Wait before retry
+        if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 1000));
       }
       
-      const { error: roleError } = await supabase.from("user_roles").upsert(
-        { user_id: userId, role: "admin" },
-        { onConflict: "user_id,role" }
-      );
-
-      if (roleError) {
-        console.error("Role error:", roleError);
-      }
-      
-      console.log("Admin role set, signing out...");
+      console.log("Admin role setting complete. Profile:", profileSuccess, "Role:", roleSuccess);
       
       // Wait before signing out
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -154,7 +175,13 @@ export default function AdminLoginPage() {
       setTab("login");
       setEmail(regEmail);
       setPassword(regPassword);
-      setError("✅ Admin account created successfully! Please sign in below.");
+      
+      if (profileSuccess && roleSuccess) {
+        setError("✅ Admin account created successfully! Please sign in below.");
+      } else {
+        setError("⚠️ Account created but admin role may need manual setup. Try logging in.");
+      }
+      
       console.log("Registration complete, switched to login tab");
     } catch (error: any) {
       console.error("Registration exception:", error);

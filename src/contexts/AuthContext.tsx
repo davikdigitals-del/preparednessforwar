@@ -217,13 +217,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log("Admin login attempt for:", email);
       
-      // Add timeout to prevent hanging
-      const loginPromise = supabase.auth.signInWithPassword({ email, password });
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Login timeout")), 10000)
-      );
-      
-      const { data, error } = await Promise.race([loginPromise, timeoutPromise]) as any;
+      // Step 1: Authenticate user
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error || !data.user) {
         console.error("Admin login failed:", error);
@@ -233,54 +228,82 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const uid = data.user.id;
       console.log("Admin login - User authenticated:", uid);
 
-      // Mark this user as admin in profiles (with timeout)
-      try {
-        const profilePromise = supabase.from("profiles").upsert(
-          {
-            id: uid,
-            email: data.user.email || "",
-            name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "Admin",
-            country: data.user.user_metadata?.country || "GB",
-            is_admin: true,
-            role: "admin",
-          },
-          { onConflict: "id" }
-        );
+      // Step 2: Force set admin role in profiles table
+      // Use multiple attempts to ensure it sticks
+      let profileUpdated = false;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const { error: profileError } = await supabase.from("profiles").upsert(
+            {
+              id: uid,
+              email: data.user.email || "",
+              name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "Admin",
+              country: data.user.user_metadata?.country || "GB",
+              is_admin: true,
+              role: "admin",
+            },
+            { onConflict: "id" }
+          );
+          
+          if (!profileError) {
+            console.log(`Admin profile updated successfully (attempt ${attempt + 1})`);
+            profileUpdated = true;
+            break;
+          } else {
+            console.warn(`Profile update attempt ${attempt + 1} failed:`, profileError);
+          }
+        } catch (err) {
+          console.warn(`Profile update attempt ${attempt + 1} error:`, err);
+        }
         
-        const profileTimeout = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Profile update timeout")), 5000)
-        );
-        
-        await Promise.race([profilePromise, profileTimeout]);
-        console.log("Admin profile updated successfully");
-      } catch (err) {
-        console.warn("Profile update error (non-critical):", err);
-        // Continue even if profile update fails
+        // Wait before retry
+        if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 500));
       }
 
-      // Ensure admin role in user_roles (with timeout)
-      try {
-        const rolePromise = supabase.from("user_roles").upsert(
-          { user_id: uid, role: "admin" },
-          { onConflict: "user_id,role" }
-        );
+      // Step 3: Force set admin role in user_roles table
+      let roleUpdated = false;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const { error: roleError } = await supabase.from("user_roles").upsert(
+            { user_id: uid, role: "admin" },
+            { onConflict: "user_id,role" }
+          );
+          
+          if (!roleError) {
+            console.log(`Admin role updated successfully (attempt ${attempt + 1})`);
+            roleUpdated = true;
+            break;
+          } else {
+            console.warn(`Role update attempt ${attempt + 1} failed:`, roleError);
+          }
+        } catch (err) {
+          console.warn(`Role update attempt ${attempt + 1} error:`, err);
+        }
         
-        const roleTimeout = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Role update timeout")), 5000)
-        );
-        
-        await Promise.race([rolePromise, roleTimeout]);
-        console.log("Admin role updated successfully");
-      } catch (err) {
-        console.warn("Role update error (non-critical):", err);
-        // Continue even if role update fails
+        // Wait before retry
+        if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 500));
       }
 
-      // Force refresh the user state
+      // Step 4: Verify admin role was set
+      const { data: verifyProfile } = await supabase
+        .from("profiles")
+        .select("is_admin, role")
+        .eq("id", uid)
+        .single();
+      
+      console.log("Admin role verification:", verifyProfile);
+
+      // Step 5: Force refresh the user state
       const built = await buildUser(data.user);
       setUser(built);
 
-      console.log("Admin login successful, user role:", built.role, "isAdmin:", built.role === "admin");
+      console.log("Admin login complete - Role:", built.role, "isAdmin:", built.role === "admin");
+      
+      // If role is still not admin, log warning but allow login
+      if (built.role !== "admin") {
+        console.error("WARNING: Admin role not set correctly. Profile update:", profileUpdated, "Role update:", roleUpdated);
+      }
+      
       return true;
     } catch (error) {
       console.error("Admin login exception:", error);
