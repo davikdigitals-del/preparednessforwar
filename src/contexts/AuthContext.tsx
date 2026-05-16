@@ -72,61 +72,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const buildUser = async (supaUser: SupabaseUser): Promise<User> => {
-    await ensureUserBootstrap(supaUser).catch(() => undefined);
-
+    // Simple read-only approach - just get data from database
     let profile: any = null;
     let isAdmin = false;
 
-    // Try multiple times to get profile (handle race conditions)
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", supaUser.id)
-          .maybeSingle();
-        
-        if (data && !error) {
-          profile = data;
-          break;
-        }
-        
-        if (attempt < 2) {
-          await new Promise(resolve => setTimeout(resolve, 300));
-        }
-      } catch (err) {
-        console.warn(`Profile fetch attempt ${attempt + 1} failed:`, err);
-      }
-    }
+    try {
+      // Single attempt to get profile
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", supaUser.id)
+        .maybeSingle();
+      
+      profile = data;
 
-    // Check is_admin flag first (most reliable)
-    if (profile?.is_admin === true) {
-      isAdmin = true;
-      console.log("✅ Admin status confirmed from profile.is_admin");
-    } else if (profile?.role === "admin") {
-      isAdmin = true;
-      console.log("✅ Admin status confirmed from profile.role");
-    } else {
-      // Fallback: check user_roles table
-      try {
-        const { data: roles } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", supaUser.id);
-        
-        if (roles?.some((r: any) => r.role === "admin")) {
-          isAdmin = true;
-          console.log("✅ Admin status confirmed from user_roles table");
-          
-          // Update profile to match
-          await supabase.from("profiles").update({
-            is_admin: true,
-            role: "admin"
-          }).eq("id", supaUser.id);
-        }
-      } catch (err) {
-        console.warn("Could not check user_roles:", err);
+      // Check admin status from profile
+      if (profile?.is_admin === true || profile?.role === "admin") {
+        isAdmin = true;
+        console.log("✅ Admin status confirmed:", profile.is_admin, profile.role);
       }
+    } catch (err) {
+      console.warn("Could not fetch profile:", err);
     }
 
     console.log(`User ${supaUser.email} - isAdmin: ${isAdmin}, profile.is_admin: ${profile?.is_admin}, profile.role: ${profile?.role}`);
@@ -168,24 +134,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session?.user?.email);
-      
-      if (!session?.user) {
-        setUser(null);
-        setNotifications([]);
-        setLoading(false);
-        return;
+    let mounted = true;
+    let debounceTimer: NodeJS.Timeout | null = null;
+
+    const handleAuthChange = async (event: string, session: any) => {
+      // Clear any pending debounce
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
       }
 
-      const built = await buildUser(session.user);
-      setUser(built);
-      await fetchNotifications(session.user.id);
-      setLoading(false);
-    });
+      // Debounce rapid auth state changes (prevents lock conflicts)
+      debounceTimer = setTimeout(async () => {
+        if (!mounted) return;
+
+        console.log("Auth state changed:", event, session?.user?.email);
+        
+        if (!session?.user) {
+          setUser(null);
+          setNotifications([]);
+          setLoading(false);
+          return;
+        }
+
+        const built = await buildUser(session.user);
+        if (mounted) {
+          setUser(built);
+          await fetchNotifications(session.user.id);
+          setLoading(false);
+        }
+      }, 100); // 100ms debounce
+    };
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthChange);
 
     // Initial session check
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted) return;
+
       console.log("Initial session check:", session?.user?.email);
       
       if (!session?.user) {
@@ -194,12 +179,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const built = await buildUser(session.user);
-      setUser(built);
-      await fetchNotifications(session.user.id);
-      setLoading(false);
+      if (mounted) {
+        setUser(built);
+        await fetchNotifications(session.user.id);
+        setLoading(false);
+      }
     });
 
-    return () => authListener.subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -254,7 +247,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log("Admin login attempt for:", email);
       
-      // Step 1: Authenticate user
+      // Simple login - no retries, no profile updates
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error || !data.user) {
@@ -262,85 +255,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false;
       }
 
-      const uid = data.user.id;
-      console.log("Admin login - User authenticated:", uid);
-
-      // Step 2: Force set admin role in profiles table
-      // Use multiple attempts to ensure it sticks
-      let profileUpdated = false;
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          const { error: profileError } = await supabase.from("profiles").upsert(
-            {
-              id: uid,
-              email: data.user.email || "",
-              name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "Admin",
-              country: data.user.user_metadata?.country || "GB",
-              is_admin: true,
-              role: "admin",
-            },
-            { onConflict: "id" }
-          );
-          
-          if (!profileError) {
-            console.log(`Admin profile updated successfully (attempt ${attempt + 1})`);
-            profileUpdated = true;
-            break;
-          } else {
-            console.warn(`Profile update attempt ${attempt + 1} failed:`, profileError);
-          }
-        } catch (err) {
-          console.warn(`Profile update attempt ${attempt + 1} error:`, err);
-        }
-        
-        // Wait before retry
-        if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 500));
-      }
-
-      // Step 3: Force set admin role in user_roles table
-      let roleUpdated = false;
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          const { error: roleError } = await supabase.from("user_roles").upsert(
-            { user_id: uid, role: "admin" },
-            { onConflict: "user_id,role" }
-          );
-          
-          if (!roleError) {
-            console.log(`Admin role updated successfully (attempt ${attempt + 1})`);
-            roleUpdated = true;
-            break;
-          } else {
-            console.warn(`Role update attempt ${attempt + 1} failed:`, roleError);
-          }
-        } catch (err) {
-          console.warn(`Role update attempt ${attempt + 1} error:`, err);
-        }
-        
-        // Wait before retry
-        if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 500));
-      }
-
-      // Step 4: Verify admin role was set
-      const { data: verifyProfile } = await supabase
-        .from("profiles")
-        .select("is_admin, role")
-        .eq("id", uid)
-        .single();
+      console.log("Admin login - User authenticated:", data.user.id);
       
-      console.log("Admin role verification:", verifyProfile);
-
-      // Step 5: Force refresh the user state
+      // Just build the user from database - don't try to update anything
       const built = await buildUser(data.user);
       setUser(built);
 
       console.log("Admin login complete - Role:", built.role, "isAdmin:", built.role === "admin");
-      
-      // If role is still not admin, log warning but allow login
-      if (built.role !== "admin") {
-        console.error("WARNING: Admin role not set correctly. Profile update:", profileUpdated, "Role update:", roleUpdated);
-      }
-      
       return true;
     } catch (error) {
       console.error("Admin login exception:", error);

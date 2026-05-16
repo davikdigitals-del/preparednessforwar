@@ -32,15 +32,33 @@ export default function AdminLayout() {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
+    // Set a maximum timeout for loading (5 seconds)
+    const timeout = setTimeout(() => {
+      if (isChecking) {
+        console.warn("Auth check timeout - forcing check completion");
+        setIsChecking(false);
+        
+        // If still no user after timeout, redirect to login
+        if (!user) {
+          navigate("/admin-login");
+        } else if (!isAdmin) {
+          console.warn("User not admin after timeout");
+          navigate("/");
+        }
+      }
+    }, 5000);
+
     // Wait for auth to finish loading
     if (authLoading) {
-      return;
+      return () => clearTimeout(timeout);
     }
 
     // If no user, redirect to login
     if (!user) {
+      console.log("No user found, redirecting to login");
       navigate("/admin-login");
       setIsChecking(false);
+      clearTimeout(timeout);
       return;
     }
     
@@ -49,12 +67,17 @@ export default function AdminLayout() {
       console.warn("Non-admin user attempted to access admin panel");
       navigate("/");
       setIsChecking(false);
+      clearTimeout(timeout);
       return;
     }
 
     // User is authenticated and is admin
+    console.log("✅ Admin access granted");
     setIsChecking(false);
-  }, [user, isAdmin, authLoading, navigate]);
+    clearTimeout(timeout);
+
+    return () => clearTimeout(timeout);
+  }, [user, isAdmin, authLoading, navigate, isChecking]);
 
   const handleSignOut = async () => {
     try {
