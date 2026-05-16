@@ -1,0 +1,149 @@
+═══════════════════════════════════════════════════════════════
+  ADMIN PORTAL TROUBLESHOOTING CHECKLIST
+═══════════════════════════════════════════════════════════════
+
+Please check each item and tell me which ones FAIL:
+
+═══════════════════════════════════════════════════════════════
+STEP 1: RENDER SERVICE STATUS
+═══════════════════════════════════════════════════════════════
+
+[ ] Go to: https://dashboard.render.com
+[ ] Service shows "Live" (green status)
+[ ] No build errors in logs
+[ ] Deployment completed successfully
+
+If any FAIL, share the error message.
+
+═══════════════════════════════════════════════════════════════
+STEP 2: ENVIRONMENT VARIABLES
+═══════════════════════════════════════════════════════════════
+
+In Render Dashboard → Environment, check these exist:
+
+[ ] VITE_SUPABASE_URL = https://xfbmpjgcfohewejdzlfw.supabase.co
+[ ] VITE_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+[ ] NODE_VERSION = 20.11.0
+
+If any MISSING, add them and redeploy.
+
+═══════════════════════════════════════════════════════════════
+STEP 3: ADMIN LOGIN PAGE
+═══════════════════════════════════════════════════════════════
+
+[ ] Go to: https://your-app.onrender.com/admin-login
+[ ] Page loads (not 404)
+[ ] See login form
+[ ] No errors in browser console (F12)
+
+If FAILS, what happens? _________________________________
+
+═══════════════════════════════════════════════════════════════
+STEP 4: ADMIN LOGIN ATTEMPT
+═══════════════════════════════════════════════════════════════
+
+[ ] Enter admin email and password
+[ ] Click "Login to Admin"
+[ ] Button shows "Authenticating..." (loading state)
+[ ] No errors in console
+
+If FAILS, what error shows? _________________________________
+
+═══════════════════════════════════════════════════════════════
+STEP 5: AFTER LOGIN - WHERE DOES IT GO?
+═══════════════════════════════════════════════════════════════
+
+After clicking login, it redirects to:
+
+[ ] /admin (correct - admin dashboard)
+[ ] / (wrong - homepage)
+[ ] /dashboard (wrong - member dashboard)
+[ ] /admin-login (wrong - stays on login page)
+[ ] Other: _________________________________
+
+═══════════════════════════════════════════════════════════════
+STEP 6: ADMIN DASHBOARD
+═══════════════════════════════════════════════════════════════
+
+If you reach /admin, what do you see?
+
+[ ] Full admin dashboard with sidebar
+[ ] Blank white page
+[ ] "Loading..." forever
+[ ] Error message: _________________________________
+[ ] Immediately redirects away
+
+═══════════════════════════════════════════════════════════════
+STEP 7: REFRESH TEST
+═══════════════════════════════════════════════════════════════
+
+On /admin page, press F5 to refresh:
+
+[ ] Stays on /admin (correct)
+[ ] Redirects to / (wrong)
+[ ] Redirects to /admin-login (wrong)
+[ ] Shows 404 error
+[ ] Shows blank page
+
+═══════════════════════════════════════════════════════════════
+STEP 8: BROWSER CONSOLE ERRORS
+═══════════════════════════════════════════════════════════════
+
+Press F12 → Console tab. Do you see:
+
+[ ] No errors (all clear)
+[ ] "Supabase client not initialized"
+[ ] "Cannot connect to Supabase"
+[ ] "Failed to fetch"
+[ ] "Network error"
+[ ] Other error: _________________________________
+
+═══════════════════════════════════════════════════════════════
+STEP 9: RENDER LOGS
+═══════════════════════════════════════════════════════════════
+
+In Render Dashboard → Logs, do you see:
+
+[ ] "Server is running on port" (good)
+[ ] "Build failed" (bad)
+[ ] "Cannot find module" (bad)
+[ ] "Error:" messages (bad)
+[ ] Other: _________________________________
+
+═══════════════════════════════════════════════════════════════
+STEP 10: DATABASE CHECK
+═══════════════════════════════════════════════════════════════
+
+Run in Supabase SQL Editor:
+
+SELECT email, is_admin, role FROM profiles WHERE email = 'your-email@example.com';
+
+Result:
+[ ] is_admin = true, role = admin (correct)
+[ ] is_admin = false or NULL (wrong - need to fix)
+[ ] No rows returned (user doesn't exist)
+
+═══════════════════════════════════════════════════════════════
+BASED ON YOUR ANSWERS, HERE'S THE FIX:
+═══════════════════════════════════════════════════════════════
+
+If STEP 2 fails (env vars missing):
+→ Add environment variables in Render
+→ Redeploy with "Clear build cache & deploy"
+
+If STEP 5 redirects to / or /dashboard:
+→ Run SQL: UPDATE profiles SET is_admin = true, role = 'admin' WHERE email = 'YOUR-EMAIL';
+
+If STEP 7 fails (redirects on refresh):
+→ Already fixed in code, just redeploy latest version
+
+If STEP 8 shows Supabase errors:
+→ Check environment variables are set
+→ Verify Supabase project is active
+
+If STEP 10 shows is_admin = false:
+→ Run SQL: UPDATE profiles SET is_admin = true, role = 'admin' WHERE email = 'YOUR-EMAIL';
+
+═══════════════════════════════════════════════════════════════
+
+TELL ME WHICH STEPS FAIL AND I'LL GIVE YOU THE EXACT FIX!
