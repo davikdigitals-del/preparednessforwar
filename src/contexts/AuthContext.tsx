@@ -256,8 +256,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const login = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return !error;
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error || !data.user) {
+        console.error("Login failed:", error);
+        return false;
+      }
+
+      // Explicitly build user to ensure state is set before navigation
+      const built = await buildUser(data.user);
+      setUser(built);
+      
+      console.log("Member login successful:", built.email, "role:", built.role);
+      return true;
+    } catch (error) {
+      console.error("Login exception:", error);
+      return false;
+    }
   };
 
   const adminLogin = async (email: string, password: string) => {

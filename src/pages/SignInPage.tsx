@@ -35,9 +35,16 @@ export default function SignInPage() {
     
     setLoading(true);
     const ok = await login(email, password);
+    
+    if (ok) {
+      // Small delay to ensure state propagates
+      await new Promise(resolve => setTimeout(resolve, 100));
+      navigate("/dashboard");
+    } else {
+      setError("Invalid credentials. Please check your email and password.");
+    }
+    
     setLoading(false);
-    if (ok) navigate("/dashboard");
-    else setError("Invalid credentials. Please check your email and password.");
   };
 
   return (
