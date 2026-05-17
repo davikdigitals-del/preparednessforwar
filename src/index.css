@@ -159,6 +159,19 @@
   .section-accent {
     @apply border-l-4 border-primary pl-3;
   }
+  
+  /* Article content images styling */
+  .prose img {
+    @apply rounded-lg shadow-md my-6 mx-auto max-w-full h-auto;
+  }
+  
+  .prose figure {
+    @apply my-6;
+  }
+  
+  .prose figcaption {
+    @apply text-sm text-gray-600 text-center mt-2 italic;
+  }
 }
 
 @layer utilities {

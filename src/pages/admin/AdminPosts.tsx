@@ -472,7 +472,17 @@ export default function AdminPosts() {
                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                 rows={10}
                 required
+                placeholder="Write your post content here. You can use HTML tags for formatting:
+- Images: <img src='URL' alt='description' />
+- Bold: <strong>text</strong>
+- Italic: <em>text</em>
+- Links: <a href='URL'>text</a>
+- Paragraphs: <p>text</p>
+- Headings: <h2>Heading</h2>"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                💡 <strong>Tip:</strong> Upload images using the "Post Image" field above, then copy the URL and use it in your content with: <code className="bg-gray-100 px-1">&lt;img src="URL" alt="description" /&gt;</code>
+              </p>
             </div>
 
             <div>
@@ -480,8 +490,32 @@ export default function AdminPosts() {
                 type="image"
                 currentUrl={formData.image_url}
                 onUrlChange={(url) => setFormData({ ...formData, image_url: url })}
-                label="Post Image"
+                label="Cover Image (Main Post Image)"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                This image will be displayed at the top of the post as the cover image.
+              </p>
+            </div>
+
+            <div className="border-t pt-4">
+              <Label className="mb-2 block">Additional Content Images</Label>
+              <FileUpload
+                type="image"
+                currentUrl=""
+                onUrlChange={(url) => {
+                  // Copy URL to clipboard for easy pasting in content
+                  navigator.clipboard.writeText(url);
+                  toast({ 
+                    title: "Image URL Copied!", 
+                    description: "Paste it in your content using: <img src=\"" + url + "\" alt=\"description\" />" 
+                  });
+                }}
+                label="Upload Image for Content"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Upload images to use within your post content. After upload, the URL will be copied to your clipboard. 
+                Paste it in the content field using: <code className="bg-gray-100 px-1">&lt;img src="URL" alt="description" /&gt;</code>
+              </p>
             </div>
 
             <div>

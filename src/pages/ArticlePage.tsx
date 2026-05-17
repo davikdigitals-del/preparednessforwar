@@ -234,10 +234,10 @@ const ArticlePage = () => {
             </div>
 
             {/* Hero image with video play button overlay */}
-            <div className="aspect-[16/9] bg-gray-100 overflow-hidden relative">
-              {/* Show image */}
+            <div className="aspect-[16/9] bg-gray-100 overflow-hidden relative flex items-center justify-center">
+              {/* Show image - full fit without cropping */}
               {post.image && (
-                <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                <img src={post.image} alt={post.title} className="w-full h-full object-contain" />
               )}
               
               {/* If video exists and not playing, show play button overlay */}
@@ -280,7 +280,7 @@ const ArticlePage = () => {
                 </div>
               }
             >
-              <div className="prose prose-lg max-w-none">
+              <div className="prose prose-lg max-w-none prose-img:rounded-lg prose-img:shadow-md prose-img:my-6">
                 {post.body ? (
                   <div className="text-lg leading-relaxed text-gray-800 space-y-5"
                     dangerouslySetInnerHTML={{ __html: post.body.replace(/\n/g, "<br/>") }} />
