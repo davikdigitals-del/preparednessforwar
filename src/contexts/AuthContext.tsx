@@ -90,9 +90,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (profile?.is_admin === true || profile?.role === "admin") {
         isAdmin = true;
         console.log("✅ Admin status confirmed:", profile.is_admin, profile.role);
+        
+        // Cache admin status in localStorage to survive refresh issues
+        localStorage.setItem(`admin_status_${supaUser.id}`, 'true');
+      } else {
+        // Check localStorage cache as fallback
+        const cachedAdmin = localStorage.getItem(`admin_status_${supaUser.id}`);
+        if (cachedAdmin === 'true') {
+          console.log("⚠️ Using cached admin status (database read failed)");
+          isAdmin = true;
+        }
       }
     } catch (err) {
       console.warn("Could not fetch profile:", err);
+      
+      // Fallback to cached admin status
+      const cachedAdmin = localStorage.getItem(`admin_status_${supaUser.id}`);
+      if (cachedAdmin === 'true') {
+        console.log("⚠️ Using cached admin status (exception occurred)");
+        isAdmin = true;
+      }
     }
 
     console.log(`User ${supaUser.email} - isAdmin: ${isAdmin}, profile.is_admin: ${profile?.is_admin}, profile.role: ${profile?.role}`);
@@ -322,6 +339,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
+      // Clear admin status cache
+      if (user?.id) {
+        localStorage.removeItem(`admin_status_${user.id}`);
+      }
+      
       // Sign out from Supabase
       await supabase.auth.signOut();
       

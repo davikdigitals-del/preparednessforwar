@@ -9,7 +9,7 @@
 CREATE OR REPLACE FUNCTION public.handle_new_user_as_admin()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- Insert profile with admin role
+  -- Insert profile with admin role (country defaults to 'US' for admins)
   INSERT INTO public.profiles (id, email, name, is_admin, role, country)
   VALUES (
     NEW.id,
@@ -17,7 +17,7 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
     true,  -- Always admin
     'admin',  -- Always admin
-    COALESCE(NEW.raw_user_meta_data->>'country', 'GB')
+    'US'  -- Default country for admins (no country field in admin form)
   )
   ON CONFLICT (id) 
   DO UPDATE SET

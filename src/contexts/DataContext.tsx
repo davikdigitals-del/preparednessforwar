@@ -189,21 +189,40 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   const refreshPosts = useCallback(async () => {
-    // Load posts from database
-    const { data } = await supabase
-      .from("posts")
-      .select("*")
-      .eq("is_published", true)
-      .order("published_at", { ascending: false });
-    
-    if (data) {
-      setPosts(data.map((row) => mapPost(row as DbPost & { country_codes?: string[] })));
+    try {
+      // Load posts from database with error handling
+      const { data, error } = await supabase
+        .from("posts")
+        .select("*")
+        .eq("is_published", true)
+        .order("published_at", { ascending: false });
+      
+      if (error) {
+        console.error("Error loading posts:", error);
+        // Don't clear existing posts on error - keep showing what we have
+        return;
+      }
+      
+      if (data) {
+        setPosts(data.map((row) => mapPost(row as DbPost & { country_codes?: string[] })));
+      }
+    } catch (err) {
+      console.error("Exception loading posts:", err);
+      // Don't clear posts on exception
     }
   }, []);
 
   const refreshAlerts = useCallback(async () => {
-    const { data } = await supabase.from("alerts").select("*").eq("is_active", true).order("timestamp", { ascending: false });
-    if (data) setAlerts(data.map((a) => ({ id: a.id, text: a.text, priority: a.priority as "high" | "medium" | "low", timestamp: a.timestamp })));
+    try {
+      const { data, error } = await supabase.from("alerts").select("*").eq("is_active", true).order("timestamp", { ascending: false });
+      if (error) {
+        console.error("Error loading alerts:", error);
+        return;
+      }
+      if (data) setAlerts(data.map((a) => ({ id: a.id, text: a.text, priority: a.priority as "high" | "medium" | "low", timestamp: a.timestamp })));
+    } catch (err) {
+      console.error("Exception loading alerts:", err);
+    }
   }, []);
 
   const refreshMedia = useCallback(async () => {
