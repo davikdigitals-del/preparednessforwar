@@ -15,6 +15,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -52,25 +53,44 @@ serve(async (req) => {
       throw new Error('Plan not found')
     }
 
-    // Create payment intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(plan.price * 100), // Convert to cents
-      currency: plan.currency.toLowerCase(),
+    // Get the origin for redirect URLs
+    const origin = req.headers.get('origin') || 'https://preparednessforwar.onrender.com'
+
+    // Create Stripe Checkout Session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: plan.currency.toLowerCase(),
+            product_data: {
+              name: plan.name,
+              description: `${plan.name} subscription`,
+            },
+            unit_amount: Math.round(plan.price * 100), // Convert to cents
+            recurring: {
+              interval: plan.interval,
+            },
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      success_url: `${origin}/dashboard?subscription=success`,
+      cancel_url: `${origin}/subscribe?plan=${planId}`,
+      customer_email: user.email,
+      client_reference_id: user.id,
       metadata: {
         userId: user.id,
         planId: plan.id,
         planName: plan.name,
       },
-      automatic_payment_methods: {
-        enabled: true,
-      },
     })
 
     return new Response(
       JSON.stringify({
-        clientSecret: paymentIntent.client_secret,
-        amount: plan.price,
-        currency: plan.currency,
+        sessionId: session.id,
+        url: session.url,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -78,6 +98,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
+    console.error('Error creating checkout session:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       {

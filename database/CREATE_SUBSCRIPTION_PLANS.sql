@@ -12,10 +12,9 @@ CREATE TABLE IF NOT EXISTS subscription_plans (
   price DECIMAL(10,2) NOT NULL,
   currency TEXT DEFAULT 'USD',
   interval TEXT NOT NULL, -- 'month' or 'year'
-  features JSONB DEFAULT '[]'::jsonb,
+  features TEXT[] DEFAULT ARRAY[]::TEXT[],
   is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Create user_subscriptions table if it doesn't exist
@@ -29,7 +28,6 @@ CREATE TABLE IF NOT EXISTS user_subscriptions (
   cancelled_at TIMESTAMPTZ,
   payment_ref TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(user_id, plan_id)
 );
 
@@ -47,7 +45,7 @@ VALUES
     9.99,
     'USD',
     'month',
-    '["Unlimited access to premium articles", "Ad-free experience", "Early access to new content", "Member-only discussions", "Priority support"]'::jsonb,
+    ARRAY['Unlimited access to premium articles', 'Ad-free experience', 'Early access to new content', 'Member-only discussions', 'Priority support'],
     true
   ),
   -- Annual Plan
@@ -58,7 +56,7 @@ VALUES
     95.99,
     'USD',
     'year',
-    '["Unlimited access to premium articles", "Ad-free experience", "Early access to new content", "Member-only discussions", "Priority support", "20% discount (save $24/year)"]'::jsonb,
+    ARRAY['Unlimited access to premium articles', 'Ad-free experience', 'Early access to new content', 'Member-only discussions', 'Priority support', '20% discount (save $24/year)'],
     true
   )
 ON CONFLICT (id) DO UPDATE SET
@@ -68,8 +66,7 @@ ON CONFLICT (id) DO UPDATE SET
   currency = EXCLUDED.currency,
   interval = EXCLUDED.interval,
   features = EXCLUDED.features,
-  is_active = EXCLUDED.is_active,
-  updated_at = NOW();
+  is_active = EXCLUDED.is_active;
 
 -- Enable RLS
 ALTER TABLE subscription_plans ENABLE ROW LEVEL SECURITY;

@@ -97,13 +97,19 @@ export default function SubscribePage() {
     setSelectedPlan(plan);
 
     try {
-      const { data, error } = await supabase.functions.invoke('create-payment-intent', {
+      // Create Stripe Checkout Session
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: { planId: plan.id },
       });
 
       if (error) throw error;
 
-      setClientSecret(data.clientSecret);
+      // Redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -111,7 +117,6 @@ export default function SubscribePage() {
         variant: 'destructive',
       });
       setSelectedPlan(null);
-    } finally {
       setProcessingPayment(false);
     }
   };
