@@ -1,6 +1,22 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { publicSupabase as supabase } from "@/integrations/supabase/publicClient";
 import type { Tables } from "@/integrations/supabase/types";
+
+/**
+ * DATA CONTEXT
+ * 
+ * This context manages ALL public data (posts, alerts, media, library, etc.)
+ * 
+ * IMPORTANT: Uses publicSupabase client which is completely isolated from
+ * authentication. This ensures posts and other public content are NEVER
+ * affected by admin login issues or auth state changes.
+ * 
+ * Posts will always be visible even if:
+ * - Admin can't login
+ * - Auth session breaks
+ * - Lock conflicts occur
+ * - User is not authenticated
+ */
 
 /* ── Types matching DB rows ────────────────── */
 export type DbPost = Tables<"posts">;
