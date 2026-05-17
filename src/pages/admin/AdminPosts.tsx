@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Edit, Trash2, Search, Video } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/FileUpload";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import { navSections, natoCountries } from "@/data/mockData";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -466,22 +467,13 @@ export default function AdminPosts() {
 
             <div>
               <Label htmlFor="content">Content</Label>
-              <Textarea
-                id="content"
+              <RichTextEditor
                 value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                rows={10}
-                required
-                placeholder="Write your post content here. You can use HTML tags for formatting:
-- Images: <img src='URL' alt='description' />
-- Bold: <strong>text</strong>
-- Italic: <em>text</em>
-- Links: <a href='URL'>text</a>
-- Paragraphs: <p>text</p>
-- Headings: <h2>Heading</h2>"
+                onChange={(value) => setFormData({ ...formData, content: value })}
+                placeholder="Write your post content here. You can format text, add images, videos, and more..."
               />
-              <p className="text-xs text-gray-500 mt-1">
-                💡 <strong>Tip:</strong> Upload images using the "Post Image" field above, then copy the URL and use it in your content with: <code className="bg-gray-100 px-1">&lt;img src="URL" alt="description" /&gt;</code>
+              <p className="text-xs text-gray-500 mt-2">
+                💡 <strong>Tip:</strong> Click the image icon (📷) in the toolbar to upload images directly into your content. You can also drag and drop or paste images!
               </p>
             </div>
 
@@ -494,27 +486,6 @@ export default function AdminPosts() {
               />
               <p className="text-xs text-gray-500 mt-1">
                 This image will be displayed at the top of the post as the cover image.
-              </p>
-            </div>
-
-            <div className="border-t pt-4">
-              <Label className="mb-2 block">Additional Content Images</Label>
-              <FileUpload
-                type="image"
-                currentUrl=""
-                onUrlChange={(url) => {
-                  // Copy URL to clipboard for easy pasting in content
-                  navigator.clipboard.writeText(url);
-                  toast({ 
-                    title: "Image URL Copied!", 
-                    description: "Paste it in your content using: <img src=\"" + url + "\" alt=\"description\" />" 
-                  });
-                }}
-                label="Upload Image for Content"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Upload images to use within your post content. After upload, the URL will be copied to your clipboard. 
-                Paste it in the content field using: <code className="bg-gray-100 px-1">&lt;img src="URL" alt="description" /&gt;</code>
               </p>
             </div>
 
