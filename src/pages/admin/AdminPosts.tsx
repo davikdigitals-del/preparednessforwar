@@ -267,7 +267,7 @@ export default function AdminPosts() {
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto overflow-y-auto max-h-[60vh]">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
@@ -398,7 +398,7 @@ export default function AdminPosts() {
                   <SelectTrigger>
                     <SelectValue placeholder="Select section first" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-60 overflow-y-auto">
                     {sections.map((sec) => (
                       <SelectItem key={sec.id} value={sec.slug}>
                         {sec.title}
@@ -420,7 +420,7 @@ export default function AdminPosts() {
                   <SelectTrigger>
                     <SelectValue placeholder={formData.section ? "Select category" : "Select section first"} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-60 overflow-y-auto">
                     {/* Group categories by section */}
                     {formData.section && (
                       <>

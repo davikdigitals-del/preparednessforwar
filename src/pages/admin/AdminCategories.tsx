@@ -151,7 +151,7 @@ export default function AdminCategories() {
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto overflow-y-auto max-h-[60vh]">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
@@ -241,7 +241,7 @@ export default function AdminCategories() {
                 value={formData.section_id}
                 onChange={(e) => setFormData({ ...formData, section_id: e.target.value })}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-48 overflow-y-auto"
               >
                 <option value="">Select a section...</option>
                 {sections.map((section) => (
