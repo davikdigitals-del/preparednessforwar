@@ -4,24 +4,66 @@ import { Menu, Search, User, Globe, Mail, X, Video, Newspaper, LogOut, ChevronDo
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { navSections } from "@/data/mockData";
+import { MegaMenu, MegaMenuTrigger, MegaMenuContent } from "@/components/MegaMenu";
+import type { MegaMenuConfig } from "@/components/MegaMenu";
+
+// Build a MegaMenuConfig from a navSection
+function buildMenuConfig(section: (typeof navSections)[number]): MegaMenuConfig {
+  return {
+    menuId: section.slug,
+    categories: {
+      heading: "Categories",
+      items: section.categories.map((cat) => ({
+        id: cat.slug,
+        label: cat.title,
+        href: `/${section.slug}/${cat.slug}`,
+      })),
+    },
+    programmes: {
+      heading: "Quick Links",
+      groups: [
+        {
+          id: "all",
+          label: `All ${section.title}`,
+          href: `/${section.slug}`,
+        },
+        ...(section.tools ?? []).map((tool) => ({
+          id: tool.slug,
+          label: tool.title,
+          href: `/${section.slug}/${tool.slug}`,
+        })),
+      ],
+    },
+    featured: {
+      heading: "Featured",
+      items: (section.featured ?? []).map((f) => ({
+        id: f.slug,
+        title: f.title,
+        description: "",
+        imageUrl: f.image ?? "/placeholder.svg",
+        href: `/${section.slug}/${f.slug}`,
+      })),
+    },
+  };
+}
+
+const mainNavItems = [
+  { label: "Emergency News", to: "/emergency-news", section: "emergency-news" },
+  { label: "Survival Guides", to: "/survival-guides", section: "survival-guides" },
+  { label: "Health & Vaccination", to: "/health", section: "health" },
+  { label: "Official Directives", to: "/directives", section: "directives" },
+  { label: "Essential Supplies", to: "/supplies", section: "supplies" },
+  { label: "Resources", to: "/resources", section: "resources" },
+  { label: "Education", to: "/education", section: "education" },
+];
 
 export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const { user, logout } = useAuth();
 
-  const mainNavItems = [
-    { label: "Emergency News", to: "/emergency-news", section: "emergency-news" },
-    { label: "Survival Guides", to: "/survival-guides", section: "survival-guides" },
-    { label: "Health & Vaccination", to: "/health", section: "health" },
-    { label: "Official Directives", to: "/directives", section: "directives" },
-    { label: "Essential Supplies", to: "/supplies", section: "supplies" },
-    { label: "Resources", to: "/resources", section: "resources" },
-    { label: "Education", to: "/education", section: "education" },
-  ];
-
   return (
-    <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
+    <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm relative">
       {/* Top utility bar - Hidden on mobile */}
       <div className="hidden md:block border-b border-gray-100 bg-gray-50">
         <div className="container mx-auto px-4">
@@ -62,26 +104,22 @@ export function SiteHeader() {
         <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Mobile Menu Button & Logo */}
           <div className="flex items-center gap-2 sm:gap-4">
-            <button 
+            <button
               className="lg:hidden p-2 hover:bg-gray-100 rounded-md transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
-            
+
             <Link to="/" className="flex items-center">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 {/* Mobile: Just PH */}
-                <span className="text-blue-900 text-2xl font-black lg:hidden">
-                  PH
-                </span>
-                
+                <span className="text-blue-900 text-2xl font-black lg:hidden">PH</span>
+
                 {/* Desktop: Full logo */}
                 <div className="hidden lg:flex items-center gap-2">
-                  <span className="text-blue-900 text-2xl font-black">
-                    PH
-                  </span>
+                  <span className="text-blue-900 text-2xl font-black">PH</span>
                   <span className="font-black text-xl tracking-tight text-gray-900">
                     preparedness<span className="font-light">for</span>war
                   </span>
@@ -90,17 +128,36 @@ export function SiteHeader() {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {mainNavItems.map((item) => (
-              <Link
-                key={item.label}
-                to={item.to}
-                className="px-3 xl:px-4 py-2 text-sm font-semibold text-gray-700 hover:text-primary hover:bg-gray-100 rounded transition-colors"
-              >
-                {item.label}
-              </Link>
-            ))}
+          {/* Desktop Navigation with Mega Menu */}
+          <nav className="hidden lg:flex items-center">
+            <MegaMenu>
+              {/* Trigger row */}
+              <div className="flex items-center gap-1">
+                {mainNavItems.map((item) => (
+                  <MegaMenuTrigger
+                    key={item.label}
+                    menuId={item.section}
+                    label={item.label}
+                    href={item.to}
+                    className="text-gray-700 font-semibold"
+                  />
+                ))}
+              </div>
+
+              {/* Dropdown panels — span full header width */}
+              {mainNavItems.map((item) => {
+                const section = navSections.find((s) => s.slug === item.section);
+                const config = section ? buildMenuConfig(section) : null;
+                return config ? (
+                  <MegaMenuContent
+                    key={item.section}
+                    menuId={item.section}
+                    config={config}
+                    className="border-t border-gray-200 shadow-xl"
+                  />
+                ) : null;
+              })}
+            </MegaMenu>
           </nav>
 
           {/* Right actions */}
@@ -200,7 +257,7 @@ export function SiteHeader() {
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Main Navigation</h3>
               <nav className="space-y-1">
                 {mainNavItems.map((item) => {
-                  const section = navSections.find(s => s.slug === item.section);
+                  const section = navSections.find((s) => s.slug === item.section);
                   const hasCategories = section && section.categories.length > 0;
                   const isExpanded = expandedSection === item.section;
 
@@ -256,7 +313,7 @@ export function SiteHeader() {
                 })}
               </nav>
             </div>
-            
+
             {/* Mobile Auth Links */}
             <div className="border-t border-gray-200 pt-3">
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Account</h3>
