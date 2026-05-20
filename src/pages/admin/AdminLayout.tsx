@@ -135,6 +135,12 @@ export default function AdminLayout() {
       items: [
         { icon: CreditCard, label: "Subscriptions", path: "/admin/subscriptions" },
         { icon: Users, label: "Members", path: "/admin/members" },
+        { icon: BookOpen, label: "Courses", path: "/admin/courses" },
+        { icon: Users, label: "Enrollments", path: "/admin/enrollments" },
+        { icon: Globe, label: "Affiliate Products", path: "/admin/affiliate-products" },
+        { icon: Megaphone, label: "Sponsors", path: "/admin/sponsors" },
+        { icon: Image, label: "Advertisements", path: "/admin/advertisements" },
+        { icon: BarChart3, label: "Revenue", path: "/admin/revenue" },
       ],
     },
     {
@@ -142,6 +148,7 @@ export default function AdminLayout() {
       items: [
         { icon: Flag, label: "Reports", path: "/admin/reports" },
         { icon: MessageSquare, label: "Comments", path: "/admin/comments" },
+        { icon: FileText, label: "Member Reports", path: "/admin/member-reports" },
       ],
     },
     {

@@ -41,10 +41,31 @@ import AdminMembers from "./pages/admin/AdminMembers";
 import AdminCountries from "./pages/admin/AdminCountries";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminComments from "./pages/admin/AdminComments";
+import AdminMemberReports from "./pages/admin/AdminMemberReports";
+import AdminCourses from "./pages/admin/AdminCourses";
+import AdminCourseBuilder from "./pages/admin/AdminCourseBuilder";
+import AdminEnrollments from "./pages/admin/AdminEnrollments";
+import AdminAffiliateProducts from "./pages/admin/AdminAffiliateProducts";
+import AdminSponsors from "./pages/admin/AdminSponsors";
+import AdminAdvertisements from "./pages/admin/AdminAdvertisements";
+import AdminRevenue from "./pages/admin/AdminRevenue";
 import NewsletterPage from "./pages/NewsletterPage";
 import SubscribePage from "./pages/SubscribePage";
 import MemberSubscription from "./pages/MemberSubscription";
 import TagPage from "./pages/TagPage";
+import CoursesPage from "./pages/CoursesPage";
+import CourseDetailPage from "./pages/CourseDetailPage";
+import CoursePlayerPage from "./pages/CoursePlayerPage";
+import MyCoursesPage from "./pages/MyCoursesPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import ShopPage from "./pages/ShopPage";
+import CommunityReports from "./pages/CommunityReports";
+import SubmitReport from "./pages/dashboard/SubmitReport";
+import MyReports from "./pages/dashboard/MyReports";
+import OfflineContentManager from "./pages/dashboard/OfflineContentManager";
+import MyBunker from "./pages/dashboard/MyBunker";
+import DashboardHome from "./pages/dashboard/DashboardHome";
+import TrainingAcademy from "./pages/dashboard/TrainingAcademy";
 
 const queryClient = new QueryClient();
 
@@ -74,9 +95,17 @@ const App = () => (
                 <Route path="settings" element={<AdminSiteSettings />} />
                 <Route path="subscriptions" element={<AdminSubscriptions />} />
                 <Route path="members" element={<AdminMembers />} />
+                <Route path="courses" element={<AdminCourses />} />
+                <Route path="courses/:id/builder" element={<AdminCourseBuilder />} />
+                <Route path="enrollments" element={<AdminEnrollments />} />
+                <Route path="affiliate-products" element={<AdminAffiliateProducts />} />
+                <Route path="sponsors" element={<AdminSponsors />} />
+                <Route path="advertisements" element={<AdminAdvertisements />} />
+                <Route path="revenue" element={<AdminRevenue />} />
                 <Route path="countries" element={<AdminCountries />} />
                 <Route path="reports" element={<AdminReports />} />
                 <Route path="comments" element={<AdminComments />} />
+                <Route path="member-reports" element={<AdminMemberReports />} />
               </Route>
               <Route element={<PublicLayout />}>
                 <Route path="/" element={<Index />} />
@@ -84,7 +113,20 @@ const App = () => (
                 <Route path="/signup" element={<SignUpPage />} />
                 <Route path="/subscribe" element={<SubscribePage />} />
                 <Route path="/dashboard" element={<MemberDashboard />} />
+                <Route path="/dashboard/home" element={<DashboardHome />} />
+                <Route path="/dashboard/training" element={<TrainingAcademy />} />
+                <Route path="/dashboard/submit-report" element={<SubmitReport />} />
+                <Route path="/dashboard/my-reports" element={<MyReports />} />
+                <Route path="/dashboard/offline-content" element={<OfflineContentManager />} />
+                <Route path="/dashboard/my-bunker" element={<MyBunker />} />
                 <Route path="/my-subscription" element={<MemberSubscription />} />
+                <Route path="/courses" element={<CoursesPage />} />
+                <Route path="/courses/:slug" element={<CourseDetailPage />} />
+                <Route path="/courses/:slug/learn" element={<CoursePlayerPage />} />
+                <Route path="/my-courses" element={<MyCoursesPage />} />
+                <Route path="/checkout/course/:courseId" element={<CheckoutPage />} />
+                <Route path="/shop" element={<ShopPage />} />
+                <Route path="/community-reports" element={<CommunityReports />} />
                 <Route path="/countries" element={<CountriesPage />} />
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/latest" element={<LatestPage />} />

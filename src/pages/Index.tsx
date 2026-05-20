@@ -612,39 +612,38 @@ const Index = () => {
               const sectionPosts = sortedPosts.filter((p) => p.section === section.slug);
               if (sectionPosts.length === 0) return null;
 
-              const pinnedPosts = sectionPosts.filter(p => p.isPinned).slice(0, 2);
-              const regularPosts = sectionPosts.filter(p => !p.isPinned).slice(0, 12);
+              const pinnedPosts = sectionPosts.filter(p => p.isPinned).slice(0, 4);
+              const regularPosts = sectionPosts.filter(p => !p.isPinned).slice(0, 16);
               const desktopHeroes = [...pinnedPosts];
-              if (desktopHeroes.length < 2 && regularPosts.length > 0) {
-                const needed = 2 - desktopHeroes.length;
+              if (desktopHeroes.length < 4 && regularPosts.length > 0) {
+                const needed = 4 - desktopHeroes.length;
                 desktopHeroes.push(...regularPosts.slice(0, needed));
               }
-              const desktopGridPosts = pinnedPosts.length >= 2 ? regularPosts : regularPosts.slice(2 - pinnedPosts.length);
+              const desktopGridPosts = pinnedPosts.length >= 4 ? regularPosts : regularPosts.slice(4 - pinnedPosts.length);
 
               return (
                 <div key={section.slug} className="mb-8">
                   <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-primary">{section.title}</h2>
                   {desktopHeroes.length > 0 && (
-                    <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-4 gap-3 mb-4">
                       {desktopHeroes.map((post) => (
                         <Link key={post.id} to={`/${post.section}/${post.category}/${post.id}`} className="group">
-                          <div className="aspect-video bg-gray-200 overflow-hidden mb-2 relative">
+                          <div className="aspect-video bg-gray-200 overflow-hidden mb-1.5 relative">
                             {post.image ? (
                               <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                             ) : (
                               <div className="w-full h-full bg-primary/10" />
                             )}
                             {post.videoUrl && (
-                              <div className="absolute bottom-1.5 right-1.5 bg-primary rounded-full w-9 h-9 flex items-center justify-center">
-                                <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                              <div className="absolute bottom-1 right-1 bg-primary rounded-full w-7 h-7 flex items-center justify-center">
+                                <Play className="w-2.5 h-2.5 text-white fill-white ml-0.5" />
                               </div>
                             )}
                             {post.isPinned && (
                               <div className="absolute top-1.5 left-1.5 bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded">FEATURED</div>
                             )}
                           </div>
-                          <h3 className="text-sm font-bold leading-tight group-hover:text-primary transition-colors mb-1">{post.title}</h3>
-                          <p className="text-xs text-gray-600 line-clamp-2">{post.standfirst}</p>
+                          <h3 className="text-xs font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2">{post.title}</h3>
                         </Link>
                       ))}
                     </div>
