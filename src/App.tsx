@@ -49,6 +49,8 @@ import AdminAffiliateProducts from "./pages/admin/AdminAffiliateProducts";
 import AdminSponsors from "./pages/admin/AdminSponsors";
 import AdminAdvertisements from "./pages/admin/AdminAdvertisements";
 import AdminRevenue from "./pages/admin/AdminRevenue";
+import AdminAds from "./pages/admin/AdminAds";
+import AdminSponsorshipInquiries from "./pages/admin/AdminSponsorshipInquiries";
 import NewsletterPage from "./pages/NewsletterPage";
 import SubscribePage from "./pages/SubscribePage";
 import MemberSubscription from "./pages/MemberSubscription";
@@ -66,6 +68,8 @@ import OfflineContentManager from "./pages/dashboard/OfflineContentManager";
 import MyBunker from "./pages/dashboard/MyBunker";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import TrainingAcademy from "./pages/dashboard/TrainingAcademy";
+import AdvertiseWithUs from "./pages/dashboard/AdvertiseWithUs";
+import SponsorshipInquiry from "./pages/dashboard/SponsorshipInquiry";
 
 const queryClient = new QueryClient();
 
@@ -102,6 +106,8 @@ const App = () => (
                 <Route path="sponsors" element={<AdminSponsors />} />
                 <Route path="advertisements" element={<AdminAdvertisements />} />
                 <Route path="revenue" element={<AdminRevenue />} />
+                <Route path="ads" element={<AdminAds />} />
+                <Route path="sponsorships" element={<AdminSponsorshipInquiries />} />
                 <Route path="countries" element={<AdminCountries />} />
                 <Route path="reports" element={<AdminReports />} />
                 <Route path="comments" element={<AdminComments />} />
@@ -119,6 +125,9 @@ const App = () => (
                 <Route path="/dashboard/my-reports" element={<MyReports />} />
                 <Route path="/dashboard/offline-content" element={<OfflineContentManager />} />
                 <Route path="/dashboard/my-bunker" element={<MyBunker />} />
+                <Route path="/dashboard/advertise" element={<AdvertiseWithUs />} />
+                <Route path="/dashboard/my-ads" element={<AdvertiseWithUs />} />
+                <Route path="/dashboard/sponsorship" element={<SponsorshipInquiry />} />
                 <Route path="/my-subscription" element={<MemberSubscription />} />
                 <Route path="/courses" element={<CoursesPage />} />
                 <Route path="/courses/:slug" element={<CourseDetailPage />} />

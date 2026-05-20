@@ -88,6 +88,32 @@ serve(async (req) => {
         break
       }
 
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.CheckoutSession
+        const { type, adPurchaseId, userId } = session.metadata || {}
+
+        // Handle ad purchase payment
+        if (type === 'ad_purchase' && adPurchaseId) {
+          const { error } = await supabaseAdmin
+            .from('ad_purchases')
+            .update({
+              payment_status: 'paid',
+              stripe_session_id: session.id,
+              stripe_payment_intent_id: session.payment_intent as string,
+              paid_at: new Date().toISOString(),
+              is_active: true, // Go live immediately after payment
+            })
+            .eq('id', adPurchaseId)
+
+          if (error) {
+            console.error('Error activating ad purchase:', error)
+            throw error
+          }
+          console.log(`Ad purchase ${adPurchaseId} activated for user ${userId}`)
+        }
+        break
+      }
+
       case 'payment_intent.payment_failed': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent
         console.error('Payment failed:', paymentIntent.id)

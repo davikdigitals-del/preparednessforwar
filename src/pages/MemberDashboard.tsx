@@ -13,7 +13,7 @@ import {
   Headphones, Video, StickyNote, ListChecks,
   Users, Activity, ChevronRight, Wifi, WifiOff,
   Target, Award, Clock, TrendingUp, AlertCircle,
-  Newspaper, Map
+  Newspaper, Map, Megaphone, Handshake
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -337,6 +337,29 @@ export default function MemberDashboard() {
             color="yellow"
           />
 
+          {/* Advertise */}
+          <PortalCard
+            icon={<Megaphone className="w-6 h-6 text-pink-400" />}
+            title="Advertise With Us"
+            description="Place an ad — pay and go live immediately"
+            links={[
+              { label: "Browse Ad Placements", to: "/dashboard/advertise" },
+              { label: "My Ads", to: "/dashboard/my-ads" },
+            ]}
+            color="pink"
+          />
+
+          {/* Sponsorship */}
+          <PortalCard
+            icon={<Handshake className="w-6 h-6 text-teal-400" />}
+            title="Sponsorship"
+            description="Partner with us — submit an inquiry, we'll contact you"
+            links={[
+              { label: "Submit Sponsorship Inquiry", to: "/dashboard/sponsorship" },
+            ]}
+            color="teal"
+          />
+
           {/* Subscription */}
           <PortalCard
             icon={<Crown className="w-6 h-6 text-yellow-400" />}
@@ -464,7 +487,7 @@ interface PortalCardProps {
   description: string;
   badge?: string;
   links: { label: string; to: string }[];
-  color: 'blue' | 'red' | 'green' | 'purple' | 'orange' | 'cyan' | 'indigo' | 'yellow';
+  color: 'blue' | 'red' | 'green' | 'purple' | 'orange' | 'cyan' | 'indigo' | 'yellow' | 'pink' | 'teal';
 }
 
 const colorMap = {
@@ -476,6 +499,8 @@ const colorMap = {
   cyan:   "border-cyan-800/50 hover:border-cyan-600",
   indigo: "border-indigo-800/50 hover:border-indigo-600",
   yellow: "border-yellow-800/50 hover:border-yellow-600",
+  pink:   "border-pink-800/50 hover:border-pink-600",
+  teal:   "border-teal-800/50 hover:border-teal-600",
 };
 
 function PortalCard({ icon, title, description, badge, links, color }: PortalCardProps) {
