@@ -4,14 +4,14 @@ import { useData } from "@/contexts/DataContext";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { natoCountries } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   User, Bell, Shield, LogOut, Crown,
-  GraduationCap, FileText, Download, BookOpen,
+  GraduationCap, FileText, BookOpen,
   Video, Activity, ChevronRight,
-  Clock, AlertCircle, Newspaper, Map,
-  Megaphone, Handshake, ArrowUpRight
+  Clock, Newspaper, Map,
+  Megaphone, Handshake, Download,
+  AlertTriangle, CheckCircle, ExternalLink
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +32,15 @@ export default function MemberDashboard() {
     completionRate: 0,
   });
   const [loadingStats, setLoadingStats] = useState(true);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const up = () => setIsOnline(true);
+    const down = () => setIsOnline(false);
+    window.addEventListener("online", up);
+    window.addEventListener("offline", down);
+    return () => { window.removeEventListener("online", up); window.removeEventListener("offline", down); };
+  }, []);
 
   useEffect(() => {
     if (user) fetchStats();
@@ -65,10 +74,10 @@ export default function MemberDashboard() {
   };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-[#f3f2f1]">
       <div className="text-center">
-        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-gray-500 text-sm">Loading your portal...</p>
+        <div className="w-8 h-8 border-4 border-[#1d70b8] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+        <p className="text-[#505a5f] text-sm">Loading portal...</p>
       </div>
     </div>
   );
@@ -79,367 +88,393 @@ export default function MemberDashboard() {
   const unreadNotifications = notifications.filter(n => !n.read);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#f3f2f1]">
 
-      {/* ── HEADER ── */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Left */}
+      {/* ── TOP BAR ── */}
+      <div className="bg-[#0b0c0c] text-white">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between h-12">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white text-sm flex-shrink-0">
-                {(user.name || user.email || "M")[0].toUpperCase()}
-              </div>
-              <div className="hidden sm:block">
-                <p className="font-semibold text-gray-900 text-sm leading-tight">{user.name || user.email}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  {userCountry && <span className="text-xs text-gray-500">{userCountry.flag} {userCountry.name}</span>}
-                  {isPremium
-                    ? <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs px-1.5 py-0">Premium</Badge>
-                    : <Badge variant="outline" className="text-gray-400 text-xs px-1.5 py-0">Free</Badge>
-                  }
-                </div>
-              </div>
+              <Shield className="w-4 h-4 text-white" />
+              <span className="text-sm font-bold tracking-widest uppercase">Preparedness For War</span>
+              <span className="hidden sm:inline text-[#b1b4b6] text-sm">— Member Portal</span>
             </div>
-
-            {/* Center */}
-            <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-blue-600" />
-              <span className="font-bold text-gray-900 text-sm sm:text-base tracking-wide">Member Portal</span>
-            </div>
-
-            {/* Right */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-4">
+              <div className={`flex items-center gap-1.5 text-xs ${isOnline ? "text-[#00703c]" : "text-[#d4351c]"}`}>
+                <div className={`w-2 h-2 rounded-full ${isOnline ? "bg-[#00703c]" : "bg-[#d4351c]"}`} />
+                {isOnline ? "Online" : "Offline"}
+              </div>
               {unreadNotifications.length > 0 && (
-                <button onClick={markAllNotificationsRead} className="relative p-2 text-gray-500 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-100">
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+                <button onClick={markAllNotificationsRead} className="relative text-white hover:text-[#b1b4b6] transition-colors">
+                  <Bell className="w-4 h-4" />
+                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#d4351c] rounded-full text-[9px] flex items-center justify-center font-bold">
+                    {unreadNotifications.length}
+                  </span>
                 </button>
               )}
               {isAdmin && (
-                <Button variant="outline" size="sm" asChild className="hidden sm:flex text-xs">
-                  <Link to="/admin"><Shield className="w-3 h-3 mr-1" />Admin</Link>
-                </Button>
-              )}
-              <Button variant="ghost" size="sm" onClick={logout} className="text-gray-500 hover:text-gray-900">
-                <LogOut className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-
-        {/* ── WELCOME + SUBSCRIPTION ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Welcome back{user.name ? `, ${user.name.split(" ")[0]}` : ""}
-            </h1>
-            <p className="text-gray-500 text-sm mt-1">Here's your preparedness overview</p>
-          </div>
-          {!isPremium ? (
-            <Button asChild className="bg-amber-500 hover:bg-amber-600 text-white font-semibold">
-              <Link to="/my-subscription">
-                <Crown className="w-4 h-4 mr-2" />Upgrade to Premium
-              </Link>
-            </Button>
-          ) : (
-            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2">
-              <Crown className="w-4 h-4 text-amber-600" />
-              <span className="text-sm font-semibold text-amber-800">{currentPlan?.name || "Premium"}</span>
-              <Link to="/my-subscription" className="text-xs text-amber-600 hover:underline ml-1">Manage</Link>
-            </div>
-          )}
-        </div>
-
-        {/* ── STATS ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: "Courses Enrolled", value: stats.coursesEnrolled, sub: `${stats.coursesCompleted} completed`, icon: GraduationCap, color: "bg-blue-50 text-blue-600" },
-            { label: "Training Hours", value: `${stats.learningHours}h`, sub: `${stats.completionRate}% completion`, icon: Clock, color: "bg-green-50 text-green-600" },
-            { label: "Offline Content", value: stats.offlineItems, sub: "items saved", icon: Download, color: "bg-purple-50 text-purple-600" },
-            { label: "Field Reports", value: stats.reportsSubmitted, sub: `${stats.reportsApproved} approved`, icon: FileText, color: "bg-orange-50 text-orange-600" },
-          ].map(s => (
-            <div key={s.label} className="bg-white rounded-xl border border-gray-200 p-5">
-              <div className={`w-10 h-10 rounded-lg ${s.color} flex items-center justify-center mb-3`}>
-                <s.icon className="w-5 h-5" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{s.value}</p>
-              <p className="text-sm font-medium text-gray-700 mt-0.5">{s.label}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{s.sub}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* ── TRAINING PROGRESS ── */}
-        {stats.coursesEnrolled > 0 && (
-          <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-gray-900">Training Progress</h2>
-              <Link to="/my-courses" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
-                View courses <ArrowUpRight className="w-3 h-3" />
-              </Link>
-            </div>
-            <div className="flex items-center gap-4 mb-3">
-              <Progress value={stats.completionRate} className="flex-1 h-2" />
-              <span className="text-sm font-bold text-gray-900 w-10 text-right">{stats.completionRate}%</span>
-            </div>
-            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-100 text-center">
-              <div>
-                <p className="text-lg font-bold text-blue-600">{stats.coursesEnrolled}</p>
-                <p className="text-xs text-gray-500">Enrolled</p>
-              </div>
-              <div>
-                <p className="text-lg font-bold text-amber-500">{stats.coursesEnrolled - stats.coursesCompleted}</p>
-                <p className="text-xs text-gray-500">In Progress</p>
-              </div>
-              <div>
-                <p className="text-lg font-bold text-green-600">{stats.coursesCompleted}</p>
-                <p className="text-xs text-gray-500">Completed</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── MAIN GRID ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
-
-          <NavCard
-            icon={GraduationCap}
-            iconBg="bg-blue-50 text-blue-600"
-            title="Training Academy"
-            description="Survival & preparedness courses"
-            badge={stats.coursesEnrolled > 0 ? `${stats.coursesEnrolled} enrolled` : undefined}
-            primary={{ label: "My Courses", to: "/dashboard/training" }}
-            secondary={{ label: "Browse Courses", to: "/courses" }}
-          />
-
-          <NavCard
-            icon={Newspaper}
-            iconBg="bg-red-50 text-red-600"
-            title="Intelligence Hub"
-            description="Latest news, alerts & situation reports"
-            badge={publishedPosts.length > 0 ? `${publishedPosts.length} articles` : undefined}
-            primary={{ label: "Latest News", to: "/latest" }}
-            secondary={{ label: "Emergency News", to: "/emergency-news" }}
-          />
-
-          <NavCard
-            icon={BookOpen}
-            iconBg="bg-green-50 text-green-600"
-            title="Content Library"
-            description="Books, guides & reference materials"
-            primary={{ label: "Library", to: "/library" }}
-            secondary={{ label: "Encyclopaedia", to: "/encyclopaedia" }}
-          />
-
-          <NavCard
-            icon={Video}
-            iconBg="bg-purple-50 text-purple-600"
-            title="Videos & Podcasts"
-            description="Watch and listen to expert content"
-            primary={{ label: "Open Media Hub", to: "/media" }}
-          />
-
-          <NavCard
-            icon={FileText}
-            iconBg="bg-orange-50 text-orange-600"
-            title="Field Reports"
-            description="Submit & track intelligence reports"
-            badge={stats.reportsSubmitted > 0 ? `${stats.reportsSubmitted} reports` : undefined}
-            primary={{ label: "Submit Report", to: "/dashboard/submit-report" }}
-            secondary={{ label: "My Reports", to: "/dashboard/my-reports" }}
-          />
-
-          <NavCard
-            icon={Shield}
-            iconBg="bg-cyan-50 text-cyan-600"
-            title="My Bunker"
-            description="Notes, checklists & emergency contacts"
-            primary={{ label: "Open Bunker", to: "/dashboard/my-bunker" }}
-          />
-
-          <NavCard
-            icon={Download}
-            iconBg="bg-indigo-50 text-indigo-600"
-            title="Offline Content"
-            description="Manage saved content for offline access"
-            badge={stats.offlineItems > 0 ? `${stats.offlineItems} saved` : undefined}
-            primary={{ label: "Manage Offline", to: "/dashboard/offline-content" }}
-          />
-
-          <NavCard
-            icon={Map}
-            iconBg="bg-yellow-50 text-yellow-600"
-            title="Survival Guides"
-            description="Tactical guides for every scenario"
-            primary={{ label: "Browse Guides", to: "/survival-guides" }}
-            secondary={{ label: "Resources", to: "/resources" }}
-          />
-
-          <NavCard
-            icon={Megaphone}
-            iconBg="bg-pink-50 text-pink-600"
-            title="Advertise With Us"
-            description="Place an ad — pay and go live instantly"
-            primary={{ label: "Browse Placements", to: "/dashboard/advertise" }}
-            secondary={{ label: "My Ads", to: "/dashboard/my-ads" }}
-          />
-
-          <NavCard
-            icon={Handshake}
-            iconBg="bg-teal-50 text-teal-600"
-            title="Sponsorship"
-            description="Partner with us — we'll contact you"
-            primary={{ label: "Submit Inquiry", to: "/dashboard/sponsorship" }}
-          />
-
-          <NavCard
-            icon={Crown}
-            iconBg="bg-amber-50 text-amber-600"
-            title="My Subscription"
-            description={isPremium ? `${currentPlan?.name || "Premium"} — Active` : "Free plan — Upgrade for full access"}
-            primary={{ label: isPremium ? "Manage Plan" : "Upgrade Now", to: "/my-subscription" }}
-          />
-
-        </div>
-
-        {/* ── LATEST POSTS ── */}
-        {publishedPosts.length > 0 && (
-          <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-                <Activity className="w-5 h-5 text-blue-600" />
-                Latest Intelligence
-              </h2>
-              <Link to="/latest" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
-                View all <ArrowUpRight className="w-3 h-3" />
-              </Link>
-            </div>
-            <div className="divide-y divide-gray-100">
-              {publishedPosts.slice(0, 5).map(post => (
-                <Link
-                  key={post.id}
-                  to={`/${post.section}/${post.category}/${post.id}`}
-                  className="flex items-start gap-4 py-4 hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors group"
-                >
-                  {post.image && (
-                    <img src={post.image} alt={post.title} className="w-16 h-12 object-cover rounded-lg flex-shrink-0" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                      {post.title}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">{post.section}</span>
-                      <span className="text-xs text-gray-400">{post.readTime}</span>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500 flex-shrink-0 mt-1 transition-colors" />
+                <Link to="/admin" className="text-xs text-[#b1b4b6] hover:text-white transition-colors flex items-center gap-1">
+                  <ExternalLink className="w-3 h-3" />Admin
                 </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── NOTIFICATIONS ── */}
-        {unreadNotifications.length > 0 && (
-          <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-                <Bell className="w-5 h-5 text-gray-600" />
-                Notifications
-                <span className="bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">{unreadNotifications.length}</span>
-              </h2>
-              <button onClick={markAllNotificationsRead} className="text-xs text-blue-600 hover:underline">
-                Mark all read
+              )}
+              <button onClick={logout} className="text-xs text-[#b1b4b6] hover:text-white transition-colors flex items-center gap-1">
+                <LogOut className="w-3 h-3" />Sign out
               </button>
             </div>
-            <div className="space-y-3">
-              {unreadNotifications.slice(0, 3).map(n => (
-                <div key={n.id} className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{n.title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.message}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
-        )}
+        </div>
+      </div>
 
-        {/* ── EMPTY STATE ── */}
-        {stats.coursesEnrolled === 0 && !loadingStats && (
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 flex items-start gap-4">
-            <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 mb-1">Start Your Training</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                You haven't enrolled in any courses yet. Browse our survival and preparedness training to get started.
-              </p>
-              <div className="flex gap-3 flex-wrap">
-                <Button asChild size="sm">
-                  <Link to="/courses">Browse Courses</Link>
-                </Button>
-                <Button asChild variant="outline" size="sm">
-                  <Link to="/dashboard/submit-report">Submit a Report</Link>
-                </Button>
+      {/* ── IDENTITY BAR ── */}
+      <div className="bg-[#1d70b8] text-white">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[#b1b4b6] text-xs uppercase tracking-wider mb-1">Signed in as</p>
+              <h1 className="text-xl sm:text-2xl font-bold">{user.name || user.email}</h1>
+              <div className="flex items-center gap-3 mt-1.5 text-sm text-[#b1b4b6]">
+                {userCountry && <span>{userCountry.flag} {userCountry.name}</span>}
+                <span>·</span>
+                {isPremium
+                  ? <span className="text-[#ffdd00] font-semibold">Premium Member</span>
+                  : <span>Free Account</span>
+                }
               </div>
             </div>
+            {!isPremium && (
+              <Link
+                to="/my-subscription"
+                className="flex-shrink-0 bg-[#ffdd00] text-[#0b0c0c] text-sm font-bold px-4 py-2 hover:bg-[#ffd700] transition-colors flex items-center gap-2"
+              >
+                <Crown className="w-4 h-4" />Upgrade
+              </Link>
+            )}
+            {isPremium && (
+              <div className="flex-shrink-0 text-right">
+                <p className="text-[#ffdd00] font-bold text-sm">{currentPlan?.name || "Premium"}</p>
+                <Link to="/my-subscription" className="text-xs text-[#b1b4b6] hover:text-white underline">Manage plan</Link>
+              </div>
+            )}
           </div>
-        )}
-
-        {/* ── FOOTER ── */}
-        <div className="text-center py-6 text-xs text-gray-400 border-t border-gray-200 mt-8">
-          Preparedness For War — Member Portal · All content is for preparedness purposes only
         </div>
       </div>
-    </div>
-  );
-}
 
-// ── NAV CARD COMPONENT ──
-interface NavCardProps {
-  icon: React.ElementType;
-  iconBg: string;
-  title: string;
-  description: string;
-  badge?: string;
-  primary: { label: string; to: string };
-  secondary?: { label: string; to: string };
-}
-
-function NavCard({ icon: Icon, iconBg, title, description, badge, primary, secondary }: NavCardProps) {
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-gray-300 transition-all">
-      <div className="flex items-start justify-between mb-4">
-        <div className={`w-10 h-10 rounded-lg ${iconBg} flex items-center justify-center flex-shrink-0`}>
-          <Icon className="w-5 h-5" />
+      {/* ── OFFLINE BANNER ── */}
+      {!isOnline && (
+        <div className="bg-[#f47738] text-white">
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-3 flex items-center gap-3 text-sm">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+            <span><strong>You are offline.</strong> All your saved content and bunker data is still accessible. Changes will sync when you reconnect.</span>
+          </div>
         </div>
-        {badge && (
-          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">{badge}</span>
-        )}
-      </div>
-      <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
-      <p className="text-xs text-gray-500 mb-4 leading-relaxed">{description}</p>
-      <div className="flex gap-2">
-        <Link
-          to={primary.to}
-          className="flex-1 text-center text-sm font-medium bg-gray-900 text-white px-3 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-        >
-          {primary.label}
-        </Link>
-        {secondary && (
-          <Link
-            to={secondary.to}
-            className="flex-1 text-center text-sm font-medium bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            {secondary.label}
-          </Link>
-        )}
+      )}
+
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8">
+        <div className="flex gap-8">
+
+          {/* ── LEFT SIDEBAR ── */}
+          <aside className="hidden lg:block w-56 flex-shrink-0">
+            <nav>
+              <p className="text-xs font-bold text-[#505a5f] uppercase tracking-wider mb-3">Navigation</p>
+              <ul className="space-y-0 border-l-4 border-[#1d70b8]">
+                {[
+                  { label: "Overview", to: "/dashboard", icon: Activity },
+                  { label: "Training Academy", to: "/dashboard/training", icon: GraduationCap },
+                  { label: "Intelligence Hub", to: "/latest", icon: Newspaper },
+                  { label: "Content Library", to: "/library", icon: BookOpen },
+                  { label: "Videos & Podcasts", to: "/media", icon: Video },
+                  { label: "Field Reports", to: "/dashboard/my-reports", icon: FileText },
+                  { label: "My Bunker", to: "/dashboard/my-bunker", icon: Shield },
+                  { label: "Survival Guides", to: "/survival-guides", icon: Map },
+                  { label: "Advertise", to: "/dashboard/advertise", icon: Megaphone },
+                  { label: "Sponsorship", to: "/dashboard/sponsorship", icon: Handshake },
+                  { label: "My Subscription", to: "/my-subscription", icon: Crown },
+                ].map(item => (
+                  <li key={item.to}>
+                    <Link
+                      to={item.to}
+                      className="flex items-center gap-2.5 pl-4 pr-3 py-2.5 text-sm text-[#1d70b8] hover:bg-[#e8f0f8] hover:text-[#003078] transition-colors font-medium"
+                    >
+                      <item.icon className="w-4 h-4 flex-shrink-0" />
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            {/* Offline status */}
+            <div className="mt-6 p-3 bg-white border border-[#b1b4b6]">
+              <p className="text-xs font-bold text-[#0b0c0c] mb-1">Offline Access</p>
+              <p className="text-xs text-[#505a5f]">{stats.offlineItems} items saved for offline use</p>
+              <Link to="/dashboard/offline-content" className="text-xs text-[#1d70b8] hover:underline mt-1 block">
+                Manage offline content →
+              </Link>
+            </div>
+          </aside>
+
+          {/* ── MAIN CONTENT ── */}
+          <main className="flex-1 min-w-0 space-y-6">
+
+            {/* ── STATUS SUMMARY ── */}
+            <section>
+              <h2 className="text-lg font-bold text-[#0b0c0c] mb-4 pb-2 border-b-2 border-[#1d70b8]">
+                Preparedness Status
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-[#b1b4b6]">
+                {[
+                  { label: "Courses Enrolled", value: stats.coursesEnrolled, sub: `${stats.coursesCompleted} completed` },
+                  { label: "Training Hours", value: `${stats.learningHours}h`, sub: `${stats.completionRate}% rate` },
+                  { label: "Field Reports", value: stats.reportsSubmitted, sub: `${stats.reportsApproved} approved` },
+                  { label: "Offline Items", value: stats.offlineItems, sub: "saved locally" },
+                ].map((s, i) => (
+                  <div key={s.label} className={`bg-white p-4 ${i < 3 ? "border-r border-[#b1b4b6]" : ""}`}>
+                    <p className="text-2xl font-bold text-[#0b0c0c]">{s.value}</p>
+                    <p className="text-xs font-semibold text-[#0b0c0c] mt-0.5">{s.label}</p>
+                    <p className="text-xs text-[#505a5f] mt-0.5">{s.sub}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* ── TRAINING PROGRESS ── */}
+            {stats.coursesEnrolled > 0 && (
+              <section>
+                <h2 className="text-lg font-bold text-[#0b0c0c] mb-4 pb-2 border-b-2 border-[#1d70b8]">
+                  Training Progress
+                </h2>
+                <div className="bg-white border border-[#b1b4b6] p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-[#0b0c0c]">Overall completion</span>
+                    <span className="text-sm font-bold text-[#0b0c0c]">{stats.completionRate}%</span>
+                  </div>
+                  <div className="w-full bg-[#f3f2f1] h-4 mb-4">
+                    <div
+                      className="h-4 bg-[#00703c] transition-all"
+                      style={{ width: `${stats.completionRate}%` }}
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[#f3f2f1]">
+                    <div>
+                      <p className="text-xl font-bold text-[#1d70b8]">{stats.coursesEnrolled}</p>
+                      <p className="text-xs text-[#505a5f]">Enrolled</p>
+                    </div>
+                    <div>
+                      <p className="text-xl font-bold text-[#f47738]">{stats.coursesEnrolled - stats.coursesCompleted}</p>
+                      <p className="text-xs text-[#505a5f]">In progress</p>
+                    </div>
+                    <div>
+                      <p className="text-xl font-bold text-[#00703c]">{stats.coursesCompleted}</p>
+                      <p className="text-xs text-[#505a5f]">Completed</p>
+                    </div>
+                  </div>
+                  <Link to="/my-courses" className="inline-block mt-4 text-sm text-[#1d70b8] hover:underline font-medium">
+                    View all courses →
+                  </Link>
+                </div>
+              </section>
+            )}
+
+            {/* ── PORTAL SECTIONS ── */}
+            <section>
+              <h2 className="text-lg font-bold text-[#0b0c0c] mb-4 pb-2 border-b-2 border-[#1d70b8]">
+                Portal Sections
+              </h2>
+              <div className="space-y-0 border border-[#b1b4b6]">
+                {[
+                  {
+                    icon: GraduationCap,
+                    title: "Training Academy",
+                    desc: "Access your enrolled survival and preparedness courses. Track progress and continue training.",
+                    links: [{ label: "My courses", to: "/dashboard/training" }, { label: "Browse all courses", to: "/courses" }],
+                    tag: stats.coursesEnrolled > 0 ? `${stats.coursesEnrolled} enrolled` : null,
+                  },
+                  {
+                    icon: Shield,
+                    title: "My Bunker",
+                    desc: "Personal command centre. Emergency contacts, supply inventory, bug-out plan, saved articles. Works offline.",
+                    links: [{ label: "Open bunker", to: "/dashboard/my-bunker" }],
+                    tag: "Offline ready",
+                    tagColor: "text-[#00703c]",
+                  },
+                  {
+                    icon: Newspaper,
+                    title: "Intelligence Hub",
+                    desc: "Latest news, emergency alerts, situation reports and intelligence from across NATO member states.",
+                    links: [{ label: "Latest news", to: "/latest" }, { label: "Emergency news", to: "/emergency-news" }],
+                    tag: publishedPosts.length > 0 ? `${publishedPosts.length} articles` : null,
+                  },
+                  {
+                    icon: BookOpen,
+                    title: "Content Library",
+                    desc: "Reference books, survival guides, encyclopaedia entries and downloadable resources.",
+                    links: [{ label: "Library", to: "/library" }, { label: "Encyclopaedia", to: "/encyclopaedia" }],
+                    tag: null,
+                  },
+                  {
+                    icon: Video,
+                    title: "Videos & Podcasts",
+                    desc: "Expert-led video content and podcast episodes on preparedness, tactics and survival.",
+                    links: [{ label: "Media hub", to: "/media" }],
+                    tag: null,
+                  },
+                  {
+                    icon: FileText,
+                    title: "Field Reports",
+                    desc: "Submit intelligence reports from the field. Approved reports are published to the community.",
+                    links: [{ label: "Submit report", to: "/dashboard/submit-report" }, { label: "My reports", to: "/dashboard/my-reports" }, { label: "Community reports", to: "/community-reports" }],
+                    tag: stats.reportsSubmitted > 0 ? `${stats.reportsSubmitted} submitted` : null,
+                  },
+                  {
+                    icon: Map,
+                    title: "Survival Guides",
+                    desc: "Tactical guides, checklists, templates and resources for every emergency scenario.",
+                    links: [{ label: "Browse guides", to: "/survival-guides" }, { label: "Resources", to: "/resources" }],
+                    tag: null,
+                  },
+                  {
+                    icon: Megaphone,
+                    title: "Advertise With Us",
+                    desc: "Place an advertisement on the platform. Pay and your ad goes live immediately.",
+                    links: [{ label: "Browse placements", to: "/dashboard/advertise" }, { label: "My ads", to: "/dashboard/my-ads" }],
+                    tag: null,
+                  },
+                  {
+                    icon: Handshake,
+                    title: "Sponsorship",
+                    desc: "Partner with Preparedness For War. Submit an inquiry and our team will contact you.",
+                    links: [{ label: "Submit inquiry", to: "/dashboard/sponsorship" }],
+                    tag: null,
+                  },
+                  {
+                    icon: Crown,
+                    title: "My Subscription",
+                    desc: isPremium ? `You are on the ${currentPlan?.name || "Premium"} plan with full access to all content.` : "You are on the free plan. Upgrade to access all courses, exclusive content and offline features.",
+                    links: [{ label: isPremium ? "Manage subscription" : "Upgrade now", to: "/my-subscription" }],
+                    tag: isPremium ? "Active" : "Free",
+                    tagColor: isPremium ? "text-[#00703c]" : "text-[#505a5f]",
+                  },
+                ].map((section, i) => (
+                  <div key={section.title} className={`bg-white p-5 flex gap-4 ${i > 0 ? "border-t border-[#b1b4b6]" : ""}`}>
+                    <div className="w-10 h-10 bg-[#f3f2f1] flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <section.icon className="w-5 h-5 text-[#1d70b8]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-3 mb-1">
+                        <h3 className="font-bold text-[#0b0c0c] text-base">{section.title}</h3>
+                        {section.tag && (
+                          <span className={`text-xs font-semibold flex-shrink-0 ${section.tagColor || "text-[#505a5f]"}`}>
+                            {section.tag}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-[#505a5f] mb-3 leading-relaxed">{section.desc}</p>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1">
+                        {section.links.map((link, li) => (
+                          <Link
+                            key={link.to}
+                            to={link.to}
+                            className={`text-sm font-medium hover:underline flex items-center gap-1 ${li === 0 ? "text-[#1d70b8]" : "text-[#505a5f] hover:text-[#1d70b8]"}`}
+                          >
+                            {link.label}
+                            {li === 0 && <ChevronRight className="w-3 h-3" />}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* ── LATEST INTELLIGENCE ── */}
+            {publishedPosts.length > 0 && (
+              <section>
+                <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-[#1d70b8]">
+                  <h2 className="text-lg font-bold text-[#0b0c0c]">Latest Intelligence</h2>
+                  <Link to="/latest" className="text-sm text-[#1d70b8] hover:underline font-medium">
+                    View all →
+                  </Link>
+                </div>
+                <div className="space-y-0 border border-[#b1b4b6]">
+                  {publishedPosts.slice(0, 5).map((post, i) => (
+                    <Link
+                      key={post.id}
+                      to={`/${post.section}/${post.category}/${post.id}`}
+                      className={`flex items-start gap-4 bg-white p-4 hover:bg-[#f3f2f1] transition-colors group ${i > 0 ? "border-t border-[#b1b4b6]" : ""}`}
+                    >
+                      {post.image && (
+                        <img src={post.image} alt={post.title} className="w-20 h-14 object-cover flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-[#0b0c0c] line-clamp-2 group-hover:text-[#1d70b8] transition-colors">
+                          {post.title}
+                        </p>
+                        <div className="flex items-center gap-3 mt-1.5">
+                          <span className="text-xs text-[#505a5f] uppercase tracking-wide font-medium">{post.section}</span>
+                          <span className="text-xs text-[#b1b4b6]">{post.readTime}</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-[#b1b4b6] group-hover:text-[#1d70b8] flex-shrink-0 mt-1 transition-colors" />
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ── NOTIFICATIONS ── */}
+            {unreadNotifications.length > 0 && (
+              <section>
+                <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-[#1d70b8]">
+                  <h2 className="text-lg font-bold text-[#0b0c0c]">
+                    Notifications
+                    <span className="ml-2 bg-[#d4351c] text-white text-xs px-2 py-0.5 font-bold">{unreadNotifications.length}</span>
+                  </h2>
+                  <button onClick={markAllNotificationsRead} className="text-sm text-[#1d70b8] hover:underline font-medium">
+                    Mark all as read
+                  </button>
+                </div>
+                <div className="space-y-0 border border-[#b1b4b6]">
+                  {unreadNotifications.slice(0, 3).map((n, i) => (
+                    <div key={n.id} className={`bg-white p-4 flex items-start gap-3 ${i > 0 ? "border-t border-[#b1b4b6]" : ""}`}>
+                      <div className="w-2 h-2 bg-[#1d70b8] rounded-full mt-1.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-bold text-[#0b0c0c]">{n.title}</p>
+                        <p className="text-xs text-[#505a5f] mt-0.5 line-clamp-2">{n.message}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ── EMPTY STATE ── */}
+            {stats.coursesEnrolled === 0 && !loadingStats && (
+              <section className="bg-white border-l-4 border-[#1d70b8] p-5">
+                <h3 className="font-bold text-[#0b0c0c] mb-2">Begin your training</h3>
+                <p className="text-sm text-[#505a5f] mb-4">
+                  You have not enrolled in any courses yet. Browse our survival and preparedness training catalogue to get started.
+                </p>
+                <div className="flex gap-3 flex-wrap">
+                  <Link to="/courses" className="bg-[#00703c] text-white text-sm font-bold px-4 py-2 hover:bg-[#005a30] transition-colors">
+                    Browse courses
+                  </Link>
+                  <Link to="/dashboard/submit-report" className="bg-white text-[#0b0c0c] text-sm font-bold px-4 py-2 border-2 border-[#0b0c0c] hover:bg-[#f3f2f1] transition-colors">
+                    Submit a report
+                  </Link>
+                </div>
+              </section>
+            )}
+
+            {/* ── FOOTER ── */}
+            <div className="pt-4 border-t border-[#b1b4b6]">
+              <p className="text-xs text-[#505a5f]">
+                Preparedness For War — Member Portal. All content is for preparedness and educational purposes only.
+              </p>
+            </div>
+
+          </main>
+        </div>
       </div>
     </div>
   );
