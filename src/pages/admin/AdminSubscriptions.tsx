@@ -127,17 +127,25 @@ export default function AdminSubscriptions() {
       if (plansError) throw plansError;
       setPlans(plansData || []);
 
-      // Fetch subscriptions without the profiles join (avoids 400 error)
+      // Fetch subscriptions without nested joins
       const { data: subsData, error: subsError } = await supabase
         .from("user_subscriptions")
-        .select(`
-          *,
-          subscription_plans:plan_id (name, price, currency)
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
 
       if (subsError) throw subsError;
-      setSubscriptions(subsData || []);
+
+      // Fetch plans separately and merge
+      const { data: plansForSubs } = await supabase
+        .from("subscription_plans")
+        .select("id, name, price, currency");
+
+      const merged = (subsData || []).map(sub => ({
+        ...sub,
+        subscription_plans: (plansForSubs || []).find(p => p.id === sub.plan_id) || null,
+      }));
+
+      setSubscriptions(merged);
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }

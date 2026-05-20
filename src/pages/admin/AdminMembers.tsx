@@ -73,23 +73,36 @@ export default function AdminMembers() {
 
   const fetchMembers = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch profiles first
+      const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
-        .select(`
-          *,
-          user_subscriptions (
-            id,
-            status,
-            plan_id,
-            started_at,
-            expires_at,
-            subscription_plans (name, slug)
-          )
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setMembers(data || []);
+      if (profilesError) throw profilesError;
+
+      // Fetch subscriptions separately
+      const { data: subsData } = await supabase
+        .from("user_subscriptions")
+        .select("id, user_id, status, plan_id, started_at, expires_at");
+
+      // Fetch plans separately
+      const { data: plansData } = await supabase
+        .from("subscription_plans")
+        .select("id, name, slug");
+
+      // Merge data manually
+      const merged = (profilesData || []).map(profile => ({
+        ...profile,
+        user_subscriptions: (subsData || [])
+          .filter(s => s.user_id === profile.id)
+          .map(s => ({
+            ...s,
+            subscription_plans: (plansData || []).find(p => p.id === s.plan_id) || null,
+          })),
+      }));
+
+      setMembers(merged);
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
