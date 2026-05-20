@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Search, ExternalLink, TrendingUp, MousePointer } from "lucide-react";
+import { Plus, Edit, Trash2, Search, ExternalLink, TrendingUp, MousePointer, Phone, MapPin, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/FileUpload";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -34,6 +34,14 @@ export default function AdminAffiliateProducts() {
     is_active: true,
     is_featured: false,
     country_codes: [],
+    is_emergency_supplier: false,
+    supplier_phone: "",
+    supplier_address: "",
+    supplier_city: "",
+    supplier_postcode: "",
+    supplier_opening_hours: "",
+    supplier_accepts_cash: true,
+    supplier_coordinates: "",
   });
 
   useEffect(() => {
@@ -101,6 +109,14 @@ export default function AdminAffiliateProducts() {
       is_active: product.is_active,
       is_featured: product.is_featured,
       country_codes: product.country_codes || [],
+      is_emergency_supplier: (product as any).is_emergency_supplier || false,
+      supplier_phone: (product as any).supplier_phone || "",
+      supplier_address: (product as any).supplier_address || "",
+      supplier_city: (product as any).supplier_city || "",
+      supplier_postcode: (product as any).supplier_postcode || "",
+      supplier_opening_hours: (product as any).supplier_opening_hours || "",
+      supplier_accepts_cash: (product as any).supplier_accepts_cash ?? true,
+      supplier_coordinates: (product as any).supplier_coordinates || "",
     });
     setDialogOpen(true);
   };
@@ -137,6 +153,14 @@ export default function AdminAffiliateProducts() {
       is_active: true,
       is_featured: false,
       country_codes: [],
+      is_emergency_supplier: false,
+      supplier_phone: "",
+      supplier_address: "",
+      supplier_city: "",
+      supplier_postcode: "",
+      supplier_opening_hours: "",
+      supplier_accepts_cash: true,
+      supplier_coordinates: "",
     });
   };
 
@@ -278,6 +302,11 @@ export default function AdminAffiliateProducts() {
                         )}
                         {product.is_featured && (
                           <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Featured</span>
+                        )}
+                        {(product as any).is_emergency_supplier && (
+                          <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800 flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3" />Emergency
+                          </span>
                         )}
                       </div>
                     </td>
@@ -463,6 +492,89 @@ export default function AdminAffiliateProducts() {
                 />
                 <Label htmlFor="is_featured">Featured</Label>
               </div>
+            </div>
+
+            {/* Emergency Supplier Section */}
+            <div className="border-t pt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Checkbox
+                  id="is_emergency_supplier"
+                  checked={formData.is_emergency_supplier}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_emergency_supplier: checked as boolean })}
+                />
+                <Label htmlFor="is_emergency_supplier" className="font-semibold text-red-700 cursor-pointer">
+                  🚨 Emergency Supplier — Show in Member Bunker (offline directory)
+                </Label>
+              </div>
+              <p className="text-xs text-gray-500 mb-4">
+                When enabled, this supplier's contact details appear in members' offline bunker directory so they can call or visit physically when there's no internet.
+              </p>
+
+              {formData.is_emergency_supplier && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Phone Number *</Label>
+                      <Input
+                        value={formData.supplier_phone}
+                        onChange={(e) => setFormData({ ...formData, supplier_phone: e.target.value })}
+                        placeholder="0800 000 0000"
+                      />
+                    </div>
+                    <div>
+                      <Label>Opening Hours</Label>
+                      <Input
+                        value={formData.supplier_opening_hours}
+                        onChange={(e) => setFormData({ ...formData, supplier_opening_hours: e.target.value })}
+                        placeholder="Mon-Sat 9am-6pm"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Street Address</Label>
+                    <Input
+                      value={formData.supplier_address}
+                      onChange={(e) => setFormData({ ...formData, supplier_address: e.target.value })}
+                      placeholder="14 High Street"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>City</Label>
+                      <Input
+                        value={formData.supplier_city}
+                        onChange={(e) => setFormData({ ...formData, supplier_city: e.target.value })}
+                        placeholder="London"
+                      />
+                    </div>
+                    <div>
+                      <Label>Postcode</Label>
+                      <Input
+                        value={formData.supplier_postcode}
+                        onChange={(e) => setFormData({ ...formData, supplier_postcode: e.target.value })}
+                        placeholder="EC1A 1BB"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Coordinates (optional)</Label>
+                    <Input
+                      value={formData.supplier_coordinates}
+                      onChange={(e) => setFormData({ ...formData, supplier_coordinates: e.target.value })}
+                      placeholder="51.5074, -0.1278"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Latitude, Longitude — helps members find the location offline</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="supplier_accepts_cash"
+                      checked={formData.supplier_accepts_cash}
+                      onCheckedChange={(checked) => setFormData({ ...formData, supplier_accepts_cash: checked as boolean })}
+                    />
+                    <Label htmlFor="supplier_accepts_cash">Accepts Cash (important when card systems are down)</Label>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-2">

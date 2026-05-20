@@ -364,6 +364,15 @@ export interface AffiliateProductFormData {
   is_active: boolean;
   is_featured: boolean;
   country_codes?: string[];
+  // Emergency supplier fields
+  is_emergency_supplier?: boolean;
+  supplier_phone?: string;
+  supplier_address?: string;
+  supplier_city?: string;
+  supplier_postcode?: string;
+  supplier_opening_hours?: string;
+  supplier_accepts_cash?: boolean;
+  supplier_coordinates?: string;
 }
 
 export interface AdvertisementFormData {

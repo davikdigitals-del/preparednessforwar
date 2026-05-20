@@ -37,8 +37,7 @@ export default function AdminEnrollments() {
           .from("course_enrollments")
           .select(`
             *,
-            course:courses(*),
-            user:profiles(email, full_name)
+            course:courses(*)
           `)
           .order("enrolled_at", { ascending: false }),
         supabase.from("courses").select("*"),
