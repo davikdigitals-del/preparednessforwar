@@ -9,41 +9,31 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ],
   "categories": ["education", "lifestyle", "productivity"],
-  "screenshots": [],
   "shortcuts": [
     {
       "name": "Dashboard",
       "short_name": "Dashboard",
       "description": "View your member dashboard",
-      "url": "/dashboard",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "url": "/dashboard"
     },
     {
       "name": "My Courses",
       "short_name": "Courses",
       "description": "Access your training courses",
-      "url": "/my-courses",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "url": "/my-courses"
     },
     {
       "name": "Submit Report",
       "short_name": "Report",
       "description": "Submit a field report",
-      "url": "/dashboard/submit-report",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "url": "/dashboard/submit-report"
     }
   ],
   "prefer_related_applications": false
