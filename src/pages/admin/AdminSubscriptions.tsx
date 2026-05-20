@@ -30,10 +30,6 @@ interface UserSubscription {
   expires_at: string | null;
   cancelled_at: string | null;
   payment_ref: string | null;
-  profiles?: {
-    name: string;
-    email: string;
-  };
   subscription_plans?: {
     name: string;
     price: number;
@@ -131,12 +127,11 @@ export default function AdminSubscriptions() {
       if (plansError) throw plansError;
       setPlans(plansData || []);
 
-      // Fetch subscriptions with user details
+      // Fetch subscriptions without the profiles join (avoids 400 error)
       const { data: subsData, error: subsError } = await supabase
         .from("user_subscriptions")
         .select(`
           *,
-          profiles:user_id (name, email),
           subscription_plans:plan_id (name, price, currency)
         `)
         .order("created_at", { ascending: false });
@@ -493,8 +488,7 @@ export default function AdminSubscriptions() {
                     <tr key={sub.id} className="border-b hover:bg-gray-50">
                       <td className="py-3 px-4">
                         <div>
-                          <div className="font-medium">{sub.profiles?.name || "Unknown"}</div>
-                          <div className="text-sm text-gray-500">{sub.profiles?.email}</div>
+                          <div className="font-medium text-sm text-gray-500 font-mono">{sub.user_id?.slice(0, 8)}...</div>
                         </div>
                       </td>
                       <td className="py-3 px-4">
