@@ -20,14 +20,15 @@ export function InAppDialer({ contactName, phoneNumber, isOnline }: InAppDialerP
   const callRef = useRef<any>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Dynamically load Twilio Voice SDK
+  // Dynamically load Twilio Voice SDK (v2)
   useEffect(() => {
     if (!isOnline) return;
     const existing = document.getElementById("twilio-voice-sdk");
     if (existing) { setTwilioLoaded(true); return; }
     const script = document.createElement("script");
     script.id = "twilio-voice-sdk";
-    script.src = "https://sdk.twilio.com/js/client/v1.14/twilio.min.js";
+    // Use Twilio Voice SDK 2.x — stable, supports modern browsers
+    script.src = "https://sdk.twilio.com/js/voice/releases/2.10.0/twilio.min.js";
     script.onload = () => setTwilioLoaded(true);
     script.onerror = () => setErrorMsg("Failed to load voice SDK");
     document.head.appendChild(script);
@@ -73,35 +74,36 @@ export function InAppDialer({ contactName, phoneNumber, isOnline }: InAppDialerP
       const { token, error } = await res.json();
       if (error || !token) throw new Error(error || "No token returned");
 
-      // Setup Twilio Device
-      const Twilio = (window as any).Twilio;
-      const device = new Twilio.Device(token, { codecPreferences: ["opus", "pcmu"] });
+      // Setup Twilio Device (SDK v2)
+      const TwilioVoice = (window as any).Twilio.Device;
+      const device = new TwilioVoice(token, {
+        codecPreferences: ["opus", "pcmu"],
+        logLevel: 1,
+      });
       deviceRef.current = device;
 
-      device.on("ready", () => {
-        setCallState("ringing");
-        const call = device.connect({ To: phoneNumber });
-        callRef.current = call;
+      await device.register();
+      setCallState("ringing");
 
-        call.on("accept", () => {
-          setCallState("active");
-          timerRef.current = setInterval(() => setDuration(d => d + 1), 1000);
-        });
+      // Connect — params are sent as POST body to the TwiML handler
+      const call = await device.connect({
+        params: { To: phoneNumber },
+      });
+      callRef.current = call;
 
-        call.on("disconnect", () => {
-          setCallState("ended");
-          if (timerRef.current) clearInterval(timerRef.current);
-          setTimeout(() => { setCallState("idle"); setDuration(0); }, 3000);
-        });
-
-        call.on("error", (err: any) => {
-          setErrorMsg(err.message || "Call error");
-          setCallState("error");
-        });
+      call.on("accept", () => {
+        setCallState("active");
+        timerRef.current = setInterval(() => setDuration(d => d + 1), 1000);
       });
 
-      device.on("error", (err: any) => {
-        setErrorMsg(err.message || "Device error");
+      call.on("disconnect", () => {
+        setCallState("ended");
+        if (timerRef.current) clearInterval(timerRef.current);
+        setTimeout(() => { setCallState("idle"); setDuration(0); }, 3000);
+      });
+
+      call.on("error", (err: any) => {
+        setErrorMsg(err.message || "Call error");
         setCallState("error");
       });
 
@@ -114,6 +116,7 @@ export function InAppDialer({ contactName, phoneNumber, isOnline }: InAppDialerP
   const endCall = () => {
     if (callRef.current) callRef.current.disconnect();
     if (timerRef.current) clearInterval(timerRef.current);
+    if (deviceRef.current) { deviceRef.current.destroy(); deviceRef.current = null; }
     setCallState("ended");
     setTimeout(() => { setCallState("idle"); setDuration(0); }, 2000);
   };
