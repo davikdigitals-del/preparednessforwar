@@ -18,7 +18,7 @@ import {
   Save, RefreshCw
 } from "lucide-react";
 
-type Tab = "overview" | "contacts" | "inventory" | "bugout" | "notes" | "checklists" | "saved" | "suppliers" | "orders";
+type Tab = "overview" | "contacts" | "inventory" | "supplies" | "bugout" | "notes" | "checklists" | "saved" | "suppliers" | "orders";
 
 export default function MyBunker() {
   const { user } = useAuth();
@@ -38,6 +38,7 @@ export default function MyBunker() {
   const [savedArticles, setSavedArticles] = useState<any[]>([]);
   const [orderQueue, setOrderQueue] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [wishlist, setWishlist] = useState<any[]>([]);
 
   useEffect(() => {
     const onOnline = () => { setIsOnline(true); syncToServer(); };
@@ -149,6 +150,7 @@ export default function MyBunker() {
     { key: "overview", label: "Overview", icon: Shield },
     { key: "contacts", label: "Emergency Contacts", icon: Users, count: contacts.length },
     { key: "inventory", label: "Supply Inventory", icon: Package, count: inventory.length },
+    { key: "supplies", label: "Supplies Shop", icon: ShoppingCart },
     { key: "bugout", label: "Bug-Out Plan", icon: Map },
     { key: "notes", label: "Notes", icon: StickyNote, count: notes.length },
     { key: "checklists", label: "Checklists", icon: ListChecks, count: checklists.length },
@@ -245,6 +247,7 @@ export default function MyBunker() {
             {activeTab === "overview" && <OverviewTab score={readinessScore} scoreColor={scoreColor} scoreBg={scoreBg} contacts={contacts} inventory={inventory} checklists={checklists} savedArticles={savedArticles} orderQueue={orderQueue} setActiveTab={setActiveTab} isOnline={isOnline} />}
             {activeTab === "contacts" && <ContactsTab contacts={contacts} setContacts={setContacts} user={user} isOnline={isOnline} toast={toast} />}
             {activeTab === "inventory" && <InventoryTab inventory={inventory} setInventory={setInventory} user={user} isOnline={isOnline} toast={toast} />}
+            {activeTab === "supplies" && <SuppliesTab user={user} isOnline={isOnline} toast={toast} wishlist={wishlist} setWishlist={setWishlist} setOrderQueue={setOrderQueue} orderQueue={orderQueue} />}
             {activeTab === "bugout" && <BugoutTab plan={bugoutPlan} setPlan={setBugoutPlan} user={user} isOnline={isOnline} toast={toast} />}
             {activeTab === "notes" && <NotesTab notes={notes} setNotes={setNotes} user={user} isOnline={isOnline} toast={toast} />}
             {activeTab === "checklists" && <ChecklistsTab checklists={checklists} setChecklists={setChecklists} user={user} isOnline={isOnline} toast={toast} />}
@@ -1053,6 +1056,308 @@ function OrderQueueTab({ orders, setOrderQueue, user, isOnline, toast }: any) {
             </div>
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+// ── SUPPLIES TAB ──────────────────────────────────────────────────────────────
+function SuppliesTab({ user, isOnline, toast, wishlist, setWishlist, orderQueue, setOrderQueue }: any) {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [view, setView] = useState<"browse" | "wishlist">("browse");
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    setLoading(true);
+    try {
+      if (isOnline) {
+        const { data } = await supabase
+          .from("affiliate_products")
+          .select("*")
+          .eq("is_active", true)
+          .order("is_featured", { ascending: false });
+        const products = data || [];
+        setProducts(products);
+        // Cache for offline
+        await idb.setMany("cached_affiliate_products" as any, products.map((p: any) => ({ ...p })));
+      } else {
+        const cached = await idb.getAll("cached_affiliate_products" as any);
+        setProducts(cached);
+      }
+    } catch (e) {
+      const cached = await idb.getAll("cached_affiliate_products" as any);
+      setProducts(cached);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isWishlisted = (productId: string) => wishlist.some((w: any) => w.product_id === productId);
+
+  const toggleWishlist = async (product: any) => {
+    if (isWishlisted(product.id)) {
+      const updated = wishlist.filter((w: any) => w.product_id !== product.id);
+      setWishlist(updated);
+      toast({ title: "Removed from wishlist" });
+    } else {
+      const item = {
+        id: `wish_${Date.now()}`,
+        product_id: product.id,
+        product_name: product.name,
+        product_image: product.image_url,
+        product_price: product.price,
+        product_currency: product.currency,
+        product_url: product.affiliate_url,
+        added_at: new Date().toISOString(),
+      };
+      setWishlist([...wishlist, item]);
+      toast({ title: "Added to wishlist", description: "Saved in your bunker" });
+    }
+  };
+
+  const handleOrder = (product: any) => {
+    if (isOnline) {
+      // Track click and open affiliate URL
+      window.open(product.affiliate_url, "_blank", "noopener,noreferrer");
+    } else {
+      // Queue the order for when back online
+      const order = {
+        id: `order_${Date.now()}`,
+        product_id: product.id,
+        product_name: product.name,
+        product_image: product.image_url,
+        product_url: product.affiliate_url,
+        quantity: 1,
+        status: "queued",
+        queued_at: new Date().toISOString(),
+        user_id: user?.id,
+      };
+      idb.set(STORES.ORDER_QUEUE, order);
+      setOrderQueue([...orderQueue, order]);
+      toast({
+        title: "Order queued",
+        description: "Will open supplier link when you reconnect",
+      });
+    }
+  };
+
+  const categories = ["all", ...new Set(products.map((p: any) => p.category).filter(Boolean))];
+
+  const filtered = products.filter((p: any) => {
+    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.description?.toLowerCase().includes(search.toLowerCase());
+    const matchCat = categoryFilter === "all" || p.category === categoryFilter;
+    return matchSearch && matchCat;
+  });
+
+  const categoryLabels: Record<string, string> = {
+    "survival-gear": "Survival Gear",
+    "food-supplies": "Food & Water",
+    "medical": "Medical",
+    "bunker": "Bunker Equipment",
+    "tools": "Tools",
+    "books": "Books & Guides",
+    "other": "Other",
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-bold text-gray-900">Supplies Shop</h2>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {isOnline ? "Browse and order essential supplies" : "Cached products — order queued when offline"}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setView("browse")}
+            className={`px-3 py-1.5 text-xs font-medium border transition-colors ${view === "browse" ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-700 border-gray-300 hover:border-gray-500"}`}
+          >
+            Browse
+          </button>
+          <button
+            onClick={() => setView("wishlist")}
+            className={`px-3 py-1.5 text-xs font-medium border transition-colors ${view === "wishlist" ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-700 border-gray-300 hover:border-gray-500"}`}
+          >
+            Wishlist ({wishlist.length})
+          </button>
+        </div>
+      </div>
+
+      {!isOnline && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+          <strong>Offline mode.</strong> Showing cached products. Orders will be queued and opened when you reconnect.
+        </div>
+      )}
+
+      {/* BROWSE VIEW */}
+      {view === "browse" && (
+        <>
+          {/* Search & Filter */}
+          <div className="flex gap-3">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                placeholder="Search supplies..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm pl-8"
+              />
+              <svg className="absolute left-2.5 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <select
+              value={categoryFilter}
+              onChange={e => setCategoryFilter(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            >
+              {categories.map(cat => (
+                <option key={cat} value={cat}>
+                  {cat === "all" ? "All Categories" : categoryLabels[cat] || cat}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-sm text-gray-500">Loading supplies...</p>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+              <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">No products found.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {filtered.map((product: any) => (
+                <div key={product.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                  {product.image_url && (
+                    <img src={product.image_url} alt={product.name} className="w-full h-36 object-cover" />
+                  )}
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <h3 className="font-semibold text-gray-900 text-sm line-clamp-2">{product.name}</h3>
+                      <button
+                        onClick={() => toggleWishlist(product)}
+                        className={`flex-shrink-0 p-1 rounded transition-colors ${isWishlisted(product.id) ? "text-red-500" : "text-gray-300 hover:text-red-400"}`}
+                        title={isWishlisted(product.id) ? "Remove from wishlist" : "Add to wishlist"}
+                      >
+                        <Star className={`w-4 h-4 ${isWishlisted(product.id) ? "fill-red-500" : ""}`} />
+                      </button>
+                    </div>
+                    {product.description && (
+                      <p className="text-xs text-gray-500 line-clamp-2 mb-3">{product.description}</p>
+                    )}
+                    <div className="flex items-center justify-between">
+                      {product.price ? (
+                        <span className="font-bold text-gray-900">
+                          {product.currency === "GBP" ? "£" : product.currency === "EUR" ? "€" : "$"}{product.price}
+                        </span>
+                      ) : <span />}
+                      <Button
+                        size="sm"
+                        onClick={() => handleOrder(product)}
+                        className="text-xs"
+                      >
+                        {isOnline ? "Order Now" : "Queue Order"}
+                      </Button>
+                    </div>
+                    {product.is_emergency_supplier && product.supplier_phone && (
+                      <div className="mt-2 pt-2 border-t border-gray-100">
+                        <a href={`tel:${product.supplier_phone}`} className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                          <Phone className="w-3 h-3" />Call: {product.supplier_phone}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* WISHLIST VIEW */}
+      {view === "wishlist" && (
+        <>
+          {wishlist.length === 0 ? (
+            <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+              <Star className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 mb-2">Your wishlist is empty.</p>
+              <p className="text-xs text-gray-400">Star products while browsing to save them here.</p>
+              <Button variant="outline" size="sm" className="mt-4" onClick={() => setView("browse")}>
+                Browse Supplies
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {wishlist.map((item: any) => (
+                <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-4">
+                  {item.product_image && (
+                    <img src={item.product_image} alt={item.product_name} className="w-16 h-12 object-cover rounded flex-shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-gray-900 text-sm">{item.product_name}</h3>
+                    {item.product_price && (
+                      <p className="text-sm font-bold text-gray-700 mt-0.5">
+                        {item.product_currency === "GBP" ? "£" : "$"}{item.product_price}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      Saved {new Date(item.added_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        if (isOnline) {
+                          window.open(item.product_url, "_blank", "noopener,noreferrer");
+                        } else {
+                          const order = {
+                            id: `order_${Date.now()}`,
+                            product_id: item.product_id,
+                            product_name: item.product_name,
+                            product_image: item.product_image,
+                            product_url: item.product_url,
+                            quantity: 1,
+                            status: "queued",
+                            queued_at: new Date().toISOString(),
+                            user_id: user?.id,
+                          };
+                          idb.set(STORES.ORDER_QUEUE, order);
+                          setOrderQueue([...orderQueue, order]);
+                          toast({ title: "Order queued" });
+                        }
+                      }}
+                      className="text-xs"
+                    >
+                      {isOnline ? "Order" : "Queue"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setWishlist(wishlist.filter((w: any) => w.id !== item.id))}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-400" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

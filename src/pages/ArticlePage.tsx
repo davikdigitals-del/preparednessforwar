@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   Clock, Eye, Share2, ChevronRight, Tag, ArrowLeft, Play,
-  ExternalLink, Pin, Copy, Check, Twitter, Facebook, Link2, Star, Flag,
+  ExternalLink, Pin, Copy, Check, Twitter, Facebook, Link2, Star, Flag, Bookmark, BookmarkCheck,
 } from "lucide-react";
 import { navSections, formatDate, formatTimeAgo } from "@/data/mockData";
 import { PostCard } from "@/components/PostCard";
@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { idb, STORES } from "@/services/IndexedDBService";
 
 /* ══════════════════════════════════════════════
    ARTICLE PAGE
@@ -32,6 +33,8 @@ const ArticlePage = () => {
   const [reportReason, setReportReason] = useState("");
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarking, setBookmarking] = useState(false);
   const shareRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,6 +44,15 @@ const ArticlePage = () => {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  // Check if article is already bookmarked
+  useEffect(() => {
+    if (user && id) {
+      idb.get(STORES.SAVED_ARTICLES, id).then(saved => {
+        if (saved) setBookmarked(true);
+      });
+    }
+  }, [user, id]);
 
   const post = publishedPosts.find((p: any) => p.id === id);
   const sectionData = navSections.find((s) => s.slug === section);
@@ -65,6 +77,49 @@ const ArticlePage = () => {
     sessionStorage.setItem(key, "1");
     incrementView(id);
   }, [id, incrementView]);
+
+  const handleBookmark = async () => {
+    if (!user) {
+      toast({ title: "Sign in required", description: "Sign in to save articles to your bunker", variant: "destructive" });
+      return;
+    }
+    if (!post) return;
+    setBookmarking(true);
+    try {
+      const articleData = {
+        id: post.id,
+        post_id: post.id,
+        post_title: post.title,
+        post_url: `/${post.section}/${post.category}/${post.id}`,
+        post_image: post.image || null,
+        post_section: post.section,
+        post_excerpt: post.standfirst || null,
+        user_id: user.id,
+        saved_at: new Date().toISOString(),
+      };
+      if (bookmarked) {
+        // Remove bookmark
+        await idb.removeSavedArticle(post.id);
+        if (navigator.onLine) {
+          await supabase.from("saved_articles").delete().eq("user_id", user.id).eq("post_id", post.id);
+        }
+        setBookmarked(false);
+        toast({ title: "Removed from bunker" });
+      } else {
+        // Add bookmark
+        await idb.saveArticle(articleData);
+        if (navigator.onLine) {
+          await supabase.from("saved_articles").upsert({ ...articleData, id: undefined }, { onConflict: "user_id,post_id" });
+        }
+        setBookmarked(true);
+        toast({ title: "Saved to My Bunker", description: "Available offline in your bunker" });
+      }
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setBookmarking(false);
+    }
+  };
 
   const handleReport = async () => {
     if (!user) {
