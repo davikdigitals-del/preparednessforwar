@@ -93,7 +93,7 @@ export default function MemberDashboard() {
     <div className="min-h-screen bg-[#f3f2f1]">
 
       {/* ── TOP BAR ── */}
-      <div className="bg-[#0b0c0c] text-white">
+      <div className="bg-[#1d70b8] text-white">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-12">
             <div className="flex items-center gap-3">
@@ -182,7 +182,7 @@ export default function MemberDashboard() {
       {mobileSidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div className="w-72 bg-white border-r border-[#b1b4b6] overflow-y-auto flex-shrink-0 shadow-xl">
-            <div className="bg-[#0b0c0c] px-4 py-3 flex items-center justify-between">
+            <div className="bg-[#1d70b8] px-4 py-3 flex items-center justify-between">
               <span className="text-white text-sm font-bold">Navigation</span>
               <button onClick={() => setMobileSidebarOpen(false)} className="text-[#b1b4b6] hover:text-white">
                 <X className="w-5 h-5" />
@@ -522,7 +522,7 @@ export default function MemberDashboard() {
             {/* ── FOOTER ── */}
             <div className="pt-4 border-t border-[#b1b4b6]">
               <p className="text-xs text-[#505a5f]">
-                Preparedness For War — Member Portal. All content is for preparedness and educational purposes only.
+            
               </p>
             </div>
 
