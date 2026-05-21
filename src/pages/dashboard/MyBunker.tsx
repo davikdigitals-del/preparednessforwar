@@ -15,8 +15,9 @@ import {
   Package, Phone, Globe, Plus, Trash2, Edit,
   CheckCircle, AlertTriangle, Wifi, WifiOff,
   BookOpen, ShoppingCart, Star, ChevronRight,
-  Save, RefreshCw
+  Save, RefreshCw, MessageSquare
 } from "lucide-react";
+import { InAppDialer } from "@/components/InAppDialer";
 
 type Tab = "overview" | "contacts" | "inventory" | "supplies" | "bugout" | "notes" | "checklists" | "saved" | "suppliers" | "orders";
 
@@ -413,20 +414,35 @@ function ContactsTab({ contacts, setContacts, user, isOnline, toast }: any) {
       ) : (
         <div className="space-y-3">
           {contacts.map((c: any) => (
-            <div key={c.id} className="bg-white border border-[#b1b4b6] p-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold text-[#0b0c0c]">{c.name}</h3>
-                  {c.relationship && <p className="text-sm text-[#505a5f]">{c.relationship}</p>}
-                  <div className="mt-2 space-y-1 text-sm">
-                    {c.phone && <p className="flex items-center gap-2"><Phone className="w-3 h-3 text-[#b1b4b6]" /><a href={`tel:${c.phone}`} className="text-[#1d70b8] hover:underline">{c.phone}</a></p>}
-                    {c.email && <p className="text-[#505a5f]">{c.email}</p>}
-                    {c.address && <p className="text-[#505a5f]">{c.address}</p>}
-                    {c.notes && <p className="text-[#505a5f] italic">{c.notes}</p>}
-                  </div>
+            <div key={c.id} className="bg-white border border-[#b1b4b6]">
+              {/* Contact header */}
+              <div className="flex items-start justify-between p-4 pb-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-[#0b0c0c] text-base">{c.name}</h3>
+                  {c.relationship && <p className="text-xs text-[#505a5f] mt-0.5">{c.relationship}</p>}
+                  {c.address && <p className="text-xs text-[#505a5f] mt-1">📍 {c.address}</p>}
+                  {c.email && <p className="text-xs text-[#505a5f] mt-0.5">✉️ {c.email}</p>}
+                  {c.notes && <p className="text-xs text-[#505a5f] italic mt-1">"{c.notes}"</p>}
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-[#d4351c]" /></Button>
+                <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)} className="flex-shrink-0 ml-2">
+                  <Trash2 className="w-4 h-4 text-[#d4351c]" />
+                </Button>
               </div>
+
+              {/* Call / SMS actions — online: in-app dialer, offline: device dialer */}
+              {c.phone ? (
+                <div className="border-t border-[#f3f2f1] px-4 py-3">
+                  <InAppDialer
+                    contactName={c.name}
+                    phoneNumber={c.phone}
+                    isOnline={isOnline}
+                  />
+                </div>
+              ) : (
+                <div className="border-t border-[#f3f2f1] px-4 py-2">
+                  <p className="text-xs text-[#b1b4b6]">No phone number saved</p>
+                </div>
+              )}
             </div>
           ))}
         </div>

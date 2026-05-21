@@ -93,7 +93,7 @@ export default function MemberDashboard() {
     <div className="min-h-screen bg-[#f3f2f1]">
 
       {/* ── TOP BAR ── */}
-      <div className="bg-[#1d70b8] text-white">
+      <div className="sticky top-0 z-40 bg-[#1d70b8] text-white">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-12">
             <div className="flex items-center gap-3">
@@ -135,7 +135,7 @@ export default function MemberDashboard() {
       </div>
 
       {/* ── IDENTITY BAR ── */}
-      <div className="bg-[#1d70b8] text-white">
+      <div className="sticky top-12 z-30 bg-[#1d70b8] text-white">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-5">
         <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>
@@ -223,10 +223,10 @@ export default function MemberDashboard() {
       )}
 
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <div className="flex gap-8">
+        <div className="flex gap-8 items-start">
 
           {/* ── LEFT SIDEBAR ── */}
-          <aside className="hidden lg:block w-56 flex-shrink-0 sticky top-4 self-start max-h-screen overflow-y-auto">
+          <aside className="hidden lg:block w-56 flex-shrink-0 sticky top-[128px] self-start">
             <nav>
               <p className="text-xs font-bold text-[#505a5f] uppercase tracking-wider mb-3">Navigation</p>
               <ul className="space-y-0 border-l-4 border-[#1d70b8]">
