@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Eye, ThumbsUp, Clock, CheckCircle, XCircle, Edit, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { MemberReport } from "@/types/memberPortal";
+import { PortalBreadcrumb } from "@/components/PortalBreadcrumb";
 
 export default function MyReports() {
   const { user } = useAuth();
@@ -142,6 +143,7 @@ export default function MyReports() {
 
   return (
     <div className="container py-8">
+      <PortalBreadcrumb items={[{ label: "Field Reports", to: "/dashboard/my-reports" }, { label: "My Reports" }]} />
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="font-display text-4xl font-bold mb-2">My Reports</h1>

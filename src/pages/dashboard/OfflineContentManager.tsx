@@ -9,6 +9,7 @@ import { OfflineService } from "@/services/OfflineService";
 import { Download, Trash2, HardDrive, Video, BookOpen, Headphones, FileText, GraduationCap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { OfflineContent, OfflineContentStats } from "@/types/memberPortal";
+import { PortalBreadcrumb } from "@/components/PortalBreadcrumb";
 
 export default function OfflineContentManager() {
   const { user } = useAuth();
@@ -114,6 +115,7 @@ export default function OfflineContentManager() {
 
   return (
     <div className="container py-8">
+      <PortalBreadcrumb items={[{ label: "Offline Content" }]} />
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="font-display text-4xl font-bold mb-2">Offline Content Manager</h1>

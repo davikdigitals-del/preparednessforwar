@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Eye, ThumbsUp, MapPin, Search, TrendingUp, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { MemberReport, ReportCategory } from "@/types/memberPortal";
+import { PortalBreadcrumb } from "@/components/PortalBreadcrumb";
 
 export default function CommunityReports() {
   const { user } = useAuth();
@@ -132,6 +133,7 @@ export default function CommunityReports() {
       </div>
 
       <div className="container py-12">
+        <PortalBreadcrumb items={[{ label: "Community Reports" }]} />
         {/* Featured Reports */}
         {featuredReports.length > 0 && (
           <div className="mb-12">

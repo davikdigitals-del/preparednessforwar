@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { BookOpen, Clock, Award, TrendingUp, Play, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { CourseEnrollment, Course } from "@/types/monetization";
+import { PortalBreadcrumb } from "@/components/PortalBreadcrumb";
 
 interface EnrollmentWithCourse extends CourseEnrollment {
   course?: Course;
@@ -78,6 +79,9 @@ export default function MyCoursesPage() {
 
   return (
     <div className="bg-white min-h-screen">
+      <div className="container pt-6">
+        <PortalBreadcrumb items={[{ label: "My Courses" }]} />
+      </div>
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-12">
         <div className="container">

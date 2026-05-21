@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Handshake, CheckCircle, Building2, Mail, Phone, Globe, MessageSquare, Info } from "lucide-react";
+import { PortalBreadcrumb } from "@/components/PortalBreadcrumb";
 
 const sponsorshipTypes = [
   { value: "content_sponsorship",  label: "Content Sponsorship",    desc: "Sponsor specific articles or content series" },
@@ -106,6 +107,7 @@ export default function SponsorshipInquiry() {
 
   return (
     <div className="container py-8 max-w-3xl">
+      <PortalBreadcrumb items={[{ label: "Sponsorship Inquiry" }]} />
       {/* Header */}
       <div className="mb-8">
         <h1 className="font-display text-4xl font-bold mb-2 flex items-center gap-3">

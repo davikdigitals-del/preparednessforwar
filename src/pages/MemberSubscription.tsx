@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Crown, CheckCircle, Loader2, Calendar, CreditCard, AlertCircle, ArrowRight } from "lucide-react";
+import { PortalBreadcrumb } from "@/components/PortalBreadcrumb";
 
 interface SubscriptionPlan {
   id: string;
@@ -164,6 +165,7 @@ export default function MemberSubscription() {
 
   return (
     <div className="container py-8 max-w-6xl">
+      <PortalBreadcrumb items={[{ label: "My Subscription" }]} />
       {/* Header */}
       <div className="mb-8">
         <h1 className="font-display text-3xl font-bold mb-2">Subscription Management</h1>

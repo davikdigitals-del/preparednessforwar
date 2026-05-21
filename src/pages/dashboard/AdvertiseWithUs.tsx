@@ -16,6 +16,7 @@ import {
   MousePointer, CreditCard, ArrowRight, Info,
   LayoutDashboard, Newspaper, Monitor, Mail, ChevronLeft
 } from "lucide-react";
+import { PortalBreadcrumb } from "@/components/PortalBreadcrumb";
 
 interface AdPlacement {
   id: string;
@@ -226,6 +227,7 @@ export default function AdvertiseWithUs() {
 
   return (
     <div className="container py-8 max-w-5xl">
+      <PortalBreadcrumb items={[{ label: "Advertise With Us" }]} />
       {/* Header */}
       <div className="mb-8">
         <h1 className="font-display text-4xl font-bold mb-2 flex items-center gap-3">

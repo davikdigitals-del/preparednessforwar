@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Send, Save } from "lucide-react";
 import type { ReportCategory } from "@/types/memberPortal";
+import { PortalBreadcrumb } from "@/components/PortalBreadcrumb";
 
 export default function SubmitReport() {
   const { user } = useAuth();
@@ -91,6 +92,7 @@ export default function SubmitReport() {
 
   return (
     <div className="container max-w-4xl py-8">
+      <PortalBreadcrumb items={[{ label: "Field Reports", to: "/dashboard/my-reports" }, { label: "Submit Report" }]} />
       <div className="mb-8">
         <h1 className="font-display text-4xl font-bold mb-2">Submit Field Report</h1>
         <p className="text-muted-foreground">

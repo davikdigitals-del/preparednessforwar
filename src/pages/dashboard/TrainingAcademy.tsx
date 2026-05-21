@@ -11,6 +11,7 @@ import { DownloadButton } from "@/components/DownloadButton";
 import { GraduationCap, Play, Clock, CheckCircle, BookOpen, TrendingUp, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { CourseEnrollment, Course } from "@/types/monetization";
+import { PortalBreadcrumb } from "@/components/PortalBreadcrumb";
 
 interface EnrollmentWithCourse extends CourseEnrollment {
   course?: Course;
@@ -164,6 +165,7 @@ export default function TrainingAcademy() {
 
   return (
     <div className="container py-8">
+      <PortalBreadcrumb items={[{ label: "Training Academy" }]} />
       <div className="mb-8">
         <h1 className="font-display text-4xl font-bold mb-2">Training Academy</h1>
         <p className="text-muted-foreground">
