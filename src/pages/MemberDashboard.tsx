@@ -226,7 +226,7 @@ export default function MemberDashboard() {
         <div className="flex gap-8">
 
           {/* ── LEFT SIDEBAR ── */}
-          <aside className="hidden lg:block w-56 flex-shrink-0">
+          <aside className="hidden lg:block w-56 flex-shrink-0 sticky top-4 self-start max-h-screen overflow-y-auto">
             <nav>
               <p className="text-xs font-bold text-[#505a5f] uppercase tracking-wider mb-3">Navigation</p>
               <ul className="space-y-0 border-l-4 border-[#1d70b8]">
