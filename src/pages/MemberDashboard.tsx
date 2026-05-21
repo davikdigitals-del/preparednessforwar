@@ -11,7 +11,8 @@ import {
   Video, Activity, ChevronRight,
   Clock, Newspaper, Map,
   Megaphone, Handshake, Download,
-  AlertTriangle, CheckCircle, ExternalLink
+  AlertTriangle, CheckCircle, ExternalLink,
+  Menu, X
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +34,7 @@ export default function MemberDashboard() {
   });
   const [loadingStats, setLoadingStats] = useState(true);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     const up = () => setIsOnline(true);
@@ -95,6 +97,13 @@ export default function MemberDashboard() {
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-12">
             <div className="flex items-center gap-3">
+              <button
+                className="lg:hidden text-white hover:text-[#b1b4b6] transition-colors"
+                onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+                aria-label="Toggle navigation"
+              >
+                {mobileSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
               <Shield className="w-4 h-4 text-white" />
               <span className="text-sm font-bold tracking-widest uppercase">Preparedness For War</span>
               <span className="hidden sm:inline text-[#b1b4b6] text-sm">— Member Portal</span>
@@ -166,6 +175,50 @@ export default function MemberDashboard() {
             <AlertTriangle className="w-4 h-4 flex-shrink-0" />
             <span><strong>You are offline.</strong> All your saved content and bunker data is still accessible. Changes will sync when you reconnect.</span>
           </div>
+        </div>
+      )}
+
+      {/* ── MOBILE SIDEBAR DRAWER ── */}
+      {mobileSidebarOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex">
+          <div className="w-72 bg-white border-r border-[#b1b4b6] overflow-y-auto flex-shrink-0 shadow-xl">
+            <div className="bg-[#0b0c0c] px-4 py-3 flex items-center justify-between">
+              <span className="text-white text-sm font-bold">Navigation</span>
+              <button onClick={() => setMobileSidebarOpen(false)} className="text-[#b1b4b6] hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <nav className="p-4">
+              <ul className="space-y-0 border-l-4 border-[#1d70b8]">
+                {[
+                  { label: "Overview", to: "/dashboard", icon: Activity },
+                  { label: "Training Academy", to: "/dashboard/training", icon: GraduationCap },
+                  { label: "Intelligence Hub", to: "/latest", icon: Newspaper },
+                  { label: "Content Library", to: "/library", icon: BookOpen },
+                  { label: "Videos & Podcasts", to: "/media", icon: Video },
+                  { label: "Field Reports", to: "/dashboard/my-reports", icon: FileText },
+                  { label: "My Bunker", to: "/dashboard/my-bunker", icon: Shield },
+                  { label: "Survival Guides", to: "/survival-guides", icon: Map },
+                  { label: "Advertise", to: "/dashboard/advertise", icon: Megaphone },
+                  { label: "Sponsorship", to: "/dashboard/sponsorship", icon: Handshake },
+                  { label: "My Subscription", to: "/my-subscription", icon: Crown },
+                ].map(item => (
+                  <li key={item.to}>
+                    <Link
+                      to={item.to}
+                      onClick={() => setMobileSidebarOpen(false)}
+                      className="flex items-center gap-2.5 pl-4 pr-3 py-3 text-sm text-[#1d70b8] hover:bg-[#e8f0f8] hover:text-[#003078] transition-colors font-medium border-b border-[#f3f2f1]"
+                    >
+                      <item.icon className="w-4 h-4 flex-shrink-0" />
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
+          {/* Backdrop */}
+          <div className="flex-1 bg-black/50" onClick={() => setMobileSidebarOpen(false)} />
         </div>
       )}
 

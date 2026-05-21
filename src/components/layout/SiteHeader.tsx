@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, Search, User, Globe, Mail, X, Video, Newspaper, LogOut, ChevronDown, ChevronUp } from "lucide-react";
-import { useState } from "react";
+import { Menu, Search, User, Globe, Mail, X, Video, Newspaper, LogOut, ChevronDown, ChevronUp, MoreHorizontal, FileText, BookOpen, GraduationCap, ShoppingBag, Info } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { navSections } from "@/data/mockData";
 import { MegaMenu, MegaMenuTrigger, MegaMenuContent } from "@/components/MegaMenu";
@@ -60,7 +60,20 @@ const mainNavItems = [
 export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
+
+  // Close "More" dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm relative">
@@ -158,6 +171,40 @@ export function SiteHeader() {
                 ) : null;
               })}
             </MegaMenu>
+
+            {/* More dropdown */}
+            <div ref={moreRef} className="relative ml-1">
+              <button
+                onClick={() => setMoreOpen(!moreOpen)}
+                className="flex items-center gap-1 px-3 py-2 text-sm font-semibold text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md transition-colors"
+              >
+                More
+                <ChevronDown className={`w-4 h-4 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
+              </button>
+              {moreOpen && (
+                <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-gray-200 shadow-xl rounded-md z-50 py-1">
+                  {[
+                    { label: "Community Reports", to: "/community-reports", icon: FileText },
+                    { label: "Courses", to: "/courses", icon: GraduationCap },
+                    { label: "Shop", to: "/shop", icon: ShoppingBag },
+                    { label: "Library", to: "/library", icon: BookOpen },
+                    { label: "Encyclopaedia", to: "/encyclopaedia", icon: BookOpen },
+                    { label: "About Us", to: "/about", icon: Info },
+                    { label: "Newsletter", to: "/newsletter", icon: Mail },
+                  ].map(item => (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      onClick={() => setMoreOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                    >
+                      <item.icon className="w-4 h-4 text-gray-400" />
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Right actions */}
@@ -248,6 +295,30 @@ export function SiteHeader() {
                 >
                   <Mail className="w-4 h-4" />
                   Newsletter
+                </Link>
+                <Link
+                  to="/community-reports"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <FileText className="w-4 h-4" />
+                  Community Reports
+                </Link>
+                <Link
+                  to="/courses"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <GraduationCap className="w-4 h-4" />
+                  Courses
+                </Link>
+                <Link
+                  to="/shop"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  Shop
                 </Link>
               </div>
             </div>
