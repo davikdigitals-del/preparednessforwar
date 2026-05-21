@@ -187,9 +187,9 @@ export default function SubmitReport() {
         </CardContent>
       </Card>
 
-      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <h3 className="font-semibold text-blue-900 mb-2">Submission Guidelines</h3>
-        <ul className="text-sm text-blue-800 space-y-1">
+      <div className="mt-6 p-4 bg-[#e8f0f8] border border-[#1d70b8]/30 rounded-lg">
+        <h3 className="font-semibold text-[#003078] mb-2">Submission Guidelines</h3>
+        <ul className="text-sm text-[#003078] space-y-1">
           <li>• Reports are reviewed within 24-48 hours</li>
           <li>• Approved reports will be published on the Community Reports page</li>
           <li>• Rejected reports will include feedback for improvement</li>

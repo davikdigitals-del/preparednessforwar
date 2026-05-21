@@ -17,8 +17,6 @@ import {
   Award,
   AlertCircle,
   BookOpen,
-  Video,
-  Headphones,
   Shield,
   Target,
   Activity
@@ -32,60 +30,25 @@ export default function DashboardHome() {
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
 
   useEffect(() => {
-    if (user) {
-      fetchDashboardData();
-    }
+    if (user) fetchDashboardData();
   }, [user]);
 
   const fetchDashboardData = async () => {
     if (!user) return;
-
     try {
       setLoading(true);
-
-      // Fetch enrollments
-      const { data: enrollments } = await supabase
-        .from("course_enrollments")
-        .select("*")
-        .eq("user_id", user.id);
-
-      // Fetch reports
-      const { data: reports } = await supabase
-        .from("member_reports")
-        .select("*")
-        .eq("user_id", user.id);
-
-      // Fetch notes
-      const { data: notes } = await supabase
-        .from("member_notes")
-        .select("id")
-        .eq("user_id", user.id);
-
-      // Fetch checklists
-      const { data: checklists } = await supabase
-        .from("preparedness_checklists")
-        .select("*")
-        .eq("user_id", user.id);
-
-      // Fetch achievements
-      const { data: achievements } = await supabase
-        .from("member_achievements")
-        .select("*")
-        .eq("user_id", user.id);
-
-      // Get offline content stats
+      const { data: enrollments } = await supabase.from("course_enrollments").select("*").eq("user_id", user.id);
+      const { data: reports } = await supabase.from("member_reports").select("*").eq("user_id", user.id);
+      const { data: notes } = await supabase.from("member_notes").select("id").eq("user_id", user.id);
+      const { data: checklists } = await supabase.from("preparedness_checklists").select("*").eq("user_id", user.id);
+      const { data: achievements } = await supabase.from("member_achievements").select("*").eq("user_id", user.id);
       const offlineStats = await OfflineService.getOfflineStats(user.id);
 
-      // Calculate stats
       const coursesEnrolled = enrollments?.length || 0;
       const coursesCompleted = enrollments?.filter(e => e.is_completed).length || 0;
-      const totalLearningHours = enrollments?.reduce((sum, e) => {
-        const courseHours = 10; // Default, should come from course data
-        const progress = e.progress_percentage / 100;
-        return sum + (courseHours * progress);
-      }, 0) || 0;
+      const totalLearningHours = enrollments?.reduce((sum, e) => sum + ((e.progress_percentage / 100) * 10), 0) || 0;
 
-      const dashboardStats: DashboardStats = {
+      setStats({
         coursesEnrolled,
         coursesCompleted,
         totalLearningHours: Math.round(totalLearningHours),
@@ -96,18 +59,11 @@ export default function DashboardHome() {
         notesCount: notes?.length || 0,
         checklistsCount: checklists?.length || 0,
         completionRate: coursesEnrolled > 0 ? Math.round((coursesCompleted / coursesEnrolled) * 100) : 0,
-      };
+      });
 
-      setStats(dashboardStats);
-
-      // Fetch recent activity
       const { data: activity } = await supabase
-        .from("member_activity")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
-
+        .from("member_activity").select("*").eq("user_id", user.id)
+        .order("created_at", { ascending: false }).limit(5);
       setRecentActivity(activity || []);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -119,251 +75,163 @@ export default function DashboardHome() {
   if (loading) {
     return (
       <div className="container py-12 text-center">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-muted-foreground">Loading command center...</p>
+        <div className="w-12 h-12 border-4 border-[#1d70b8] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-[#505a5f]">Loading dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <div className="container py-8">
+    <div className="min-h-screen bg-[#f3f2f1]">
+      <div className="container py-6 sm:py-8">
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8">
           <div>
-            <h1 className="font-display text-2xl sm:text-4xl font-bold text-white mb-1 sm:mb-2">
-              Command Center
-            </h1>
-            <p className="text-slate-300 text-sm sm:text-base">
-              Mission Status: {user?.email}
-            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#0b0c0c] mb-1">Command Center</h1>
+            <p className="text-[#505a5f] text-sm">{user?.email}</p>
           </div>
           <OfflineIndicator />
         </div>
 
-        {/* Quick Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <GraduationCap className="w-8 h-8 text-blue-400" />
-                <Badge variant="secondary">{stats?.coursesEnrolled || 0}</Badge>
-              </div>
-              <p className="text-2xl font-bold text-white">{stats?.coursesCompleted || 0}</p>
-              <p className="text-sm text-slate-400">Courses Completed</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <Clock className="w-8 h-8 text-green-400" />
-              </div>
-              <p className="text-2xl font-bold text-white">{stats?.totalLearningHours || 0}h</p>
-              <p className="text-sm text-slate-400">Training Hours</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <Download className="w-8 h-8 text-purple-400" />
-              </div>
-              <p className="text-2xl font-bold text-white">{stats?.offlineContentCount || 0}</p>
-              <p className="text-sm text-slate-400">Offline Content</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <FileText className="w-8 h-8 text-orange-400" />
-              </div>
-              <p className="text-2xl font-bold text-white">{stats?.reportsApproved || 0}</p>
-              <p className="text-sm text-slate-400">Reports Published</p>
-            </CardContent>
-          </Card>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-0 border border-[#b1b4b6] mb-6 sm:mb-8">
+          {[
+            { icon: GraduationCap, label: "Courses Completed", value: stats?.coursesCompleted || 0, sub: `${stats?.coursesEnrolled || 0} enrolled` },
+            { icon: Clock, label: "Training Hours", value: `${stats?.totalLearningHours || 0}h`, sub: `${stats?.completionRate || 0}% rate` },
+            { icon: Download, label: "Offline Content", value: stats?.offlineContentCount || 0, sub: "saved locally" },
+            { icon: FileText, label: "Reports Published", value: stats?.reportsApproved || 0, sub: `${stats?.reportsSubmitted || 0} submitted` },
+          ].map((s, i) => (
+            <div key={s.label} className={`bg-white p-3 sm:p-4 ${i % 2 === 0 ? "border-r border-[#b1b4b6]" : ""} ${i < 2 ? "border-b border-[#b1b4b6] md:border-b-0" : ""} ${i === 1 ? "md:border-r border-[#b1b4b6]" : ""} ${i === 2 ? "md:border-r border-[#b1b4b6]" : ""}`}>
+              <s.icon className="w-5 h-5 text-[#1d70b8] mb-2" />
+              <p className="text-2xl font-bold text-[#0b0c0c]">{s.value}</p>
+              <p className="text-xs font-semibold text-[#0b0c0c] mt-0.5">{s.label}</p>
+              <p className="text-xs text-[#505a5f]">{s.sub}</p>
+            </div>
+          ))}
         </div>
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {/* Training Progress */}
-          <Card className="lg:col-span-2 bg-slate-800/50 border-slate-700 backdrop-blur">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Target className="w-5 h-5 text-blue-400" />
-                Training Progress
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-slate-300">Overall Completion</span>
-                  <span className="font-semibold text-white">{stats?.completionRate || 0}%</span>
-                </div>
-                <Progress value={stats?.completionRate || 0} className="h-3" />
+          <div className="lg:col-span-2 bg-white border border-[#b1b4b6] p-5">
+            <h2 className="text-base font-bold text-[#0b0c0c] mb-4 pb-2 border-b-2 border-[#1d70b8] flex items-center gap-2">
+              <Target className="w-4 h-4 text-[#1d70b8]" />Training Progress
+            </h2>
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-[#505a5f]">Overall Completion</span>
+              <span className="font-bold text-[#0b0c0c]">{stats?.completionRate || 0}%</span>
+            </div>
+            <div className="w-full bg-[#f3f2f1] h-4 mb-5">
+              <div className="h-4 bg-[#1d70b8] transition-all" style={{ width: `${stats?.completionRate || 0}%` }} />
+            </div>
+            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[#f3f2f1] mb-5">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-[#1d70b8]">{stats?.coursesEnrolled || 0}</p>
+                <p className="text-xs text-[#505a5f]">Enrolled</p>
               </div>
-
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-700">
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-blue-400">{stats?.coursesEnrolled || 0}</p>
-                  <p className="text-xs text-slate-400">Enrolled</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-yellow-400">
-                    {(stats?.coursesEnrolled || 0) - (stats?.coursesCompleted || 0)}
-                  </p>
-                  <p className="text-xs text-slate-400">In Progress</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-green-400">{stats?.coursesCompleted || 0}</p>
-                  <p className="text-xs text-slate-400">Completed</p>
-                </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-[#f47738]">{(stats?.coursesEnrolled || 0) - (stats?.coursesCompleted || 0)}</p>
+                <p className="text-xs text-[#505a5f]">In Progress</p>
               </div>
-
-              <Button asChild className="w-full">
-                <Link to="/my-courses">
-                  <GraduationCap className="w-4 h-4 mr-2" />
-                  Continue Training
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-[#00703c]">{stats?.coursesCompleted || 0}</p>
+                <p className="text-xs text-[#505a5f]">Completed</p>
+              </div>
+            </div>
+            <Link to="/my-courses" className="inline-block bg-[#1d70b8] text-white text-sm font-bold px-4 py-2 hover:bg-[#003078] transition-colors">
+              Continue Training
+            </Link>
+          </div>
 
           {/* Quick Actions */}
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
-            <CardHeader>
-              <CardTitle className="text-white">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button asChild variant="outline" className="w-full justify-start border-slate-600 text-white hover:bg-slate-700">
-                <Link to="/dashboard/submit-report">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Submit Report
+          <div className="bg-white border border-[#b1b4b6] p-5">
+            <h2 className="text-base font-bold text-[#0b0c0c] mb-4 pb-2 border-b-2 border-[#1d70b8]">Quick Actions</h2>
+            <div className="space-y-0 border border-[#b1b4b6]">
+              {[
+                { to: "/dashboard/submit-report", icon: FileText, label: "Submit Report" },
+                { to: "/dashboard/offline-content", icon: Download, label: "Manage Offline" },
+                { to: "/dashboard/my-bunker", icon: Shield, label: "My Bunker" },
+                { to: "/courses", icon: BookOpen, label: "Browse Courses" },
+              ].map((item, i) => (
+                <Link key={item.to} to={item.to} className={`flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#1d70b8] hover:bg-[#e8f0f8] hover:text-[#003078] transition-colors ${i > 0 ? "border-t border-[#f3f2f1]" : ""}`}>
+                  <item.icon className="w-4 h-4 flex-shrink-0" />{item.label}
                 </Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full justify-start border-slate-600 text-white hover:bg-slate-700">
-                <Link to="/dashboard/offline-content">
-                  <Download className="w-4 h-4 mr-2" />
-                  Manage Offline
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full justify-start border-slate-600 text-white hover:bg-slate-700">
-                <Link to="/dashboard/my-bunker">
-                  <Shield className="w-4 h-4 mr-2" />
-                  My Bunker
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full justify-start border-slate-600 text-white hover:bg-slate-700">
-                <Link to="/courses">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Browse Courses
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Secondary Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {/* Preparedness Status */}
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Shield className="w-5 h-5 text-green-400" />
-                Preparedness
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-300">Notes</span>
-                <Badge variant="secondary">{stats?.notesCount || 0}</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-300">Checklists</span>
-                <Badge variant="secondary">{stats?.checklistsCount || 0}</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-300">Reports</span>
-                <Badge variant="secondary">{stats?.reportsSubmitted || 0}</Badge>
-              </div>
-              <Button asChild variant="outline" size="sm" className="w-full border-slate-600 text-white hover:bg-slate-700">
-                <Link to="/dashboard/my-bunker">View Bunker</Link>
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Preparedness */}
+          <div className="bg-white border border-[#b1b4b6] p-5">
+            <h2 className="text-base font-bold text-[#0b0c0c] mb-4 pb-2 border-b-2 border-[#1d70b8] flex items-center gap-2">
+              <Shield className="w-4 h-4 text-[#1d70b8]" />Preparedness
+            </h2>
+            <div className="space-y-3 mb-4">
+              {[
+                { label: "Notes", value: stats?.notesCount || 0 },
+                { label: "Checklists", value: stats?.checklistsCount || 0 },
+                { label: "Reports", value: stats?.reportsSubmitted || 0 },
+              ].map(item => (
+                <div key={item.label} className="flex items-center justify-between text-sm">
+                  <span className="text-[#505a5f]">{item.label}</span>
+                  <span className="font-bold text-[#0b0c0c]">{item.value}</span>
+                </div>
+              ))}
+            </div>
+            <Link to="/dashboard/my-bunker" className="text-sm text-[#1d70b8] hover:underline font-medium">View Bunker →</Link>
+          </div>
 
           {/* Achievements */}
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Award className="w-5 h-5 text-yellow-400" />
-                Achievements
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-4">
-                <p className="text-4xl font-bold text-yellow-400 mb-2">
-                  {stats?.achievementsEarned || 0}
-                </p>
-                <p className="text-sm text-slate-400">Badges Earned</p>
-              </div>
-              {stats?.achievementsEarned === 0 && (
-                <p className="text-xs text-slate-500 text-center">
-                  Complete courses and submit reports to earn badges
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          <div className="bg-white border border-[#b1b4b6] p-5">
+            <h2 className="text-base font-bold text-[#0b0c0c] mb-4 pb-2 border-b-2 border-[#1d70b8] flex items-center gap-2">
+              <Award className="w-4 h-4 text-[#1d70b8]" />Achievements
+            </h2>
+            <div className="text-center py-4">
+              <p className="text-4xl font-bold text-[#1d70b8] mb-1">{stats?.achievementsEarned || 0}</p>
+              <p className="text-sm text-[#505a5f]">Badges Earned</p>
+            </div>
+            {stats?.achievementsEarned === 0 && (
+              <p className="text-xs text-[#505a5f] text-center">Complete courses and submit reports to earn badges</p>
+            )}
+          </div>
 
-          {/* Activity */}
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Activity className="w-5 h-5 text-blue-400" />
-                Recent Activity
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {recentActivity.length === 0 ? (
-                <p className="text-sm text-slate-400 text-center py-4">
-                  No recent activity
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {recentActivity.slice(0, 3).map((activity) => (
-                    <div key={activity.id} className="text-xs text-slate-400 border-b border-slate-700 pb-2">
-                      <p className="font-medium text-slate-300">{activity.activity_type}</p>
-                      <p className="text-slate-500">
-                        {new Date(activity.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {/* Recent Activity */}
+          <div className="bg-white border border-[#b1b4b6] p-5">
+            <h2 className="text-base font-bold text-[#0b0c0c] mb-4 pb-2 border-b-2 border-[#1d70b8] flex items-center gap-2">
+              <Activity className="w-4 h-4 text-[#1d70b8]" />Recent Activity
+            </h2>
+            {recentActivity.length === 0 ? (
+              <p className="text-sm text-[#505a5f] text-center py-4">No recent activity</p>
+            ) : (
+              <div className="space-y-2">
+                {recentActivity.slice(0, 3).map((activity) => (
+                  <div key={activity.id} className="text-xs border-b border-[#f3f2f1] pb-2">
+                    <p className="font-semibold text-[#0b0c0c]">{activity.activity_type}</p>
+                    <p className="text-[#505a5f]">{new Date(activity.created_at).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Alert Banner */}
         {stats && stats.coursesEnrolled === 0 && (
-          <Card className="mt-6 bg-blue-900/30 border-blue-700 backdrop-blur">
-            <CardContent className="py-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-                <AlertCircle className="w-7 h-7 sm:w-8 sm:h-8 text-blue-400 flex-shrink-0" />
-                <div className="flex-1">
-                  <h3 className="font-semibold text-white mb-1">Start Your Training</h3>
-                  <p className="text-sm text-slate-300">
-                    You haven't enrolled in any courses yet. Browse our survival and preparedness training to get started.
-                  </p>
-                </div>
-                <Button asChild className="self-start sm:self-auto flex-shrink-0">
-                  <Link to="/courses">Browse Courses</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="mt-6 bg-white border-l-4 border-[#1d70b8] p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+            <AlertCircle className="w-6 h-6 text-[#1d70b8] flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="font-bold text-[#0b0c0c] mb-1">Start Your Training</h3>
+              <p className="text-sm text-[#505a5f]">You haven't enrolled in any courses yet. Browse our survival and preparedness training to get started.</p>
+            </div>
+            <Link to="/courses" className="self-start sm:self-auto flex-shrink-0 bg-[#00703c] text-white text-sm font-bold px-4 py-2 hover:bg-[#005a30] transition-colors">
+              Browse Courses
+            </Link>
+          </div>
         )}
+
       </div>
     </div>
   );

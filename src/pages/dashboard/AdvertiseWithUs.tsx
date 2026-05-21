@@ -208,9 +208,9 @@ export default function AdvertiseWithUs() {
 
   const getStatusBadge = (ad: AdPurchase) => {
     if (ad.payment_status === "pending")
-      return <Badge variant="outline" className="text-yellow-600 border-yellow-400"><Clock className="w-3 h-3 mr-1" />Awaiting Payment</Badge>;
+      return <Badge variant="outline" className="text-[#f47738] border-[#f47738]"><Clock className="w-3 h-3 mr-1" />Awaiting Payment</Badge>;
     if (ad.payment_status === "paid" && ad.is_active)
-      return <Badge className="bg-green-600"><CheckCircle className="w-3 h-3 mr-1" />Live</Badge>;
+      return <Badge className="bg-[#00703c]"><CheckCircle className="w-3 h-3 mr-1" />Live</Badge>;
     if (ad.payment_status === "paid" && !ad.is_active)
       return <Badge variant="secondary">Expired</Badge>;
     if (ad.payment_status === "failed")
@@ -267,9 +267,9 @@ export default function AdvertiseWithUs() {
       {/* ── BROWSE PLACEMENTS ── */}
       {step === "browse" && (
         <div className="space-y-6">
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3">
-            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-blue-800">
+          <div className="p-4 bg-[#e8f0f8] border border-[#1d70b8]/30 rounded-lg flex gap-3">
+            <Info className="w-5 h-5 text-[#1d70b8] flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-[#003078]">
               <p className="font-semibold mb-1">How it works</p>
               <ol className="list-decimal list-inside space-y-1">
                 <li>Choose a placement and duration below</li>
@@ -310,11 +310,11 @@ export default function AdvertiseWithUs() {
                       <span className="text-muted-foreground text-xs">{placement.allowed_formats}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-slate-50 rounded-lg p-3 text-center border">
+                      <div className="bg-[#f3f2f1] rounded-lg p-3 text-center border">
                         <p className="text-xl font-bold text-primary">£{placement.price_per_week}</p>
                         <p className="text-xs text-muted-foreground">per week</p>
                       </div>
-                      <div className="bg-slate-50 rounded-lg p-3 text-center border">
+                      <div className="bg-[#f3f2f1] rounded-lg p-3 text-center border">
                         <p className="text-xl font-bold text-primary">£{placement.price_per_month}</p>
                         <p className="text-xs text-muted-foreground">per month</p>
                       </div>
@@ -455,7 +455,7 @@ export default function AdvertiseWithUs() {
           </Card>
 
           {/* Order Summary */}
-          <Card className="bg-slate-50 border-slate-200">
+          <Card className="bg-[#f3f2f1] border-[#b1b4b6]">
             <CardHeader><CardTitle className="text-base">Order Summary</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between">

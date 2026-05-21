@@ -196,7 +196,7 @@ export default function MemberSubscription() {
                     </p>
                   </div>
                 </div>
-                <Badge className="bg-green-500 self-start">Active</Badge>
+                <Badge className="bg-[#00703c] self-start">Active</Badge>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
@@ -224,7 +224,7 @@ export default function MemberSubscription() {
                   <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {subscription.subscription_plans.features.map((feature, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-sm">
-                        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                        <CheckCircle className="w-4 h-4 text-[#00703c] flex-shrink-0 mt-0.5" />
                         <span>{feature}</span>
                       </li>
                     ))}
@@ -236,7 +236,7 @@ export default function MemberSubscription() {
                 <Button
                   variant="outline"
                   onClick={handleCancelSubscription}
-                  className="text-red-600 hover:text-red-700"
+                  className="text-[#d4351c] hover:text-[#aa2a12]"
                 >
                   Cancel Subscription
                 </Button>
@@ -255,7 +255,7 @@ export default function MemberSubscription() {
                   <ul className="space-y-1">
                     {freePlan.features.map((feature, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-sm">
-                        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                        <CheckCircle className="w-4 h-4 text-[#00703c] flex-shrink-0 mt-0.5" />
                         <span>{feature}</span>
                       </li>
                     ))}
@@ -301,7 +301,7 @@ export default function MemberSubscription() {
 
               {isCurrentPlan && (
                 <div className="absolute -top-3 right-4">
-                  <Badge className="bg-green-500">Current Plan</Badge>
+                  <Badge className="bg-[#00703c]">Current Plan</Badge>
                 </div>
               )}
 
@@ -324,7 +324,7 @@ export default function MemberSubscription() {
                 <ul className="space-y-3">
                   {plan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-2">
-                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                      <CheckCircle className="w-5 h-5 text-[#00703c] flex-shrink-0 mt-0.5" />
                       <span className="text-sm">{feature}</span>
                     </li>
                   ))}
@@ -357,7 +357,7 @@ export default function MemberSubscription() {
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-center">
             <div>
-              <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
+              <CheckCircle className="w-8 h-8 text-[#00703c] mx-auto mb-2" />
               <h4 className="font-bold mb-1">Cancel Anytime</h4>
               <p className="text-sm text-muted-foreground">
                 No long-term commitments. Cancel whenever you want.

@@ -72,15 +72,15 @@ export default function SponsorshipInquiry() {
   if (submitted) {
     return (
       <div className="container py-10 sm:py-16 max-w-2xl text-center px-4 sm:px-6">
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle className="w-10 h-10 text-green-600" />
+        <div className="w-20 h-20 bg-[#e8f4ee] rounded-full flex items-center justify-center mx-auto mb-6">
+          <CheckCircle className="w-10 h-10 text-[#00703c]" />
         </div>
         <h1 className="font-display text-3xl font-bold mb-4">Inquiry Received!</h1>
         <p className="text-muted-foreground text-lg mb-6">
           Thank you for your interest in sponsoring Preparedness For War. Our team will review your inquiry and contact you at{" "}
           <strong>{form.contact_email}</strong> within <strong>2–3 business days</strong>.
         </p>
-        <div className="bg-slate-50 border rounded-lg p-6 text-left space-y-3 mb-8">
+        <div className="bg-[#f3f2f1] border rounded-lg p-6 text-left space-y-3 mb-8">
           <h3 className="font-semibold">What happens next?</h3>
           <div className="space-y-2 text-sm text-muted-foreground">
             {[
@@ -126,7 +126,7 @@ export default function SponsorshipInquiry() {
           { icon: "📈", title: "Growing Platform", desc: "Thousands of active members and growing monthly" },
           { icon: "🤝", title: "Tailored Packages", desc: "Custom deals to fit your goals — no fixed price" },
         ].map((item) => (
-          <div key={item.title} className="bg-slate-50 border rounded-lg p-4 text-center">
+          <div key={item.title} className="bg-[#f3f2f1] border rounded-lg p-4 text-center">
             <div className="text-3xl mb-2">{item.icon}</div>
             <h3 className="font-semibold text-sm mb-1">{item.title}</h3>
             <p className="text-xs text-muted-foreground">{item.desc}</p>
@@ -134,9 +134,9 @@ export default function SponsorshipInquiry() {
         ))}
       </div>
 
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3 mb-8">
-        <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-blue-800">
+      <div className="p-4 bg-[#e8f0f8] border border-[#1d70b8]/30 rounded-lg flex gap-3 mb-8">
+        <Info className="w-5 h-5 text-[#1d70b8] flex-shrink-0 mt-0.5" />
+        <p className="text-sm text-[#003078]">
           <strong>No payment required now.</strong> Submit this form and our team will contact you to discuss a tailored sponsorship package and pricing.
         </p>
       </div>

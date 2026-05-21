@@ -48,7 +48,7 @@ export default function MyReports() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
-        return <Badge className="bg-green-600"><CheckCircle className="w-3 h-3 mr-1" /> Approved</Badge>;
+        return <Badge className="bg-[#00703c]"><CheckCircle className="w-3 h-3 mr-1" /> Approved</Badge>;
       case 'rejected':
         return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" /> Rejected</Badge>;
       case 'pending':
@@ -99,14 +99,14 @@ export default function MyReports() {
         )}
 
         {report.status === 'rejected' && report.rejection_reason && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800 mb-4">
+          <div className="p-3 bg-[#fdf0e8] border border-[#d4351c]/30 rounded text-sm text-[#d4351c] mb-4">
             <p className="font-semibold mb-1">Rejection Reason:</p>
             <p>{report.rejection_reason}</p>
           </div>
         )}
 
         {report.admin_notes && (
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800 mb-4">
+          <div className="p-3 bg-[#e8f0f8] border border-[#1d70b8]/30 rounded text-sm text-[#003078] mb-4">
             <p className="font-semibold mb-1">Admin Notes:</p>
             <p>{report.admin_notes}</p>
           </div>
@@ -172,7 +172,7 @@ export default function MyReports() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-3xl font-bold text-green-600">{approvedReports.length}</p>
+              <p className="text-3xl font-bold text-[#00703c]">{approvedReports.length}</p>
               <p className="text-sm text-muted-foreground">Approved</p>
             </div>
           </CardContent>
@@ -180,7 +180,7 @@ export default function MyReports() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-3xl font-bold text-blue-600">{pendingReports.length}</p>
+              <p className="text-3xl font-bold text-[#1d70b8]">{pendingReports.length}</p>
               <p className="text-sm text-muted-foreground">Pending</p>
             </div>
           </CardContent>
@@ -188,7 +188,7 @@ export default function MyReports() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-3xl font-bold text-orange-600">{draftReports.length}</p>
+              <p className="text-3xl font-bold text-[#f47738]">{draftReports.length}</p>
               <p className="text-sm text-muted-foreground">Drafts</p>
             </div>
           </CardContent>

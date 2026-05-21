@@ -93,12 +93,12 @@ export default function OfflineContentManager() {
 
   const getContentIcon = (type: string) => {
     switch (type) {
-      case 'course': return <GraduationCap className="w-5 h-5 text-blue-600" />;
-      case 'video': return <Video className="w-5 h-5 text-red-600" />;
-      case 'podcast': return <Headphones className="w-5 h-5 text-purple-600" />;
-      case 'library': return <BookOpen className="w-5 h-5 text-green-600" />;
-      case 'article': return <FileText className="w-5 h-5 text-orange-600" />;
-      default: return <Download className="w-5 h-5 text-gray-600" />;
+      case 'course': return <GraduationCap className="w-5 h-5 text-[#1d70b8]" />;
+      case 'video': return <Video className="w-5 h-5 text-[#d4351c]" />;
+      case 'podcast': return <Headphones className="w-5 h-5 text-[#1d70b8]" />;
+      case 'library': return <BookOpen className="w-5 h-5 text-[#00703c]" />;
+      case 'article': return <FileText className="w-5 h-5 text-[#f47738]" />;
+      default: return <Download className="w-5 h-5 text-[#505a5f]" />;
     }
   };
 
@@ -165,11 +165,11 @@ export default function OfflineContentManager() {
           <CardContent>
             <div className="space-y-3">
               {[
-                { type: 'course', label: 'Courses', icon: GraduationCap, color: 'text-blue-600' },
-                { type: 'video', label: 'Videos', icon: Video, color: 'text-red-600' },
-                { type: 'podcast', label: 'Podcasts', icon: Headphones, color: 'text-purple-600' },
-                { type: 'library', label: 'Library', icon: BookOpen, color: 'text-green-600' },
-                { type: 'article', label: 'Articles', icon: FileText, color: 'text-orange-600' },
+                { type: 'course', label: 'Courses', icon: GraduationCap, color: 'text-[#1d70b8]' },
+                { type: 'video', label: 'Videos', icon: Video, color: 'text-[#d4351c]' },
+                { type: 'podcast', label: 'Podcasts', icon: Headphones, color: 'text-[#1d70b8]' },
+                { type: 'library', label: 'Library', icon: BookOpen, color: 'text-[#00703c]' },
+                { type: 'article', label: 'Articles', icon: FileText, color: 'text-[#f47738]' },
               ].map(({ type, label, icon: Icon, color }) => (
                 <div key={type} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -213,7 +213,7 @@ export default function OfflineContentManager() {
               {content.map(item => (
                 <div
                   key={item.id}
-                  className="flex items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-2"
+                  className="flex items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-[#f3f2f1] transition-colors gap-2"
                 >
                   <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
                     <div className="flex-shrink-0 mt-0.5 sm:mt-0">{getContentIcon(item.content_type)}</div>
@@ -246,9 +246,9 @@ export default function OfflineContentManager() {
       </Card>
 
       {/* Info */}
-      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <h3 className="font-semibold text-blue-900 mb-2">About Offline Access</h3>
-        <ul className="text-sm text-blue-800 space-y-1">
+      <div className="mt-6 p-4 bg-[#e8f0f8] border border-[#1d70b8]/30 rounded-lg">
+        <h3 className="font-semibold text-[#003078] mb-2">About Offline Access</h3>
+        <ul className="text-sm text-[#003078] space-y-1">
           <li>• Content is cached in your browser for offline access</li>
           <li>• Downloaded content stays in your portal, not your computer files</li>
           <li>• Storage limit is 5 GB per member</li>

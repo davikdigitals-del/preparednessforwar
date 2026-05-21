@@ -143,8 +143,8 @@ export default function MyBunker() {
     }
   };
 
-  const scoreColor = readinessScore >= 75 ? "text-green-600" : readinessScore >= 50 ? "text-amber-600" : "text-red-600";
-  const scoreBg = readinessScore >= 75 ? "bg-green-50 border-green-200" : readinessScore >= 50 ? "bg-amber-50 border-amber-200" : "bg-red-50 border-red-200";
+  const scoreColor = readinessScore >= 75 ? "text-[#00703c]" : readinessScore >= 50 ? "text-[#f47738]" : "text-[#d4351c]";
+  const scoreBg = readinessScore >= 75 ? "bg-[#e8f4ee] border-[#00703c]/30" : readinessScore >= 50 ? "bg-[#fdf0e8] border-[#f47738]/30" : "bg-[#fde8e8] border-[#d4351c]/30";
 
   const tabs: { key: Tab; label: string; icon: any; count?: number }[] = [
     { key: "overview", label: "Overview", icon: Shield },
@@ -160,39 +160,39 @@ export default function MyBunker() {
   ];
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-[#f3f2f1]">
       <div className="text-center">
         <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-gray-500 text-sm">Loading your bunker...</p>
+        <p className="text-[#505a5f] text-sm">Loading your bunker...</p>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#f3f2f1]">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-[#b1b4b6]">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-                <Link to="/dashboard" className="hover:text-blue-600">Dashboard</Link>
+              <div className="flex items-center gap-2 text-sm text-[#505a5f] mb-1">
+                <Link to="/dashboard" className="hover:text-[#1d70b8]">Dashboard</Link>
                 <ChevronRight className="w-3 h-3" />
                 <span>My Bunker</span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+              <h1 className="text-xl sm:text-2xl font-bold text-[#0b0c0c] flex items-center gap-2">
+                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-[#1d70b8]" />
                 My Bunker
               </h1>
-              <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Personal survival command centre — works offline</p>
+              <p className="text-xs sm:text-sm text-[#505a5f] mt-0.5">Personal survival command centre — works offline</p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded border ${isOnline ? "bg-green-50 text-green-700 border-green-200" : "bg-orange-50 text-orange-700 border-orange-200"}`}>
+              <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded border ${isOnline ? "bg-[#e8f4ee] text-[#00703c] border-[#00703c]" : "bg-[#fdf0e8] text-[#f47738] border-[#f47738]"}`}>
                 {isOnline ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
                 <span className="hidden sm:inline">{isOnline ? "Online" : "Offline"}</span>
               </div>
               {isOnline && (
-                <Button variant="outline" size="sm" onClick={loadAllData} className="h-7 px-2 text-xs">
+                <Button variant="outline" size="sm" onClick={loadAllData} className="h-7 px-2 text-xs border-[#b1b4b6]">
                   <RefreshCw className="w-3 h-3 sm:mr-1" /><span className="hidden sm:inline">Sync</span>
                 </Button>
               )}
@@ -207,7 +207,7 @@ export default function MyBunker() {
           <select
             value={activeTab}
             onChange={e => setActiveTab(e.target.value as Tab)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white font-medium"
+            className="w-full border border-[#b1b4b6] px-3 py-2.5 text-sm bg-white font-medium text-[#0b0c0c]"
           >
             {tabs.map(t => (
               <option key={t.key} value={t.key}>
@@ -220,15 +220,15 @@ export default function MyBunker() {
         <div className="flex gap-6">
           {/* Sidebar — desktop only */}
           <aside className="w-56 flex-shrink-0 hidden md:block">
-            <nav className="bg-white border border-gray-200 rounded-lg overflow-hidden sticky top-4">
+            <nav className="bg-white border border-[#b1b4b6] overflow-hidden sticky top-4">
               {tabs.map(tab => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`w-full flex items-center justify-between px-4 py-3 text-sm border-b border-gray-100 last:border-0 transition-colors ${
+                  className={`w-full flex items-center justify-between px-4 py-3 text-sm border-b border-[#f3f2f1] last:border-0 transition-colors ${
                     activeTab === tab.key
-                      ? "bg-blue-600 text-white font-medium"
-                      : "text-gray-700 hover:bg-gray-50"
+                      ? "bg-[#1d70b8] text-white font-medium"
+                      : "text-[#0b0c0c] hover:bg-[#e8f0f8] hover:text-[#1d70b8]"
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -236,7 +236,7 @@ export default function MyBunker() {
                     <span>{tab.label}</span>
                   </div>
                   {tab.count !== undefined && tab.count > 0 && (
-                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeTab === tab.key ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-600"}`}>
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeTab === tab.key ? "bg-[#003078] text-white" : "bg-[#f3f2f1] text-[#505a5f]"}`}>
                       {tab.count}
                     </span>
                   )}
@@ -274,25 +274,25 @@ function OverviewTab({ score, scoreColor, scoreBg, contacts, inventory, checklis
   return (
     <div className="space-y-6">
       {/* Readiness Score */}
-      <div className={`border rounded-lg p-6 ${scoreBg}`}>
+      <div className={`border p-6 ${scoreBg}`}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-gray-900 text-lg">Readiness Score</h2>
+          <h2 className="font-bold text-[#0b0c0c] text-lg">Readiness Score</h2>
           <span className={`text-4xl font-black ${scoreColor}`}>{score}%</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
-          <div className={`h-3 rounded-full transition-all ${score >= 75 ? "bg-green-500" : score >= 50 ? "bg-amber-500" : "bg-red-500"}`} style={{ width: `${score}%` }} />
+        <div className="w-full bg-[#f3f2f1] h-3 mb-3">
+          <div className={`h-3 transition-all ${score >= 75 ? "bg-[#00703c]" : score >= 50 ? "bg-[#f47738]" : "bg-[#d4351c]"}`} style={{ width: `${score}%` }} />
         </div>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-[#505a5f]">
           {score >= 75 ? "Well prepared. Keep maintaining your supplies." : score >= 50 ? "Moderately prepared. Complete your checklists and stock up." : "Low readiness. Take action now — add contacts, supplies, and complete your bug-out plan."}
         </p>
       </div>
 
       {!isOnline && (
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-start gap-3">
-          <WifiOff className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+        <div className="bg-[#fdf0e8] border border-[#f47738] p-4 flex items-start gap-3">
+          <WifiOff className="w-5 h-5 text-[#f47738] flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-orange-900">You are offline</p>
-            <p className="text-sm text-orange-700 mt-0.5">All your bunker data is available. Changes will sync when you reconnect.</p>
+            <p className="font-semibold text-[#0b0c0c]">You are offline</p>
+            <p className="text-sm text-[#505a5f] mt-0.5">All your bunker data is available. Changes will sync when you reconnect.</p>
           </div>
         </div>
       )}
@@ -300,22 +300,22 @@ function OverviewTab({ score, scoreColor, scoreBg, contacts, inventory, checklis
       {/* Quick stats */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
         {[
-          { label: "Emergency Contacts", value: contacts.length, icon: Users, tab: "contacts", target: 3 },
-          { label: "Supply Categories", value: `${covered.length}/4`, icon: Package, tab: "inventory", target: 4 },
-          { label: "Checklist Progress", value: totalItems > 0 ? `${completedItems}/${totalItems}` : "0", icon: ListChecks, tab: "checklists", target: null },
-          { label: "Saved Articles", value: savedArticles.length, icon: BookOpen, tab: "saved", target: null },
+          { label: "Emergency Contacts", value: contacts.length, icon: Users, tab: "contacts" },
+          { label: "Supply Categories", value: `${covered.length}/4`, icon: Package, tab: "inventory" },
+          { label: "Checklist Progress", value: totalItems > 0 ? `${completedItems}/${totalItems}` : "0", icon: ListChecks, tab: "checklists" },
+          { label: "Saved Articles", value: savedArticles.length, icon: BookOpen, tab: "saved" },
         ].map(s => (
-          <button key={s.label} onClick={() => setActiveTab(s.tab)} className="bg-white border border-gray-200 rounded-lg p-4 text-left hover:border-blue-300 hover:shadow-sm transition-all">
-            <s.icon className="w-5 h-5 text-blue-600 mb-2" />
-            <p className="text-2xl font-bold text-gray-900">{s.value}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+          <button key={s.label} onClick={() => setActiveTab(s.tab)} className="bg-white border border-[#b1b4b6] p-4 text-left hover:border-[#1d70b8] hover:bg-[#e8f0f8] transition-all">
+            <s.icon className="w-5 h-5 text-[#1d70b8] mb-2" />
+            <p className="text-2xl font-bold text-[#0b0c0c]">{s.value}</p>
+            <p className="text-xs text-[#505a5f] mt-0.5">{s.label}</p>
           </button>
         ))}
       </div>
 
       {/* Action items */}
-      <div className="bg-white border border-gray-200 rounded-lg p-5">
-        <h3 className="font-semibold text-gray-900 mb-4">Priority Actions</h3>
+      <div className="bg-white border border-[#b1b4b6] p-5">
+        <h3 className="font-bold text-[#0b0c0c] mb-4">Priority Actions</h3>
         <div className="space-y-3">
           {contacts.length === 0 && <ActionItem text="Add emergency contacts" to="contacts" setActiveTab={setActiveTab} />}
           {covered.length < 4 && <ActionItem text={`Stock up on: ${categories.filter(c => !covered.includes(c)).join(", ")}`} to="inventory" setActiveTab={setActiveTab} />}
@@ -323,7 +323,7 @@ function OverviewTab({ score, scoreColor, scoreBg, contacts, inventory, checklis
           {checklists.length === 0 && <ActionItem text="Create a preparedness checklist" to="checklists" setActiveTab={setActiveTab} />}
           {orderQueue.length > 0 && <ActionItem text={`${orderQueue.length} orders queued — connect to submit`} to="orders" setActiveTab={setActiveTab} urgent />}
           {contacts.length > 0 && covered.length >= 4 && checklists.length > 0 && (
-            <div className="flex items-center gap-2 text-green-700 text-sm">
+            <div className="flex items-center gap-2 text-[#00703c] text-sm">
               <CheckCircle className="w-4 h-4" />
               <span>Good work! Keep your supplies updated regularly.</span>
             </div>
@@ -336,9 +336,9 @@ function OverviewTab({ score, scoreColor, scoreBg, contacts, inventory, checklis
 
 function ActionItem({ text, to, setActiveTab, urgent }: any) {
   return (
-    <button onClick={() => setActiveTab(to)} className={`w-full flex items-center justify-between p-3 rounded-lg border text-left text-sm transition-colors ${urgent ? "bg-red-50 border-red-200 text-red-800 hover:bg-red-100" : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"}`}>
+    <button onClick={() => setActiveTab(to)} className={`w-full flex items-center justify-between p-3 border text-left text-sm transition-colors ${urgent ? "bg-[#fdf0e8] border-[#f47738] text-[#0b0c0c] hover:bg-[#fce3d0]" : "bg-[#f3f2f1] border-[#b1b4b6] text-[#0b0c0c] hover:bg-[#e8f0f8]"}`}>
       <div className="flex items-center gap-2">
-        <AlertTriangle className={`w-4 h-4 ${urgent ? "text-red-500" : "text-amber-500"}`} />
+        <AlertTriangle className={`w-4 h-4 ${urgent ? "text-[#f47738]" : "text-[#f47738]"}`} />
         {text}
       </div>
       <ChevronRight className="w-4 h-4" />
@@ -386,11 +386,11 @@ function ContactsTab({ contacts, setContacts, user, isOnline, toast }: any) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-gray-900">Emergency Contacts</h2>
+        <h2 className="font-bold text-[#0b0c0c]">Emergency Contacts</h2>
         <Button size="sm" onClick={() => setAdding(!adding)}><Plus className="w-4 h-4 mr-1" />Add Contact</Button>
       </div>
       {adding && (
-        <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-3">
+        <div className="bg-white border border-[#b1b4b6] p-5 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Name *</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Full name" /></div>
             <div><Label>Relationship</Label><Input value={form.relationship} onChange={e => setForm({...form, relationship: e.target.value})} placeholder="e.g. Spouse, Parent" /></div>
@@ -406,26 +406,26 @@ function ContactsTab({ contacts, setContacts, user, isOnline, toast }: any) {
         </div>
       )}
       {contacts.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-          <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">No emergency contacts yet. Add contacts for family, friends, and rally points.</p>
+        <div className="bg-white border border-[#b1b4b6] p-8 text-center">
+          <Users className="w-12 h-12 text-[#b1b4b6] mx-auto mb-3" />
+          <p className="text-[#505a5f]">No emergency contacts yet. Add contacts for family, friends, and rally points.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {contacts.map((c: any) => (
-            <div key={c.id} className="bg-white border border-gray-200 rounded-lg p-4">
+            <div key={c.id} className="bg-white border border-[#b1b4b6] p-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-semibold text-gray-900">{c.name}</h3>
-                  {c.relationship && <p className="text-sm text-gray-500">{c.relationship}</p>}
+                  <h3 className="font-semibold text-[#0b0c0c]">{c.name}</h3>
+                  {c.relationship && <p className="text-sm text-[#505a5f]">{c.relationship}</p>}
                   <div className="mt-2 space-y-1 text-sm">
-                    {c.phone && <p className="flex items-center gap-2"><Phone className="w-3 h-3 text-gray-400" /><a href={`tel:${c.phone}`} className="text-blue-600 hover:underline">{c.phone}</a></p>}
-                    {c.email && <p className="text-gray-600">{c.email}</p>}
-                    {c.address && <p className="text-gray-600">{c.address}</p>}
-                    {c.notes && <p className="text-gray-500 italic">{c.notes}</p>}
+                    {c.phone && <p className="flex items-center gap-2"><Phone className="w-3 h-3 text-[#b1b4b6]" /><a href={`tel:${c.phone}`} className="text-[#1d70b8] hover:underline">{c.phone}</a></p>}
+                    {c.email && <p className="text-[#505a5f]">{c.email}</p>}
+                    {c.address && <p className="text-[#505a5f]">{c.address}</p>}
+                    {c.notes && <p className="text-[#505a5f] italic">{c.notes}</p>}
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-red-400" /></Button>
+                <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-[#d4351c]" /></Button>
               </div>
             </div>
           ))}
@@ -492,15 +492,15 @@ function InventoryTab({ inventory, setInventory, user, isOnline, toast }: any) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-gray-900">Supply Inventory</h2>
+        <h2 className="font-bold text-[#0b0c0c]">Supply Inventory</h2>
         <Button size="sm" onClick={() => setAdding(!adding)}><Plus className="w-4 h-4 mr-1" />Add Item</Button>
       </div>
       {adding && (
-        <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-3">
+        <div className="bg-white border border-[#b1b4b6] p-5 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Category</Label>
-              <select value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+              <select value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="w-full border border-[#b1b4b6] rounded-md px-3 py-2 text-sm">
                 {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
             </div>
@@ -518,27 +518,27 @@ function InventoryTab({ inventory, setInventory, user, isOnline, toast }: any) {
       )}
       <div className="space-y-4">
         {grouped.filter(g => g.items.length > 0).map(group => (
-          <div key={group.value} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-              <h3 className="font-semibold text-sm text-gray-700">{group.label}</h3>
-              {group.target && <p className="text-xs text-gray-400">Target: {group.target}</p>}
+          <div key={group.value} className="bg-white border border-[#b1b4b6] overflow-hidden">
+            <div className="bg-[#f3f2f1] px-4 py-2 border-b border-[#b1b4b6]">
+              <h3 className="font-semibold text-sm text-[#0b0c0c]">{group.label}</h3>
+              {group.target && <p className="text-xs text-[#b1b4b6]">Target: {group.target}</p>}
             </div>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-[#f3f2f1]">
               {group.items.map((item: any) => {
                 const pct = item.target_quantity ? Math.min((item.quantity / item.target_quantity) * 100, 100) : null;
                 return (
                   <div key={item.id} className="px-4 py-3 flex items-center justify-between">
                     <div className="flex-1">
-                      <p className="font-medium text-sm text-gray-900">{item.item_name}</p>
-                      <p className="text-xs text-gray-500">{item.quantity} {item.unit}{item.target_quantity ? ` / ${item.target_quantity} ${item.unit}` : ""}</p>
+                      <p className="font-medium text-sm text-[#0b0c0c]">{item.item_name}</p>
+                      <p className="text-xs text-[#505a5f]">{item.quantity} {item.unit}{item.target_quantity ? ` / ${item.target_quantity} ${item.unit}` : ""}</p>
                       {pct !== null && (
                         <div className="mt-1 w-32 bg-gray-200 rounded-full h-1.5">
-                          <div className={`h-1.5 rounded-full ${pct >= 75 ? "bg-green-500" : pct >= 40 ? "bg-amber-500" : "bg-red-500"}`} style={{ width: `${pct}%` }} />
+                          <div className={`h-1.5 rounded-full ${pct >= 75 ? "bg-green-500" : pct >= 40 ? "bg-[#fdf0e8]0" : "bg-red-500"}`} style={{ width: `${pct}%` }} />
                         </div>
                       )}
-                      {item.notes && <p className="text-xs text-gray-400 mt-0.5">{item.notes}</p>}
+                      {item.notes && <p className="text-xs text-[#b1b4b6] mt-0.5">{item.notes}</p>}
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)}><Trash2 className="w-4 h-4 text-red-400" /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)}><Trash2 className="w-4 h-4 text-[#d4351c]" /></Button>
                   </div>
                 );
               })}
@@ -546,9 +546,9 @@ function InventoryTab({ inventory, setInventory, user, isOnline, toast }: any) {
           </div>
         ))}
         {inventory.length === 0 && (
-          <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-            <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No supplies tracked yet. Start adding your inventory.</p>
+          <div className="bg-white border border-[#b1b4b6] p-8 text-center">
+            <Package className="w-12 h-12 text-[#b1b4b6] mx-auto mb-3" />
+            <p className="text-[#505a5f]">No supplies tracked yet. Start adding your inventory.</p>
           </div>
         )}
       </div>
@@ -587,7 +587,7 @@ function BugoutTab({ plan, setPlan, user, isOnline, toast }: any) {
 
   const Field = ({ label, field, placeholder, multiline }: any) => (
     <div>
-      <Label className="text-sm font-medium text-gray-700">{label}</Label>
+      <Label className="text-sm font-medium text-[#0b0c0c]">{label}</Label>
       {multiline
         ? <Textarea value={(form as any)[field]} onChange={e => setForm({...form, [field]: e.target.value})} placeholder={placeholder} rows={3} className="mt-1" />
         : <Input value={(form as any)[field]} onChange={e => setForm({...form, [field]: e.target.value})} placeholder={placeholder} className="mt-1" />
@@ -598,19 +598,19 @@ function BugoutTab({ plan, setPlan, user, isOnline, toast }: any) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-gray-900">Bug-Out Plan</h2>
+        <h2 className="font-bold text-[#0b0c0c]">Bug-Out Plan</h2>
         <Button size="sm" onClick={handleSave} disabled={saving}><Save className="w-4 h-4 mr-1" />{saving ? "Saving..." : "Save Plan"}</Button>
       </div>
-      <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-5">
+      <div className="bg-white border border-[#b1b4b6] p-5 space-y-5">
         <div>
-          <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-100">Routes</h3>
+          <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-[#f3f2f1]">Routes</h3>
           <div className="space-y-3">
             <Field label="Primary Route" field="primary_route" placeholder="Main evacuation route description..." multiline />
             <Field label="Secondary Route (Backup)" field="secondary_route" placeholder="Alternative route if primary is blocked..." multiline />
           </div>
         </div>
         <div>
-          <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-100">Rally Points</h3>
+          <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-[#f3f2f1]">Rally Points</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Field label="Rally Point 1" field="rally_point_1" placeholder="Location name or address" />
             <Field label="Coordinates 1" field="rally_point_1_coords" placeholder="e.g. 51.5074, -0.1278" />
@@ -619,14 +619,14 @@ function BugoutTab({ plan, setPlan, user, isOnline, toast }: any) {
           </div>
         </div>
         <div>
-          <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-100">Destination</h3>
+          <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-[#f3f2f1]">Destination</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Field label="Final Destination" field="destination" placeholder="Safe house, bunker, family location..." />
             <Field label="Destination Coordinates" field="destination_coords" placeholder="e.g. 51.5074, -0.1278" />
           </div>
         </div>
         <div>
-          <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-100">Logistics</h3>
+          <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-[#f3f2f1]">Logistics</h3>
           <div className="space-y-3">
             <Field label="Vehicle Information" field="vehicle_info" placeholder="Vehicle type, registration, fuel type, range..." />
             <Field label="Fuel Plan" field="fuel_plan" placeholder="Fuel stops, reserve cans, alternative transport..." />
@@ -679,11 +679,11 @@ function NotesTab({ notes, setNotes, user, isOnline, toast }: any) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-gray-900">Personal Notes</h2>
+        <h2 className="font-bold text-[#0b0c0c]">Personal Notes</h2>
         <Button size="sm" onClick={() => setAdding(!adding)}><Plus className="w-4 h-4 mr-1" />New Note</Button>
       </div>
       {adding && (
-        <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-3">
+        <div className="bg-white border border-[#b1b4b6] p-5 space-y-3">
           <div><Label>Title *</Label><Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="Note title" /></div>
           <div><Label>Category</Label><Input value={form.category} onChange={e => setForm({...form, category: e.target.value})} placeholder="e.g. Medical, Security, Contacts" /></div>
           <div><Label>Content</Label><Textarea value={form.content} onChange={e => setForm({...form, content: e.target.value})} rows={5} placeholder="Write your note..." /></div>
@@ -694,23 +694,23 @@ function NotesTab({ notes, setNotes, user, isOnline, toast }: any) {
         </div>
       )}
       {notes.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-          <StickyNote className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">No notes yet. Document your plans and observations.</p>
+        <div className="bg-white border border-[#b1b4b6] p-8 text-center">
+          <StickyNote className="w-12 h-12 text-[#b1b4b6] mx-auto mb-3" />
+          <p className="text-[#505a5f]">No notes yet. Document your plans and observations.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {notes.map((note: any) => (
-            <div key={note.id} className="bg-white border border-gray-200 rounded-lg p-4">
+            <div key={note.id} className="bg-white border border-[#b1b4b6] p-4">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h3 className="font-semibold text-gray-900">{note.title}</h3>
+                  <h3 className="font-semibold text-[#0b0c0c]">{note.title}</h3>
                   {note.category && <Badge variant="secondary" className="text-xs mt-1">{note.category}</Badge>}
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => handleDelete(note.id)}><Trash2 className="w-4 h-4 text-red-400" /></Button>
+                <Button variant="ghost" size="sm" onClick={() => handleDelete(note.id)}><Trash2 className="w-4 h-4 text-[#d4351c]" /></Button>
               </div>
-              <p className="text-sm text-gray-600 line-clamp-4 whitespace-pre-wrap">{note.content}</p>
-              <p className="text-xs text-gray-400 mt-2">{new Date(note.created_at).toLocaleDateString()}</p>
+              <p className="text-sm text-[#505a5f] line-clamp-4 whitespace-pre-wrap">{note.content}</p>
+              <p className="text-xs text-[#b1b4b6] mt-2">{new Date(note.created_at).toLocaleDateString()}</p>
             </div>
           ))}
         </div>
@@ -786,11 +786,11 @@ function ChecklistsTab({ checklists, setChecklists, user, isOnline, toast }: any
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-gray-900">Preparedness Checklists</h2>
+        <h2 className="font-bold text-[#0b0c0c]">Preparedness Checklists</h2>
         <Button size="sm" onClick={() => setAdding(!adding)}><Plus className="w-4 h-4 mr-1" />New Checklist</Button>
       </div>
       {adding && (
-        <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-3">
+        <div className="bg-white border border-[#b1b4b6] p-5 space-y-3">
           <div><Label>Title *</Label><Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="e.g. 72-Hour Bug-Out Bag" /></div>
           <div><Label>Category</Label><Input value={form.category} onChange={e => setForm({...form, category: e.target.value})} placeholder="e.g. Evacuation, Medical, Home" /></div>
           <div><Label>Description</Label><Input value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Brief description..." /></div>
@@ -801,9 +801,9 @@ function ChecklistsTab({ checklists, setChecklists, user, isOnline, toast }: any
         </div>
       )}
       {checklists.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-          <ListChecks className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">No checklists yet. Create checklists to track your preparedness tasks.</p>
+        <div className="bg-white border border-[#b1b4b6] p-8 text-center">
+          <ListChecks className="w-12 h-12 text-[#b1b4b6] mx-auto mb-3" />
+          <p className="text-[#505a5f]">No checklists yet. Create checklists to track your preparedness tasks.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -812,28 +812,28 @@ function ChecklistsTab({ checklists, setChecklists, user, isOnline, toast }: any
             const done = items.filter((i: any) => i.completed).length;
             const pct = items.length > 0 ? Math.round((done / items.length) * 100) : 0;
             return (
-              <div key={cl.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+              <div key={cl.id} className="bg-white border border-[#b1b4b6] overflow-hidden">
+                <div className="px-4 py-3 bg-[#f3f2f1] border-b border-[#b1b4b6] flex items-center justify-between">
                   <div>
-                    <h3 className="font-semibold text-gray-900">{cl.title}</h3>
-                    {cl.description && <p className="text-xs text-gray-500">{cl.description}</p>}
+                    <h3 className="font-semibold text-[#0b0c0c]">{cl.title}</h3>
+                    {cl.description && <p className="text-xs text-[#505a5f]">{cl.description}</p>}
                     <div className="flex items-center gap-3 mt-1">
-                      <span className="text-xs text-gray-500">{done}/{items.length} completed</span>
+                      <span className="text-xs text-[#505a5f]">{done}/{items.length} completed</span>
                       <div className="w-24 bg-gray-200 rounded-full h-1.5">
-                        <div className={`h-1.5 rounded-full ${pct === 100 ? "bg-green-500" : pct >= 50 ? "bg-amber-500" : "bg-red-400"}`} style={{ width: `${pct}%` }} />
+                        <div className={`h-1.5 rounded-full ${pct === 100 ? "bg-green-500" : pct >= 50 ? "bg-[#fdf0e8]0" : "bg-red-400"}`} style={{ width: `${pct}%` }} />
                       </div>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => deleteChecklist(cl.id)}><Trash2 className="w-4 h-4 text-red-400" /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => deleteChecklist(cl.id)}><Trash2 className="w-4 h-4 text-[#d4351c]" /></Button>
                 </div>
                 <div className="p-4 space-y-2">
                   {items.map((item: any) => (
                     <div key={item.id} className="flex items-center gap-3">
                       <Checkbox checked={item.completed} onCheckedChange={() => toggleItem(cl.id, item.id)} />
-                      <span className={`text-sm ${item.completed ? "line-through text-gray-400" : "text-gray-700"}`}>{item.text}</span>
+                      <span className={`text-sm ${item.completed ? "line-through text-[#b1b4b6]" : "text-[#0b0c0c]"}`}>{item.text}</span>
                     </div>
                   ))}
-                  <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-[#f3f2f1]">
                     <Input
                       value={newItemText[cl.id] || ""}
                       onChange={e => setNewItemText({ ...newItemText, [cl.id]: e.target.value })}
@@ -865,32 +865,32 @@ function SavedArticlesTab({ articles, setSavedArticles, user, isOnline, toast }:
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-gray-900">Saved Articles</h2>
-        <p className="text-sm text-gray-500">Bookmark articles from the site to read offline</p>
+        <h2 className="font-bold text-[#0b0c0c]">Saved Articles</h2>
+        <p className="text-sm text-[#505a5f]">Bookmark articles from the site to read offline</p>
       </div>
       {articles.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-          <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 mb-2">No saved articles yet.</p>
-          <p className="text-sm text-gray-400">Browse articles and click the bookmark icon to save them for offline reading.</p>
+        <div className="bg-white border border-[#b1b4b6] p-8 text-center">
+          <BookOpen className="w-12 h-12 text-[#b1b4b6] mx-auto mb-3" />
+          <p className="text-[#505a5f] mb-2">No saved articles yet.</p>
+          <p className="text-sm text-[#b1b4b6]">Browse articles and click the bookmark icon to save them for offline reading.</p>
           <Button asChild variant="outline" size="sm" className="mt-4"><Link to="/latest">Browse Articles</Link></Button>
         </div>
       ) : (
         <div className="space-y-3">
           {articles.map((article: any) => (
-            <div key={article.post_id || article.id} className="bg-white border border-gray-200 rounded-lg p-4 flex items-start gap-4">
+            <div key={article.post_id || article.id} className="bg-white border border-[#b1b4b6] p-4 flex items-start gap-4">
               {article.post_image && <img src={article.post_image} alt={article.post_title} className="w-16 h-12 object-cover rounded flex-shrink-0" />}
               <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-gray-900 line-clamp-2">{article.post_title}</h3>
-                {article.post_excerpt && <p className="text-sm text-gray-500 line-clamp-2 mt-0.5">{article.post_excerpt}</p>}
+                <h3 className="font-medium text-[#0b0c0c] line-clamp-2">{article.post_title}</h3>
+                {article.post_excerpt && <p className="text-sm text-[#505a5f] line-clamp-2 mt-0.5">{article.post_excerpt}</p>}
                 <div className="flex items-center gap-3 mt-2">
                   {article.post_section && <Badge variant="secondary" className="text-xs">{article.post_section}</Badge>}
-                  <span className="text-xs text-gray-400">Saved {new Date(article.saved_at).toLocaleDateString()}</span>
+                  <span className="text-xs text-[#b1b4b6]">Saved {new Date(article.saved_at).toLocaleDateString()}</span>
                 </div>
               </div>
               <div className="flex gap-2 flex-shrink-0">
                 {article.post_url && <Button asChild variant="outline" size="sm"><Link to={article.post_url}>Read</Link></Button>}
-                <Button variant="ghost" size="sm" onClick={() => handleRemove(article.post_id || article.id)}><Trash2 className="w-4 h-4 text-red-400" /></Button>
+                <Button variant="ghost" size="sm" onClick={() => handleRemove(article.post_id || article.id)}><Trash2 className="w-4 h-4 text-[#d4351c]" /></Button>
               </div>
             </div>
           ))}
@@ -920,37 +920,37 @@ function SuppliersTab({ suppliers, isOnline }: any) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-gray-900">Emergency Suppliers</h2>
-        {!isOnline && <Badge variant="outline" className="text-orange-600 border-orange-300 text-xs">Cached — Available Offline</Badge>}
+        <h2 className="font-bold text-[#0b0c0c]">Emergency Suppliers</h2>
+        {!isOnline && <Badge variant="outline" className="text-[#f47738] border-orange-300 text-xs">Cached — Available Offline</Badge>}
       </div>
 
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+      <div className="bg-[#fdf0e8] border border-[#f47738]/30 rounded-lg p-3 text-sm text-[#f47738]">
         <strong>No internet?</strong> Call suppliers directly using the numbers below. All contact details are cached and available offline.
       </div>
 
       {/* Category filters */}
       <div className="flex gap-2 flex-wrap">
-        <button onClick={() => setFilter("all")} className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${filter === "all" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300 hover:border-blue-300"}`}>All</button>
+        <button onClick={() => setFilter("all")} className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${filter === "all" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-[#505a5f] border-[#b1b4b6] hover:border-[#1d70b8]"}`}>All</button>
         {categories.map((cat: any) => (
-          <button key={cat} onClick={() => setFilter(cat)} className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${filter === cat ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300 hover:border-blue-300"}`}>
+          <button key={cat} onClick={() => setFilter(cat)} className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${filter === cat ? "bg-blue-600 text-white border-blue-600" : "bg-white text-[#505a5f] border-[#b1b4b6] hover:border-[#1d70b8]"}`}>
             {categoryLabels[cat] || cat}
           </button>
         ))}
       </div>
 
       {filtered.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-          <Phone className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 mb-1">No emergency suppliers listed yet.</p>
-          <p className="text-xs text-gray-400">Admin can mark affiliate products as emergency suppliers in the admin panel.</p>
+        <div className="bg-white border border-[#b1b4b6] p-8 text-center">
+          <Phone className="w-12 h-12 text-[#b1b4b6] mx-auto mb-3" />
+          <p className="text-[#505a5f] mb-1">No emergency suppliers listed yet.</p>
+          <p className="text-xs text-[#b1b4b6]">Admin can mark affiliate products as emergency suppliers in the admin panel.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {filtered.map((s: any) => (
-            <div key={s.id} className="bg-white border border-gray-200 rounded-lg p-4">
+            <div key={s.id} className="bg-white border border-[#b1b4b6] p-4">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h3 className="font-semibold text-gray-900">{s.name}</h3>
+                  <h3 className="font-semibold text-[#0b0c0c]">{s.name}</h3>
                   <Badge variant="secondary" className="text-xs mt-1">{categoryLabels[s.category] || s.category}</Badge>
                 </div>
                 {s.supplier_accepts_cash && (
@@ -958,28 +958,28 @@ function SuppliersTab({ suppliers, isOnline }: any) {
                 )}
               </div>
 
-              {s.description && <p className="text-sm text-gray-600 mb-3">{s.description}</p>}
+              {s.description && <p className="text-sm text-[#505a5f] mb-3">{s.description}</p>}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                 {s.supplier_phone && (
-                  <a href={`tel:${s.supplier_phone}`} className="flex items-center gap-2 text-blue-600 hover:underline font-semibold">
+                  <a href={`tel:${s.supplier_phone}`} className="flex items-center gap-2 text-[#1d70b8] hover:underline font-semibold">
                     <Phone className="w-4 h-4" />{s.supplier_phone}
                   </a>
                 )}
                 {s.supplier_address && s.supplier_city && (
-                  <p className="flex items-center gap-2 text-gray-600">
-                    <Map className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <p className="flex items-center gap-2 text-[#505a5f]">
+                    <Map className="w-4 h-4 text-[#b1b4b6] flex-shrink-0" />
                     {s.supplier_address}, {s.supplier_city} {s.supplier_postcode}
                   </p>
                 )}
                 {s.supplier_opening_hours && (
-                  <p className="text-gray-500 text-xs col-span-2">🕐 {s.supplier_opening_hours}</p>
+                  <p className="text-[#505a5f] text-xs col-span-2">🕐 {s.supplier_opening_hours}</p>
                 )}
                 {s.supplier_coordinates && (
-                  <p className="text-gray-400 text-xs col-span-2">📍 Coords: {s.supplier_coordinates}</p>
+                  <p className="text-[#b1b4b6] col-span-2">📍 Coords: {s.supplier_coordinates}</p>
                 )}
                 {s.affiliate_url && isOnline && (
-                  <a href={s.affiliate_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:underline text-xs">
+                  <a href={s.affiliate_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#1d70b8] hover:underline text-xs">
                     <Globe className="w-3 h-3" />Order Online
                   </a>
                 )}
@@ -1021,7 +1021,7 @@ function OrderQueueTab({ orders, setOrderQueue, user, isOnline, toast }: any) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-gray-900">Order Queue</h2>
+        <h2 className="font-bold text-[#0b0c0c]">Order Queue</h2>
         {orders.length > 0 && (
           <Button size="sm" onClick={submitQueued} disabled={submitting || !isOnline}>
             <ShoppingCart className="w-4 h-4 mr-1" />
@@ -1030,31 +1030,31 @@ function OrderQueueTab({ orders, setOrderQueue, user, isOnline, toast }: any) {
         )}
       </div>
       {!isOnline && orders.length > 0 && (
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm text-orange-800">
+        <div className="bg-[#fdf0e8] border border-[#f47738]/30 rounded-lg p-3 text-sm text-[#f47738]">
           <strong>{orders.length} order{orders.length > 1 ? "s" : ""} queued.</strong> Will submit automatically when internet connection is restored.
         </div>
       )}
       {orders.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-          <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 mb-2">No queued orders.</p>
-          <p className="text-sm text-gray-400">When you add items to cart while offline, they appear here and submit when you reconnect.</p>
+        <div className="bg-white border border-[#b1b4b6] p-8 text-center">
+          <ShoppingCart className="w-12 h-12 text-[#b1b4b6] mx-auto mb-3" />
+          <p className="text-[#505a5f] mb-2">No queued orders.</p>
+          <p className="text-sm text-[#b1b4b6]">When you add items to cart while offline, they appear here and submit when you reconnect.</p>
           <Button asChild variant="outline" size="sm" className="mt-4"><Link to="/shop">Browse Supplies</Link></Button>
         </div>
       ) : (
         <div className="space-y-3">
           {orders.map((order: any) => (
-            <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-4">
+            <div key={order.id} className="bg-white border border-[#b1b4b6] p-4 flex items-center gap-4">
               {order.product_image && <img src={order.product_image} alt={order.product_name} className="w-14 h-14 object-cover rounded flex-shrink-0" />}
               <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-gray-900">{order.product_name}</h3>
-                <p className="text-sm text-gray-500">Qty: {order.quantity}</p>
-                {order.notes && <p className="text-xs text-gray-400">{order.notes}</p>}
-                <p className="text-xs text-gray-400 mt-1">Queued {new Date(order.queued_at).toLocaleString()}</p>
+                <h3 className="font-medium text-[#0b0c0c]">{order.product_name}</h3>
+                <p className="text-sm text-[#505a5f]">Qty: {order.quantity}</p>
+                {order.notes && <p className="text-xs text-[#b1b4b6]">{order.notes}</p>}
+                <p className="text-xs text-[#b1b4b6] mt-1">Queued {new Date(order.queued_at).toLocaleString()}</p>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs">Queued</Badge>
-                <Button variant="ghost" size="sm" onClick={() => removeOrder(order.id)}><Trash2 className="w-4 h-4 text-red-400" /></Button>
+                <Badge variant="outline" className="text-[#f47738] border-amber-300 text-xs">Queued</Badge>
+                <Button variant="ghost" size="sm" onClick={() => removeOrder(order.id)}><Trash2 className="w-4 h-4 text-[#d4351c]" /></Button>
               </div>
             </div>
           ))}
@@ -1174,21 +1174,21 @@ function SuppliesTab({ user, isOnline, toast, wishlist, setWishlist, orderQueue,
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-bold text-gray-900">Supplies Shop</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h2 className="font-bold text-[#0b0c0c]">Supplies Shop</h2>
+          <p className="text-xs text-[#505a5f] mt-0.5">
             {isOnline ? "Browse and order essential supplies" : "Cached products — order queued when offline"}
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setView("browse")}
-            className={`px-3 py-1.5 text-xs font-medium border transition-colors ${view === "browse" ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-700 border-gray-300 hover:border-gray-500"}`}
+            className={`px-3 py-1.5 text-xs font-medium border transition-colors ${view === "browse" ? "bg-gray-900 text-white border-gray-900" : "bg-white text-[#0b0c0c] border-[#b1b4b6] hover:border-gray-500"}`}
           >
             Browse
           </button>
           <button
             onClick={() => setView("wishlist")}
-            className={`px-3 py-1.5 text-xs font-medium border transition-colors ${view === "wishlist" ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-700 border-gray-300 hover:border-gray-500"}`}
+            className={`px-3 py-1.5 text-xs font-medium border transition-colors ${view === "wishlist" ? "bg-gray-900 text-white border-gray-900" : "bg-white text-[#0b0c0c] border-[#b1b4b6] hover:border-gray-500"}`}
           >
             Wishlist ({wishlist.length})
           </button>
@@ -1196,7 +1196,7 @@ function SuppliesTab({ user, isOnline, toast, wishlist, setWishlist, orderQueue,
       </div>
 
       {!isOnline && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+        <div className="bg-[#fdf0e8] border border-[#f47738]/30 rounded-lg p-3 text-sm text-[#f47738]">
           <strong>Offline mode.</strong> Showing cached products. Orders will be queued and opened when you reconnect.
         </div>
       )}
@@ -1212,16 +1212,16 @@ function SuppliesTab({ user, isOnline, toast, wishlist, setWishlist, orderQueue,
                 placeholder="Search supplies..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm pl-8"
+                className="w-full border border-[#b1b4b6] rounded-lg px-3 py-2 text-sm pl-8"
               />
-              <svg className="absolute left-2.5 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-2.5 top-2.5 w-4 h-4 text-[#b1b4b6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
             <select
               value={categoryFilter}
               onChange={e => setCategoryFilter(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="border border-[#b1b4b6] rounded-lg px-3 py-2 text-sm"
             >
               {categories.map(cat => (
                 <option key={cat} value={cat}>
@@ -1234,37 +1234,37 @@ function SuppliesTab({ user, isOnline, toast, wishlist, setWishlist, orderQueue,
           {loading ? (
             <div className="text-center py-12">
               <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-              <p className="text-sm text-gray-500">Loading supplies...</p>
+              <p className="text-sm text-[#505a5f]">Loading supplies...</p>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-              <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">No products found.</p>
+            <div className="bg-white border border-[#b1b4b6] p-8 text-center">
+              <Package className="w-12 h-12 text-[#b1b4b6] mx-auto mb-3" />
+              <p className="text-[#505a5f]">No products found.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {filtered.map((product: any) => (
-                <div key={product.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                <div key={product.id} className="bg-white border border-[#b1b4b6] overflow-hidden hover:shadow-md transition-shadow">
                   {product.image_url && (
                     <img src={product.image_url} alt={product.name} className="w-full h-36 object-cover" />
                   )}
                   <div className="p-4">
                     <div className="flex items-start justify-between gap-2 mb-1">
-                      <h3 className="font-semibold text-gray-900 text-sm line-clamp-2">{product.name}</h3>
+                      <h3 className="font-semibold text-[#0b0c0c] text-sm line-clamp-2">{product.name}</h3>
                       <button
                         onClick={() => toggleWishlist(product)}
-                        className={`flex-shrink-0 p-1 rounded transition-colors ${isWishlisted(product.id) ? "text-red-500" : "text-gray-300 hover:text-red-400"}`}
+                        className={`flex-shrink-0 p-1 rounded transition-colors ${isWishlisted(product.id) ? "text-red-500" : "text-[#b1b4b6] hover:text-[#d4351c]"}`}
                         title={isWishlisted(product.id) ? "Remove from wishlist" : "Add to wishlist"}
                       >
                         <Star className={`w-4 h-4 ${isWishlisted(product.id) ? "fill-red-500" : ""}`} />
                       </button>
                     </div>
                     {product.description && (
-                      <p className="text-xs text-gray-500 line-clamp-2 mb-3">{product.description}</p>
+                      <p className="text-xs text-[#505a5f] line-clamp-2 mb-3">{product.description}</p>
                     )}
                     <div className="flex items-center justify-between">
                       {product.price ? (
-                        <span className="font-bold text-gray-900">
+                        <span className="font-bold text-[#0b0c0c]">
                           {product.currency === "GBP" ? "£" : product.currency === "EUR" ? "€" : "$"}{product.price}
                         </span>
                       ) : <span />}
@@ -1277,8 +1277,8 @@ function SuppliesTab({ user, isOnline, toast, wishlist, setWishlist, orderQueue,
                       </Button>
                     </div>
                     {product.is_emergency_supplier && product.supplier_phone && (
-                      <div className="mt-2 pt-2 border-t border-gray-100">
-                        <a href={`tel:${product.supplier_phone}`} className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                      <div className="mt-2 pt-2 border-t border-[#f3f2f1]">
+                        <a href={`tel:${product.supplier_phone}`} className="text-xs text-[#1d70b8] hover:underline flex items-center gap-1">
                           <Phone className="w-3 h-3" />Call: {product.supplier_phone}
                         </a>
                       </div>
@@ -1295,10 +1295,10 @@ function SuppliesTab({ user, isOnline, toast, wishlist, setWishlist, orderQueue,
       {view === "wishlist" && (
         <>
           {wishlist.length === 0 ? (
-            <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-              <Star className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 mb-2">Your wishlist is empty.</p>
-              <p className="text-xs text-gray-400">Star products while browsing to save them here.</p>
+            <div className="bg-white border border-[#b1b4b6] p-8 text-center">
+              <Star className="w-12 h-12 text-[#b1b4b6] mx-auto mb-3" />
+              <p className="text-[#505a5f] mb-2">Your wishlist is empty.</p>
+              <p className="text-xs text-[#b1b4b6]">Star products while browsing to save them here.</p>
               <Button variant="outline" size="sm" className="mt-4" onClick={() => setView("browse")}>
                 Browse Supplies
               </Button>
@@ -1306,18 +1306,18 @@ function SuppliesTab({ user, isOnline, toast, wishlist, setWishlist, orderQueue,
           ) : (
             <div className="space-y-3">
               {wishlist.map((item: any) => (
-                <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-4">
+                <div key={item.id} className="bg-white border border-[#b1b4b6] p-4 flex items-center gap-4">
                   {item.product_image && (
                     <img src={item.product_image} alt={item.product_name} className="w-16 h-12 object-cover rounded flex-shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900 text-sm">{item.product_name}</h3>
+                    <h3 className="font-medium text-[#0b0c0c] text-sm">{item.product_name}</h3>
                     {item.product_price && (
-                      <p className="text-sm font-bold text-gray-700 mt-0.5">
+                      <p className="text-sm font-bold text-[#0b0c0c] mt-0.5">
                         {item.product_currency === "GBP" ? "£" : "$"}{item.product_price}
                       </p>
                     )}
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-[#b1b4b6] mt-0.5">
                       Saved {new Date(item.added_at).toLocaleDateString()}
                     </p>
                   </div>
@@ -1353,7 +1353,7 @@ function SuppliesTab({ user, isOnline, toast, wishlist, setWishlist, orderQueue,
                       size="sm"
                       onClick={() => setWishlist(wishlist.filter((w: any) => w.id !== item.id))}
                     >
-                      <Trash2 className="w-4 h-4 text-red-400" />
+                      <Trash2 className="w-4 h-4 text-[#d4351c]" />
                     </Button>
                   </div>
                 </div>

@@ -78,7 +78,7 @@ export default function TrainingAcademy() {
             className="w-full h-full object-cover"
           />
           {enrollment.is_completed && (
-            <div className="absolute inset-0 bg-green-600/20 flex items-center justify-center">
+            <div className="absolute inset-0 bg-[#00703c]/20 flex items-center justify-center">
               <CheckCircle className="w-16 h-16 text-white" />
             </div>
           )}
@@ -93,7 +93,7 @@ export default function TrainingAcademy() {
             </p>
           </div>
           {enrollment.is_completed && (
-            <Badge className="bg-green-600">
+            <Badge className="bg-[#00703c]">
               <CheckCircle className="w-3 h-3 mr-1" />
               Complete
             </Badge>
@@ -178,7 +178,7 @@ export default function TrainingAcademy() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3 mb-2">
-              <GraduationCap className="w-8 h-8 text-blue-600" />
+              <GraduationCap className="w-8 h-8 text-[#1d70b8]" />
             </div>
             <p className="text-3xl font-bold">{enrollments.length}</p>
             <p className="text-sm text-muted-foreground">Total Courses</p>
@@ -188,7 +188,7 @@ export default function TrainingAcademy() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3 mb-2">
-              <TrendingUp className="w-8 h-8 text-green-600" />
+              <TrendingUp className="w-8 h-8 text-[#00703c]" />
             </div>
             <p className="text-3xl font-bold">{inProgressCourses.length}</p>
             <p className="text-sm text-muted-foreground">In Progress</p>
@@ -198,7 +198,7 @@ export default function TrainingAcademy() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3 mb-2">
-              <Clock className="w-8 h-8 text-purple-600" />
+              <Clock className="w-8 h-8 text-[#1d70b8]" />
             </div>
             <p className="text-3xl font-bold">{Math.round(totalHoursLearned)}</p>
             <p className="text-sm text-muted-foreground">Hours Learned</p>
@@ -208,7 +208,7 @@ export default function TrainingAcademy() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3 mb-2">
-              <CheckCircle className="w-8 h-8 text-green-600" />
+              <CheckCircle className="w-8 h-8 text-[#00703c]" />
             </div>
             <p className="text-3xl font-bold">{completedCourses.length}</p>
             <p className="text-sm text-muted-foreground">Completed</p>
@@ -282,9 +282,9 @@ export default function TrainingAcademy() {
       )}
 
       {/* CTA */}
-      <Card className="mt-8 bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+      <Card className="mt-8 bg-[#e8f0f8] border-[#1d70b8]/30">
         <CardContent className="py-8 text-center">
-          <Download className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+          <Download className="w-12 h-12 text-[#1d70b8] mx-auto mb-4" />
           <h3 className="font-display text-2xl font-bold mb-2">Download for Offline Access</h3>
           <p className="text-muted-foreground mb-6">
             Save courses to your portal and access them without internet connection
