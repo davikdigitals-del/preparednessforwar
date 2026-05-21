@@ -129,12 +129,12 @@ export default function DashboardHome() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <div className="container py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8">
           <div>
-            <h1 className="font-display text-4xl font-bold text-white mb-2">
+            <h1 className="font-display text-2xl sm:text-4xl font-bold text-white mb-1 sm:mb-2">
               Command Center
             </h1>
-            <p className="text-slate-300">
+            <p className="text-slate-300 text-sm sm:text-base">
               Mission Status: {user?.email}
             </p>
           </div>
@@ -142,7 +142,7 @@ export default function DashboardHome() {
         </div>
 
         {/* Quick Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-2">
@@ -186,7 +186,7 @@ export default function DashboardHome() {
         </div>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {/* Training Progress */}
           <Card className="lg:col-span-2 bg-slate-800/50 border-slate-700 backdrop-blur">
             <CardHeader>
@@ -265,7 +265,7 @@ export default function DashboardHome() {
         </div>
 
         {/* Secondary Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Preparedness Status */}
           <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
             <CardHeader>
@@ -349,15 +349,15 @@ export default function DashboardHome() {
         {stats && stats.coursesEnrolled === 0 && (
           <Card className="mt-6 bg-blue-900/30 border-blue-700 backdrop-blur">
             <CardContent className="py-4">
-              <div className="flex items-center gap-4">
-                <AlertCircle className="w-8 h-8 text-blue-400 flex-shrink-0" />
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                <AlertCircle className="w-7 h-7 sm:w-8 sm:h-8 text-blue-400 flex-shrink-0" />
                 <div className="flex-1">
                   <h3 className="font-semibold text-white mb-1">Start Your Training</h3>
                   <p className="text-sm text-slate-300">
                     You haven't enrolled in any courses yet. Browse our survival and preparedness training to get started.
                   </p>
                 </div>
-                <Button asChild>
+                <Button asChild className="self-start sm:self-auto flex-shrink-0">
                   <Link to="/courses">Browse Courses</Link>
                 </Button>
               </div>

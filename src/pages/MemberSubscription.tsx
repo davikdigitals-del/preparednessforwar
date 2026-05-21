@@ -164,16 +164,16 @@ export default function MemberSubscription() {
   const paidPlans = plans.filter(p => p.slug !== 'free');
 
   return (
-    <div className="container py-8 max-w-6xl">
+    <div className="container py-6 sm:py-8 max-w-6xl px-4 sm:px-6">
       <PortalBreadcrumb items={[{ label: "My Subscription" }]} />
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="font-display text-3xl font-bold mb-2">Subscription Management</h1>
-        <p className="text-muted-foreground">Manage your subscription and billing</p>
+      <div className="mb-6 sm:mb-8">
+        <h1 className="font-display text-2xl sm:text-3xl font-bold mb-2">Subscription Management</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">Manage your subscription and billing</p>
       </div>
 
       {/* Current Subscription Status */}
-      <Card className="mb-8">
+      <Card className="mb-6 sm:mb-8">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="w-5 h-5" />
@@ -183,20 +183,20 @@ export default function MemberSubscription() {
         <CardContent>
           {subscription && subscription.status === 'active' ? (
             <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Crown className="w-6 h-6 text-primary" />
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">{subscription.subscription_plans?.name}</h3>
+                    <h3 className="font-bold text-base sm:text-lg">{subscription.subscription_plans?.name}</h3>
                     <p className="text-sm text-muted-foreground">
                       {subscription.subscription_plans?.currency === 'GBP' ? '£' : '$'}
                       {subscription.subscription_plans?.price} / {subscription.subscription_plans?.interval}
                     </p>
                   </div>
                 </div>
-                <Badge className="bg-green-500">Active</Badge>
+                <Badge className="bg-green-500 self-start">Active</Badge>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
@@ -277,7 +277,7 @@ export default function MemberSubscription() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {paidPlans.map((plan) => {
           const isCurrentPlan = subscription?.plan_id === plan.id;
           const isPopular = plan.slug === 'premium-monthly';
@@ -355,7 +355,7 @@ export default function MemberSubscription() {
       {/* FAQ or Additional Info */}
       <Card className="mt-8">
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-center">
             <div>
               <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
               <h4 className="font-bold mb-1">Cancel Anytime</h4>

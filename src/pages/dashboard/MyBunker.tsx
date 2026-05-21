@@ -173,28 +173,27 @@ export default function MyBunker() {
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between gap-3">
             <div>
               <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
                 <Link to="/dashboard" className="hover:text-blue-600">Dashboard</Link>
                 <ChevronRight className="w-3 h-3" />
                 <span>My Bunker</span>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <Shield className="w-6 h-6 text-blue-600" />
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                 My Bunker
               </h1>
-              <p className="text-sm text-gray-500 mt-0.5">Personal survival command centre — works offline</p>
+              <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Personal survival command centre — works offline</p>
             </div>
-            <div className="flex items-center gap-3">
-              <div className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded border ${isOnline ? "bg-green-50 text-green-700 border-green-200" : "bg-orange-50 text-orange-700 border-orange-200"}`}>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded border ${isOnline ? "bg-green-50 text-green-700 border-green-200" : "bg-orange-50 text-orange-700 border-orange-200"}`}>
                 {isOnline ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-                {isOnline ? "Online" : "Offline Mode"}
+                <span className="hidden sm:inline">{isOnline ? "Online" : "Offline"}</span>
               </div>
-              {lastSync && <span className="text-xs text-gray-400">Synced {lastSync}</span>}
               {isOnline && (
-                <Button variant="outline" size="sm" onClick={loadAllData}>
-                  <RefreshCw className="w-3 h-3 mr-1" />Sync
+                <Button variant="outline" size="sm" onClick={loadAllData} className="h-7 px-2 text-xs">
+                  <RefreshCw className="w-3 h-3 sm:mr-1" /><span className="hidden sm:inline">Sync</span>
                 </Button>
               )}
             </div>
@@ -202,11 +201,26 @@ export default function MyBunker() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-4 sm:py-6">
+        {/* Mobile tab selector */}
+        <div className="md:hidden mb-4">
+          <select
+            value={activeTab}
+            onChange={e => setActiveTab(e.target.value as Tab)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white font-medium"
+          >
+            {tabs.map(t => (
+              <option key={t.key} value={t.key}>
+                {t.label}{t.count !== undefined && t.count > 0 ? ` (${t.count})` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="flex gap-6">
-          {/* Sidebar */}
+          {/* Sidebar — desktop only */}
           <aside className="w-56 flex-shrink-0 hidden md:block">
-            <nav className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <nav className="bg-white border border-gray-200 rounded-lg overflow-hidden sticky top-4">
               {tabs.map(tab => (
                 <button
                   key={tab.key}
@@ -230,17 +244,6 @@ export default function MyBunker() {
               ))}
             </nav>
           </aside>
-
-          {/* Mobile tabs */}
-          <div className="md:hidden w-full mb-4">
-            <select
-              value={activeTab}
-              onChange={e => setActiveTab(e.target.value as Tab)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-            >
-              {tabs.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
-            </select>
-          </div>
 
           {/* Main content */}
           <main className="flex-1 min-w-0">
@@ -295,7 +298,7 @@ function OverviewTab({ score, scoreColor, scoreBg, contacts, inventory, checklis
       )}
 
       {/* Quick stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         {[
           { label: "Emergency Contacts", value: contacts.length, icon: Users, tab: "contacts", target: 3 },
           { label: "Supply Categories", value: `${covered.length}/4`, icon: Package, tab: "inventory", target: 4 },
@@ -388,7 +391,7 @@ function ContactsTab({ contacts, setContacts, user, isOnline, toast }: any) {
       </div>
       {adding && (
         <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Name *</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Full name" /></div>
             <div><Label>Relationship</Label><Input value={form.relationship} onChange={e => setForm({...form, relationship: e.target.value})} placeholder="e.g. Spouse, Parent" /></div>
             <div><Label>Phone</Label><Input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="+44 7700 000000" /></div>

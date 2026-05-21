@@ -108,10 +108,10 @@ export default function MemberDashboard() {
               <span className="text-sm font-bold tracking-widest uppercase">Preparedness For War</span>
               <span className="hidden sm:inline text-[#b1b4b6] text-sm">— Member Portal</span>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <div className={`flex items-center gap-1.5 text-xs ${isOnline ? "text-[#00703c]" : "text-[#d4351c]"}`}>
                 <div className={`w-2 h-2 rounded-full ${isOnline ? "bg-[#00703c]" : "bg-[#d4351c]"}`} />
-                {isOnline ? "Online" : "Offline"}
+                <span className="hidden sm:inline">{isOnline ? "Online" : "Offline"}</span>
               </div>
               {unreadNotifications.length > 0 && (
                 <button onClick={markAllNotificationsRead} className="relative text-white hover:text-[#b1b4b6] transition-colors">
@@ -137,11 +137,11 @@ export default function MemberDashboard() {
       {/* ── IDENTITY BAR ── */}
       <div className="bg-[#1d70b8] text-white">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-5">
-          <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>
               <p className="text-[#b1b4b6] text-xs uppercase tracking-wider mb-1">Signed in as</p>
-              <h1 className="text-xl sm:text-2xl font-bold">{user.name || user.email}</h1>
-              <div className="flex items-center gap-3 mt-1.5 text-sm text-[#b1b4b6]">
+              <h1 className="text-lg sm:text-2xl font-bold">{user.name || user.email}</h1>
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1.5 text-sm text-[#b1b4b6]">
                 {userCountry && <span>{userCountry.flag} {userCountry.name}</span>}
                 <span>·</span>
                 {isPremium
@@ -222,7 +222,7 @@ export default function MemberDashboard() {
         </div>
       )}
 
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <div className="flex gap-8">
 
           {/* ── LEFT SIDEBAR ── */}
@@ -281,7 +281,7 @@ export default function MemberDashboard() {
                   { label: "Field Reports", value: stats.reportsSubmitted, sub: `${stats.reportsApproved} approved` },
                   { label: "Offline Items", value: stats.offlineItems, sub: "saved locally" },
                 ].map((s, i) => (
-                  <div key={s.label} className={`bg-white p-4 ${i < 3 ? "border-r border-[#b1b4b6]" : ""}`}>
+                  <div key={s.label} className={`bg-white p-3 sm:p-4 ${i % 2 === 0 ? "border-r border-[#b1b4b6]" : ""} ${i < 2 ? "border-b border-[#b1b4b6] sm:border-b-0" : ""} ${i === 1 || i === 2 ? "sm:border-r border-[#b1b4b6]" : ""}`}>
                     <p className="text-2xl font-bold text-[#0b0c0c]">{s.value}</p>
                     <p className="text-xs font-semibold text-[#0b0c0c] mt-0.5">{s.label}</p>
                     <p className="text-xs text-[#505a5f] mt-0.5">{s.sub}</p>
@@ -408,13 +408,13 @@ export default function MemberDashboard() {
                     tagColor: isPremium ? "text-[#00703c]" : "text-[#505a5f]",
                   },
                 ].map((section, i) => (
-                  <div key={section.title} className={`bg-white p-5 flex gap-4 ${i > 0 ? "border-t border-[#b1b4b6]" : ""}`}>
-                    <div className="w-10 h-10 bg-[#f3f2f1] flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <section.icon className="w-5 h-5 text-[#1d70b8]" />
+                  <div key={section.title} className={`bg-white p-4 sm:p-5 flex gap-3 sm:gap-4 ${i > 0 ? "border-t border-[#b1b4b6]" : ""}`}>
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 bg-[#f3f2f1] flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <section.icon className="w-4 h-4 sm:w-5 sm:h-5 text-[#1d70b8]" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-3 mb-1">
-                        <h3 className="font-bold text-[#0b0c0c] text-base">{section.title}</h3>
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h3 className="font-bold text-[#0b0c0c] text-sm sm:text-base">{section.title}</h3>
                         {section.tag && (
                           <span className={`text-xs font-semibold flex-shrink-0 ${section.tagColor || "text-[#505a5f]"}`}>
                             {section.tag}
@@ -457,7 +457,7 @@ export default function MemberDashboard() {
                       className={`flex items-start gap-4 bg-white p-4 hover:bg-[#f3f2f1] transition-colors group ${i > 0 ? "border-t border-[#b1b4b6]" : ""}`}
                     >
                       {post.image && (
-                        <img src={post.image} alt={post.title} className="w-20 h-14 object-cover flex-shrink-0" />
+                        <img src={post.image} alt={post.title} className="w-16 sm:w-20 h-12 sm:h-14 object-cover flex-shrink-0" />
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-[#0b0c0c] line-clamp-2 group-hover:text-[#1d70b8] transition-colors">
@@ -508,11 +508,11 @@ export default function MemberDashboard() {
                 <p className="text-sm text-[#505a5f] mb-4">
                   You have not enrolled in any courses yet. Browse our survival and preparedness training catalogue to get started.
                 </p>
-                <div className="flex gap-3 flex-wrap">
-                  <Link to="/courses" className="bg-[#00703c] text-white text-sm font-bold px-4 py-2 hover:bg-[#005a30] transition-colors">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Link to="/courses" className="bg-[#00703c] text-white text-sm font-bold px-4 py-2 hover:bg-[#005a30] transition-colors text-center">
                     Browse courses
                   </Link>
-                  <Link to="/dashboard/submit-report" className="bg-white text-[#0b0c0c] text-sm font-bold px-4 py-2 border-2 border-[#0b0c0c] hover:bg-[#f3f2f1] transition-colors">
+                  <Link to="/dashboard/submit-report" className="bg-white text-[#0b0c0c] text-sm font-bold px-4 py-2 border-2 border-[#0b0c0c] hover:bg-[#f3f2f1] transition-colors text-center">
                     Submit a report
                   </Link>
                 </div>

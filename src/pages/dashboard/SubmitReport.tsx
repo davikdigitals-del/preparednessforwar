@@ -91,11 +91,11 @@ export default function SubmitReport() {
   };
 
   return (
-    <div className="container max-w-4xl py-8">
+    <div className="container max-w-4xl py-6 sm:py-8 px-4 sm:px-6">
       <PortalBreadcrumb items={[{ label: "Field Reports", to: "/dashboard/my-reports" }, { label: "Submit Report" }]} />
-      <div className="mb-8">
-        <h1 className="font-display text-4xl font-bold mb-2">Submit Field Report</h1>
-        <p className="text-muted-foreground">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="font-display text-2xl sm:text-4xl font-bold mb-2">Submit Field Report</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">
           Share your observations, experiences, and intelligence with the community
         </p>
       </div>
@@ -165,7 +165,7 @@ export default function SubmitReport() {
             </p>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Button
               onClick={() => handleSubmit('pending')}
               disabled={loading}
@@ -178,6 +178,7 @@ export default function SubmitReport() {
               variant="outline"
               onClick={() => handleSubmit('draft')}
               disabled={loading}
+              className="sm:flex-shrink-0"
             >
               <Save className="w-4 h-4 mr-2" />
               Save as Draft

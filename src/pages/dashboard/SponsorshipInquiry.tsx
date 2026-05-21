@@ -71,7 +71,7 @@ export default function SponsorshipInquiry() {
 
   if (submitted) {
     return (
-      <div className="container py-16 max-w-2xl text-center">
+      <div className="container py-10 sm:py-16 max-w-2xl text-center px-4 sm:px-6">
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircle className="w-10 h-10 text-green-600" />
         </div>
@@ -106,15 +106,15 @@ export default function SponsorshipInquiry() {
   }
 
   return (
-    <div className="container py-8 max-w-3xl">
+    <div className="container py-6 sm:py-8 max-w-3xl px-4 sm:px-6">
       <PortalBreadcrumb items={[{ label: "Sponsorship Inquiry" }]} />
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="font-display text-4xl font-bold mb-2 flex items-center gap-3">
-          <Handshake className="w-9 h-9 text-primary" />
+      <div className="mb-6 sm:mb-8">
+        <h1 className="font-display text-2xl sm:text-4xl font-bold mb-2 flex items-center gap-2 sm:gap-3">
+          <Handshake className="w-7 h-7 sm:w-9 sm:h-9 text-primary" />
           Sponsorship Inquiry
         </h1>
-        <p className="text-muted-foreground text-lg">
+        <p className="text-muted-foreground text-sm sm:text-lg">
           Partner with us to reach a highly engaged audience of preparedness-focused readers across the UK, EU & NATO countries.
         </p>
       </div>
@@ -245,7 +245,7 @@ export default function SponsorshipInquiry() {
           <CardContent className="space-y-4">
             <div>
               <Label className="mb-3 block">Type of Sponsorship *</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {sponsorshipTypes.map((type) => (
                   <div
                     key={type.value}

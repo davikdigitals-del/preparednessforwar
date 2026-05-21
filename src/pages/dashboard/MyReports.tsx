@@ -68,16 +68,16 @@ export default function MyReports() {
   const ReportCard = ({ report }: { report: MemberReport }) => (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader>
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div className="flex-1">
-            <CardTitle className="text-lg mb-2">{report.title}</CardTitle>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <CardTitle className="text-base sm:text-lg mb-2">{report.title}</CardTitle>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm text-muted-foreground">
               <span className="font-medium">{report.category}</span>
               {report.location && <span>📍 {report.location}</span>}
               <span>{new Date(report.created_at).toLocaleDateString()}</span>
             </div>
           </div>
-          {getStatusBadge(report.status)}
+          <div className="flex-shrink-0">{getStatusBadge(report.status)}</div>
         </div>
       </CardHeader>
       <CardContent>
@@ -144,14 +144,14 @@ export default function MyReports() {
   return (
     <div className="container py-8">
       <PortalBreadcrumb items={[{ label: "Field Reports", to: "/dashboard/my-reports" }, { label: "My Reports" }]} />
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="font-display text-4xl font-bold mb-2">My Reports</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-display text-2xl sm:text-4xl font-bold mb-1 sm:mb-2">My Reports</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
             Track and manage your submitted field reports
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className="self-start sm:self-auto">
           <Link to="/dashboard/submit-report">
             <Plus className="w-4 h-4 mr-2" />
             New Report
@@ -160,7 +160,7 @@ export default function MyReports() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
@@ -213,12 +213,12 @@ export default function MyReports() {
         </Card>
       ) : (
         <Tabs defaultValue="all" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="all">All ({reports.length})</TabsTrigger>
-            <TabsTrigger value="pending">Pending ({pendingReports.length})</TabsTrigger>
-            <TabsTrigger value="approved">Approved ({approvedReports.length})</TabsTrigger>
-            <TabsTrigger value="rejected">Rejected ({rejectedReports.length})</TabsTrigger>
-            <TabsTrigger value="drafts">Drafts ({draftReports.length})</TabsTrigger>
+          <TabsList className="flex flex-wrap h-auto gap-1">
+            <TabsTrigger value="all" className="text-xs sm:text-sm">All ({reports.length})</TabsTrigger>
+            <TabsTrigger value="pending" className="text-xs sm:text-sm">Pending ({pendingReports.length})</TabsTrigger>
+            <TabsTrigger value="approved" className="text-xs sm:text-sm">Approved ({approvedReports.length})</TabsTrigger>
+            <TabsTrigger value="rejected" className="text-xs sm:text-sm">Rejected ({rejectedReports.length})</TabsTrigger>
+            <TabsTrigger value="drafts" className="text-xs sm:text-sm">Drafts ({draftReports.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="space-y-4">

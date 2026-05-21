@@ -114,12 +114,12 @@ export default function OfflineContentManager() {
   }
 
   return (
-    <div className="container py-8">
+    <div className="container py-6 sm:py-8 px-4 sm:px-6">
       <PortalBreadcrumb items={[{ label: "Offline Content" }]} />
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="font-display text-4xl font-bold mb-2">Offline Content Manager</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-display text-2xl sm:text-4xl font-bold mb-1 sm:mb-2">Offline Content Manager</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
             Manage content saved for offline access
           </p>
         </div>
@@ -127,7 +127,7 @@ export default function OfflineContentManager() {
       </div>
 
       {/* Storage Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -213,13 +213,13 @@ export default function OfflineContentManager() {
               {content.map(item => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-2"
                 >
-                  <div className="flex items-center gap-4 flex-1 min-w-0">
-                    {getContentIcon(item.content_type)}
+                  <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                    <div className="flex-shrink-0 mt-0.5 sm:mt-0">{getContentIcon(item.content_type)}</div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium truncate">{item.content_title || 'Untitled'}</h4>
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <h4 className="font-medium truncate text-sm sm:text-base">{item.content_title || 'Untitled'}</h4>
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 text-xs sm:text-sm text-muted-foreground mt-0.5">
                         <Badge variant="outline" className="text-xs">
                           {item.content_type}
                         </Badge>

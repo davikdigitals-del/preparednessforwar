@@ -164,17 +164,17 @@ export default function TrainingAcademy() {
   }
 
   return (
-    <div className="container py-8">
+    <div className="container py-6 sm:py-8 px-4 sm:px-6">
       <PortalBreadcrumb items={[{ label: "Training Academy" }]} />
-      <div className="mb-8">
-        <h1 className="font-display text-4xl font-bold mb-2">Training Academy</h1>
-        <p className="text-muted-foreground">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="font-display text-2xl sm:text-4xl font-bold mb-2">Training Academy</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">
           Your survival and preparedness training courses
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3 mb-2">
@@ -231,14 +231,14 @@ export default function TrainingAcademy() {
         </Card>
       ) : (
         <Tabs defaultValue="in-progress" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="in-progress">
+          <TabsList className="flex flex-wrap h-auto gap-1">
+            <TabsTrigger value="in-progress" className="text-xs sm:text-sm">
               In Progress ({inProgressCourses.length})
             </TabsTrigger>
-            <TabsTrigger value="not-started">
+            <TabsTrigger value="not-started" className="text-xs sm:text-sm">
               Not Started ({notStartedCourses.length})
             </TabsTrigger>
-            <TabsTrigger value="completed">
+            <TabsTrigger value="completed" className="text-xs sm:text-sm">
               Completed ({completedCourses.length})
             </TabsTrigger>
           </TabsList>

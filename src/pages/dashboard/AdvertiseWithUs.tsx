@@ -226,22 +226,22 @@ export default function AdvertiseWithUs() {
   );
 
   return (
-    <div className="container py-8 max-w-5xl">
+    <div className="container py-6 sm:py-8 max-w-5xl px-4 sm:px-6">
       <PortalBreadcrumb items={[{ label: "Advertise With Us" }]} />
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="font-display text-4xl font-bold mb-2 flex items-center gap-3">
-          <Megaphone className="w-9 h-9 text-primary" />
+      <div className="mb-6 sm:mb-8">
+        <h1 className="font-display text-2xl sm:text-4xl font-bold mb-2 flex items-center gap-2 sm:gap-3">
+          <Megaphone className="w-7 h-7 sm:w-9 sm:h-9 text-primary" />
           Advertise With Us
         </h1>
-        <p className="text-muted-foreground text-lg">
+        <p className="text-muted-foreground text-sm sm:text-lg">
           Reach thousands of preparedness-focused readers across the UK, EU & NATO countries.
           Pay and your ad goes live immediately.
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-8 border-b">
+      <div className="flex gap-1 mb-8 border-b overflow-x-auto">
         {[
           { key: "browse", label: "Ad Placements" },
           { key: "create", label: "Place Ad", disabled: !selectedPlacement },
@@ -251,7 +251,7 @@ export default function AdvertiseWithUs() {
             key={tab.key}
             onClick={() => !(tab as any).disabled && setStep(tab.key as any)}
             disabled={(tab as any).disabled}
-            className={`px-5 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${
               step === tab.key
                 ? "border-primary text-primary"
                 : (tab as any).disabled
@@ -280,7 +280,7 @@ export default function AdvertiseWithUs() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {placements.map((placement) => {
               const Icon = locationIcons[placement.location] || Monitor;
               const isSelected = selectedPlacement?.id === placement.id;
@@ -510,12 +510,12 @@ export default function AdvertiseWithUs() {
             myAds.map((ad) => (
               <Card key={ad.id}>
                 <CardContent className="py-4">
-                  <div className="flex items-start gap-4">
+                  <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                     {ad.image_url && (
                       <img
                         src={ad.image_url}
                         alt={ad.title}
-                        className="w-24 h-16 object-cover rounded flex-shrink-0 border"
+                        className="w-full sm:w-24 h-32 sm:h-16 object-cover rounded flex-shrink-0 border"
                       />
                     )}
                     <div className="flex-1 min-w-0">
