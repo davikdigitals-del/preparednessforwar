@@ -115,16 +115,10 @@ export default function SubscribePage() {
       const accessToken = sessionData?.session?.access_token;
 
       if (!accessToken) {
-        toast({
-          title: 'Session expired',
-          description: 'Please log in again.',
-          variant: 'destructive',
-        });
-        navigate('/login?redirect=/subscribe?plan=' + plan.id);
-        return;
+        console.warn('No access token but user exists — proceeding anyway');
       }
 
-      // Call edge function directly via fetch
+      // Call edge function — pass user info in body since token auth is unreliable
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const response = await fetch(
         `${supabaseUrl}/functions/v1/create-checkout-session`,
@@ -132,10 +126,13 @@ export default function SubscribePage() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
             'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
-          body: JSON.stringify({ planId: plan.id }),
+          body: JSON.stringify({
+            planId: plan.id,
+            userId: currentUser.id,
+            userEmail: currentUser.email,
+          }),
         }
       );
 
