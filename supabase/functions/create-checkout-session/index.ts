@@ -15,56 +15,58 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // Extract Bearer token from Authorization header
-    const authHeader = req.headers.get('Authorization')
-    console.log('Auth header present:', !!authHeader)
-    console.log('Auth header starts with Bearer:', authHeader?.startsWith('Bearer '))
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new Error('Not authenticated - missing or invalid Authorization header')
-    }
-
-    const token = authHeader.replace('Bearer ', '').trim()
-    console.log('Token length:', token.length)
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
-    console.log('SUPABASE_URL set:', !!supabaseUrl)
-    console.log('SERVICE_ROLE_KEY set:', !!serviceRoleKey)
-    console.log('ANON_KEY set:', !!anonKey)
+    // Extract the user JWT from Authorization header
+    const authHeader = req.headers.get('Authorization') ?? ''
+    const token = authHeader.replace('Bearer ', '').trim()
 
-    // Use service role key if available, otherwise fall back to anon key
-    const adminKey = serviceRoleKey || anonKey
-    if (!adminKey) {
-      throw new Error('Not authenticated - Supabase keys not configured')
+    console.log('token present:', !!token)
+    console.log('token length:', token.length)
+    console.log('serviceRoleKey set:', !!serviceRoleKey)
+
+    // Decode token payload to check what we received (without verifying)
+    let tokenPayload: any = {}
+    try {
+      const parts = token.split('.')
+      if (parts.length === 3) {
+        tokenPayload = JSON.parse(atob(parts[1]))
+      }
+    } catch (_) {}
+
+    console.log('token role:', tokenPayload?.role)
+    console.log('token sub:', tokenPayload?.sub ?? 'MISSING')
+
+    // Reject immediately if the token is the anon key (no sub claim)
+    if (!tokenPayload?.sub) {
+      throw new Error('Not authenticated - no user session found. Please log in and try again.')
     }
 
-    const supabaseAdmin = createClient(supabaseUrl, adminKey, {
+    // Verify the token using service role key (preferred) or anon key
+    const verifyKey = serviceRoleKey || anonKey
+    const supabaseAdmin = createClient(supabaseUrl, verifyKey, {
       auth: { persistSession: false },
     })
 
-    // Verify the user JWT
     const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token)
     console.log('getUser error:', userError?.message ?? 'none')
-    console.log('User found:', !!user)
+    console.log('user id:', user?.id ?? 'none')
 
     if (userError || !user) {
       throw new Error(`Not authenticated - ${userError?.message ?? 'user not found'}`)
     }
 
-    // Parse request body
+    // Parse body
     const { planId } = await req.json()
-    console.log('planId:', planId)
 
-    // Fetch plan details using anon client with user token
+    // Fetch plan
     const supabaseClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     })
@@ -79,28 +81,22 @@ serve(async (req) => {
       throw new Error(`Plan not found - ${planError?.message ?? 'no data'}`)
     }
 
-    // Get the origin for redirect URLs
     const origin = req.headers.get('origin') || 'https://preparednessforwar.onrender.com'
 
-    // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: plan.currency.toLowerCase(),
-            product_data: {
-              name: plan.name,
-              description: `${plan.name} subscription`,
-            },
-            unit_amount: Math.round(plan.price * 100),
-            recurring: {
-              interval: plan.interval,
-            },
+      line_items: [{
+        price_data: {
+          currency: plan.currency.toLowerCase(),
+          product_data: {
+            name: plan.name,
+            description: `${plan.name} subscription`,
           },
-          quantity: 1,
+          unit_amount: Math.round(plan.price * 100),
+          recurring: { interval: plan.interval },
         },
-      ],
+        quantity: 1,
+      }],
       mode: 'subscription',
       success_url: `${origin}/dashboard?subscription=success`,
       cancel_url: `${origin}/subscribe?plan=${planId}`,
@@ -117,6 +113,7 @@ serve(async (req) => {
       JSON.stringify({ sessionId: session.id, url: session.url }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
+
   } catch (error: any) {
     console.error('create-checkout-session error:', error.message)
     return new Response(

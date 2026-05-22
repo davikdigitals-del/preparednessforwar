@@ -97,21 +97,36 @@ export default function SubscribePage() {
     setSelectedPlan(plan);
 
     try {
-      // Force a live token refresh to ensure we have a valid user JWT (not anon key)
-      const { error: refreshError } = await supabase.auth.refreshSession();
-      if (refreshError) {
-        console.warn('Session refresh failed:', refreshError.message);
-      }
+      // Force refresh to get a fresh user JWT
+      await supabase.auth.refreshSession();
 
       const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData?.session?.access_token;
+      const session = sessionData?.session;
+      const accessToken = session?.access_token;
 
-      if (!accessToken) {
+      // Debug: log what we have
+      console.log('Session user id:', session?.user?.id ?? 'NONE');
+      console.log('Access token present:', !!accessToken);
+      if (accessToken) {
+        // Decode without verifying to check token type
+        try {
+          const payload = JSON.parse(atob(accessToken.split('.')[1]));
+          console.log('Token role:', payload.role);
+          console.log('Token sub:', payload.sub ?? 'MISSING - this is the anon key!');
+        } catch (_) {}
+      }
+
+      if (!accessToken || !session?.user?.id) {
+        toast({
+          title: 'Please log in',
+          description: 'You need to be logged in to subscribe.',
+          variant: 'destructive',
+        });
         navigate('/login?redirect=/subscribe?plan=' + plan.id);
         return;
       }
 
-      // Call edge function directly via fetch — bypasses any SDK token confusion
+      // Call edge function directly via fetch
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const response = await fetch(
         `${supabaseUrl}/functions/v1/create-checkout-session`,
@@ -132,7 +147,6 @@ export default function SubscribePage() {
         throw new Error(result.error || 'Failed to create checkout session');
       }
 
-      // Redirect to Stripe Checkout
       if (result.url) {
         window.location.href = result.url;
       } else {
