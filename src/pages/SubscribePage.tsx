@@ -57,13 +57,16 @@ export default function SubscribePage() {
   }, []);
 
   useEffect(() => {
-    if (planIdFromUrl && plans.length > 0 && user) {
+    // Only auto-trigger after user is confirmed loaded and plans are ready
+    if (planIdFromUrl && plans.length > 0 && user && !loading) {
       const plan = plans.find(p => p.id === planIdFromUrl);
       if (plan) {
-        handleSelectPlan(plan);
+        // Small delay to ensure session is fully initialized
+        const timer = setTimeout(() => handleSelectPlan(plan), 500);
+        return () => clearTimeout(timer);
       }
     }
-  }, [planIdFromUrl, plans, user]);
+  }, [planIdFromUrl, plans, user, loading]);
 
   const fetchPlans = async () => {
     try {
