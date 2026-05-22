@@ -199,10 +199,20 @@ export function SiteHeader() {
 
           {/* Right actions */}
           <div className="flex items-center gap-1 sm:gap-2">
-            {/* Mobile Search */}
-            <button className="lg:hidden p-2 hover:bg-gray-100 rounded-md transition-colors">
-              <Search className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+            {/* Mobile: show user avatar/dashboard if logged in, else show login */}
+            {user ? (
+              <Button variant="ghost" size="sm" asChild className="lg:hidden">
+                <Link to="/dashboard">
+                  <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                </Link>
+              </Button>
+            ) : (
+              <Button variant="ghost" size="sm" asChild className="lg:hidden">
+                <Link to="/login">
+                  <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                </Link>
+              </Button>
+            )}
 
             {user ? (
               <>
