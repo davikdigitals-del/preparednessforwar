@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { Button } from "@/components/ui/button";
-import { Clock, Users, Star, BookOpen, Globe, Award, CheckCircle, Play, Lock } from "lucide-react";
+import { Clock, Users, Star, BookOpen, Globe, Award, CheckCircle, Play, Lock, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Course, CourseModule, CourseReview } from "@/types/monetization";
 
@@ -11,6 +12,7 @@ export default function CourseDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isPremium } = usePremiumStatus();
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [reviews, setReviews] = useState<CourseReview[]>([]);
@@ -90,12 +92,12 @@ export default function CourseDetailPage() {
       return;
     }
 
-    if (course?.is_free) {
-      // Create free enrollment
+    if (course?.is_free || isPremium) {
+      // Free course OR premium subscriber — enroll for free
       createFreeEnrollment();
     } else {
-      // Redirect to checkout
-      navigate(`/checkout/course/${course?.id}`);
+      // Redirect to subscribe page
+      navigate(`/subscribe`);
     }
   };
 
@@ -225,10 +227,21 @@ export default function CourseDetailPage() {
                 <div className="mb-4">
                   {course.is_free ? (
                     <p className="text-3xl font-bold text-green-600">FREE</p>
+                  ) : isPremium ? (
+                    <div>
+                      <p className="text-3xl font-bold text-primary flex items-center gap-2">
+                        <Crown className="w-7 h-7" /> Premium
+                      </p>
+                      <p className="text-sm text-green-600 font-medium mt-1">Included in your subscription</p>
+                    </div>
                   ) : (
                     <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Crown className="w-5 h-5 text-primary" />
+                        <span className="text-sm font-semibold text-primary">Premium Members Only</span>
+                      </div>
                       <p className="text-3xl font-bold">${course.price}</p>
-                      <p className="text-sm text-gray-600">{course.currency}</p>
+                      <p className="text-sm text-gray-500 mt-1">or subscribe for unlimited access</p>
                     </div>
                   )}
                 </div>
@@ -247,10 +260,20 @@ export default function CourseDetailPage() {
                       Continue Learning
                     </Button>
                   </div>
-                ) : (
+                ) : course.is_free || isPremium ? (
                   <Button className="w-full" size="lg" onClick={handleEnroll}>
-                    {course.is_free ? "Enroll for Free" : "Enroll Now"}
+                    {course.is_free ? "Enroll for Free" : "Start Learning"}
                   </Button>
+                ) : (
+                  <div className="space-y-3">
+                    <Button className="w-full" size="lg" onClick={handleEnroll}>
+                      <Crown className="w-4 h-4 mr-2" />
+                      Subscribe to Access
+                    </Button>
+                    <p className="text-xs text-center text-gray-500">
+                      Get unlimited access to all courses
+                    </p>
+                  </div>
                 )}
 
                 <div className="mt-6 space-y-2 text-sm">

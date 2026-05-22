@@ -36,8 +36,9 @@ export function CourseCard({ course, featured = false }: CourseCardProps) {
               FREE
             </span>
           ) : (
-            <span className="px-3 py-1 bg-blue-900 text-white text-xs font-bold uppercase rounded">
-              ${course.price}
+            <span className="px-3 py-1 bg-primary text-white text-xs font-bold uppercase rounded flex items-center gap-1">
+              <Crown className="w-3 h-3" />
+              PREMIUM
             </span>
           )}
           {featured && (
