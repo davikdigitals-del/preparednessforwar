@@ -18,6 +18,14 @@ export const navSections: NavSection[] = [
       { title: "Global Situation", slug: "global-situation" },
       { title: "Infrastructure Disruptions", slug: "infrastructure" },
     ],
+    tools: [
+      { title: "Breaking News", slug: "breaking" },
+      { title: "Live Updates", slug: "live" },
+    ],
+    featured: [
+      { title: "UK Emergency Preparedness Guidelines 2026", slug: "uk-guidelines-2026", image: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&q=80" },
+      { title: "Power Grid Disruption: Northern Europe", slug: "power-grid-europe", image: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=400&q=80" },
+    ],
   },
   {
     title: "Survival Guides",
@@ -29,6 +37,14 @@ export const navSections: NavSection[] = [
       { title: "Home Preparation", slug: "home-preparation" },
       { title: "Urban Survival", slug: "urban-survival" },
       { title: "Rural Survival", slug: "rural-survival" },
+    ],
+    tools: [
+      { title: "72-Hour Kit Builder", slug: "kit-builder" },
+      { title: "Evacuation Planner", slug: "evacuation-planner" },
+    ],
+    featured: [
+      { title: "Build a 14-Day Emergency Water Supply", slug: "water-supply-guide", image: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&q=80" },
+      { title: "Urban Evacuation Routes: Exit Strategy", slug: "urban-evacuation", image: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&q=80" },
     ],
   },
   {
@@ -42,6 +58,14 @@ export const navSections: NavSection[] = [
       { title: "First Aid", slug: "first-aid" },
       { title: "Mental Health", slug: "mental-health" },
     ],
+    tools: [
+      { title: "Vaccination Tracker", slug: "vaccination-tracker" },
+      { title: "First Aid Guide", slug: "first-aid-guide" },
+    ],
+    featured: [
+      { title: "Essential First Aid Skills Every Household Needs", slug: "first-aid-skills", image: "https://images.unsplash.com/photo-1603398938378-e54eab446dde?w=400&q=80" },
+      { title: "Mental Health Resilience in Crisis", slug: "mental-health-crisis", image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=80" },
+    ],
   },
   {
     title: "Official Directives",
@@ -52,6 +76,14 @@ export const navSections: NavSection[] = [
       { title: "NATO Civil Preparedness", slug: "nato-civil" },
       { title: "EU Civil Protection", slug: "eu-civil" },
       { title: "Red Cross Guidance", slug: "red-cross" },
+    ],
+    tools: [
+      { title: "Directive Archive", slug: "archive" },
+      { title: "Country Guidance", slug: "by-country" },
+    ],
+    featured: [
+      { title: "NATO Civil Preparedness Framework", slug: "nato-framework", image: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=400&q=80" },
+      { title: "Red Cross Winter Shelter Guidelines", slug: "red-cross-shelter", image: "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=400&q=80" },
     ],
   },
   {
@@ -67,6 +99,14 @@ export const navSections: NavSection[] = [
       { title: "Clothing & Shelter", slug: "clothing-shelter" },
       { title: "Hygiene & Sanitation", slug: "hygiene" },
     ],
+    tools: [
+      { title: "Supply Calculator", slug: "calculator" },
+      { title: "Shopping List Generator", slug: "shopping-list" },
+    ],
+    featured: [
+      { title: "Long-Term Food Storage Guide", slug: "food-storage", image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80" },
+      { title: "Emergency Communication Without Internet", slug: "offline-comms", image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&q=80" },
+    ],
   },
   {
     title: "Resources",
@@ -78,6 +118,13 @@ export const navSections: NavSection[] = [
       { title: "Schedules", slug: "schedules" },
       { title: "Downloads", slug: "downloads" },
     ],
+    tools: [
+      { title: "All Downloads", slug: "all-downloads" },
+      { title: "Printable Packs", slug: "printable-packs" },
+    ],
+    featured: [
+      { title: "Printable Emergency Checklists", slug: "emergency-checklists", image: "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400&q=80" },
+    ],
   },
   {
     title: "Education",
@@ -87,6 +134,13 @@ export const navSections: NavSection[] = [
       { title: "Courses", slug: "courses" },
       { title: "Training Programmes", slug: "training" },
       { title: "Workshops", slug: "workshops" },
+    ],
+    tools: [
+      { title: "Browse All Courses", slug: "all-courses" },
+      { title: "My Learning", slug: "my-courses" },
+    ],
+    featured: [
+      { title: "Emergency Preparedness Courses", slug: "preparedness-courses", image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=400&q=80" },
     ],
   },
   {
@@ -98,6 +152,13 @@ export const navSections: NavSection[] = [
       { title: "Videos", slug: "videos" },
       { title: "Documentaries", slug: "documentaries" },
       { title: "Interviews", slug: "interviews" },
+    ],
+    tools: [
+      { title: "Media Hub", slug: "media-hub" },
+      { title: "Latest Episodes", slug: "latest" },
+    ],
+    featured: [
+      { title: "Podcast: Preparing for Power Outages", slug: "power-outage-podcast", image: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=400&q=80" },
     ],
   },
 ];

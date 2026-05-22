@@ -10,6 +10,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useMegaMenuContext } from './MegaMenuContext';
 import { DEFAULT_TIMER_CONFIG } from './types';
+import { ChevronDown } from 'lucide-react';
 import type { MegaMenuTriggerProps } from './types';
 
 /**
@@ -166,13 +167,13 @@ export function MegaMenuTrigger({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
-      // ARIA attributes (Requirements 10.2, 10.3)
       aria-expanded={isActive}
       aria-haspopup="true"
       aria-controls={`mega-menu-${menuId}`}
       role="button"
     >
       {children || label}
+      <ChevronDown className={`ml-1 w-3.5 h-3.5 transition-transform duration-200 ${isActive ? 'rotate-180' : ''}`} />
     </a>
   );
 }
