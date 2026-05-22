@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, Search, User, Globe, Mail, X, Video, Newspaper, LogOut, ChevronDown, ChevronUp, MoreHorizontal, FileText, BookOpen, GraduationCap, ShoppingBag, Info } from "lucide-react";
+import { Menu, Search, User, Globe, Mail, X, Video, Newspaper, LogOut, ChevronDown, ChevronUp, FileText, BookOpen, GraduationCap, ShoppingBag, Info, Crown, Radio, MapPin, Users } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { navSections } from "@/data/mockData";
@@ -57,23 +57,47 @@ const mainNavItems = [
   { label: "Education", to: "/education", section: "education" },
 ];
 
+// "More" mega menu config
+const moreMenuConfig: MegaMenuConfig = {
+  menuId: "more",
+  categories: {
+    heading: "Community",
+    items: [
+      { id: "community-reports", label: "Community Reports", href: "/community-reports" },
+      { id: "countries", label: "Countries", href: "/countries" },
+      { id: "newsletter", label: "Newsletter", href: "/newsletter" },
+      { id: "about", label: "About Us", href: "/about" },
+    ],
+  },
+  programmes: {
+    heading: "Learn & Shop",
+    groups: [
+      { id: "courses", label: "Courses", href: "/courses" },
+      { id: "my-courses", label: "My Learning", href: "/my-courses" },
+      { id: "shop", label: "Shop", href: "/shop" },
+      { id: "library", label: "Library", href: "/library" },
+      { id: "encyclopaedia", label: "Encyclopaedia", href: "/encyclopaedia" },
+      { id: "media", label: "Media Hub", href: "/media" },
+    ],
+  },
+  featured: {
+    heading: "Go Premium",
+    items: [
+      {
+        id: "premium",
+        title: "Upgrade to Premium",
+        description: "Unlimited access to all courses, guides and exclusive content.",
+        imageUrl: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=400&q=80",
+        href: "/subscribe",
+      },
+    ],
+  },
+};
+
 export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [moreOpen, setMoreOpen] = useState(false);
-  const moreRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
-
-  // Close "More" dropdown when clicking outside
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
-        setMoreOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm relative">
@@ -155,9 +179,15 @@ export function SiteHeader() {
                     className="text-gray-700 font-semibold"
                   />
                 ))}
+                {/* More — mega menu */}
+                <MegaMenuTrigger
+                  menuId="more"
+                  label="More"
+                  className="text-gray-700 font-semibold"
+                />
               </div>
 
-              {/* Dropdown panels — span full header width */}
+              {/* Dropdown panels */}
               {mainNavItems.map((item) => {
                 const section = navSections.find((s) => s.slug === item.section);
                 const config = section ? buildMenuConfig(section) : null;
@@ -170,41 +200,14 @@ export function SiteHeader() {
                   />
                 ) : null;
               })}
-            </MegaMenu>
 
-            {/* More dropdown */}
-            <div ref={moreRef} className="relative ml-1">
-              <button
-                onClick={() => setMoreOpen(!moreOpen)}
-                className="flex items-center gap-1 px-3 py-2 text-sm font-semibold text-gray-700 hover:text-primary hover:bg-gray-100 rounded-md transition-colors"
-              >
-                More
-                <ChevronDown className={`w-4 h-4 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
-              </button>
-              {moreOpen && (
-                <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-gray-200 shadow-xl rounded-md z-50 py-1">
-                  {[
-                    { label: "Community Reports", to: "/community-reports", icon: FileText },
-                    { label: "Courses", to: "/courses", icon: GraduationCap },
-                    { label: "Shop", to: "/shop", icon: ShoppingBag },
-                    { label: "Library", to: "/library", icon: BookOpen },
-                    { label: "Encyclopaedia", to: "/encyclopaedia", icon: BookOpen },
-                    { label: "About Us", to: "/about", icon: Info },
-                    { label: "Newsletter", to: "/newsletter", icon: Mail },
-                  ].map(item => (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      onClick={() => setMoreOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
-                    >
-                      <item.icon className="w-4 h-4 text-gray-400" />
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+              {/* More mega menu panel */}
+              <MegaMenuContent
+                menuId="more"
+                config={moreMenuConfig}
+                className="border-t border-gray-200 shadow-xl"
+              />
+            </MegaMenu>
           </nav>
 
           {/* Right actions */}
