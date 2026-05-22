@@ -97,26 +97,12 @@ export default function SubscribePage() {
     setSelectedPlan(plan);
 
     try {
-      // Force refresh to get a fresh user JWT
-      await supabase.auth.refreshSession();
-
+      // Get session directly — no refresh, no side effects
       const { data: sessionData } = await supabase.auth.getSession();
-      const session = sessionData?.session;
-      const accessToken = session?.access_token;
+      const accessToken = sessionData?.session?.access_token;
+      const userId = sessionData?.session?.user?.id;
 
-      // Debug: log what we have
-      console.log('Session user id:', session?.user?.id ?? 'NONE');
-      console.log('Access token present:', !!accessToken);
-      if (accessToken) {
-        // Decode without verifying to check token type
-        try {
-          const payload = JSON.parse(atob(accessToken.split('.')[1]));
-          console.log('Token role:', payload.role);
-          console.log('Token sub:', payload.sub ?? 'MISSING - this is the anon key!');
-        } catch (_) {}
-      }
-
-      if (!accessToken || !session?.user?.id) {
+      if (!accessToken || !userId) {
         toast({
           title: 'Please log in',
           description: 'You need to be logged in to subscribe.',
