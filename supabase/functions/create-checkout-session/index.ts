@@ -21,44 +21,54 @@ serve(async (req) => {
   }
 
   try {
-    // Use service role key to verify the JWT from the Authorization header
+    // Extract Bearer token from Authorization header
     const authHeader = req.headers.get('Authorization')
+    console.log('Auth header present:', !!authHeader)
+    console.log('Auth header starts with Bearer:', authHeader?.startsWith('Bearer '))
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new Error('Not authenticated')
+      throw new Error('Not authenticated - missing or invalid Authorization header')
     }
 
-    const token = authHeader.replace('Bearer ', '')
+    const token = authHeader.replace('Bearer ', '').trim()
+    console.log('Token length:', token.length)
 
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      { auth: { persistSession: false } }
-    )
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
 
-    // Verify the user's JWT
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseAdmin.auth.getUser(token)
+    console.log('SUPABASE_URL set:', !!supabaseUrl)
+    console.log('SERVICE_ROLE_KEY set:', !!serviceRoleKey)
+    console.log('ANON_KEY set:', !!anonKey)
+
+    // Use service role key if available, otherwise fall back to anon key
+    const adminKey = serviceRoleKey || anonKey
+    if (!adminKey) {
+      throw new Error('Not authenticated - Supabase keys not configured')
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, adminKey, {
+      auth: { persistSession: false },
+    })
+
+    // Verify the user JWT
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token)
+    console.log('getUser error:', userError?.message ?? 'none')
+    console.log('User found:', !!user)
 
     if (userError || !user) {
-      throw new Error('Not authenticated')
+      throw new Error(`Not authenticated - ${userError?.message ?? 'user not found'}`)
     }
 
-    // Client scoped to the user for data queries
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
-    )
-
+    // Parse request body
     const { planId } = await req.json()
+    console.log('planId:', planId)
 
-    // Fetch plan details
+    // Fetch plan details using anon client with user token
+    const supabaseClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    })
+
     const { data: plan, error: planError } = await supabaseClient
       .from('subscription_plans')
       .select('*')
@@ -66,7 +76,7 @@ serve(async (req) => {
       .single()
 
     if (planError || !plan) {
-      throw new Error('Plan not found')
+      throw new Error(`Plan not found - ${planError?.message ?? 'no data'}`)
     }
 
     // Get the origin for redirect URLs
@@ -83,7 +93,7 @@ serve(async (req) => {
               name: plan.name,
               description: `${plan.name} subscription`,
             },
-            unit_amount: Math.round(plan.price * 100), // Convert to cents
+            unit_amount: Math.round(plan.price * 100),
             recurring: {
               interval: plan.interval,
             },
@@ -104,23 +114,14 @@ serve(async (req) => {
     })
 
     return new Response(
-      JSON.stringify({
-        sessionId: session.id,
-        url: session.url,
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      }
+      JSON.stringify({ sessionId: session.id, url: session.url }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
-  } catch (error) {
-    console.error('Error creating checkout session:', error)
+  } catch (error: any) {
+    console.error('create-checkout-session error:', error.message)
     return new Response(
       JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
     )
   }
 })
