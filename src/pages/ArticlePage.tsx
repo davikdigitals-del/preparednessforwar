@@ -212,8 +212,169 @@ const ArticlePage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
           <article className="bg-white border border-gray-200">
-            {/* Article Header Section */}
-            <div className="p-6 md:p-8 bg-white border-b border-gray-200">
+            {/* ── MOBILE LAYOUT (hidden on lg+) ── */}
+            <div className="lg:hidden">
+              {/* Breadcrumb */}
+              <nav className="flex items-center gap-1 text-xs px-4 pt-4 pb-2 flex-wrap text-gray-500">
+                <Link to="/" className="hover:text-primary">Home</Link>
+                <ChevronRight className="w-3 h-3" />
+                {sectionData && <Link to={`/${section}`} className="hover:text-primary">{sectionData.title}</Link>}
+                {categoryData && (<><ChevronRight className="w-3 h-3" /><span>{categoryData.title}</span></>)}
+              </nav>
+
+              {/* Title */}
+              <h1 className="font-display font-black text-2xl leading-tight text-gray-900 px-4 pb-3">
+                {post.title}
+              </h1>
+
+              {/* Full-width image — edge to edge */}
+              <div className="w-full bg-gray-100 overflow-hidden relative">
+                {post.image && (
+                  <img src={post.image} alt={post.title} className="w-full object-cover" />
+                )}
+                {((post as any).videoUrl || (post as any).video_url) && !videoPlaying && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer"
+                       onClick={() => setVideoPlaying(true)}>
+                    <div className="w-16 h-16 rounded-full bg-blue-900 flex items-center justify-center shadow-2xl">
+                      <Play className="w-8 h-8 text-white fill-white ml-1" />
+                    </div>
+                  </div>
+                )}
+                {((post as any).videoUrl || (post as any).video_url) && videoPlaying && (
+                  <div className="aspect-video bg-black">
+                    <ArticleVideoPlayer url={(post as any).videoUrl || (post as any).video_url} title={post.title} />
+                  </div>
+                )}
+              </div>
+
+              {/* Author + date */}
+              <div className="px-4 pt-3 pb-2 space-y-1">
+                <p className="text-sm text-gray-700">
+                  By <span className="text-blue-600 font-semibold">{post.author}</span>
+                </p>
+                <p className="text-xs text-gray-500">
+                  Published {formatDate(post.publishedAt)}
+                  {post.readTime && <span> · {post.readTime} read</span>}
+                </p>
+              </div>
+
+              {/* Share / Bookmark / Report bar */}
+              <div className="flex items-center gap-3 px-4 py-3 border-t border-b border-gray-200 mb-4">
+                <button
+                  onClick={() => setShareOpen(o => !o)}
+                  className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 border border-blue-200 rounded px-3 py-1.5"
+                >
+                  <Share2 className="w-4 h-4" /> Share
+                </button>
+                <button
+                  onClick={handleBookmark}
+                  disabled={bookmarking}
+                  className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 border border-blue-200 rounded px-3 py-1.5"
+                >
+                  {bookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+                  {bookmarked ? "Saved" : "Save"}
+                </button>
+                <button
+                  onClick={() => setReportOpen(true)}
+                  className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 border border-gray-200 rounded px-3 py-1.5 ml-auto"
+                >
+                  <Flag className="w-4 h-4" /> Report
+                </button>
+              </div>
+
+              {/* Share dropdown (mobile) */}
+              {shareOpen && (
+                <div ref={shareRef} className="mx-4 mb-4 bg-white border border-gray-200 shadow-lg rounded">
+                  <div className="p-3 border-b border-gray-100">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Article link</p>
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded">
+                      <Link2 className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                      <span className="text-xs text-gray-500 truncate flex-1 font-mono">{pageUrl}</span>
+                    </div>
+                  </div>
+                  <div className="p-2 space-y-1">
+                    <button onClick={copyLink} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-gray-50 text-left rounded">
+                      {shareCopied ? <><Check className="w-4 h-4 text-green-600" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy link</>}
+                    </button>
+                    <button onClick={() => { window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(pageUrl)}`, "_blank", "noopener"); setShareOpen(false); }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-gray-50 text-left rounded">
+                      <Twitter className="w-4 h-4" /> Share on X
+                    </button>
+                    <button onClick={() => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`, "_blank", "noopener"); setShareOpen(false); }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-gray-50 text-left rounded">
+                      <Facebook className="w-4 h-4" /> Share on Facebook
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Standfirst */}
+              <p className="px-4 pb-4 text-base font-bold leading-snug text-gray-900">
+                {post.standfirst}
+              </p>
+
+              {/* Article body */}
+              <div className="px-4 pb-6">
+                <PremiumGate
+                  isPremium={post.isPremium || false}
+                  contentType="article"
+                  showPreview={true}
+                  previewContent={<p className="text-base leading-relaxed text-gray-700">{post.standfirst}</p>}
+                >
+                  <div className="prose prose-base max-w-none">
+                    {post.body ? (
+                      <div className="text-base leading-relaxed text-gray-800 space-y-4"
+                        dangerouslySetInnerHTML={{ __html: post.body.replace(/\n/g, "<br/>") }} />
+                    ) : (
+                      <div className="space-y-4 text-base leading-relaxed text-gray-800">
+                        <p>{post.standfirst}</p>
+                        <p>This article provides comprehensive guidance on <strong>{post.title.toLowerCase()}</strong>. In an era of increasing uncertainty, being prepared is not just advisable — it's essential for every household.</p>
+                        <h2 className="font-bold text-xl mt-6 mb-3">Key Points</h2>
+                        <ul className="list-disc pl-5 space-y-2 text-gray-700">
+                          <li>Understanding the current threat landscape and risk assessment</li>
+                          <li>Practical steps for immediate implementation in your household</li>
+                          <li>Long-term strategies for sustained preparedness</li>
+                          <li>Resources and tools for further learning</li>
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </PremiumGate>
+              </div>
+
+              {/* Tags */}
+              {post.tags && post.tags.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 px-4 pb-6 pt-2 border-t border-gray-200">
+                  <Tag className="w-4 h-4 text-blue-900" />
+                  {post.tags.map((tag: string) => (
+                    <Link key={tag} to={`/tag/${encodeURIComponent(tag)}`}
+                      className="px-3 py-1 bg-blue-50 text-blue-900 text-xs font-bold border border-blue-200 hover:bg-blue-100 transition-colors">
+                      {tag}
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              {/* Related on mobile */}
+              {relatedPosts.length > 0 && (
+                <div className="border-t border-gray-200 px-4 py-6">
+                  <h3 className="font-bold text-lg mb-4">Related Articles</h3>
+                  <div className="space-y-4">
+                    {relatedPosts.map((p: any) => (
+                      <Link key={p.id} to={`/${p.section}/${p.category}/${p.id}`} className="flex gap-3 group">
+                        <div className="w-24 h-16 bg-gray-100 shrink-0 overflow-hidden">
+                          {p.image && <img src={p.image} alt={p.title} className="w-full h-full object-cover" />}
+                        </div>
+                        <h4 className="text-sm font-bold leading-snug group-hover:text-primary transition-colors line-clamp-3">{p.title}</h4>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── DESKTOP LAYOUT (hidden on mobile) ── */}
+            <div className="hidden lg:block">
               {/* Labels */}
               <div className="flex items-center gap-2 mb-4 flex-wrap">
                 <span className="px-3 py-1.5 bg-blue-900 text-white text-xs font-bold uppercase tracking-wide">
@@ -375,9 +536,12 @@ const ArticlePage = () => {
             )}
             </div>
 
-            {/* Related Articles Section */}
+            {/* ── END DESKTOP LAYOUT ── */}
+            </div>
+
+            {/* Related Articles — shown on both mobile (lg:hidden handles mobile above) and desktop */}
             {relatedPosts.length > 0 && (
-              <div className="bg-white border-t border-gray-200 p-6 md:p-8">
+              <div className="hidden lg:block bg-white border-t border-gray-200 p-6 md:p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="h-0.5 w-12 bg-blue-900"></div>
                   <h3 className="font-display font-bold text-2xl text-gray-900">Related Articles</h3>
