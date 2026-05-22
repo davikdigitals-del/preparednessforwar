@@ -97,9 +97,21 @@ export default function SubscribePage() {
     setSelectedPlan(plan);
 
     try {
-      // Create Stripe Checkout Session
+      // Get the current session to ensure we have a valid token
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        navigate('/login?redirect=/subscribe?plan=' + plan.id);
+        return;
+      }
+
+      const accessToken = sessionData.session.access_token;
+
+      // Create Stripe Checkout Session — pass token explicitly
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: { planId: plan.id },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
 
       if (error) throw error;

@@ -17,7 +17,7 @@ import {
   BookOpen, ShoppingCart, Star, ChevronRight,
   Save, RefreshCw, MessageSquare
 } from "lucide-react";
-import { InAppDialer } from "@/components/InAppDialer";
+
 
 type Tab = "overview" | "contacts" | "inventory" | "supplies" | "bugout" | "notes" | "checklists" | "saved" | "suppliers" | "orders";
 
@@ -429,14 +429,21 @@ function ContactsTab({ contacts, setContacts, user, isOnline, toast }: any) {
                 </Button>
               </div>
 
-              {/* Call / SMS actions — online: in-app dialer, offline: device dialer */}
+              {/* Call / SMS actions */}
               {c.phone ? (
-                <div className="border-t border-[#f3f2f1] px-4 py-3">
-                  <InAppDialer
-                    contactName={c.name}
-                    phoneNumber={c.phone}
-                    isOnline={isOnline}
-                  />
+                <div className="border-t border-[#f3f2f1] px-4 py-3 flex flex-wrap gap-2">
+                  <a
+                    href={`tel:${c.phone}`}
+                    className="flex items-center gap-2 bg-[#1d70b8] text-white text-sm font-bold px-4 py-2 hover:bg-[#003078] transition-colors"
+                  >
+                    <Phone className="w-4 h-4" /> {c.phone}
+                  </a>
+                  <a
+                    href={`sms:${c.phone}`}
+                    className="flex items-center gap-2 bg-[#f3f2f1] text-[#0b0c0c] text-sm font-bold px-4 py-2 border border-[#b1b4b6] hover:bg-[#e8f0f8] transition-colors"
+                  >
+                    SMS
+                  </a>
                 </div>
               ) : (
                 <div className="border-t border-[#f3f2f1] px-4 py-2">

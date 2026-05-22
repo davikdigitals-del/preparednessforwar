@@ -21,24 +21,40 @@ serve(async (req) => {
   }
 
   try {
+    // Use service role key to verify the JWT from the Authorization header
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new Error('Not authenticated')
+    }
+
+    const token = authHeader.replace('Bearer ', '')
+
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { persistSession: false } }
+    )
+
+    // Verify the user's JWT
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseAdmin.auth.getUser(token)
+
+    if (userError || !user) {
+      throw new Error('Not authenticated')
+    }
+
+    // Client scoped to the user for data queries
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
+          headers: { Authorization: authHeader },
         },
       }
     )
-
-    // Get the user
-    const {
-      data: { user },
-    } = await supabaseClient.auth.getUser()
-
-    if (!user) {
-      throw new Error('Not authenticated')
-    }
 
     const { planId } = await req.json()
 
