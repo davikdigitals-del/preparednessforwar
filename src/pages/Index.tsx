@@ -527,32 +527,40 @@ const Index = () => {
         <div className="hidden lg:grid lg:grid-cols-[1fr_320px] gap-6">
           {/* LEFT COLUMN - Main Content */}
           <div>
-            {/* DESKTOP HERO - Original layout */}
+            {/* DESKTOP HERO - Newspaper layout: text left, large image right */}
             {heroPost && (
-              <div className="grid grid-cols-[2fr_1fr] gap-3 mb-4">
-                <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group">
-                  <h1 className="text-2xl font-bold leading-tight mb-2 group-hover:text-primary transition-colors">
-                    {heroPost.title}
-                  </h1>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-2">
-                    {heroPost.standfirst}
-                  </p>
-                </Link>
-                <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group">
-                  <div className="aspect-[16/9] bg-gray-200 overflow-hidden relative">
+              <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group block mb-6">
+                <div className="grid grid-cols-2 gap-6 items-stretch">
+                  {/* Left: Text */}
+                  <div className="flex flex-col justify-center py-2">
+                    <h1 className="text-3xl xl:text-4xl font-black leading-[1.1] mb-4 group-hover:text-primary transition-colors">
+                      {heroPost.title}
+                    </h1>
+                    <p className="text-gray-600 text-sm leading-relaxed line-clamp-4">
+                      {heroPost.standfirst}
+                    </p>
+                    <div className="flex items-center gap-2 mt-4 text-xs text-gray-400">
+                      <Clock className="w-3 h-3" />
+                      <span>{formatTimeAgo(heroPost.publishedAt)}</span>
+                      <span>·</span>
+                      <span>{heroPost.author}</span>
+                    </div>
+                  </div>
+                  {/* Right: Image fills full height */}
+                  <div className="overflow-hidden" style={{ minHeight: '280px' }}>
                     {heroPost.image ? (
-                      <img src={heroPost.image} alt={heroPost.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <img
+                        src={heroPost.image}
+                        alt={heroPost.title}
+                        className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
+                        style={{ minHeight: '280px' }}
+                      />
                     ) : (
-                      <div className="w-full h-full bg-primary/10" />
-                    )}
-                    {heroPost.videoUrl && (
-                      <div className="absolute bottom-2 right-2 bg-primary rounded-full w-10 h-10 flex items-center justify-center">
-                        <Play className="w-4 h-4 text-white fill-white ml-0.5" />
-                      </div>
+                      <div className="w-full h-full bg-primary/10" style={{ minHeight: '280px' }} />
                     )}
                   </div>
-                </Link>
-              </div>
+                </div>
+              </Link>
             )}
 
             {/* DESKTOP - 3 column grid */}
