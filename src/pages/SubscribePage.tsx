@@ -97,16 +97,24 @@ export default function SubscribePage() {
     setSelectedPlan(plan);
 
     try {
-      // Get the current session to ensure we have a valid token
+      // Force a live token refresh to ensure we have a valid user JWT (not anon key)
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) {
+        console.warn('Session refresh failed, trying getSession:', refreshError.message);
+      }
+
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData.session) {
+      const accessToken = sessionData?.session?.access_token;
+
+      console.log('Session present:', !!sessionData?.session);
+      console.log('Access token length:', accessToken?.length ?? 0);
+
+      if (sessionError || !accessToken) {
         navigate('/login?redirect=/subscribe?plan=' + plan.id);
         return;
       }
 
-      const accessToken = sessionData.session.access_token;
-
-      // Create Stripe Checkout Session — pass token explicitly
+      // Create Stripe Checkout Session — pass refreshed token explicitly
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: { planId: plan.id },
         headers: {
