@@ -146,13 +146,13 @@ export function MegaMenuTrigger({
   const triggerClasses = [
     // Base styles
     'inline-flex items-center justify-center',
-    'px-4 py-2',
-    'text-sm font-medium',
+    'px-2.5 py-2',
+    'text-xs font-medium',
     'transition-colors duration-150',
     'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
-    // Hover state (Requirement 2.1, 11.4)
+    // Hover state
     'hover:bg-gray-100 hover:text-gray-900',
-    // Active state (Requirement 2.5)
+    // Active state
     isActive && 'bg-gray-100 text-gray-900 border-b-2 border-blue-600',
     // Custom classes
     className,

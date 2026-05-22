@@ -64,8 +64,6 @@ const moreMenuConfig: MegaMenuConfig = {
     heading: "Community",
     items: [
       { id: "community-reports", label: "Community Reports", href: "/community-reports" },
-      { id: "countries", label: "Countries", href: "/countries" },
-      { id: "newsletter", label: "Newsletter", href: "/newsletter" },
       { id: "about", label: "About Us", href: "/about" },
     ],
   },
@@ -75,22 +73,11 @@ const moreMenuConfig: MegaMenuConfig = {
       { id: "courses", label: "Courses", href: "/courses" },
       { id: "my-courses", label: "My Learning", href: "/my-courses" },
       { id: "shop", label: "Shop", href: "/shop" },
-      { id: "library", label: "Library", href: "/library" },
-      { id: "encyclopaedia", label: "Encyclopaedia", href: "/encyclopaedia" },
-      { id: "media", label: "Media Hub", href: "/media" },
     ],
   },
   featured: {
-    heading: "Go Premium",
-    items: [
-      {
-        id: "premium",
-        title: "Upgrade to Premium",
-        description: "Unlimited access to all courses, guides and exclusive content.",
-        imageUrl: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=400&q=80",
-        href: "/subscribe",
-      },
-    ],
+    heading: "",
+    items: [],
   },
 };
 
@@ -169,21 +156,21 @@ export function SiteHeader() {
           <nav className="hidden lg:flex items-center">
             <MegaMenu>
               {/* Trigger row */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0">
                 {mainNavItems.map((item) => (
                   <MegaMenuTrigger
                     key={item.label}
                     menuId={item.section}
                     label={item.label}
                     href={item.to}
-                    className="text-gray-700 font-semibold"
+                    className="text-gray-700 font-semibold text-xs px-2"
                   />
                 ))}
                 {/* More — mega menu */}
                 <MegaMenuTrigger
                   menuId="more"
                   label="More"
-                  className="text-gray-700 font-semibold"
+                  className="text-gray-700 font-semibold text-xs px-2"
                 />
               </div>
 
