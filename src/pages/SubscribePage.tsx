@@ -100,33 +100,41 @@ export default function SubscribePage() {
       // Force a live token refresh to ensure we have a valid user JWT (not anon key)
       const { error: refreshError } = await supabase.auth.refreshSession();
       if (refreshError) {
-        console.warn('Session refresh failed, trying getSession:', refreshError.message);
+        console.warn('Session refresh failed:', refreshError.message);
       }
 
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
 
-      console.log('Session present:', !!sessionData?.session);
-      console.log('Access token length:', accessToken?.length ?? 0);
-
-      if (sessionError || !accessToken) {
+      if (!accessToken) {
         navigate('/login?redirect=/subscribe?plan=' + plan.id);
         return;
       }
 
-      // Create Stripe Checkout Session — pass refreshed token explicitly
-      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: { planId: plan.id },
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      // Call edge function directly via fetch — bypasses any SDK token confusion
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/create-checkout-session`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ planId: plan.id }),
+        }
+      );
 
-      if (error) throw error;
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create checkout session');
+      }
 
       // Redirect to Stripe Checkout
-      if (data.url) {
-        window.location.href = data.url;
+      if (result.url) {
+        window.location.href = result.url;
       } else {
         throw new Error('No checkout URL returned');
       }
