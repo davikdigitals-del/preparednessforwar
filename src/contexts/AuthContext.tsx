@@ -160,6 +160,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearTimeout(debounceTimer);
       }
 
+      // Immediately clear user on sign out or token refresh failure — no debounce
+      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESH_FAILED' || event === 'USER_DELETED') {
+        if (mounted) {
+          setUser(null);
+          setNotifications([]);
+          setLoading(false);
+        }
+        return;
+      }
+
       // Debounce rapid auth state changes (prevents lock conflicts)
       debounceTimer = setTimeout(async () => {
         if (!mounted) return;
