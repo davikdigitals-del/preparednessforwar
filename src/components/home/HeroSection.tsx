@@ -13,23 +13,25 @@ export default function HeroSection({ featuredPost, sidebarPosts }: HeroSectionP
     <div className="container py-6">
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
 
-        {/* Main Featured — newspaper style: text left, image right */}
+        {/* Main Featured */}
         <Link
           to={`/${featuredPost.section}/${featuredPost.category}/${featuredPost.id}`}
           className="group block"
         >
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_1.1fr] gap-6 items-start">
-            {/* Left: Text */}
-            <div className="flex flex-col justify-start">
+          {/* Newspaper layout: text left, image right — equal halves, image fills height */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            {/* Left: Text — vertically centered */}
+            <div className="flex flex-col justify-center py-2">
               {featuredPost.isPinned && (
                 <span className="inline-block bg-primary text-white px-2 py-0.5 text-[10px] font-black uppercase tracking-widest mb-3 w-fit">
                   Featured
                 </span>
               )}
-              <h1 className="font-display font-black text-2xl md:text-3xl lg:text-4xl leading-tight group-hover:text-primary transition-colors">
+              <h1 className="font-display font-black text-3xl md:text-4xl leading-[1.1] group-hover:text-primary transition-colors">
                 {featuredPost.title}
               </h1>
-              <p className="text-sm text-muted-foreground mt-3 leading-relaxed line-clamp-3">
+              <p className="text-sm text-muted-foreground mt-4 leading-relaxed line-clamp-4">
                 {featuredPost.standfirst}
               </p>
               <div className="flex items-center gap-3 mt-4 text-xs text-muted-foreground">
@@ -39,30 +41,27 @@ export default function HeroSection({ featuredPost, sidebarPosts }: HeroSectionP
                 </span>
                 <span>·</span>
                 <span>{featuredPost.author}</span>
-                <span>·</span>
-                <span className="flex items-center gap-1">
-                  <Eye className="w-3 h-3" />
-                  {featuredPost.viewCount.toLocaleString()}
-                </span>
               </div>
             </div>
 
-            {/* Right: Image */}
-            <div className="aspect-[4/3] bg-muted overflow-hidden">
+            {/* Right: Image — fills the full height of the card */}
+            <div className="w-full overflow-hidden" style={{ minHeight: '260px' }}>
               {featuredPost.image ? (
                 <img
                   src={featuredPost.image}
                   alt={featuredPost.title}
                   className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
+                  style={{ minHeight: '260px' }}
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center" style={{ minHeight: '260px' }}>
                   <span className="text-primary/20 font-black text-6xl">
                     {featuredPost.title[0]}
                   </span>
                 </div>
               )}
             </div>
+
           </div>
         </Link>
 
