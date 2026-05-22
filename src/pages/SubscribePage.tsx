@@ -57,13 +57,13 @@ export default function SubscribePage() {
   }, []);
 
   useEffect(() => {
-    if (planIdFromUrl && plans.length > 0) {
+    if (planIdFromUrl && plans.length > 0 && user) {
       const plan = plans.find(p => p.id === planIdFromUrl);
       if (plan) {
         handleSelectPlan(plan);
       }
     }
-  }, [planIdFromUrl, plans]);
+  }, [planIdFromUrl, plans, user]);
 
   const fetchPlans = async () => {
     try {
@@ -97,15 +97,27 @@ export default function SubscribePage() {
     setSelectedPlan(plan);
 
     try {
-      // Get session directly — no refresh, no side effects
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData?.session?.access_token;
-      const userId = sessionData?.session?.user?.id;
+      // Use getUser() which waits for session to be fully initialized
+      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
 
-      if (!accessToken || !userId) {
+      if (userError || !currentUser) {
         toast({
           title: 'Please log in',
           description: 'You need to be logged in to subscribe.',
+          variant: 'destructive',
+        });
+        navigate('/login?redirect=/subscribe?plan=' + plan.id);
+        return;
+      }
+
+      // Now get the session token — guaranteed to be ready after getUser()
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+
+      if (!accessToken) {
+        toast({
+          title: 'Session expired',
+          description: 'Please log in again.',
           variant: 'destructive',
         });
         navigate('/login?redirect=/subscribe?plan=' + plan.id);
