@@ -57,15 +57,8 @@ export default function SubscribePage() {
   }, []);
 
   useEffect(() => {
-    // Only auto-trigger after user is confirmed loaded and plans are ready
-    if (planIdFromUrl && plans.length > 0 && user && !loading) {
-      const plan = plans.find(p => p.id === planIdFromUrl);
-      if (plan) {
-        // Small delay to ensure session is fully initialized
-        const timer = setTimeout(() => handleSelectPlan(plan), 500);
-        return () => clearTimeout(timer);
-      }
-    }
+    // Do NOT auto-trigger checkout from URL params — just let user click
+    // The ?plan= param is handled by highlighting the plan visually only
   }, [planIdFromUrl, plans, user, loading]);
 
   const fetchPlans = async () => {
@@ -224,12 +217,13 @@ export default function SubscribePage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {plans.map((plan) => {
           const isPopular = plan.slug === 'premium-monthly';
+          const isHighlighted = plan.id === planIdFromUrl;
           
           return (
             <Card
               key={plan.id}
               className={`relative ${
-                isPopular
+                isPopular || isHighlighted
                   ? 'border-2 border-primary shadow-lg scale-105'
                   : 'border-2 border-border'
               }`}
