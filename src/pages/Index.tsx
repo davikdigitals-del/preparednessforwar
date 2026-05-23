@@ -530,9 +530,9 @@ const Index = () => {
             {/* DESKTOP HERO - Newspaper layout: text left, large image right */}
             {heroPost && (
               <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group block mb-6">
-                <div className="grid grid-cols-[2fr_3fr] gap-6 items-stretch">
-                  {/* Left: Text — vertically centered */}
-                  <div className="flex flex-col justify-center py-2">
+                <div className="grid grid-cols-[2fr_3fr] gap-6" style={{minHeight: '280px'}}>
+                  {/* Left: Text — top aligned */}
+                  <div className="flex flex-col justify-start pt-2">
                     <h1 className="text-4xl xl:text-5xl font-black leading-[1.1] mb-3 group-hover:text-primary transition-colors">
                       {heroPost.title}
                     </h1>
@@ -542,13 +542,14 @@ const Index = () => {
                       </p>
                     )}
                   </div>
-                  {/* Right: Image fills full height of the text column */}
-                  <div className="overflow-hidden bg-gray-100 min-h-[260px]">
+                  {/* Right: Image fills full height */}
+                  <div className="overflow-hidden bg-gray-100" style={{minHeight: '280px'}}>
                     {heroPost.image ? (
                       <img
                         src={heroPost.image}
                         alt={heroPost.title}
                         className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
+                        style={{minHeight: '280px'}}
                       />
                     ) : (
                       <div className="w-full h-full bg-primary/10" />
