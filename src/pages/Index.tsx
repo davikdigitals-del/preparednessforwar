@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useData, type MediaItem } from "@/contexts/DataContext";
 import { formatTimeAgo, navSections } from "@/data/mockData";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 
-/* ── Embed URL resolver ── */
+/* â”€â”€ Embed URL resolver â”€â”€ */
 function getEmbedUrl(url: string): string | null {
   if (!url) return null;
   if (url.includes("youtube.com/embed/") || url.includes("player.vimeo.com")) return url;
@@ -31,7 +31,7 @@ function isAudio(url: string) {
   return /\.(mp3|aac|wav|ogg|m4a)(\?|$)/i.test(url);
 }
 
-/* ── Media player modal ── */
+/* â”€â”€ Media player modal â”€â”€ */
 function MediaModal({ item, onClose }: { item: MediaItem; onClose: () => void }) {
   const { user } = useAuth();
   const { isPremium: hasPremiumAccess, loading: premiumLoading } = usePremiumStatus();
@@ -56,7 +56,7 @@ function MediaModal({ item, onClose }: { item: MediaItem; onClose: () => void })
               </span>
             )}
           </DialogTitle>
-          <p className="text-xs text-muted-foreground mt-0.5">{item.author} · {item.duration}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{item.author} Â· {item.duration}</p>
         </DialogHeader>
 
         {isPremiumLocked ? (
@@ -128,7 +128,7 @@ function MediaModal({ item, onClose }: { item: MediaItem; onClose: () => void })
               <audio controls autoPlay className="w-full" src={url} />
             </div>
           ) : (
-            /* Unknown URL — show open externally */
+            /* Unknown URL â€” show open externally */
             <div className="aspect-video bg-muted flex flex-col items-center justify-center gap-3 text-muted-foreground">
               <Video className="w-12 h-12 opacity-30" />
               <p className="text-sm">Cannot embed this URL directly.</p>
@@ -377,7 +377,7 @@ const Index = () => {
               })}
             </div>
             <div className="p-4 border-t border-gray-200 text-center">
-              <Link to="/latest" className="text-sm text-primary font-semibold hover:underline">See more →</Link>
+              <Link to="/latest" className="text-sm text-primary font-semibold hover:underline">See more â†’</Link>
             </div>
           </div>
 
@@ -530,33 +530,28 @@ const Index = () => {
             {/* DESKTOP HERO - Newspaper layout: text left, large image right */}
             {heroPost && (
               <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group block mb-6">
-                <div className="grid grid-cols-2 gap-6 items-stretch">
+                <div className="grid grid-cols-[3fr_2fr] gap-6 items-center">
                   {/* Left: Text */}
                   <div className="flex flex-col justify-center py-2">
-                    <h1 className="text-3xl xl:text-4xl font-black leading-[1.1] mb-4 group-hover:text-primary transition-colors">
+                    <h1 className="text-4xl xl:text-5xl font-black leading-[1.1] mb-3 group-hover:text-primary transition-colors">
                       {heroPost.title}
                     </h1>
-                    <p className="text-gray-600 text-sm leading-relaxed line-clamp-4">
-                      {heroPost.standfirst}
-                    </p>
-                    <div className="flex items-center gap-2 mt-4 text-xs text-gray-400">
-                      <Clock className="w-3 h-3" />
-                      <span>{formatTimeAgo(heroPost.publishedAt)}</span>
-                      <span>·</span>
-                      <span>{heroPost.author}</span>
-                    </div>
+                    {heroPost.standfirst && (
+                      <p className="text-gray-600 text-base leading-relaxed">
+                        {heroPost.standfirst}
+                      </p>
+                    )}
                   </div>
-                  {/* Right: Image fills full height */}
-                  <div className="overflow-hidden" style={{ minHeight: '280px' }}>
+                  {/* Right: Landscape rectangle image */}
+                  <div className="aspect-[16/9] overflow-hidden bg-gray-100">
                     {heroPost.image ? (
                       <img
                         src={heroPost.image}
                         alt={heroPost.title}
                         className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
-                        style={{ minHeight: '280px' }}
                       />
                     ) : (
-                      <div className="w-full h-full bg-primary/10" style={{ minHeight: '280px' }} />
+                      <div className="w-full h-full bg-primary/10" />
                     )}
                   </div>
                 </div>
@@ -824,7 +819,7 @@ const Index = () => {
               </div>
               <div className="p-4 border-t border-gray-200 text-center">
                 <Link to="/latest" className="text-sm text-primary font-semibold hover:underline">
-                  See more →
+                  See more â†’
                 </Link>
               </div>
             </div>

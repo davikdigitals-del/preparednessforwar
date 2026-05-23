@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   Clock, Eye, Share2, ChevronRight, Tag, ArrowLeft, Play,
@@ -19,9 +19,9 @@ import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { idb, STORES } from "@/services/IndexedDBService";
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    ARTICLE PAGE
-══════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const ArticlePage = () => {
   const { section, category, id } = useParams();
   const { publishedPosts, incrementView } = useData();
@@ -212,7 +212,10 @@ const ArticlePage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
           <article className="bg-white border border-gray-200">
-            {/* ── MOBILE LAYOUT (hidden on lg+) ── */}
+
+            {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                MOBILE LAYOUT (hidden on lg+)
+            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
             <div className="lg:hidden">
               {/* Breadcrumb */}
               <nav className="flex items-center gap-1 text-xs px-4 pt-4 pb-2 flex-wrap text-gray-500">
@@ -227,7 +230,7 @@ const ArticlePage = () => {
                 {post.title}
               </h1>
 
-              {/* Full-width image — edge to edge */}
+              {/* Full-width image â€” edge to edge */}
               <div className="w-full bg-gray-100 overflow-hidden relative">
                 {post.image && (
                   <img src={post.image} alt={post.title} className="w-full object-cover" />
@@ -254,7 +257,7 @@ const ArticlePage = () => {
                 </p>
                 <p className="text-xs text-gray-500">
                   Published {formatDate(post.publishedAt)}
-                  {post.readTime && <span> · {post.readTime} read</span>}
+                  {post.readTime && <span> Â· {post.readTime} read</span>}
                 </p>
               </div>
 
@@ -328,7 +331,7 @@ const ArticlePage = () => {
                     ) : (
                       <div className="space-y-4 text-base leading-relaxed text-gray-800">
                         <p>{post.standfirst}</p>
-                        <p>This article provides comprehensive guidance on <strong>{post.title.toLowerCase()}</strong>. In an era of increasing uncertainty, being prepared is not just advisable — it's essential for every household.</p>
+                        <p>This article provides comprehensive guidance on <strong>{post.title.toLowerCase()}</strong>. In an era of increasing uncertainty, being prepared is not just advisable â€” it's essential for every household.</p>
                         <h2 className="font-bold text-xl mt-6 mb-3">Key Points</h2>
                         <ul className="list-disc pl-5 space-y-2 text-gray-700">
                           <li>Understanding the current threat landscape and risk assessment</li>
@@ -373,10 +376,12 @@ const ArticlePage = () => {
               )}
             </div>
 
-            {/* ── DESKTOP LAYOUT (hidden on mobile) ── */}
+            {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                DESKTOP LAYOUT (hidden on mobile)
+            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
             <div className="hidden lg:block">
               {/* Labels */}
-              <div className="flex items-center gap-2 mb-4 flex-wrap">
+              <div className="flex items-center gap-2 mb-4 flex-wrap px-6 pt-6">
                 <span className="px-3 py-1.5 bg-blue-900 text-white text-xs font-bold uppercase tracking-wide">
                   {sectionData?.title || section}
                 </span>
@@ -393,164 +398,147 @@ const ArticlePage = () => {
                 )}
               </div>
 
-              <h1 className="font-display font-black text-3xl md:text-4xl lg:text-5xl leading-tight text-gray-900">{post.title}</h1>
-              <p className="text-lg text-gray-600 mt-4 leading-relaxed border-l-2 border-blue-900 pl-5 bg-blue-50/50 py-3">{post.standfirst}</p>
+              <h1 className="font-display font-black text-3xl md:text-4xl lg:text-5xl leading-tight text-gray-900 px-6">{post.title}</h1>
+              <p className="text-lg text-gray-600 mt-4 leading-relaxed border-l-2 border-blue-900 pl-5 bg-blue-50/50 py-3 mx-6">{post.standfirst}</p>
 
-              {/* Meta */}
-              <div className="flex flex-wrap items-center gap-4 mt-6 pt-5 border-t border-gray-200 text-sm">
-              <span className="font-bold text-gray-900 flex items-center gap-2">
-                <div className="w-8 h-8 bg-blue-900 flex items-center justify-center text-white text-xs font-bold">
-                  {post.author.charAt(0)}
-                </div>
-                {post.author}
-              </span>
-              <span className="flex items-center gap-1.5 text-gray-600"><Clock className="w-4 h-4 text-blue-900" />{post.readTime}</span>
-              <span className="text-gray-600">Published {formatDate(post.publishedAt)}</span>
-              <span className="flex items-center gap-1.5 text-gray-600"><Eye className="w-4 h-4 text-blue-900" />{post.viewCount?.toLocaleString()} views</span>
+              {/* Meta row */}
+              <div className="flex flex-wrap items-center gap-4 mt-6 pt-5 border-t border-gray-200 text-sm px-6">
+                <span className="font-bold text-gray-900 flex items-center gap-2">
+                  <div className="w-8 h-8 bg-blue-900 flex items-center justify-center text-white text-xs font-bold">
+                    {post.author.charAt(0)}
+                  </div>
+                  {post.author}
+                </span>
+                <span className="flex items-center gap-1.5 text-gray-600"><Clock className="w-4 h-4 text-blue-900" />{post.readTime}</span>
+                <span className="text-gray-600">Published {formatDate(post.publishedAt)}</span>
+                <span className="flex items-center gap-1.5 text-gray-600"><Eye className="w-4 h-4 text-blue-900" />{post.viewCount?.toLocaleString()} views</span>
 
-              {/* Share dropdown */}
-              <div ref={shareRef} className="ml-auto relative">
-                <button onClick={() => setShareOpen(o => !o)}
-                  className={`flex items-center gap-2 text-sm font-bold px-4 py-2 transition-all ${shareOpen ? "bg-blue-900 text-white" : "bg-white border-2 border-blue-900 text-blue-900 hover:bg-blue-50"}`}>
-                  <Share2 className="w-4 h-4" /> Share
-                </button>
-                {shareOpen && (
-                  <div className="absolute right-0 top-full mt-1 w-72 bg-white border border-border shadow-xl z-50 animate-slide-down">
-                    <div className="p-3 border-b border-border">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Article link</p>
-                      <div className="flex items-center gap-2 bg-muted px-3 py-2">
-                        <Link2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                        <span className="text-xs text-muted-foreground truncate flex-1 font-mono">{pageUrl}</span>
+                {/* Share dropdown */}
+                <div ref={shareRef} className="ml-auto relative">
+                  <button onClick={() => setShareOpen(o => !o)}
+                    className={`flex items-center gap-2 text-sm font-bold px-4 py-2 transition-all ${shareOpen ? "bg-blue-900 text-white" : "bg-white border-2 border-blue-900 text-blue-900 hover:bg-blue-50"}`}>
+                    <Share2 className="w-4 h-4" /> Share
+                  </button>
+                  {shareOpen && (
+                    <div className="absolute right-0 top-full mt-1 w-72 bg-white border border-border shadow-xl z-50 animate-slide-down">
+                      <div className="p-3 border-b border-border">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Article link</p>
+                        <div className="flex items-center gap-2 bg-muted px-3 py-2">
+                          <Link2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          <span className="text-xs text-muted-foreground truncate flex-1 font-mono">{pageUrl}</span>
+                        </div>
+                      </div>
+                      <div className="p-2 space-y-1">
+                        <button onClick={copyLink}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold transition-colors text-left ${shareCopied ? "bg-green-50 text-green-700" : "hover:bg-primary/5 hover:text-primary"}`}>
+                          {shareCopied ? <><Check className="w-4 h-4 text-green-600 shrink-0" /> Copied!</> : <><Copy className="w-4 h-4 shrink-0" /> Copy link</>}
+                        </button>
+                        <button onClick={() => { window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(pageUrl)}`, "_blank", "noopener"); setShareOpen(false); }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-primary/5 hover:text-primary transition-colors text-left">
+                          <Twitter className="w-4 h-4 shrink-0" /> Share on X (Twitter)
+                        </button>
+                        <button onClick={() => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`, "_blank", "noopener"); setShareOpen(false); }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-primary/5 hover:text-primary transition-colors text-left">
+                          <Facebook className="w-4 h-4 shrink-0" /> Share on Facebook
+                        </button>
                       </div>
                     </div>
-                    <div className="p-2 space-y-1">
-                      <button onClick={copyLink}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold transition-colors text-left ${shareCopied ? "bg-green-50 text-green-700" : "hover:bg-primary/5 hover:text-primary"}`}>
-                        {shareCopied ? <><Check className="w-4 h-4 text-green-600 shrink-0" /> Copied!</> : <><Copy className="w-4 h-4 shrink-0" /> Copy link</>}
-                      </button>
-                      <button onClick={() => { window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(pageUrl)}`, "_blank", "noopener"); setShareOpen(false); }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-primary/5 hover:text-primary transition-colors text-left">
-                        <Twitter className="w-4 h-4 shrink-0" /> Share on X (Twitter)
-                      </button>
-                      <button onClick={() => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`, "_blank", "noopener"); setShareOpen(false); }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-primary/5 hover:text-primary transition-colors text-left">
-                        <Facebook className="w-4 h-4 shrink-0" /> Share on Facebook
-                      </button>
+                  )}
+                </div>
+
+                {/* Report button */}
+                <button onClick={() => setReportOpen(true)}
+                  className="flex items-center gap-2 text-sm font-bold px-4 py-2 bg-white border-2 border-blue-900 text-blue-900 hover:bg-blue-50 transition-all">
+                  <Flag className="w-4 h-4" /> Report
+                </button>
+              </div>
+
+              {/* Hero image */}
+              <div className="aspect-[16/9] bg-gray-100 overflow-hidden relative mt-6">
+                {post.image && (
+                  <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                )}
+                {((post as any).videoUrl || (post as any).video_url) && !videoPlaying && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer group hover:bg-black/50 transition-colors"
+                       onClick={() => setVideoPlaying(true)}>
+                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-blue-900 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                      <Play className="w-10 h-10 md:w-12 md:h-12 text-white fill-white ml-1" />
+                    </div>
+                    <div className="absolute top-4 right-4 px-3 py-1.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wide flex items-center gap-1.5">
+                      <Play className="w-3.5 h-3.5 fill-white" /> Click to Play Video
                     </div>
                   </div>
                 )}
-              </div>
-
-              {/* Report button */}
-              <button onClick={() => setReportOpen(true)}
-                className="flex items-center gap-2 text-sm font-bold px-4 py-2 bg-white border-2 border-blue-900 text-blue-900 hover:bg-blue-50 transition-all">
-                <Flag className="w-4 h-4" /> Report
-              </button>
-            </div>
-            </div>
-
-            {/* Hero image with video play button overlay */}
-            <div className="aspect-[16/9] bg-gray-100 overflow-hidden relative flex items-center justify-center">
-              {/* Show image - full fit without cropping */}
-              {post.image && (
-                <img src={post.image} alt={post.title} className="w-full h-full object-contain" />
-              )}
-              
-              {/* If video exists and not playing, show play button overlay */}
-              {((post as any).videoUrl || (post as any).video_url) && !videoPlaying && (
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer group hover:bg-black/50 transition-colors"
-                     onClick={() => setVideoPlaying(true)}>
-                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-blue-900 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
-                    <Play className="w-10 h-10 md:w-12 md:h-12 text-white fill-white ml-1" />
-                  </div>
-                  <div className="absolute top-4 right-4 px-3 py-1.5 bg-red-600 text-white text-xs font-bold uppercase tracking-wide flex items-center gap-1.5">
-                    <Play className="w-3.5 h-3.5 fill-white" />
-                    Click to Play Video
-                  </div>
-                </div>
-              )}
-              
-              {/* If video is playing, show video player */}
-              {((post as any).videoUrl || (post as any).video_url) && videoPlaying && (
-                <div className="absolute inset-0 bg-black">
-                  <ArticleVideoPlayer 
-                    url={(post as any).videoUrl || (post as any).video_url} 
-                    title={post.title} 
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Article Content Section */}
-            <div className="p-6 md:p-8">
-            <PremiumGate
-              isPremium={post.isPremium || false}
-              contentType="article"
-              showPreview={true}
-              previewContent={
-                <div className="prose prose-lg max-w-none">
-                  <p className="text-lg leading-relaxed text-gray-700">{post.standfirst}</p>
-                  <p className="text-lg leading-relaxed text-gray-700 mt-4">
-                    This article provides comprehensive guidance on {post.title.toLowerCase()}...
-                  </p>
-                </div>
-              }
-            >
-              <div className="prose prose-lg max-w-none prose-img:rounded-lg prose-img:shadow-md prose-img:my-6">
-                {post.body ? (
-                  <div className="text-lg leading-relaxed text-gray-800 space-y-5"
-                    dangerouslySetInnerHTML={{ __html: post.body.replace(/\n/g, "<br/>") }} />
-                ) : (
-                  <div className="space-y-6 text-lg leading-relaxed text-gray-800">
-                    <p>{post.standfirst} This article provides comprehensive guidance on the topic of <strong>{post.title.toLowerCase()}</strong>. In an era of increasing uncertainty, being prepared is not just advisable — it's essential for every household.</p>
-                    <h2 className="font-display font-bold text-2xl mt-10 mb-4 text-gray-900 border-l-2 border-blue-900 pl-4 bg-blue-50 py-2">Key Points</h2>
-                    <ul className="list-disc pl-6 space-y-3 text-gray-700">
-                      <li>Understanding the current threat landscape and risk assessment</li>
-                      <li>Practical steps for immediate implementation in your household</li>
-                      <li>Long-term strategies for sustained preparedness</li>
-                      <li>Resources and tools for further learning and community engagement</li>
-                    </ul>
-                    <h2 className="font-display font-bold text-2xl mt-10 mb-4 text-gray-900 border-l-2 border-blue-900 pl-4 bg-blue-50 py-2">Why This Matters</h2>
-                    <p>Preparedness is a community effort. When individuals and families are equipped with the right knowledge and supplies, entire communities become more resilient.</p>
-                    <h2 className="font-display font-bold text-2xl mt-10 mb-4 text-gray-900 border-l-2 border-blue-900 pl-4 bg-blue-50 py-2">Next Steps</h2>
-                    <p>Review the related resources in our Library and Encyclopaedia sections. Stay informed through our Just In feed for the latest updates.</p>
+                {((post as any).videoUrl || (post as any).video_url) && videoPlaying && (
+                  <div className="absolute inset-0 bg-black">
+                    <ArticleVideoPlayer url={(post as any).videoUrl || (post as any).video_url} title={post.title} />
                   </div>
                 )}
               </div>
-            </PremiumGate>
 
-            {/* Tags */}
-            {post.tags && post.tags.length > 0 && (
-              <div className="flex flex-wrap items-center gap-3 mt-10 pt-6 border-t border-gray-200">
-                <Tag className="w-5 h-5 text-blue-900" />
-                {post.tags.map((tag: string) => (
-                  <Link
-                    key={tag}
-                    to={`/tag/${encodeURIComponent(tag)}`}
-                    className="px-4 py-2 bg-blue-50 text-blue-900 text-sm font-bold border border-blue-900 hover:bg-blue-100 transition-colors cursor-pointer"
-                  >
-                    {tag}
-                  </Link>
-                ))}
+              {/* Article body */}
+              <div className="p-6 md:p-8">
+                <PremiumGate
+                  isPremium={post.isPremium || false}
+                  contentType="article"
+                  showPreview={true}
+                  previewContent={
+                    <div className="prose prose-lg max-w-none">
+                      <p className="text-lg leading-relaxed text-gray-700">{post.standfirst}</p>
+                    </div>
+                  }
+                >
+                  <div className="prose prose-lg max-w-none prose-img:rounded-lg prose-img:shadow-md prose-img:my-6">
+                    {post.body ? (
+                      <div className="text-lg leading-relaxed text-gray-800 space-y-5"
+                        dangerouslySetInnerHTML={{ __html: post.body.replace(/\n/g, "<br/>") }} />
+                    ) : (
+                      <div className="space-y-6 text-lg leading-relaxed text-gray-800">
+                        <p>{post.standfirst} This article provides comprehensive guidance on the topic of <strong>{post.title.toLowerCase()}</strong>. In an era of increasing uncertainty, being prepared is not just advisable â€” it's essential for every household.</p>
+                        <h2 className="font-display font-bold text-2xl mt-10 mb-4 text-gray-900 border-l-2 border-blue-900 pl-4 bg-blue-50 py-2">Key Points</h2>
+                        <ul className="list-disc pl-6 space-y-3 text-gray-700">
+                          <li>Understanding the current threat landscape and risk assessment</li>
+                          <li>Practical steps for immediate implementation in your household</li>
+                          <li>Long-term strategies for sustained preparedness</li>
+                          <li>Resources and tools for further learning and community engagement</li>
+                        </ul>
+                        <h2 className="font-display font-bold text-2xl mt-10 mb-4 text-gray-900 border-l-2 border-blue-900 pl-4 bg-blue-50 py-2">Why This Matters</h2>
+                        <p>Preparedness is a community effort. When individuals and families are equipped with the right knowledge and supplies, entire communities become more resilient.</p>
+                        <h2 className="font-display font-bold text-2xl mt-10 mb-4 text-gray-900 border-l-2 border-blue-900 pl-4 bg-blue-50 py-2">Next Steps</h2>
+                        <p>Review the related resources in our Library and Encyclopaedia sections. Stay informed through our Just In feed for the latest updates.</p>
+                      </div>
+                    )}
+                  </div>
+                </PremiumGate>
+
+                {/* Tags */}
+                {post.tags && post.tags.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-3 mt-10 pt-6 border-t border-gray-200">
+                    <Tag className="w-5 h-5 text-blue-900" />
+                    {post.tags.map((tag: string) => (
+                      <Link key={tag} to={`/tag/${encodeURIComponent(tag)}`}
+                        className="px-4 py-2 bg-blue-50 text-blue-900 text-sm font-bold border border-blue-900 hover:bg-blue-100 transition-colors cursor-pointer">
+                        {tag}
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-            </div>
 
-            {/* ── END DESKTOP LAYOUT ── */}
+              {/* Related Articles â€” desktop */}
+              {relatedPosts.length > 0 && (
+                <div className="bg-white border-t border-gray-200 p-6 md:p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="h-0.5 w-12 bg-blue-900"></div>
+                    <h3 className="font-display font-bold text-2xl text-gray-900">Related Articles</h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    {relatedPosts.map((p: any) => <PostCard key={p.id} post={p} />)}
+                  </div>
+                </div>
+              )}
+            </div>{/* end desktop layout */}
 
-            {/* Related Articles — desktop only (mobile has its own above) */}
-            {relatedPosts.length > 0 && (
-              <div className="hidden lg:block bg-white border-t border-gray-200 p-6 md:p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-0.5 w-12 bg-blue-900"></div>
-                  <h3 className="font-display font-bold text-2xl text-gray-900">Related Articles</h3>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  {relatedPosts.map((p: any) => <PostCard key={p.id} post={p} />)}
-                </div>
-              </div>
-            )}
-          </div>{/* end hidden lg:block desktop wrapper */}
           </article>
 
           <div className="hidden lg:block">
