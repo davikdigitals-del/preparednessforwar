@@ -177,30 +177,30 @@ export default function AdminLayout() {
     <div className="min-h-screen bg-gray-50">
       {/* Top Bar */}
       <div className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-30">
-        <div className="flex items-center justify-between px-4 h-16">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between px-3 sm:px-4 h-14 sm:h-16">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="lg:hidden p-2 hover:bg-gray-100 rounded"
             >
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
-            <h1 className="font-display font-black text-xl">Admin Portal</h1>
+            <h1 className="font-display font-black text-base sm:text-xl">Admin Portal</h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 sm:gap-4">
             <Link
               to="/"
-              className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 rounded"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 text-xs sm:text-sm hover:bg-gray-100 rounded"
             >
               <ExternalLink className="w-4 h-4" />
-              View Site
+              <span className="hidden sm:inline">View Site</span>
             </Link>
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 rounded"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 text-xs sm:text-sm hover:bg-gray-100 rounded"
             >
               <LogOut className="w-4 h-4" />
-              Sign Out
+              <span className="hidden sm:inline">Sign Out</span>
             </button>
           </div>
         </div>
@@ -208,7 +208,7 @@ export default function AdminLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-16 left-0 bottom-0 w-64 bg-white border-r border-gray-200 overflow-y-auto transition-transform lg:translate-x-0 z-20 ${
+        className={`fixed top-14 sm:top-16 left-0 bottom-0 w-64 bg-white border-r border-gray-200 overflow-y-auto transition-transform lg:translate-x-0 z-20 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -245,8 +245,8 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main Content */}
-      <main className="lg:ml-64 pt-16">
-        <div className="p-6">
+      <main className="lg:ml-64 pt-14 sm:pt-16">
+        <div className="p-3 sm:p-6">
           <Outlet />
         </div>
       </main>

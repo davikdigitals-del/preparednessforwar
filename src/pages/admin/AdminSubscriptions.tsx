@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -269,9 +269,9 @@ export default function AdminSubscriptions() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Subscriptions & Revenue</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Subscriptions & Revenue</h1>
           <p className="text-gray-600 mt-1">Manage subscription plans and monitor revenue</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -286,7 +286,7 @@ export default function AdminSubscriptions() {
               <DialogTitle>{editingPlan ? "Edit Plan" : "Create New Plan"}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Plan Name</Label>
                   <Input
@@ -307,7 +307,7 @@ export default function AdminSubscriptions() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
                   <Label>Price</Label>
                   <Input
@@ -386,7 +386,7 @@ export default function AdminSubscriptions() {
               <span className="text-sm text-gray-600">Active Subscriptions</span>
               <Users className="w-5 h-5 text-gray-400" />
             </div>
-            <div className="text-3xl font-bold">{activeSubscriptions}</div>
+            <div className="text-2xl sm:text-3xl font-bold">{activeSubscriptions}</div>
             <div className="text-sm text-gray-500 mt-1">Total active users</div>
           </CardContent>
         </Card>
@@ -397,7 +397,7 @@ export default function AdminSubscriptions() {
               <span className="text-sm text-gray-600">Monthly Revenue</span>
               <DollarSign className="w-5 h-5 text-gray-400" />
             </div>
-            <div className="text-3xl font-bold">£{monthlyRevenue.toFixed(2)}</div>
+            <div className="text-2xl sm:text-3xl font-bold">£{monthlyRevenue.toFixed(2)}</div>
             <div className="text-sm text-gray-500 mt-1">Recurring revenue</div>
           </CardContent>
         </Card>
@@ -408,7 +408,7 @@ export default function AdminSubscriptions() {
               <span className="text-sm text-gray-600">Total Plans</span>
               <CreditCard className="w-5 h-5 text-gray-400" />
             </div>
-            <div className="text-3xl font-bold">{plans.length}</div>
+            <div className="text-2xl sm:text-3xl font-bold">{plans.length}</div>
             <div className="text-sm text-gray-500 mt-1">Available plans</div>
           </CardContent>
         </Card>

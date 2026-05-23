@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -149,9 +149,9 @@ export default function AdminEncyclopaedia() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Encyclopaedia Management</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Encyclopaedia Management</h1>
           <p className="text-sm text-gray-600 mt-1">
             Manage encyclopaedia entries and reference materials
           </p>
@@ -302,7 +302,7 @@ export default function AdminEncyclopaedia() {
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="col-span-1">
                 <Label htmlFor="letter">Letter</Label>
                 <select

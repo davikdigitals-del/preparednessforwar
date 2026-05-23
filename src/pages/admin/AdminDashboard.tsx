@@ -149,14 +149,14 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
           <p className="text-gray-600 mt-1">Welcome to your admin portal</p>
         </div>
         <Link
           to="/admin/posts"
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 w-fit"
         >
           <Plus className="w-4 h-4" />
           New Post

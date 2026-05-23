@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,9 +76,9 @@ export default function AdminEmergencySuppliers() {
 
   return (
     <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Emergency Suppliers</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Emergency Suppliers</h1>
           <p className="text-muted-foreground mt-1">Manage the offline supplier directory shown in members' bunkers</p>
         </div>
         <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
@@ -137,7 +137,7 @@ export default function AdminEmergencySuppliers() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editing ? "Edit Supplier" : "Add Supplier"}</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div><Label>Name *</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required /></div>
               <div>
                 <Label>Category *</Label>
@@ -147,13 +147,13 @@ export default function AdminEmergencySuppliers() {
               </div>
             </div>
             <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows={2} /></div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div><Label>Phone</Label><Input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="0800 000 0000" /></div>
               <div><Label>Email</Label><Input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} /></div>
               <div><Label>Website</Label><Input value={form.website} onChange={e => setForm({...form, website: e.target.value})} placeholder="https://..." /></div>
               <div><Label>Opening Hours</Label><Input value={form.opening_hours} onChange={e => setForm({...form, opening_hours: e.target.value})} placeholder="Mon-Sat 9am-6pm" /></div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div><Label>Address</Label><Input value={form.address} onChange={e => setForm({...form, address: e.target.value})} /></div>
               <div><Label>City</Label><Input value={form.city} onChange={e => setForm({...form, city: e.target.value})} /></div>
               <div><Label>Postcode</Label><Input value={form.postcode} onChange={e => setForm({...form, postcode: e.target.value})} /></div>

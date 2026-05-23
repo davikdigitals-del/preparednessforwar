@@ -1,11 +1,11 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/components/ui/button";
 import { Flag, CheckCircle, XCircle } from "lucide-react";
 
 export default function AdminReports() {
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Content Reports</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold">Content Reports</h1>
         <div className="flex gap-2">
           <Button variant="outline">
             <Flag className="w-4 h-4 mr-2" />
@@ -20,7 +20,7 @@ export default function AdminReports() {
             <span className="text-sm text-gray-600">Pending Reports</span>
             <Flag className="w-5 h-5 text-orange-500" />
           </div>
-          <div className="text-3xl font-bold">0</div>
+          <div className="text-2xl sm:text-3xl font-bold">0</div>
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -28,7 +28,7 @@ export default function AdminReports() {
             <span className="text-sm text-gray-600">Resolved</span>
             <CheckCircle className="w-5 h-5 text-green-500" />
           </div>
-          <div className="text-3xl font-bold">0</div>
+          <div className="text-2xl sm:text-3xl font-bold">0</div>
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -36,7 +36,7 @@ export default function AdminReports() {
             <span className="text-sm text-gray-600">Dismissed</span>
             <XCircle className="w-5 h-5 text-gray-400" />
           </div>
-          <div className="text-3xl font-bold">0</div>
+          <div className="text-2xl sm:text-3xl font-bold">0</div>
         </div>
       </div>
 

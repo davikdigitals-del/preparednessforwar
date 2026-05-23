@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -276,7 +276,7 @@ export default function AdminCourseBuilder() {
           Back
         </Button>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold">{course.title}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">{course.title}</h1>
           <p className="text-muted-foreground mt-1">Build your course curriculum</p>
         </div>
         <Button onClick={() => { resetModuleForm(); setModuleDialogOpen(true); }}>

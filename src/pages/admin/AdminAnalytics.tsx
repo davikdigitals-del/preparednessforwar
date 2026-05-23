@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   TrendingUp, 
@@ -188,7 +188,7 @@ export default function AdminAnalytics() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Analytics</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Analytics</h1>
           <p className="text-gray-600 mt-1">Track your site performance and engagement</p>
         </div>
         
@@ -317,19 +317,19 @@ export default function AdminAnalytics() {
         <h2 className="text-xl font-bold mb-4">Quick Insights</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <div className="text-3xl font-bold">
+            <div className="text-2xl sm:text-3xl font-bold">
               {data.totalPosts > 0 ? Math.round(data.totalViews / data.totalPosts) : 0}
             </div>
             <div className="text-sm opacity-90">Average views per post</div>
           </div>
           <div>
-            <div className="text-3xl font-bold">
+            <div className="text-2xl sm:text-3xl font-bold">
               {data.postsThisMonth}
             </div>
             <div className="text-sm opacity-90">Posts published this month</div>
           </div>
           <div>
-            <div className="text-3xl font-bold">
+            <div className="text-2xl sm:text-3xl font-bold">
               {data.postsBySection.length}
             </div>
             <div className="text-sm opacity-90">Active sections</div>
