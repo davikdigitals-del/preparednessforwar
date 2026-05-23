@@ -530,14 +530,14 @@ const Index = () => {
             {/* DESKTOP HERO - Newspaper layout: text left, large image right */}
             {heroPost && (
               <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group block mb-6">
-                <div className="grid grid-cols-[2fr_3fr] gap-6" style={{height: '380px'}}>
+                <div className="grid grid-cols-[2fr_3fr] gap-6 items-start">
                   {/* Left: Text — top aligned */}
-                  <div className="flex flex-col justify-start pt-2">
+                  <div className="flex flex-col pt-2">
                     <h1 className="text-4xl xl:text-5xl font-black leading-[1.1] mb-3 group-hover:text-primary transition-colors">
                       {heroPost.title}
                     </h1>
                     {(heroPost.standfirst || heroPost.body || (heroPost as any).excerpt) && (
-                      <p className="text-gray-500 text-sm leading-relaxed mt-1 line-clamp-5">
+                      <p className="text-gray-500 text-sm leading-relaxed line-clamp-4">
                         {heroPost.body
                           ? heroPost.body.replace(/<[^>]*>/g, '').substring(0, 400)
                           : heroPost.standfirst || (heroPost as any).excerpt}
@@ -545,7 +545,7 @@ const Index = () => {
                     )}
                   </div>
                   {/* Right: Image fills full height */}
-                  <div className="overflow-hidden bg-gray-100 h-full">
+                  <div className="aspect-[4/3] overflow-hidden bg-gray-100">
                     {heroPost.image ? (
                       <img
                         src={heroPost.image}
