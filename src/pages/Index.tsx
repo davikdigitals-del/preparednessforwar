@@ -539,7 +539,7 @@ const Index = () => {
                     {(heroPost.standfirst || heroPost.body || (heroPost as any).excerpt) && (
                       <p className="text-gray-500 text-sm leading-relaxed mt-1">
                         {heroPost.body
-                          ? heroPost.body.substring(0, 160)
+                          ? heroPost.body.replace(/<[^>]*>/g, '').substring(0, 160)
                           : heroPost.standfirst || (heroPost as any).excerpt}
                       </p>
                     )}
