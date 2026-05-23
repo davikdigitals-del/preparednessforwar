@@ -537,9 +537,9 @@ const Index = () => {
                       {heroPost.title}
                     </h1>
                     {(heroPost.standfirst || heroPost.body || (heroPost as any).excerpt) && (
-                      <p className="text-gray-500 text-sm leading-relaxed mt-1">
+                      <p className="text-gray-500 text-sm leading-relaxed mt-1 line-clamp-5">
                         {heroPost.body
-                          ? heroPost.body.replace(/<[^>]*>/g, '').substring(0, 160)
+                          ? heroPost.body.replace(/<[^>]*>/g, '').substring(0, 400)
                           : heroPost.standfirst || (heroPost as any).excerpt}
                       </p>
                     )}
