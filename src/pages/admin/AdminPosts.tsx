@@ -77,8 +77,7 @@ export default function AdminPosts() {
       const { data, error } = await supabase
         .from("posts")
         .select("*")
-        .order("created_at", { ascending: false })
-        .limit(100); // Limit to prevent slow queries
+        .order("created_at", { ascending: false });
 
       if (error) {
         console.error("Error fetching posts:", error);
