@@ -561,7 +561,7 @@ const Index = () => {
             )}
 
             {/* DESKTOP - 3 column grid */}
-            <hr className="border-t border-gray-200 mb-4" />
+            <hr className="border-t border-gray-200 mt-6 mb-6" />
             <div className="grid grid-cols-3 gap-3 mb-4">
               {topStories.map((post) => {
                 const section = navSections.find((s) => s.slug === post.section);
