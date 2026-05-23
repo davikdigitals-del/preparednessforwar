@@ -361,7 +361,7 @@ export default function AdminMembers() {
                   <SelectContent>
                     {plans.map((plan) => (
                       <SelectItem key={plan.id} value={plan.id}>
-                        {plan.name} - {plan.currency === 'GBP' ? '£' : '$'}{plan.price}/{plan.interval}
+                        {plan.name} - £{plan.price}/{plan.interval}
                       </SelectItem>
                     ))}
                   </SelectContent>

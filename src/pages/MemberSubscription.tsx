@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
@@ -191,8 +191,7 @@ export default function MemberSubscription() {
                   <div>
                     <h3 className="font-bold text-base sm:text-lg">{subscription.subscription_plans?.name}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {subscription.subscription_plans?.currency === 'GBP' ? '£' : '$'}
-                      {subscription.subscription_plans?.price} / {subscription.subscription_plans?.interval}
+                      £{subscription.subscription_plans?.price} / {subscription.subscription_plans?.interval}
                     </p>
                   </div>
                 </div>
@@ -311,8 +310,7 @@ export default function MemberSubscription() {
                 </CardTitle>
                 <div className="text-center">
                   <div className="text-4xl font-bold text-primary">
-                    {plan.currency === 'GBP' ? '£' : plan.currency === 'USD' ? '$' : '€'}
-                    {plan.price}
+                    £{plan.price}
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     per {plan.interval}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -57,7 +57,7 @@ export default function SubscribePage() {
   }, []);
 
   useEffect(() => {
-    // Do NOT auto-trigger checkout from URL params — just let user click
+    // Do NOT auto-trigger checkout from URL params â€” just let user click
     // The ?plan= param is handled by highlighting the plan visually only
   }, [planIdFromUrl, plans, user, loading]);
 
@@ -106,15 +106,15 @@ export default function SubscribePage() {
         return;
       }
 
-      // Now get the session token — guaranteed to be ready after getUser()
+      // Now get the session token â€” guaranteed to be ready after getUser()
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
 
       if (!accessToken) {
-        console.warn('No access token but user exists — proceeding anyway');
+        console.warn('No access token but user exists â€” proceeding anyway');
       }
 
-      // Call edge function — pass user info in body since token auth is unreliable
+      // Call edge function â€” pass user info in body since token auth is unreliable
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const response = await fetch(
         `${supabaseUrl}/functions/v1/create-checkout-session`,
@@ -240,8 +240,7 @@ export default function SubscribePage() {
                 <CardTitle className="text-center">
                   <div className="text-2xl font-bold mb-2">{plan.name}</div>
                   <div className="text-4xl font-bold text-primary">
-                    {plan.currency === 'GBP' ? '£' : plan.currency === 'USD' ? '$' : '€'}
-                    {plan.price}
+                    £{plan.price}
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     per {plan.interval}

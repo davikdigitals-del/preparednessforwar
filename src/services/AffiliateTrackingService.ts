@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+﻿import { supabase } from "@/integrations/supabase/client";
 
 export class AffiliateTrackingService {
   /**
@@ -112,7 +112,7 @@ export class AffiliateTrackingService {
           transaction_type: "affiliate_commission",
           affiliate_product_id: productId,
           amount: conversionAmount,
-          currency: "USD",
+          currency: "GBP",
           status: "completed",
           country_code: click.country_code,
           transaction_date: new Date().toISOString(),

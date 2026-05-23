@@ -32,7 +32,7 @@ export default function AdminCourses() {
     thumbnail_url: "",
     preview_video_url: "",
     price: 0,
-    currency: "USD",
+    currency: "GBP",
     is_free: false,
     level: "beginner",
     duration_hours: 0,
@@ -182,7 +182,7 @@ export default function AdminCourses() {
       thumbnail_url: "",
       preview_video_url: "",
       price: 0,
-      currency: "USD",
+      currency: "GBP",
       is_free: false,
       level: "beginner",
       duration_hours: 0,
@@ -545,7 +545,7 @@ export default function AdminCourses() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="USD">USD ($)</SelectItem>
+                        <SelectItem value="GBP">USD ($)</SelectItem>
                         <SelectItem value="GBP">GBP (£)</SelectItem>
                         <SelectItem value="EUR">EUR (€)</SelectItem>
                       </SelectContent>

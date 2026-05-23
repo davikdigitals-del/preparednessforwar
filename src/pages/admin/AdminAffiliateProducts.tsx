@@ -30,7 +30,7 @@ export default function AdminAffiliateProducts() {
     affiliate_network: "amazon",
     commission_rate: 0,
     price: 0,
-    currency: "USD",
+    currency: "GBP",
     is_active: true,
     is_featured: false,
     country_codes: [],
@@ -149,7 +149,7 @@ export default function AdminAffiliateProducts() {
       affiliate_network: "amazon",
       commission_rate: 0,
       price: 0,
-      currency: "USD",
+      currency: "GBP",
       is_active: true,
       is_featured: false,
       country_codes: [],
@@ -436,7 +436,7 @@ export default function AdminAffiliateProducts() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="GBP">USD</SelectItem>
                     <SelectItem value="GBP">GBP</SelectItem>
                     <SelectItem value="EUR">EUR</SelectItem>
                   </SelectContent>

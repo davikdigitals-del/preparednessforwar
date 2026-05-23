@@ -253,7 +253,7 @@ export default function CheckoutPage() {
                   ) : (
                     <>
                       <Lock className="w-5 h-5 mr-2" />
-                      Pay ${course.price} {course.currency}
+                      Pay £{course.price} {course.currency}
                     </>
                   )}
                 </Button>
@@ -287,11 +287,11 @@ export default function CheckoutPage() {
               <div className="border-t border-gray-200 pt-4 mb-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Course Price</span>
-                  <span className="font-semibold">${course.price}</span>
+                  <span className="font-semibold">£{course.price}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Tax</span>
-                  <span className="font-semibold">$0.00</span>
+                  <span className="font-semibold">£0.00</span>
                 </div>
               </div>
 
@@ -299,7 +299,7 @@ export default function CheckoutPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-bold">Total</span>
                   <span className="text-2xl font-bold text-blue-900">
-                    ${course.price} {course.currency}
+                    £{course.price} {course.currency}
                   </span>
                 </div>
               </div>

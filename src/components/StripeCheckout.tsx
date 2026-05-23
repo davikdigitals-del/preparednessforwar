@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { getStripe } from '@/lib/stripe';
 import { Button } from '@/components/ui/button';
@@ -63,8 +63,7 @@ function CheckoutForm({ planName, amount, currency, onSuccess, onCancel }: Check
       <div className="space-y-2">
         <h3 className="font-semibold text-lg">{planName}</h3>
         <p className="text-2xl font-bold">
-          {currency === 'GBP' ? '£' : currency === 'USD' ? '$' : '€'}
-          {amount.toFixed(2)}
+          £{amount.toFixed(2)}
         </p>
       </div>
 

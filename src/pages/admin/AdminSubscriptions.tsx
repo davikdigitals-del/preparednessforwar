@@ -326,7 +326,7 @@ export default function AdminSubscriptions() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="GBP">GBP (£)</SelectItem>
-                      <SelectItem value="USD">USD ($)</SelectItem>
+                      <SelectItem value="GBP">USD ($)</SelectItem>
                       <SelectItem value="EUR">EUR (€)</SelectItem>
                     </SelectContent>
                   </Select>
@@ -444,8 +444,7 @@ export default function AdminSubscriptions() {
                   </div>
                   <div className="mb-3">
                     <span className="text-2xl font-bold">
-                      {plan.currency === "GBP" ? "£" : plan.currency === "USD" ? "$" : "€"}
-                      {plan.price}
+                      £{plan.price}
                     </span>
                     <span className="text-gray-500">/{plan.interval}</span>
                   </div>
@@ -503,8 +502,7 @@ export default function AdminSubscriptions() {
                         <div>
                           <div className="font-medium">{sub.subscription_plans?.name}</div>
                           <div className="text-sm text-gray-500">
-                            {sub.subscription_plans?.currency === "GBP" ? "£" : "$"}
-                            {sub.subscription_plans?.price}
+                            £{sub.subscription_plans?.price}
                           </div>
                         </div>
                       </td>

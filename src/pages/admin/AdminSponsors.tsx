@@ -31,7 +31,7 @@ export default function AdminSponsors() {
     contract_start_date: "",
     contract_end_date: "",
     monthly_fee: 0,
-    currency: "USD",
+    currency: "GBP",
     is_active: true,
     target_countries: [] as string[],
   });
@@ -134,7 +134,7 @@ export default function AdminSponsors() {
       contract_start_date: "",
       contract_end_date: "",
       monthly_fee: 0,
-      currency: "USD",
+      currency: "GBP",
       is_active: true,
       target_countries: [],
     });
@@ -407,7 +407,7 @@ export default function AdminSponsors() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="GBP">USD</SelectItem>
                     <SelectItem value="GBP">GBP</SelectItem>
                     <SelectItem value="EUR">EUR</SelectItem>
                   </SelectContent>
