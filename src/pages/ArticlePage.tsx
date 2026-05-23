@@ -537,9 +537,8 @@ const ArticlePage = () => {
             </div>
 
             {/* ── END DESKTOP LAYOUT ── */}
-            </div>
 
-            {/* Related Articles — shown on both mobile (lg:hidden handles mobile above) and desktop */}
+            {/* Related Articles — desktop only (mobile has its own above) */}
             {relatedPosts.length > 0 && (
               <div className="hidden lg:block bg-white border-t border-gray-200 p-6 md:p-8">
                 <div className="flex items-center gap-3 mb-6">
@@ -551,6 +550,7 @@ const ArticlePage = () => {
                 </div>
               </div>
             )}
+          </div>{/* end hidden lg:block desktop wrapper */}
           </article>
 
           <div className="hidden lg:block">
