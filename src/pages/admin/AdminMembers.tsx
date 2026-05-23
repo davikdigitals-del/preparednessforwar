@@ -328,6 +328,7 @@ export default function AdminMembers() {
                           size="sm"
                           variant="outline"
                           onClick={() => handleManageSubscription(member)}
+                          disabled
                         >
                           <Edit className="w-4 h-4 mr-1" />
                           Manage
