@@ -536,9 +536,11 @@ const Index = () => {
                     <h1 className="text-4xl xl:text-5xl font-black leading-[1.1] mb-3 group-hover:text-primary transition-colors">
                       {heroPost.title}
                     </h1>
-                    {(heroPost.standfirst || (heroPost as any).excerpt) && (
+                    {(heroPost.standfirst || heroPost.body || (heroPost as any).excerpt) && (
                       <p className="text-gray-500 text-sm leading-relaxed mt-1">
-                        {heroPost.standfirst || (heroPost as any).excerpt}
+                        {heroPost.body
+                          ? heroPost.body.substring(0, 160)
+                          : heroPost.standfirst || (heroPost as any).excerpt}
                       </p>
                     )}
                   </div>
