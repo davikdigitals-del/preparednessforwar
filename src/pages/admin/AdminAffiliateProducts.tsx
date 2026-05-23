@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Search, ExternalLink, TrendingUp, MousePointer, Phone, MapPin, AlertTriangle } from "lucide-react";
+import { Plus, Edit, Trash2, Search, ExternalLink, TrendingUp, MousePointer, Phone, MapPin, AlertTriangle, Link, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/FileUpload";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -140,6 +140,7 @@ export default function AdminAffiliateProducts() {
 
   const resetForm = () => {
     setEditingProduct(null);
+    setScrapeUrl("");
     setFormData({
       name: "",
       description: "",
@@ -162,6 +163,44 @@ export default function AdminAffiliateProducts() {
       supplier_accepts_cash: true,
       supplier_coordinates: "",
     });
+  };
+
+  const [scrapeUrl, setScrapeUrl] = useState("");
+  const [scraping, setScraping] = useState(false);
+
+  const handleScrapeUrl = async () => {
+    if (!scrapeUrl.trim()) return;
+    setScraping(true);
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const res = await fetch(`${supabaseUrl}/functions/v1/scrape-product`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ url: scrapeUrl }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      setFormData(prev => ({
+        ...prev,
+        affiliate_url: scrapeUrl,
+        name: data.name || prev.name,
+        description: data.description || prev.description,
+        image_url: data.image_url || prev.image_url,
+        price: data.price ?? prev.price,
+        currency: data.currency || prev.currency,
+        affiliate_network: data.affiliate_network || prev.affiliate_network,
+      }));
+
+      toast({ title: "Details fetched!", description: "Product details auto-filled from the URL" });
+    } catch (err: any) {
+      toast({ title: "Could not fetch details", description: err.message, variant: "destructive" });
+    } finally {
+      setScraping(false);
+    }
   };
 
   const toggleCountry = (countryCode: string) => {
@@ -333,6 +372,35 @@ export default function AdminAffiliateProducts() {
             <DialogTitle>{editingProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* URL Scraper */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <Label className="text-blue-900 font-semibold flex items-center gap-2 mb-2">
+                <Sparkles className="w-4 h-4" />
+                Auto-fill from URL
+              </Label>
+              <p className="text-xs text-blue-700 mb-3">Paste a product link and we'll fetch the details automatically</p>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="https://www.amazon.co.uk/product/..."
+                  value={scrapeUrl}
+                  onChange={(e) => setScrapeUrl(e.target.value)}
+                  className="flex-1 bg-white"
+                />
+                <Button
+                  type="button"
+                  onClick={handleScrapeUrl}
+                  disabled={scraping || !scrapeUrl.trim()}
+                  className="shrink-0"
+                >
+                  {scraping ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Fetching...</>
+                  ) : (
+                    <><Link className="w-4 h-4 mr-2" /> Fetch</>
+                  )}
+                </Button>
+              </div>
+            </div>
+
             <div>
               <Label htmlFor="name">Product Name *</Label>
               <Input
