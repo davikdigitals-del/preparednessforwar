@@ -73,10 +73,12 @@ export default function AdminMembers() {
 
   const fetchMembers = async () => {
     try {
-      // Fetch profiles first
+      // Fetch profiles first — only non-admin members
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
         .select("*")
+        .eq("role", "member")
+        .eq("is_admin", false)
         .order("created_at", { ascending: false });
 
       if (profilesError) throw profilesError;
@@ -114,6 +116,7 @@ export default function AdminMembers() {
         .from("subscription_plans")
         .select("*")
         .eq("is_active", true)
+        .neq("slug", "free")
         .order("price", { ascending: true });
 
       if (error) throw error;
