@@ -6,9 +6,29 @@ import { useAuth } from "@/contexts/AuthContext";
 import { navSections } from "@/data/mockData";
 import { MegaMenu, MegaMenuTrigger, MegaMenuContent } from "@/components/MegaMenu";
 import type { MegaMenuConfig } from "@/components/MegaMenu";
+import { useFeaturedPosts } from "@/hooks/useFeaturedPosts";
 
-// Build a MegaMenuConfig from a navSection
-function buildMenuConfig(section: (typeof navSections)[number]): MegaMenuConfig {
+// Build a MegaMenuConfig from a navSection, injecting a live featured post if available
+function buildMenuConfig(
+  section: (typeof navSections)[number],
+  featuredPost?: { id: string; title: string; image: string | null; category: string; standfirst: string | null }
+): MegaMenuConfig {
+  const featuredItems = featuredPost
+    ? [{
+        id: featuredPost.id,
+        title: featuredPost.title,
+        description: featuredPost.standfirst?.replace(/<[^>]*>/g, '').substring(0, 80) || "",
+        imageUrl: featuredPost.image || "/placeholder.svg",
+        href: `/${section.slug}/${featuredPost.category}/${featuredPost.id}`,
+      }]
+    : (section.featured ?? []).map((f) => ({
+        id: f.slug,
+        title: f.title,
+        description: "",
+        imageUrl: f.image ?? "/placeholder.svg",
+        href: `/${section.slug}/${f.slug}`,
+      }));
+
   return {
     menuId: section.slug,
     categories: {
@@ -36,13 +56,7 @@ function buildMenuConfig(section: (typeof navSections)[number]): MegaMenuConfig 
     },
     featured: {
       heading: "Featured",
-      items: (section.featured ?? []).map((f) => ({
-        id: f.slug,
-        title: f.title,
-        description: "",
-        imageUrl: f.image ?? "/placeholder.svg",
-        href: `/${section.slug}/${f.slug}`,
-      })),
+      items: featuredItems,
     },
   };
 }
@@ -85,6 +99,7 @@ export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const { user, logout } = useAuth();
+  const featuredMap = useFeaturedPosts();
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm relative">
@@ -177,7 +192,7 @@ export function SiteHeader() {
               {/* Dropdown panels */}
               {mainNavItems.map((item) => {
                 const section = navSections.find((s) => s.slug === item.section);
-                const config = section ? buildMenuConfig(section) : null;
+                const config = section ? buildMenuConfig(section, featuredMap[item.section]) : null;
                 return config ? (
                   <MegaMenuContent
                     key={item.section}
