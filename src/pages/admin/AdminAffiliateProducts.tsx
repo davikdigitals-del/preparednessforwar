@@ -203,7 +203,7 @@ export default function AdminAffiliateProducts() {
         description: data.description || prev.description,
         image_url: data.image_url || prev.image_url,
         price: data.price ?? prev.price,
-        currency: data.currency || prev.currency,
+        currency: "GBP", // always save in GBP — scraper auto-converts
         affiliate_network: data.affiliate_network || prev.affiliate_network,
         images: data.images || [],
         video_url: data.video_url || "",
@@ -212,7 +212,7 @@ export default function AdminAffiliateProducts() {
       const got = [data.name && 'name', data.image_url && 'image', data.video_url && 'video', data.price && 'price'].filter(Boolean);
       toast({
         title: "Details fetched!",
-        description: `Got: ${got.join(', ')}£{!data.price ? ' (price not available — enter manually)' : ''}`
+        description: `Got: ${got.join(', ')}${!data.price ? ' (price not available — enter manually)' : ''}`
       });
     } catch (err: any) {
       toast({ title: "Could not fetch details", description: err.message, variant: "destructive" });
@@ -542,16 +542,14 @@ export default function AdminAffiliateProducts() {
               <div>
                 <Label htmlFor="currency">Currency</Label>
                 <Select
-                  value={formData.currency}
-                  onValueChange={(value) => setFormData({ ...formData, currency: value })}
+                  value="GBP"
+                  onValueChange={() => {}}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="GBP">USD</SelectItem>
-                    <SelectItem value="GBP">GBP</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="GBP">£ GBP (British Pounds)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
