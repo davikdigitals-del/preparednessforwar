@@ -82,15 +82,16 @@ export function AffiliateProductCard({ product, onTrackClick }: AffiliateProduct
         <Button
           className="w-full"
           onClick={handleClick}
+        <Button
+          className="w-full"
+          onClick={handleClick}
+          asChild
         >
-          View Product
-          <ExternalLink className="w-4 h-4 ml-2" />
+          <a href={product.affiliate_url} target="_blank" rel="noopener noreferrer">
+            View Product
+            <ExternalLink className="w-4 h-4 ml-2" />
+          </a>
         </Button>
-
-        {/* Affiliate Disclosure */}
-        <p className="text-xs text-gray-500 text-center mt-3">
-          We may earn a commission from this purchase
-        </p>
       </div>
     </div>
   );

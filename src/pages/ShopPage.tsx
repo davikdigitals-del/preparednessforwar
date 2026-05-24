@@ -191,16 +191,7 @@ export default function ShopPage() {
           </div>
         )}
 
-        {/* Disclaimer */}
-        <div className="mt-12 bg-blue-50 border border-blue-200 p-6 rounded-lg">
-          <h3 className="font-semibold mb-2">Affiliate Disclosure</h3>
-          <p className="text-sm text-gray-700">
-            Preparedness For War is a participant in various affiliate programs. When you purchase through our links, 
-            we may earn a commission at no additional cost to you. This helps us continue providing valuable content 
-            and resources to our community. We only recommend products we believe in and that align with our mission 
-            of helping people prepare for emergencies.
-          </p>
-        </div>
+        
       </div>
     </div>
   );
