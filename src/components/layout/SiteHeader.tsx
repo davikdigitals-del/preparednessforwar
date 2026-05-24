@@ -7,6 +7,7 @@ import { navSections } from "@/data/mockData";
 import { MegaMenu, MegaMenuTrigger, MegaMenuContent } from "@/components/MegaMenu";
 import type { MegaMenuConfig } from "@/components/MegaMenu";
 import { useFeaturedPosts } from "@/hooks/useFeaturedPosts";
+import { useNavSections } from "@/hooks/useNavSections";
 
 // Build a MegaMenuConfig from a navSection, injecting a live featured post if available
 function buildMenuConfig(
@@ -61,16 +62,6 @@ function buildMenuConfig(
   };
 }
 
-const mainNavItems = [
-  { label: "Emergency News", to: "/emergency-news", section: "emergency-news" },
-  { label: "Survival Guides", to: "/survival-guides", section: "survival-guides" },
-  { label: "Health & Vaccination", to: "/health", section: "health" },
-  { label: "Official Directives", to: "/directives", section: "directives" },
-  { label: "Essential Supplies", to: "/supplies", section: "supplies" },
-  { label: "Resources", to: "/resources", section: "resources" },
-  { label: "Education", to: "/education", section: "education" },
-];
-
 // "More" mega menu config
 const moreMenuConfig: MegaMenuConfig = {
   menuId: "more",
@@ -100,6 +91,16 @@ export function SiteHeader() {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const { user, logout } = useAuth();
   const featuredMap = useFeaturedPosts();
+  const { sections: dbSections } = useNavSections();
+
+  // Use DB sections for nav, fall back to static navSections
+  const activeSections = dbSections.length > 0 ? dbSections : navSections;
+
+  const mainNavItems = activeSections.map(s => ({
+    label: s.title,
+    to: `/${s.slug}`,
+    section: s.slug,
+  }));
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm relative">
@@ -191,7 +192,7 @@ export function SiteHeader() {
 
               {/* Dropdown panels */}
               {mainNavItems.map((item) => {
-                const section = navSections.find((s) => s.slug === item.section);
+                const section = activeSections.find((s) => s.slug === item.section);
                 const config = section ? buildMenuConfig(section, featuredMap[item.section]) : null;
                 return config ? (
                   <MegaMenuContent
@@ -343,7 +344,7 @@ export function SiteHeader() {
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Main Navigation</h3>
               <nav className="space-y-1">
                 {mainNavItems.map((item) => {
-                  const section = navSections.find((s) => s.slug === item.section);
+                  const section = activeSections.find((s) => s.slug === item.section);
                   const hasCategories = section && section.categories.length > 0;
                   const isExpanded = expandedSection === item.section;
 
