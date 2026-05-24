@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ExternalLink, TrendingUp, Star, ChevronLeft, ChevronRight, Play, X } from "lucide-react";
+﻿import { useState } from "react";
+import { ExternalLink, TrendingUp, Star, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import type { AffiliateProduct } from "@/types/monetization";
@@ -17,7 +17,7 @@ export function AffiliateProductCard({ product, onTrackClick }: AffiliateProduct
     window.open(product.affiliate_url, "_blank", "noopener,noreferrer");
   };
 
-  const currencySymbol = product.currency === "GBP" ? "£" : product.currency === "EUR" ? "€" : "$";
+  const currencySymbol = product.currency === "GBP" ? "Â£" : product.currency === "EUR" ? "â‚¬" : "$";
 
   return (
     <>
@@ -78,7 +78,7 @@ export function AffiliateProductCard({ product, onTrackClick }: AffiliateProduct
   );
 }
 
-/* ── Product Preview Modal ── */
+/* â”€â”€ Product Preview Modal â”€â”€ */
 function ProductPreviewModal({
   product, open, onClose, onBuy, currencySymbol,
 }: {
@@ -91,7 +91,7 @@ function ProductPreviewModal({
   const [activeImg, setActiveImg] = useState(0);
   const [videoPlaying, setVideoPlaying] = useState(false);
 
-  // Build image gallery — use images array if available, else just image_url
+  // Build image gallery â€” use images array if available, else just image_url
   const images: string[] = (product as any).images?.length
     ? (product as any).images
     : product.image_url ? [product.image_url] : [];
@@ -106,7 +106,7 @@ function ProductPreviewModal({
       <DialogContent className="max-w-4xl w-full p-0 overflow-hidden max-h-[95vh] overflow-y-auto">
         <div className="grid grid-cols-1 md:grid-cols-2">
 
-          {/* Left — Image/Video Gallery */}
+          {/* Left â€” Image/Video Gallery */}
           <div className="bg-gray-50 p-4 flex flex-col gap-3">
             {/* Main image/video */}
             <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
@@ -165,16 +165,13 @@ function ProductPreviewModal({
             )}
           </div>
 
-          {/* Right — Product Details */}
+          {/* Right â€” Product Details */}
           <div className="p-5 flex flex-col gap-4">
-            {/* Category + close */}
-            <div className="flex items-start justify-between">
+            {/* Category */}
+            <div>
               <span className="text-xs font-bold text-blue-900 uppercase tracking-wide bg-blue-50 px-2 py-1 rounded">
                 {product.category}
               </span>
-              <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
-                <X className="w-4 h-4" />
-              </button>
             </div>
 
             {/* Title */}
@@ -202,7 +199,7 @@ function ProductPreviewModal({
                 <h3 className="text-sm font-bold text-gray-700 mb-1">About this product</h3>
                 <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
                   {product.description.split(' | ').map((line, i) => (
-                    <span key={i} className="block mb-1">• {line}</span>
+                    <span key={i} className="block mb-1">â€¢ {line}</span>
                   ))}
                 </p>
               </div>
