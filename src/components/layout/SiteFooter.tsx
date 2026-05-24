@@ -52,11 +52,6 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
-                <Link to="/dashboard" className="text-muted-foreground hover:text-primary transition-colors">
-                  Member Dashboard
-                </Link>
-              </li>
-              <li>
                 <Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">
                   About Us
                 </Link>
