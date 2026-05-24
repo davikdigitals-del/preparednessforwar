@@ -141,6 +141,8 @@ export default function AdminAffiliateProducts() {
   const resetForm = () => {
     setEditingProduct(null);
     setScrapeUrl("");
+    setScrapedImages([]);
+    setScrapedVideo("");
     setFormData({
       name: "",
       description: "",
@@ -167,6 +169,8 @@ export default function AdminAffiliateProducts() {
 
   const [scrapeUrl, setScrapeUrl] = useState("");
   const [scraping, setScraping] = useState(false);
+  const [scrapedImages, setScrapedImages] = useState<string[]>([]);
+  const [scrapedVideo, setScrapedVideo] = useState("");
 
   const handleScrapeUrl = async () => {
     if (!scrapeUrl.trim()) return;
@@ -182,7 +186,15 @@ export default function AdminAffiliateProducts() {
         body: JSON.stringify({ url: scrapeUrl }),
       });
       const data = await res.json();
+
+      if (data.blocked) {
+        toast({ title: "Site blocked scraping", description: "Fill in the details manually", variant: "destructive" });
+        return;
+      }
       if (data.error) throw new Error(data.error);
+
+      setScrapedImages(data.images || []);
+      setScrapedVideo(data.video_url || "");
 
       setFormData(prev => ({
         ...prev,
@@ -195,7 +207,11 @@ export default function AdminAffiliateProducts() {
         affiliate_network: data.affiliate_network || prev.affiliate_network,
       }));
 
-      toast({ title: "Details fetched!", description: "Product details auto-filled from the URL" });
+      const got = [data.name && 'name', data.image_url && 'image', data.video_url && 'video', data.price && 'price'].filter(Boolean);
+      toast({ 
+        title: "Details fetched!", 
+        description: `Got: ${got.join(', ')}${!data.price ? ' (price not available — enter manually)' : ''}` 
+      });
     } catch (err: any) {
       toast({ title: "Could not fetch details", description: err.message, variant: "destructive" });
     } finally {
@@ -400,6 +416,33 @@ export default function AdminAffiliateProducts() {
                 </Button>
               </div>
             </div>
+
+            {/* Scraped images gallery */}
+            {scrapedImages.length > 0 && (
+              <div className="bg-gray-50 border rounded-lg p-3">
+                <p className="text-xs font-semibold text-gray-600 mb-2">Select main image:</p>
+                <div className="flex gap-2 flex-wrap">
+                  {scrapedImages.map((img, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, image_url: img }))}
+                      className={`w-16 h-16 rounded overflow-hidden border-2 transition-all ${formData.image_url === img ? 'border-primary' : 'border-gray-200'}`}
+                    >
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Scraped video preview */}
+            {scrapedVideo && (
+              <div className="bg-gray-50 border rounded-lg p-3">
+                <p className="text-xs font-semibold text-gray-600 mb-2">Product video found:</p>
+                <video src={scrapedVideo} controls className="w-full max-h-48 rounded" />
+              </div>
+            )}
 
             <div>
               <Label htmlFor="name">Product Name *</Label>
