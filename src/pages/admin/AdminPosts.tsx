@@ -121,16 +121,18 @@ export default function AdminPosts() {
 
   const fetchSections = async () => {
     try {
-      const { data, error } = await supabase
-        .from("sections")
-        .select("*")
-        .eq("is_active", true)
-        .order("display_order");
-
-      if (error) throw error;
-      setSections(data || []);
+      const [{ data: secs }, { data: cats }] = await Promise.all([
+        supabase.from("nav_sections").select("*").eq("is_active", true).order("sort_order"),
+        supabase.from("nav_categories").select("*").order("sort_order"),
+      ]);
+      setSections(secs || []);
+      // Map categories to match the shape the form expects
+      setCategories((cats || []).map(c => ({
+        ...c,
+        sections: (secs || []).find(s => s.id === c.section_id),
+      })));
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: "Error loading sections", description: error.message, variant: "destructive" });
     }
   };
 
