@@ -7,8 +7,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Plus, Edit, Trash2, ChevronDown, ChevronRight, GripVertical } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+interface NavTool { id: string; title: string; slug: string; sort_order: number; }
 interface NavCategory { id: string; title: string; slug: string; sort_order: number; }
-interface NavSection { id: string; title: string; slug: string; color: string; sort_order: number; is_active: boolean; categories: NavCategory[]; }
+interface NavSection { id: string; title: string; slug: string; color: string; sort_order: number; is_active: boolean; categories: NavCategory[]; tools: NavTool[]; }
 
 export default function AdminSections() {
   const [sections, setSections] = useState<NavSection[]>([]);
@@ -27,16 +28,24 @@ export default function AdminSections() {
   const [catSectionId, setCatSectionId] = useState("");
   const [catForm, setCatForm] = useState({ title: "", slug: "" });
 
+  // Tool dialog
+  const [toolDialog, setToolDialog] = useState(false);
+  const [editingTool, setEditingTool] = useState<NavTool | null>(null);
+  const [toolSectionId, setToolSectionId] = useState("");
+  const [toolForm, setToolForm] = useState({ title: "", slug: "" });
+
   useEffect(() => { fetchSections(); }, []);
 
   const fetchSections = async () => {
     setLoading(true);
     const { data: secs } = await supabase.from("nav_sections").select("*").order("sort_order");
     const { data: cats } = await supabase.from("nav_categories").select("*").order("sort_order");
+    const { data: tools } = await supabase.from("nav_tools").select("*").order("sort_order");
     if (secs) {
       setSections(secs.map(s => ({
         ...s,
         categories: (cats || []).filter(c => c.section_id === s.id),
+        tools: (tools || []).filter(t => t.section_id === s.id),
       })));
     }
     setLoading(false);
@@ -131,6 +140,48 @@ export default function AdminSections() {
     fetchSections();
   };
 
+  /* ── Tool CRUD ── */
+  const openNewTool = (sectionId: string) => {
+    setEditingTool(null);
+    setToolSectionId(sectionId);
+    setToolForm({ title: "", slug: "" });
+    setToolDialog(true);
+  };
+
+  const openEditTool = (tool: NavTool, sectionId: string) => {
+    setEditingTool(tool);
+    setToolSectionId(sectionId);
+    setToolForm({ title: tool.title, slug: tool.slug });
+    setToolDialog(true);
+  };
+
+  const saveTool = async () => {
+    if (!toolForm.title.trim()) return;
+    const slug = toolForm.slug || toSlug(toolForm.title);
+    try {
+      if (editingTool) {
+        const { error } = await supabase.from("nav_tools").update({ title: toolForm.title, slug }).eq("id", editingTool.id);
+        if (error) throw error;
+        toast({ title: "Quick link updated" });
+      } else {
+        const section = sections.find(s => s.id === toolSectionId);
+        const maxOrder = Math.max(0, ...(section?.tools || []).map(t => t.sort_order));
+        const { error } = await supabase.from("nav_tools").insert({ section_id: toolSectionId, title: toolForm.title, slug, sort_order: maxOrder + 1 });
+        if (error) throw error;
+        toast({ title: "Quick link created" });
+      }
+      setToolDialog(false);
+      fetchSections();
+    } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+  };
+
+  const deleteTool = async (id: string) => {
+    if (!confirm("Delete this quick link?")) return;
+    await supabase.from("nav_tools").delete().eq("id", id);
+    toast({ title: "Quick link deleted" });
+    fetchSections();
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
@@ -180,6 +231,8 @@ export default function AdminSections() {
               {/* Categories */}
               {expanded === section.id && (
                 <div className="border-t border-gray-100 bg-gray-50 px-4 py-3">
+                  {/* Categories */}
+                  <div className="mb-4">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Categories</p>
                     <Button size="sm" variant="outline" onClick={() => openNewCat(section.id)}>
@@ -204,6 +257,35 @@ export default function AdminSections() {
                       ))}
                     </div>
                   )}
+                  </div>
+
+                  {/* Quick Links */}
+                  <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Quick Links</p>
+                    <Button size="sm" variant="outline" onClick={() => openNewTool(section.id)}>
+                      <Plus className="w-3 h-3 mr-1" /> Add Quick Link
+                    </Button>
+                  </div>
+                  {section.tools.length === 0 ? (
+                    <p className="text-sm text-gray-400 py-2">No quick links yet</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {section.tools.map((tool) => (
+                        <div key={tool.id} className="flex items-center gap-2 bg-white rounded px-3 py-2 border border-gray-100">
+                          <span className="text-sm flex-1">{tool.title}</span>
+                          <span className="text-xs text-gray-400 font-mono">/{section.slug}/{tool.slug}</span>
+                          <Button size="sm" variant="ghost" onClick={() => openEditTool(tool, section.id)}>
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="text-red-500" onClick={() => deleteTool(tool.id)}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  </div>
                 </div>
               )}
             </div>
@@ -253,6 +335,30 @@ export default function AdminSections() {
             <div className="flex gap-2 pt-2">
               <Button className="flex-1" onClick={saveCat}>{editingCat ? "Update" : "Create"}</Button>
               <Button variant="outline" onClick={() => setCatDialog(false)}>Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Tool Dialog */}
+      <Dialog open={toolDialog} onOpenChange={setToolDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingTool ? "Edit Quick Link" : "New Quick Link"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Title *</Label>
+              <Input value={toolForm.title} onChange={e => setToolForm(p => ({ ...p, title: e.target.value, slug: p.slug || toSlug(e.target.value) }))} placeholder="Breaking News" />
+            </div>
+            <div>
+              <Label>Slug *</Label>
+              <Input value={toolForm.slug} onChange={e => setToolForm(p => ({ ...p, slug: e.target.value }))} placeholder="breaking" />
+              <p className="text-xs text-gray-400 mt-1">Links to /section-slug/this-slug</p>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button className="flex-1" onClick={saveTool}>{editingTool ? "Update" : "Create"}</Button>
+              <Button variant="outline" onClick={() => setToolDialog(false)}>Cancel</Button>
             </div>
           </div>
         </DialogContent>

@@ -22,19 +22,19 @@ export function useNavSections() {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const [{ data: secs }, { data: cats }] = await Promise.all([
+        const [{ data: secs }, { data: cats }, { data: tools }] = await Promise.all([
           supabase.from("nav_sections").select("*").eq("is_active", true).order("sort_order"),
           supabase.from("nav_categories").select("*").order("sort_order"),
+          supabase.from("nav_tools").select("*").order("sort_order"),
         ]);
 
         if (secs && secs.length > 0) {
-          // Merge categories into sections, and carry over tools/featured from mockData fallback
           const merged: NavSectionDb[] = secs.map(s => {
             const fallback = fallbackSections.find(f => f.slug === s.slug);
             return {
               ...s,
               categories: (cats || []).filter(c => c.section_id === s.id),
-              tools: fallback?.tools || [],
+              tools: (tools || []).filter(t => t.section_id === s.id).map(t => ({ title: t.title, slug: t.slug })),
               featured: fallback?.featured || [],
             };
           });
