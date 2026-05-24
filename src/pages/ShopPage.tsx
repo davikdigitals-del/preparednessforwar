@@ -75,33 +75,33 @@ export default function ShopPage() {
   return (
     <div className="bg-white min-h-screen">
       {/* Hero */}
-      <div className="bg-gradient-to-r from-green-900 to-green-700 text-white py-16">
-        <div className="container">
+      <div className="bg-gradient-to-r from-green-900 to-green-700 text-white py-10 sm:py-16">
+        <div className="container px-4">
           <div className="max-w-3xl">
-            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
+            <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-bold mb-3">
               Essential Survival Gear & Supplies
             </h1>
-            <p className="text-xl text-green-100 mb-8">
+            <p className="text-sm sm:text-xl text-green-100 mb-4">
               Curated selection of high-quality survival gear, emergency supplies, and preparedness equipment
             </p>
             <div className="flex items-center gap-2 text-sm">
-              <ShoppingBag className="w-5 h-5" />
+              <ShoppingBag className="w-4 h-4" />
               <span>{products.length} Products Available</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container py-12">
+      <div className="container px-4 py-8 sm:py-12">
         {/* Featured Products */}
         {featuredProducts.length > 0 && (
-          <div className="mb-12">
-            <h2 className="font-display text-3xl font-bold mb-6">Featured Products</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="mb-10">
+            <h2 className="font-display text-xl sm:text-3xl font-bold mb-4">Featured Products</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {featuredProducts.map((product) => (
-                <AffiliateProductCard 
-                  key={product.id} 
-                  product={product} 
+                <AffiliateProductCard
+                  key={product.id}
+                  product={product}
                   onTrackClick={handleProductClick}
                 />
               ))}
@@ -110,14 +110,12 @@ export default function ShopPage() {
         )}
 
         {/* Filters */}
-        <div className="bg-gray-50 border border-gray-200 p-6 rounded-lg mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <Filter className="w-5 h-5 text-gray-600" />
-            <h3 className="font-semibold text-lg">Filter Products</h3>
+        <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Filter className="w-4 h-4 text-gray-600" />
+            <h3 className="font-semibold">Filter Products</h3>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Search */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
               <Input
@@ -127,12 +125,8 @@ export default function ShopPage() {
                 className="pl-10"
               />
             </div>
-
-            {/* Category Filter */}
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="All Categories" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
                 <SelectItem value="survival-gear">Survival Gear</SelectItem>
@@ -144,12 +138,8 @@ export default function ShopPage() {
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
-
-            {/* Sort */}
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sort By" />
-              </SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Sort By" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="featured">Featured First</SelectItem>
                 <SelectItem value="popular">Most Popular</SelectItem>
@@ -161,37 +151,33 @@ export default function ShopPage() {
         </div>
 
         {/* Results Count */}
-        <div className="mb-6">
-          <p className="text-gray-600">
-            Showing <span className="font-semibold">{filteredProducts.length}</span> product{filteredProducts.length !== 1 ? 's' : ''}
-          </p>
-        </div>
+        <p className="text-sm text-gray-600 mb-4">
+          Showing <span className="font-semibold">{filteredProducts.length}</span> product{filteredProducts.length !== 1 ? 's' : ''}
+        </p>
 
         {/* Products Grid */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-900"></div>
+            <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-green-900"></div>
             <p className="mt-4 text-gray-600">Loading products...</p>
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="text-center py-12">
-            <ShoppingBag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No products found</h3>
-            <p className="text-gray-600">Try adjusting your filters or search term</p>
+            <ShoppingBag className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No products found</h3>
+            <p className="text-gray-600 text-sm">Try adjusting your filters or search term</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {filteredProducts.map((product) => (
-              <AffiliateProductCard 
-                key={product.id} 
+              <AffiliateProductCard
+                key={product.id}
                 product={product}
                 onTrackClick={handleProductClick}
               />
             ))}
           </div>
         )}
-
-        
       </div>
     </div>
   );
