@@ -205,12 +205,14 @@ export default function AdminAffiliateProducts() {
         price: data.price ?? prev.price,
         currency: data.currency || prev.currency,
         affiliate_network: data.affiliate_network || prev.affiliate_network,
+        images: data.images || [],
+        video_url: data.video_url || "",
       }));
 
       const got = [data.name && 'name', data.image_url && 'image', data.video_url && 'video', data.price && 'price'].filter(Boolean);
-      toast({ 
-        title: "Details fetched!", 
-        description: `Got: ${got.join(', ')}${!data.price ? ' (price not available — enter manually)' : ''}` 
+      toast({
+        title: "Details fetched!",
+        description: `Got: ${got.join(', ')}${!data.price ? ' (price not available — enter manually)' : ''}`
       });
     } catch (err: any) {
       toast({ title: "Could not fetch details", description: err.message, variant: "destructive" });
