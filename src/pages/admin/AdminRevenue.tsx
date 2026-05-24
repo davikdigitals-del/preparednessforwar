@@ -100,7 +100,7 @@ export default function AdminRevenue() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-green-100 text-sm mb-2">Total Revenue ({timeRange} days)</p>
-            <p className="text-5xl font-bold">${totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            <p className="text-5xl font-bold">£{totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             <p className="text-green-100 mt-2">{transactions.filter(t => t.status === "completed").length} completed transactions</p>
           </div>
           <DollarSign className="w-24 h-24 text-green-300 opacity-50" />
@@ -114,7 +114,7 @@ export default function AdminRevenue() {
             <BookOpen className="w-8 h-8 text-blue-500" />
           </div>
           <p className="text-sm text-muted-foreground">Course Sales</p>
-          <p className="text-2xl font-bold">${revenueByType.course_sale.toLocaleString()}</p>
+          <p className="text-2xl font-bold">£{revenueByType.course_sale.toLocaleString()}</p>
         </div>
 
         <div className="bg-white p-4 rounded-lg border">
@@ -122,7 +122,7 @@ export default function AdminRevenue() {
             <Calendar className="w-8 h-8 text-purple-500" />
           </div>
           <p className="text-sm text-muted-foreground">Subscriptions</p>
-          <p className="text-2xl font-bold">${revenueByType.subscription.toLocaleString()}</p>
+          <p className="text-2xl font-bold">£{revenueByType.subscription.toLocaleString()}</p>
         </div>
 
         <div className="bg-white p-4 rounded-lg border">
@@ -130,7 +130,7 @@ export default function AdminRevenue() {
             <LinkIcon className="w-8 h-8 text-green-500" />
           </div>
           <p className="text-sm text-muted-foreground">Affiliate</p>
-          <p className="text-2xl font-bold">${revenueByType.affiliate_commission.toLocaleString()}</p>
+          <p className="text-2xl font-bold">£{revenueByType.affiliate_commission.toLocaleString()}</p>
         </div>
 
         <div className="bg-white p-4 rounded-lg border">
@@ -138,7 +138,7 @@ export default function AdminRevenue() {
             <Megaphone className="w-8 h-8 text-orange-500" />
           </div>
           <p className="text-sm text-muted-foreground">Sponsorships</p>
-          <p className="text-2xl font-bold">${revenueByType.sponsorship.toLocaleString()}</p>
+          <p className="text-2xl font-bold">£{revenueByType.sponsorship.toLocaleString()}</p>
         </div>
 
         <div className="bg-white p-4 rounded-lg border">
@@ -146,7 +146,7 @@ export default function AdminRevenue() {
             <TrendingUp className="w-8 h-8 text-red-500" />
           </div>
           <p className="text-sm text-muted-foreground">Advertisements</p>
-          <p className="text-2xl font-bold">${revenueByType.advertisement.toLocaleString()}</p>
+          <p className="text-2xl font-bold">£{revenueByType.advertisement.toLocaleString()}</p>
         </div>
       </div>
 
@@ -161,7 +161,7 @@ export default function AdminRevenue() {
               {topCountries.map(([country, amount]) => (
                 <div key={country} className="flex items-center justify-between">
                   <span className="font-medium">{country}</span>
-                  <span className="text-green-600 font-semibold">${amount.toLocaleString()}</span>
+                  <span className="text-green-600 font-semibold">£{amount.toLocaleString()}</span>
                 </div>
               ))}
             </div>
@@ -231,7 +231,7 @@ export default function AdminRevenue() {
                       {transaction.transaction_type.replace(/_/g, " ")}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold">
-                      ${transaction.amount.toFixed(2)} {transaction.currency}
+                      £{transaction.amount.toFixed(2)} {transaction.currency}
                     </td>
                     <td className="px-6 py-4 text-sm">{transaction.country_code || "-"}</td>
                     <td className="px-6 py-4">

@@ -170,7 +170,7 @@ export default function AdminEnrollments() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total Revenue</p>
-              <p className="text-2xl font-bold">${totalRevenue.toLocaleString()}</p>
+              <p className="text-2xl font-bold">£{totalRevenue.toLocaleString()}</p>
             </div>
             <DollarSign className="w-8 h-8 text-green-500" />
           </div>
@@ -275,7 +275,7 @@ export default function AdminEnrollments() {
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <div className="font-semibold">
-                        ${enrollment.payment_amount.toFixed(2)}
+                        £{enrollment.payment_amount.toFixed(2)}
                       </div>
                       <div className="text-gray-500">{enrollment.payment_currency}</div>
                     </td>

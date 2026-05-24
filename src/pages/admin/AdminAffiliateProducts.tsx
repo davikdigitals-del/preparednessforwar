@@ -212,7 +212,7 @@ export default function AdminAffiliateProducts() {
       const got = [data.name && 'name', data.image_url && 'image', data.video_url && 'video', data.price && 'price'].filter(Boolean);
       toast({
         title: "Details fetched!",
-        description: `Got: ${got.join(', ')}${!data.price ? ' (price not available — enter manually)' : ''}`
+        description: `Got: ${got.join(', ')}£{!data.price ? ' (price not available — enter manually)' : ''}`
       });
     } catch (err: any) {
       toast({ title: "Could not fetch details", description: err.message, variant: "destructive" });
@@ -284,7 +284,7 @@ export default function AdminAffiliateProducts() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Revenue</p>
-              <p className="text-2xl font-bold">${totalRevenue.toFixed(2)}</p>
+              <p className="text-2xl font-bold">£{totalRevenue.toFixed(2)}</p>
             </div>
             <TrendingUp className="w-8 h-8 text-yellow-500" />
           </div>

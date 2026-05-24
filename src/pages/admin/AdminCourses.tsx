@@ -359,7 +359,7 @@ export default function AdminCourses() {
                       {course.is_free ? (
                         <span className="text-green-600 font-semibold">FREE</span>
                       ) : (
-                        <span className="font-semibold">${course.price}</span>
+                        <span className="font-semibold">£{course.price}</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm">{course.enrollment_count}</td>

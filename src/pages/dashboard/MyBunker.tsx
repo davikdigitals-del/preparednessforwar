@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -1337,7 +1337,7 @@ function SuppliesTab({ user, isOnline, toast, wishlist, setWishlist, orderQueue,
                     <h3 className="font-medium text-[#0b0c0c] text-sm">{item.product_name}</h3>
                     {item.product_price && (
                       <p className="text-sm font-bold text-[#0b0c0c] mt-0.5">
-                        {item.product_currency === "GBP" ? "£" : "£"}{item.product_price}
+                        {"£"}{item.product_price}
                       </p>
                     )}
                     <p className="text-xs text-[#b1b4b6] mt-0.5">

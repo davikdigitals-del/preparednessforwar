@@ -195,7 +195,7 @@ export default function AdminSponsors() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Monthly Revenue</p>
-              <p className="text-2xl font-bold">${totalMonthlyRevenue.toLocaleString()}</p>
+              <p className="text-2xl font-bold">£{totalMonthlyRevenue.toLocaleString()}</p>
             </div>
             <DollarSign className="w-8 h-8 text-yellow-500" />
           </div>
@@ -273,7 +273,7 @@ export default function AdminSponsors() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold">
-                      ${sponsor.monthly_fee?.toLocaleString() || 0}
+                      £{sponsor.monthly_fee?.toLocaleString() || 0}
                     </td>
                     <td className="px-6 py-4">
                       {sponsor.is_active ? (

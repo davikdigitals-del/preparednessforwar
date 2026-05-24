@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -93,7 +93,7 @@ export default function CourseDetailPage() {
     }
 
     if (course?.is_free || isPremium) {
-      // Free course OR premium subscriber — enroll for free
+      // Free course OR premium subscriber â€” enroll for free
       createFreeEnrollment();
     } else {
       // Redirect to subscribe page
@@ -164,7 +164,7 @@ export default function CourseDetailPage() {
             <div className="lg:col-span-2">
               <div className="mb-4">
                 <Link to="/courses" className="text-red-200 hover:text-white text-sm">
-                  ← Back to Training Programs
+                  â† Back to Training Programs
                 </Link>
               </div>
               
@@ -240,7 +240,7 @@ export default function CourseDetailPage() {
                         <Crown className="w-5 h-5 text-primary" />
                         <span className="text-sm font-semibold text-primary">Premium Members Only</span>
                       </div>
-                      <p className="text-3xl font-bold">${course.price}</p>
+                      <p className="text-3xl font-bold">£{course.price}</p>
                       <p className="text-sm text-gray-500 mt-1">or subscribe for unlimited access</p>
                     </div>
                   )}
@@ -326,7 +326,7 @@ export default function CourseDetailPage() {
                 <ul className="space-y-2">
                   {course.requirements.map((req, index) => (
                     <li key={index} className="flex items-start gap-2 text-gray-700">
-                      <span className="text-blue-600 mt-1">•</span>
+                      <span className="text-blue-600 mt-1">â€¢</span>
                       <span>{req}</span>
                     </li>
                   ))}
