@@ -32,8 +32,8 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
-        // Cache the app shell (HTML, JS, CSS)
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        maximumFileSizeToCacheInBytes: 20 * 1024 * 1024, // 20MB limit
         // Cache strategies
         runtimeCaching: [
           {
