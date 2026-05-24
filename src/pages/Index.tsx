@@ -1,7 +1,8 @@
 ﻿import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useData, type MediaItem } from "@/contexts/DataContext";
-import { formatTimeAgo, navSections } from "@/data/mockData";
+import { formatTimeAgo, navSections as fallbackSections } from "@/data/mockData";
+import { useNavSections } from "@/hooks/useNavSections";
 import { Clock, Play, Video, Eye, Headphones, ExternalLink, Crown, Lock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
@@ -160,25 +161,13 @@ function MediaModal({ item, onClose }: { item: MediaItem; onClose: () => void })
 const Index = () => {
   const { publishedPosts, mediaItems, loading } = useData();
   const [activeMedia, setActiveMedia] = useState<MediaItem | null>(null);
-  const [sections, setSections] = useState<any[]>([]);
+  const { sections: dbSections } = useNavSections();
+  const sections = dbSections.length > 0 ? dbSections : fallbackSections;
+  const navSections = sections; // alias for existing references
 
   // Set page title
   useEffect(() => {
     document.title = "Preparedness For War - Latest News & Updates";
-  }, []);
-
-  // Fetch sections from database
-  useEffect(() => {
-    const fetchSections = async () => {
-      const { data } = await supabase
-        .from("sections")
-        .select("*")
-        .eq("is_active", true)
-        .order("display_order", { ascending: true });
-      
-      if (data) setSections(data);
-    };
-    fetchSections();
   }, []);
 
   if (loading) {
