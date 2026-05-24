@@ -2,24 +2,90 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import { VitePWA } from "vite-plugin-pwa";
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   root: ".",
   server: {
     host: "::",
     port: 8080,
-    hmr: {
-      overlay: false,
-    },
+    hmr: { overlay: false },
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [
+    react(),
+    mode === "development" && componentTagger(),
+    VitePWA({
+      registerType: "autoUpdate",
+      includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
+      manifest: {
+        name: "Preparedness For War",
+        short_name: "PrepForWar",
+        description: "Latest news, survival guides and emergency preparedness resources",
+        theme_color: "#1e3a5f",
+        background_color: "#ffffff",
+        display: "standalone",
+        start_url: "/",
+        icons: [
+          { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
+          { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+        ],
+      },
+      workbox: {
+        // Cache the app shell (HTML, JS, CSS)
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Cache strategies
+        runtimeCaching: [
+          {
+            // Cache Supabase API responses for posts
+            urlPattern: /^https:\/\/xfbmpjgcfohewejdzlfw\.supabase\.co\/rest\/v1\/posts/,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "supabase-posts",
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 }, // 24h
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Cache images
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "images",
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 7 }, // 7 days
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Cache Google Fonts
+            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "google-fonts",
+              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Network first for everything else, fallback to cache
+            urlPattern: /^https:\/\//,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "general",
+              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 },
+              cacheableResponse: { statuses: [0, 200] },
+              networkTimeoutSeconds: 5,
+            },
+          },
+        ],
+        // Offline fallback page
+        navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/api/, /^\/admin/],
+      },
+    }),
+  ].filter(Boolean),
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
+    alias: { "@": path.resolve(__dirname, "./src") },
   },
-  build: {
-    outDir: "dist",
-  },
+  build: { outDir: "dist" },
 }));
