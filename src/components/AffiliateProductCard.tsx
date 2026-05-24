@@ -17,7 +17,7 @@ export function AffiliateProductCard({ product, onTrackClick }: AffiliateProduct
     window.open(product.affiliate_url, "_blank", "noopener,noreferrer");
   };
 
-  const currencySymbol = product.currency === "GBP" ? "Â£" : product.currency === "EUR" ? "â‚¬" : "$";
+  const currencySymbol = product.currency === "GBP" ? "£" : product.currency === "EUR" ? "â‚¬" : "$";
 
   return (
     <>

@@ -346,10 +346,10 @@ export default function AdminAffiliateProducts() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm">{product.category}</td>
-                    <td className="px-6 py-4 text-sm font-semibold">${product.price}</td>
+                    <td className="px-6 py-4 text-sm font-semibold">£{product.price}</td>
                     <td className="px-6 py-4 text-sm">{product.commission_rate}%</td>
                     <td className="px-6 py-4 text-sm">{product.click_count}</td>
-                    <td className="px-6 py-4 text-sm font-semibold text-green-600">${product.revenue_generated.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-sm font-semibold text-green-600">£{product.revenue_generated.toFixed(2)}</td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1">
                         {product.is_active ? (
