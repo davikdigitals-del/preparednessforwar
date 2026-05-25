@@ -21,6 +21,14 @@ function getVimeoId(url: string) {
   const m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
   return m ? m[1] : null;
 }
+function getDailymotionId(url: string) {
+  const m = url.match(/dailymotion\.com\/video\/([^_?]+)/);
+  return m ? m[1] : null;
+}
+function getTwitchId(url: string) {
+  const m = url.match(/twitch\.tv\/videos\/(\d+)/);
+  return m ? m[1] : null;
+}
 function getSpotifyId(url: string) {
   const m = url.match(/spotify\.com\/episode\/([a-zA-Z0-9]+)/);
   return m ? m[1] : null;
@@ -360,11 +368,13 @@ export function MediaPlayer({ url, title, isPremium = false, type, thumbnail }: 
 
   const ytId = getYouTubeId(url);
   const vimeoId = getVimeoId(url);
+  const dailymotionId = getDailymotionId(url);
+  const twitchId = getTwitchId(url);
   const spotifyId = getSpotifyId(url);
   const directVideo = isDirectVideo(url);
   const directAudio = isDirectAudio(url) || type === "podcast" || type === "audio";
 
-  // YouTube
+  // YouTube (all formats including Shorts)
   if (ytId) {
     const embedUrl = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&color=white`;
     return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} />;
@@ -373,6 +383,18 @@ export function MediaPlayer({ url, title, isPremium = false, type, thumbnail }: 
   // Vimeo
   if (vimeoId) {
     const embedUrl = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0&badge=0`;
+    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} />;
+  }
+
+  // Dailymotion
+  if (dailymotionId) {
+    const embedUrl = `https://www.dailymotion.com/embed/video/${dailymotionId}?autoplay=1`;
+    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} />;
+  }
+
+  // Twitch
+  if (twitchId) {
+    const embedUrl = `https://player.twitch.tv/?video=${twitchId}&parent=${window.location.hostname}&autoplay=true`;
     return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} />;
   }
 
