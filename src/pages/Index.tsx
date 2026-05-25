@@ -33,125 +33,33 @@ function isAudio(url: string) {
 }
 
 /* â”€â”€ Media player modal â”€â”€ */
-function MediaModal({ item, onClose }: { item: MediaItem; onClose: () => void }) {
+function MediaModal({ item, onClose }) {
   const { user } = useAuth();
-  const { isPremium: hasPremiumAccess, loading: premiumLoading } = usePremiumStatus();
-  const url = item.url || "";
-  const embedUrl = getEmbedUrl(url);
-  const direct = isDirectVideo(url);
-  const audio = isAudio(url) || item.type === "podcast";
-
-  // Check if content is premium and user doesn't have access
+  const { isPremium: hasPremiumAccess } = usePremiumStatus();
   const isPremiumLocked = item.isPremium && !hasPremiumAccess;
-
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl p-0 overflow-hidden gap-0">
-        <DialogHeader className="px-5 pt-4 pb-3 border-b border-border">
-          <DialogTitle className="text-sm font-bold line-clamp-1 pr-8 flex items-center gap-2">
+      <DialogContent className="max-w-3xl p-0 overflow-hidden gap-0 bg-black border-gray-800">
+        <DialogHeader className="px-5 pt-4 pb-3 border-b border-gray-800 bg-gray-900">
+          <DialogTitle className="text-sm font-bold line-clamp-1 pr-8 text-white flex items-center gap-2">
             {item.title}
-            {item.isPremium && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                <Crown className="w-3 h-3" />
-                Premium
-              </span>
-            )}
+            {item.isPremium && <Crown className="w-3.5 h-3.5 text-yellow-400 shrink-0" />}
           </DialogTitle>
-          <p className="text-xs text-muted-foreground mt-0.5">{item.author} Â· {item.duration}</p>
+          <p className="text-xs text-gray-400 mt-0.5">{item.author} · {item.duration}</p>
         </DialogHeader>
-
         {isPremiumLocked ? (
-          /* Premium Gate */
-          <div className="p-8">
-            <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
-              <CardContent className="pt-8 pb-8 text-center">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Crown className="w-8 h-8 text-primary" />
-                </div>
-
-                <h3 className="text-2xl font-bold mb-2">Premium Content</h3>
-                <p className="text-gray-600 mb-6">
-                  This {item.type} is available exclusively to premium members. Upgrade now to unlock unlimited access.
-                </p>
-
-                {/* CTA buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  {user ? (
-                    <>
-                      <Button asChild size="lg" className="gap-2">
-                        <Link to="/premium">
-                          <Crown className="w-4 h-4" />
-                          Upgrade to Premium
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" size="lg">
-                        <Link to="/my-subscription">View Subscription</Link>
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button asChild size="lg" className="gap-2">
-                        <Link to="/signup">
-                          <Crown className="w-4 h-4" />
-                          Start Free Trial
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" size="lg">
-                        <Link to="/login">Sign In</Link>
-                      </Button>
-                    </>
-                  )}
-                </div>
-
-                <p className="text-xs text-gray-500 mt-4">
-                  Already a premium member? <Link to="/login" className="text-primary hover:underline">Sign in</Link>
-                </p>
-              </CardContent>
-            </Card>
+          <div className="aspect-video bg-gray-900 flex flex-col items-center justify-center gap-4 px-8 text-center">
+            <Crown className="w-12 h-12 text-yellow-400" />
+            <h3 className="text-white font-bold text-lg">Premium Content</h3>
+            <p className="text-gray-400 text-sm">Subscribe to access this {item.type}.</p>
+            <Button asChild className="bg-yellow-500 text-black font-bold" onClick={onClose}>
+              <Link to={user ? '/subscribe' : '/login'}>{user ? 'Upgrade to Premium' : 'Sign In'}</Link>
+            </Button>
           </div>
-        ) : url ? (
-          embedUrl && !direct ? (
-            /* YouTube / Vimeo iframe */
-            <div className="aspect-video">
-              <iframe src={embedUrl} title={item.title} className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen />
-            </div>
-          ) : direct ? (
-            /* Direct video file */
-            <video controls autoPlay className="w-full max-h-[60vh] bg-black" src={url} />
-          ) : audio ? (
-            /* Audio / podcast */
-            <div className="p-6 bg-muted flex flex-col items-center gap-4">
-              <div className="w-20 h-20 bg-primary flex items-center justify-center">
-                <Headphones className="w-10 h-10 text-white" />
-              </div>
-              <audio controls autoPlay className="w-full" src={url} />
-            </div>
-          ) : (
-            /* Unknown URL â€” show open externally */
-            <div className="aspect-video bg-muted flex flex-col items-center justify-center gap-3 text-muted-foreground">
-              <Video className="w-12 h-12 opacity-30" />
-              <p className="text-sm">Cannot embed this URL directly.</p>
-              <a href={url} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs text-primary underline">
-                <ExternalLink className="w-3 h-3" /> Open in new tab
-              </a>
-            </div>
-          )
+        ) : item.url ? (
+          <MediaPlayer url={item.url} title={item.title} isPremium={item.isPremium} type={item.type} thumbnail={item.thumbnail} />
         ) : (
-          <div className="aspect-video bg-muted flex items-center justify-center text-muted-foreground">
-            <p className="text-sm">No media URL provided yet.</p>
-          </div>
-        )}
-
-        {url && !isPremiumLocked && (
-          <div className="px-5 py-3 border-t border-border flex justify-end">
-            <a href={url} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-primary hover:underline">
-              <ExternalLink className="w-3 h-3" /> Open externally
-            </a>
-          </div>
+          <div className="aspect-video bg-gray-900 flex items-center justify-center text-gray-500"><p className="text-sm">No media URL.</p></div>
         )}
       </DialogContent>
     </Dialog>
