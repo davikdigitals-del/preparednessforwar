@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize,
   Download, SkipBack, SkipForward, Settings
@@ -12,7 +12,7 @@ interface MediaPlayerProps {
   thumbnail?: string;
 }
 
-/* ── URL type detection ── */
+/* â”€â”€ URL type detection â”€â”€ */
 function getYouTubeId(url: string) {
   const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/);
   return m ? m[1] : null;
@@ -28,14 +28,14 @@ function getSpotifyId(url: string) {
 function isDirectVideo(url: string) { return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url); }
 function isDirectAudio(url: string) { return /\.(mp3|wav|ogg|m4a|aac|flac)(\?|$)/i.test(url); }
 
-/* ── Download helper — proxies through edge function for direct files ── */
+/* â”€â”€ Download helper â€” proxies through edge function for direct files â”€â”€ */
 async function downloadViaProxy(url: string, title: string, setDownloading?: (v: boolean) => void) {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   setDownloading?.(true);
 
-  // For YouTube/Vimeo/Spotify — can't proxy, open externally
+  // For YouTube/Vimeo/Spotify â€” can't proxy, open externally
   const blocked = ['youtube.com', 'youtu.be', 'vimeo.com', 'spotify.com', 'apple.com'];
   if (blocked.some(b => url.includes(b))) {
     window.open(url, '_blank', 'noopener');
@@ -83,9 +83,9 @@ function fmt(s: number) {
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
-/* ══════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    CUSTOM HTML5 PLAYER (video + audio)
-══════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function CustomPlayer({ url, title, isPremium, isAudio, thumbnail }: {
   url: string; title: string; isPremium?: boolean; isAudio?: boolean; thumbnail?: string;
 }) {
@@ -306,17 +306,17 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail }: {
   );
 }
 
-/* ══════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    EMBEDDED PLAYER (YouTube, Vimeo, etc.)
    Hides branding with overlay
-══════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl }: {
   embedUrl: string; title: string; isPremium?: boolean; originalUrl: string;
 }) {
   const [downloading, setDownloading] = useState(false);
   return (
     <div className="relative bg-black">
-      {/* Title bar overlay — covers YouTube/Vimeo branding at top */}
+      {/* Title bar overlay â€” covers YouTube/Vimeo branding at top */}
       <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent px-4 py-2 pointer-events-none">
         <p className="text-white text-sm font-semibold line-clamp-1">{title}</p>
       </div>
@@ -352,9 +352,9 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl }: {
   );
 }
 
-/* ══════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    MAIN MEDIA PLAYER EXPORT
-══════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 export function MediaPlayer({ url, title, isPremium = false, type, thumbnail }: MediaPlayerProps) {
   if (!url) return null;
 
@@ -392,6 +392,6 @@ export function MediaPlayer({ url, title, isPremium = false, type, thumbnail }: 
     return <CustomPlayer url={url} title={title} isPremium={isPremium} isAudio={true} thumbnail={thumbnail} />;
   }
 
-  // Generic iframe for any other platform (Apple Podcasts, Anchor, Dailymotion, etc.)
+  // Generic iframe embed for any other platform (Apple Podcasts, Anchor, Dailymotion, etc.)
   return <EmbeddedPlayer embedUrl={url} title={title} isPremium={isPremium} originalUrl={url} />;
 }
