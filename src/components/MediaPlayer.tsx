@@ -328,12 +328,12 @@ export function MediaPlayer({ url, title, isPremium = false, type, thumbnail }: 
   }
 
   // Direct video file
-  if (directVideo) {
+  if (directVideo && type !== "podcast" && type !== "audio") {
     return <CustomPlayer url={url} title={title} isPremium={isPremium} isAudio={false} thumbnail={thumbnail} />;
   }
 
-  // Direct audio / podcast
-  if (directAudio) {
+  // Direct audio / podcast (including when type is explicitly podcast/audio)
+  if (directAudio || type === "podcast" || type === "audio") {
     return <CustomPlayer url={url} title={title} isPremium={isPremium} isAudio={true} thumbnail={thumbnail} />;
   }
 

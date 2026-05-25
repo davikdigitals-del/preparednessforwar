@@ -1,24 +1,61 @@
 import { useState } from "react";
-import { Play, Clock, Eye, Headphones, Video, Search } from "lucide-react";
+import { Play, Clock, Eye, Headphones, Video, Search, Crown, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useData, type MediaItem } from "@/contexts/DataContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { MediaPlayer } from "@/components/MediaPlayer";
+import { Link } from "react-router-dom";
 
 /* ── Media player modal ── */
 function MediaModal({ item, onClose }: { item: MediaItem; onClose: () => void }) {
   const url = item.url || "";
+  const { user } = useAuth();
+  const { isPremium } = usePremiumStatus();
+
+  // Premium gate — block if content is premium and user doesn't have subscription
+  const isLocked = item.isPremium && !isPremium;
 
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-3xl p-0 overflow-hidden gap-0 bg-black border-gray-800">
         <DialogHeader className="px-5 pt-4 pb-3 border-b border-gray-800 bg-gray-900">
-          <DialogTitle className="text-sm font-bold line-clamp-1 pr-8 text-white">{item.title}</DialogTitle>
+          <DialogTitle className="text-sm font-bold line-clamp-1 pr-8 text-white flex items-center gap-2">
+            {item.title}
+            {item.isPremium && <Crown className="w-3.5 h-3.5 text-yellow-400 shrink-0" />}
+          </DialogTitle>
           <p className="text-xs text-gray-400 mt-0.5">{item.author} · {item.duration}</p>
         </DialogHeader>
 
-        {url ? (
+        {isLocked ? (
+          /* Premium gate UI */
+          <div className="aspect-video bg-gray-900 flex flex-col items-center justify-center gap-4 px-8 text-center">
+            <div className="w-16 h-16 rounded-full bg-yellow-500/10 flex items-center justify-center">
+              <Lock className="w-8 h-8 text-yellow-400" />
+            </div>
+            <div>
+              <h3 className="text-white font-bold text-lg mb-1">Premium Content</h3>
+              <p className="text-gray-400 text-sm mb-4">
+                Subscribe to access this {item.type === "podcast" ? "podcast" : "video"} and all premium content.
+              </p>
+            </div>
+            {user ? (
+              <Button asChild className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold">
+                <Link to="/subscribe" onClick={onClose}>
+                  <Crown className="w-4 h-4 mr-2" /> Upgrade to Premium
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold">
+                <Link to="/login?redirect=/media" onClick={onClose}>
+                  Sign In to Subscribe
+                </Link>
+              </Button>
+            )}
+          </div>
+        ) : url ? (
           <MediaPlayer
             url={url}
             title={item.title}
@@ -60,6 +97,15 @@ function MediaCard({ item, onClick }: { item: MediaItem; onClick: () => void }) 
             {item.type}
           </span>
         </div>
+
+        {/* Premium lock badge */}
+        {item.isPremium && (
+          <div className="absolute top-2 right-2">
+            <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-black bg-yellow-500 text-black rounded">
+              <Crown className="w-2.5 h-2.5" /> PREMIUM
+            </span>
+          </div>
+        )}
 
         {/* Duration */}
         {item.duration && (
