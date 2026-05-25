@@ -28,7 +28,43 @@ function getSpotifyId(url: string) {
 function isDirectVideo(url: string) { return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url); }
 function isDirectAudio(url: string) { return /\.(mp3|wav|ogg|m4a|aac|flac)(\?|$)/i.test(url); }
 
-/* ── Format seconds to mm:ss ── */
+/* ── Download helper — proxies through edge function for direct files ── */
+async function downloadViaProxy(url: string, title: string) {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  // For YouTube/Vimeo/Spotify — can't proxy, open externally
+  const blocked = ['youtube.com', 'youtu.be', 'vimeo.com', 'spotify.com', 'apple.com'];
+  if (blocked.some(b => url.includes(b))) {
+    window.open(url, '_blank', 'noopener');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${supabaseUrl}/functions/v1/download-media`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': anonKey },
+      body: JSON.stringify({ url, filename: `${title.replace(/[^a-z0-9]/gi, '_').substring(0, 50)}` }),
+    });
+
+    if (!res.ok) {
+      // Fallback to direct link
+      window.open(url, '_blank', 'noopener');
+      return;
+    }
+
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = title.replace(/[^a-z0-9\s]/gi, '').trim() || 'download';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  } catch {
+    window.open(url, '_blank', 'noopener');
+  }
+}
 function fmt(s: number) {
   if (!s || isNaN(s)) return "0:00";
   const m = Math.floor(s / 60);
@@ -148,8 +184,9 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail }: {
           <video
             ref={mediaRef as any}
             src={url}
-            className="w-full aspect-video"
+            className="w-full aspect-video object-cover"
             poster={thumbnail}
+            style={thumbnail ? { backgroundImage: `url(${thumbnail})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
             onTimeUpdate={() => setCurrentTime(mediaRef.current?.currentTime || 0)}
             onLoadedMetadata={() => setDuration(mediaRef.current?.duration || 0)}
             onEnded={() => setPlaying(false)}
@@ -235,10 +272,11 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail }: {
 
           {/* Download */}
           {!isPremium && (
-            <a href={url} download target="_blank" rel="noopener noreferrer"
+            <button
+              onClick={() => downloadViaProxy(url, title)}
               className="text-white/80 hover:text-white transition-colors" title="Download">
               <Download className="w-4 h-4" />
-            </a>
+            </button>
           )}
 
           {/* Fullscreen (video only) */}
@@ -273,24 +311,22 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl }: {
           src={embedUrl}
           title={title}
           className="w-full h-full"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
           allowFullScreen
-          referrerPolicy="no-referrer"
+          sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-forms"
         />
       </div>
 
       {/* Download bar below player */}
       {!isPremium && (
         <div className="bg-gray-900 px-4 py-2 flex items-center justify-between">
-          <span className="text-gray-400 text-xs">Non-premium content</span>
-          <a
-            href={originalUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <span className="text-gray-400 text-xs">Free content</span>
+          <button
+            onClick={() => downloadViaProxy(originalUrl, title)}
             className="flex items-center gap-1.5 text-xs text-white bg-primary hover:bg-primary/90 px-3 py-1.5 rounded transition-colors"
           >
-            <Download className="w-3.5 h-3.5" /> Open & Download
-          </a>
+            <Download className="w-3.5 h-3.5" /> Download
+          </button>
         </div>
       )}
     </div>
