@@ -37,6 +37,7 @@ export class OfflineService {
 
   /**
    * Download content for offline access
+   * Records the content in the database so it appears in the offline manager
    */
   static async downloadContent(
     userId: string,
@@ -46,48 +47,18 @@ export class OfflineService {
     contentUrl: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      // Send message to service worker to cache the content
-      const messageChannel = new MessageChannel();
-      
-      const promise = new Promise<{ success: boolean; error?: string }>((resolve) => {
-        messageChannel.port1.onmessage = (event) => {
-          if (event.data.success) {
-            resolve({ success: true });
-          } else {
-            resolve({ success: false, error: event.data.error });
-          }
-        };
-      });
+      const { error } = await supabase.from('offline_content').upsert({
+        user_id: userId,
+        content_type: contentType,
+        content_id: contentId,
+        content_title: contentTitle,
+        content_url: contentUrl,
+        downloaded_at: new Date().toISOString(),
+        last_accessed_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,content_id' });
 
-      if (this.serviceWorker) {
-        this.serviceWorker.postMessage(
-          {
-            type: 'CACHE_CONTENT',
-            url: contentUrl,
-            contentType,
-            contentId,
-          },
-          [messageChannel.port2]
-        );
-      }
-
-      const result = await promise;
-
-      if (result.success) {
-        // Record in database
-        const { error } = await supabase.from('offline_content').upsert({
-          user_id: userId,
-          content_type: contentType,
-          content_id: contentId,
-          content_title: contentTitle,
-          downloaded_at: new Date().toISOString(),
-          last_accessed_at: new Date().toISOString(),
-        });
-
-        if (error) throw error;
-      }
-
-      return result;
+      if (error) throw error;
+      return { success: true };
     } catch (error: any) {
       console.error('Download failed:', error);
       return { success: false, error: error.message };
@@ -103,43 +74,14 @@ export class OfflineService {
     contentUrl: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      // Remove from service worker cache
-      const messageChannel = new MessageChannel();
-      
-      const promise = new Promise<{ success: boolean; error?: string }>((resolve) => {
-        messageChannel.port1.onmessage = (event) => {
-          if (event.data.success) {
-            resolve({ success: true });
-          } else {
-            resolve({ success: false, error: event.data.error });
-          }
-        };
-      });
+      const { error } = await supabase
+        .from('offline_content')
+        .delete()
+        .eq('user_id', userId)
+        .eq('content_id', contentId);
 
-      if (this.serviceWorker) {
-        this.serviceWorker.postMessage(
-          {
-            type: 'REMOVE_CACHED_CONTENT',
-            url: contentUrl,
-          },
-          [messageChannel.port2]
-        );
-      }
-
-      const result = await promise;
-
-      if (result.success) {
-        // Remove from database
-        const { error } = await supabase
-          .from('offline_content')
-          .delete()
-          .eq('user_id', userId)
-          .eq('content_id', contentId);
-
-        if (error) throw error;
-      }
-
-      return result;
+      if (error) throw error;
+      return { success: true };
     } catch (error: any) {
       console.error('Remove failed:', error);
       return { success: false, error: error.message };
@@ -233,39 +175,13 @@ export class OfflineService {
    */
   static async clearAllContent(userId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      // Clear service worker cache
-      const messageChannel = new MessageChannel();
-      
-      const promise = new Promise<{ success: boolean; error?: string }>((resolve) => {
-        messageChannel.port1.onmessage = (event) => {
-          if (event.data.success) {
-            resolve({ success: true });
-          } else {
-            resolve({ success: false, error: event.data.error });
-          }
-        };
-      });
+      const { error } = await supabase
+        .from('offline_content')
+        .delete()
+        .eq('user_id', userId);
 
-      if (this.serviceWorker) {
-        this.serviceWorker.postMessage(
-          { type: 'CLEAR_ALL_CACHE' },
-          [messageChannel.port2]
-        );
-      }
-
-      const result = await promise;
-
-      if (result.success) {
-        // Clear database records
-        const { error } = await supabase
-          .from('offline_content')
-          .delete()
-          .eq('user_id', userId);
-
-        if (error) throw error;
-      }
-
-      return result;
+      if (error) throw error;
+      return { success: true };
     } catch (error: any) {
       console.error('Clear all failed:', error);
       return { success: false, error: error.message };

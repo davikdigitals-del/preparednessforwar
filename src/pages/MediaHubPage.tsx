@@ -1,37 +1,14 @@
 import { useState } from "react";
-import { Play, Clock, Eye, Headphones, Video, ExternalLink, Search } from "lucide-react";
+import { Play, Clock, Eye, Headphones, Video, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useData, type MediaItem } from "@/contexts/DataContext";
 import { useAuth } from "@/contexts/AuthContext";
-
-/* ── Embed URL resolver ── */
-function getEmbedUrl(url: string): string | null {
-  if (!url) return null;
-  if (url.includes("youtube.com/embed/") || url.includes("player.vimeo.com")) return url;
-  const ytWatch = url.match(/youtube\.com\/watch\?v=([\w-]+)/);
-  if (ytWatch) return `https://www.youtube.com/embed/${ytWatch[1]}?autoplay=1&rel=0`;
-  const ytShort = url.match(/youtu\.be\/([\w-]+)/);
-  if (ytShort) return `https://www.youtube.com/embed/${ytShort[1]}?autoplay=1&rel=0`;
-  const vimeo = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}?autoplay=1`;
-  return null;
-}
-
-function isDirectVideo(url: string) {
-  return /\.(mp4|webm|ogg)(\?|$)/i.test(url);
-}
-
-function isAudio(url: string) {
-  return /\.(mp3|aac|wav|ogg|m4a)(\?|$)/i.test(url);
-}
+import { ArticleVideoPlayer } from "@/components/ArticleVideoPlayer";
 
 /* ── Media player modal ── */
 function MediaModal({ item, onClose }: { item: MediaItem; onClose: () => void }) {
   const url = item.url || "";
-  const embedUrl = getEmbedUrl(url);
-  const direct = isDirectVideo(url);
-  const audio = isAudio(url) || item.type === "podcast";
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -42,47 +19,12 @@ function MediaModal({ item, onClose }: { item: MediaItem; onClose: () => void })
         </DialogHeader>
 
         {url ? (
-          embedUrl && !direct ? (
-            /* YouTube / Vimeo iframe */
-            <div className="aspect-video">
-              <iframe src={embedUrl} title={item.title} className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen />
-            </div>
-          ) : direct ? (
-            /* Direct video file */
-            <video controls autoPlay className="w-full max-h-[60vh] bg-black" src={url} />
-          ) : audio ? (
-            /* Audio / podcast */
-            <div className="p-6 bg-muted flex flex-col items-center gap-4">
-              <div className="w-20 h-20 bg-primary flex items-center justify-center">
-                <Headphones className="w-10 h-10 text-white" />
-              </div>
-              <audio controls autoPlay className="w-full" src={url} />
-            </div>
-          ) : (
-            /* Unknown URL — show open externally */
-            <div className="aspect-video bg-muted flex flex-col items-center justify-center gap-3 text-muted-foreground">
-              <Video className="w-12 h-12 opacity-30" />
-              <p className="text-sm">Cannot embed this URL directly.</p>
-              <a href={url} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs text-primary underline">
-                <ExternalLink className="w-3 h-3" /> Open in new tab
-              </a>
-            </div>
-          )
+          <div className="aspect-video bg-black">
+            <ArticleVideoPlayer url={url} title={item.title} />
+          </div>
         ) : (
           <div className="aspect-video bg-muted flex items-center justify-center text-muted-foreground">
             <p className="text-sm">No media URL provided yet.</p>
-          </div>
-        )}
-
-        {url && (
-          <div className="px-5 py-3 border-t border-border flex justify-end">
-            <a href={url} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-primary hover:underline">
-              <ExternalLink className="w-3 h-3" /> Open externally
-            </a>
           </div>
         )}
       </DialogContent>
