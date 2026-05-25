@@ -188,7 +188,13 @@ export default function AdminAffiliateProducts() {
       const data = await res.json();
 
       if (data.blocked) {
-        toast({ title: "Site blocked scraping", description: "Fill in the details manually", variant: "destructive" });
+        // Still save the URL even if scraping failed
+        setFormData(prev => ({ ...prev, affiliate_url: scrapeUrl }));
+        toast({ 
+          title: "Could not auto-fill details", 
+          description: "This site blocks automated requests. The URL has been saved — please fill in the name, price and description manually.",
+          variant: "destructive" 
+        });
         return;
       }
       if (data.error) throw new Error(data.error);
