@@ -153,15 +153,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
     let debounceTimer: NodeJS.Timeout | null = null;
+    let lastProcessedUserId: string | null = null;
 
     const handleAuthChange = async (event: string, session: any) => {
-      // Clear any pending debounce
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
+      if (debounceTimer) clearTimeout(debounceTimer);
 
-      // Immediately clear user on sign out or token refresh failure — no debounce
+      // Immediately clear user on sign out
       if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESH_FAILED' || event === 'USER_DELETED') {
+        lastProcessedUserId = null;
         if (mounted) {
           setUser(null);
           setNotifications([]);
@@ -170,12 +169,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Debounce rapid auth state changes (prevents lock conflicts)
+      // Skip duplicate SIGNED_IN events for the same user
+      if (event === 'SIGNED_IN' && session?.user?.id && session.user.id === lastProcessedUserId) {
+        return;
+      }
+
       debounceTimer = setTimeout(async () => {
         if (!mounted) return;
-
         console.log("Auth state changed:", event, session?.user?.email);
-        
+
         if (!session?.user) {
           setUser(null);
           setNotifications([]);
@@ -183,13 +185,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
+        lastProcessedUserId = session.user.id;
         const built = await buildUser(session.user);
         if (mounted) {
           setUser(built);
           await fetchNotifications(session.user.id);
           setLoading(false);
         }
-      }, 100); // 100ms debounce
+      }, 300); // increased debounce
     };
 
     const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthChange);
