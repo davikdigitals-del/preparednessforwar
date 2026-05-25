@@ -29,40 +29,51 @@ function isDirectVideo(url: string) { return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(
 function isDirectAudio(url: string) { return /\.(mp3|wav|ogg|m4a|aac|flac)(\?|$)/i.test(url); }
 
 /* ── Download helper — proxies through edge function for direct files ── */
-async function downloadViaProxy(url: string, title: string) {
+async function downloadViaProxy(url: string, title: string, setDownloading?: (v: boolean) => void) {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  setDownloading?.(true);
 
   // For YouTube/Vimeo/Spotify — can't proxy, open externally
   const blocked = ['youtube.com', 'youtu.be', 'vimeo.com', 'spotify.com', 'apple.com'];
   if (blocked.some(b => url.includes(b))) {
     window.open(url, '_blank', 'noopener');
+    setDownloading?.(false);
     return;
   }
 
   try {
+    // Step 1: silently fetch via proxy
     const res = await fetch(`${supabaseUrl}/functions/v1/download-media`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': anonKey },
-      body: JSON.stringify({ url, filename: `${title.replace(/[^a-z0-9]/gi, '_').substring(0, 50)}` }),
+      body: JSON.stringify({ url, filename: title.replace(/[^a-z0-9\s]/gi, '').trim().substring(0, 60) }),
     });
 
-    if (!res.ok) {
-      // Fallback to direct link
-      window.open(url, '_blank', 'noopener');
-      return;
-    }
+    if (!res.ok) throw new Error('proxy failed');
 
+    // Step 2: trigger real download from blob
     const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
+    a.href = objectUrl;
     a.download = title.replace(/[^a-z0-9\s]/gi, '').trim() || 'download';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(a.href);
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
   } catch {
-    window.open(url, '_blank', 'noopener');
+    // Fallback: direct link
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = title;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } finally {
+    setDownloading?.(false);
   }
 }
 function fmt(s: number) {
@@ -90,6 +101,7 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail }: {
   const [speed, setSpeed] = useState(1);
   const [showSpeed, setShowSpeed] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const [downloading, setDownloading] = useState(false);
   const hideTimer = useRef<NodeJS.Timeout>();
 
   const resetHideTimer = () => {
@@ -273,9 +285,12 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail }: {
           {/* Download */}
           {!isPremium && (
             <button
-              onClick={() => downloadViaProxy(url, title)}
-              className="text-white/80 hover:text-white transition-colors" title="Download">
-              <Download className="w-4 h-4" />
+              onClick={() => downloadViaProxy(url, title, setDownloading)}
+              disabled={downloading}
+              className="text-white/80 hover:text-white transition-colors disabled:opacity-50" title={downloading ? "Downloading..." : "Download"}>
+              {downloading
+                ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin block" />
+                : <Download className="w-4 h-4" />}
             </button>
           )}
 
@@ -298,6 +313,7 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail }: {
 function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl }: {
   embedUrl: string; title: string; isPremium?: boolean; originalUrl: string;
 }) {
+  const [downloading, setDownloading] = useState(false);
   return (
     <div className="relative bg-black">
       {/* Title bar overlay — covers YouTube/Vimeo branding at top */}
@@ -313,7 +329,6 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl }: {
           className="w-full h-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
           allowFullScreen
-          sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-forms"
         />
       </div>
 
@@ -322,10 +337,14 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl }: {
         <div className="bg-gray-900 px-4 py-2 flex items-center justify-between">
           <span className="text-gray-400 text-xs">Free content</span>
           <button
-            onClick={() => downloadViaProxy(originalUrl, title)}
-            className="flex items-center gap-1.5 text-xs text-white bg-primary hover:bg-primary/90 px-3 py-1.5 rounded transition-colors"
+            onClick={() => downloadViaProxy(originalUrl, title, setDownloading)}
+            disabled={downloading}
+            className="flex items-center gap-1.5 text-xs text-white bg-primary hover:bg-primary/90 disabled:opacity-50 px-3 py-1.5 rounded transition-colors"
           >
-            <Download className="w-3.5 h-3.5" /> Download
+            {downloading
+              ? <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              : <Download className="w-3.5 h-3.5" />}
+            {downloading ? 'Downloading...' : 'Download'}
           </button>
         </div>
       )}
