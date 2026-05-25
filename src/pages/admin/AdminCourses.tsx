@@ -399,9 +399,10 @@ export default function AdminCourses() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="course-dialog-desc">
           <DialogHeader>
             <DialogTitle>{editingCourse ? "Edit Course" : "Create New Course"}</DialogTitle>
+            <p id="course-dialog-desc" className="sr-only">Course creation and editing form</p>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Info */}
