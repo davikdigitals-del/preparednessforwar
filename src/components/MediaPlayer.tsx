@@ -14,7 +14,7 @@ interface MediaPlayerProps {
 
 /* â”€â”€ URL type detection â”€â”€ */
 function getYouTubeId(url: string) {
-  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/);
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([\w-]{11})/);
   return m ? m[1] : null;
 }
 function getVimeoId(url: string) {
