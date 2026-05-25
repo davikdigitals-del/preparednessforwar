@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useData, type MediaItem } from "@/contexts/DataContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArticleVideoPlayer } from "@/components/ArticleVideoPlayer";
+import { MediaPlayer } from "@/components/MediaPlayer";
 
 /* ── Media player modal ── */
 function MediaModal({ item, onClose }: { item: MediaItem; onClose: () => void }) {
@@ -12,18 +12,22 @@ function MediaModal({ item, onClose }: { item: MediaItem; onClose: () => void })
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl p-0 overflow-hidden gap-0">
-        <DialogHeader className="px-5 pt-4 pb-3 border-b border-border">
-          <DialogTitle className="text-sm font-bold line-clamp-1 pr-8">{item.title}</DialogTitle>
-          <p className="text-xs text-muted-foreground mt-0.5">{item.author} · {item.duration}</p>
+      <DialogContent className="max-w-3xl p-0 overflow-hidden gap-0 bg-black border-gray-800">
+        <DialogHeader className="px-5 pt-4 pb-3 border-b border-gray-800 bg-gray-900">
+          <DialogTitle className="text-sm font-bold line-clamp-1 pr-8 text-white">{item.title}</DialogTitle>
+          <p className="text-xs text-gray-400 mt-0.5">{item.author} · {item.duration}</p>
         </DialogHeader>
 
         {url ? (
-          <div className="aspect-video bg-black">
-            <ArticleVideoPlayer url={url} title={item.title} />
-          </div>
+          <MediaPlayer
+            url={url}
+            title={item.title}
+            isPremium={item.isPremium}
+            type={item.type}
+            thumbnail={item.thumbnail}
+          />
         ) : (
-          <div className="aspect-video bg-muted flex items-center justify-center text-muted-foreground">
+          <div className="aspect-video bg-gray-900 flex items-center justify-center text-gray-500">
             <p className="text-sm">No media URL provided yet.</p>
           </div>
         )}
