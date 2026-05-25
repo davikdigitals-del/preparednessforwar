@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Search, Video, Headphones } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Video, Headphones, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/FileUpload";
 
@@ -158,6 +158,7 @@ export default function AdminPodcastVideos() {
 
   const resetForm = () => {
     setEditingItem(null);
+    setFetching(false);
     setFormData({
       title: "",
       description: "",
@@ -169,6 +170,40 @@ export default function AdminPodcastVideos() {
       tags: "",
       is_premium: false,
     });
+  };
+
+  const [fetching, setFetching] = useState(false);
+
+  const handleFetchMeta = async (url: string) => {
+    if (!url.trim() || !url.startsWith('http')) return;
+    setFetching(true);
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const res = await fetch(`${supabaseUrl}/functions/v1/fetch-media-meta`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      setFormData(prev => ({
+        ...prev,
+        title: data.title || prev.title,
+        description: data.description || prev.description,
+        thumbnail: data.thumbnail || prev.thumbnail,
+        author: data.author || prev.author,
+        duration: data.duration || prev.duration,
+        type: data.type || prev.type,
+      }));
+
+      const got = [data.title && 'title', data.thumbnail && 'thumbnail', data.author && 'author', data.duration && 'duration'].filter(Boolean);
+      toast({ title: "Details fetched!", description: got.length ? `Got: ${got.join(', ')}` : "URL saved — fill in details manually" });
+    } catch (err: any) {
+      toast({ title: "Could not fetch details", description: "Fill in manually", variant: "destructive" });
+    } finally {
+      setFetching(false);
+    }
   };
 
   const getTypeIcon = (type: string) => {
@@ -382,22 +417,40 @@ export default function AdminPodcastVideos() {
               <Label htmlFor="url">
                 {formData.type === "podcast" ? "Podcast URL" : "Video URL"}
               </Label>
-              <Input
-                id="url"
-                type="url"
-                value={formData.url}
-                onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                placeholder={
-                  formData.type === "podcast"
-                    ? "Spotify, Apple Podcasts, or MP3 URL"
-                    : "YouTube, Vimeo, or direct video URL"
-                }
-                required
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                {formData.type === "podcast"
-                  ? "Supports Spotify, Apple Podcasts, Anchor.fm, or direct audio files"
-                  : "Supports YouTube, Vimeo, Dailymotion, or direct video files"}
+              <div className="flex gap-2">
+                <Input
+                  id="url"
+                  type="url"
+                  value={formData.url}
+                  onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                  onBlur={(e) => { if (e.target.value && !formData.title) handleFetchMeta(e.target.value); }}
+                  onPaste={(e) => {
+                    const pasted = e.clipboardData.getData('text');
+                    if (pasted.startsWith('http')) {
+                      setTimeout(() => handleFetchMeta(pasted), 100);
+                    }
+                  }}
+                  placeholder={
+                    formData.type === "podcast"
+                      ? "Paste Spotify, Apple Podcasts, YouTube, or MP3 URL"
+                      : "Paste YouTube, Vimeo, or direct video URL"
+                  }
+                  required
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleFetchMeta(formData.url)}
+                  disabled={fetching || !formData.url}
+                  className="shrink-0"
+                >
+                  {fetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                Paste a URL — title, thumbnail, author and duration auto-fill
               </p>
             </div>
 
