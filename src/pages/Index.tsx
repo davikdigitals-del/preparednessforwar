@@ -10,6 +10,7 @@ import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { MediaPlayer } from "@/components/MediaPlayer";
 
 /* â”€â”€ Embed URL resolver â”€â”€ */
 function getEmbedUrl(url: string): string | null {
