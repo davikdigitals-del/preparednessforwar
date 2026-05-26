@@ -47,10 +47,14 @@ async function downloadViaProxy(url: string, title: string, setDownloading?: (v:
     return;
   }
 
+  console.log('[Download] Starting download for:', url);
+
   // Try 1: direct CORS fetch
   try {
+    console.log('[Download] Trying direct CORS fetch...');
     const res = await fetch(url, { mode: 'cors' });
     if (res.ok) {
+      console.log('[Download] CORS fetch succeeded, creating blob...');
       const blob = await res.blob();
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
@@ -58,13 +62,18 @@ async function downloadViaProxy(url: string, title: string, setDownloading?: (v:
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      console.log('[Download] Download triggered via CORS');
       setDownloading?.(false);
       return;
     }
-  } catch (_) {}
+    console.log('[Download] CORS fetch failed with status:', res.status);
+  } catch (e) {
+    console.log('[Download] CORS fetch error:', e);
+  }
 
   // Try 2: proxy via edge function
   try {
+    console.log('[Download] Trying proxy edge function...');
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     const res = await fetch(`${supabaseUrl}/functions/v1/download-media`, {
@@ -72,20 +81,29 @@ async function downloadViaProxy(url: string, title: string, setDownloading?: (v:
       headers: { 'Content-Type': 'application/json', 'apikey': anonKey },
       body: JSON.stringify({ url, filename: cleanName }),
     });
+    console.log('[Download] Proxy response status:', res.status);
     if (res.ok) {
       const blob = await res.blob();
+      console.log('[Download] Proxy blob size:', blob.size, 'type:', blob.type);
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = cleanName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      console.log('[Download] Download triggered via proxy');
       setDownloading?.(false);
       return;
+    } else {
+      const errText = await res.text();
+      console.log('[Download] Proxy error response:', errText);
     }
-  } catch (_) {}
+  } catch (e) {
+    console.log('[Download] Proxy error:', e);
+  }
 
   // Fallback: open in new tab
+  console.log('[Download] All methods failed, opening in new tab');
   const a = document.createElement('a');
   a.href = url;
   a.download = cleanName;
