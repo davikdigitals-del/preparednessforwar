@@ -1,8 +1,9 @@
 ﻿import { useState, useRef, useEffect } from "react";
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize,
-  Download, SkipBack, SkipForward, Settings
+  Download, SkipBack, SkipForward, Settings, Check
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MediaPlayerProps {
   url: string;
@@ -10,6 +11,7 @@ interface MediaPlayerProps {
   isPremium?: boolean;
   type?: "video" | "podcast" | "audio";
   thumbnail?: string;
+  mediaId?: string;
 }
 
 function getYouTubeId(url: string) {
@@ -35,83 +37,41 @@ function getSpotifyId(url: string) {
 function isDirectVideo(url: string) { return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url); }
 function isDirectAudio(url: string) { return /\.(mp3|wav|ogg|m4a|aac|flac)(\?|$)/i.test(url); }
 
-async function downloadViaProxy(url: string, title: string, setDownloading?: (v: boolean) => void) {
-  setDownloading?.(true);
-  const cleanName = title.replace(/[^a-z0-9\s]/gi, '').trim() || 'download';
-
-  // Streaming platforms cannot be downloaded
-  const streaming = ['youtube.com', 'youtu.be', 'vimeo.com', 'spotify.com', 'apple.com', 'twitch.tv', 'dailymotion.com'];
-  if (streaming.some(b => url.includes(b))) {
-    window.open(url, '_blank', 'noopener');
-    setDownloading?.(false);
-    return;
-  }
-
-  console.log('[Download] Starting download for:', url);
-
-  // Try 1: direct CORS fetch
+// Save media to member's dashboard offline content
+async function saveToDashboard(
+  url: string,
+  title: string,
+  type: string,
+  mediaId: string | undefined,
+  setSaving: (v: boolean) => void,
+  setSaved: (v: boolean) => void
+) {
+  setSaving(true);
   try {
-    console.log('[Download] Trying direct CORS fetch...');
-    const res = await fetch(url, { mode: 'cors' });
-    if (res.ok) {
-      console.log('[Download] CORS fetch succeeded, creating blob...');
-      const blob = await res.blob();
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = cleanName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      console.log('[Download] Download triggered via CORS');
-      setDownloading?.(false);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      window.location.href = '/login?redirect=/media';
+      setSaving(false);
       return;
     }
-    console.log('[Download] CORS fetch failed with status:', res.status);
+    const contentId = mediaId || url;
+    const contentType = (type === 'podcast' || type === 'audio') ? 'podcast' : 'video';
+    const { error } = await supabase.from('offline_content').upsert({
+      user_id: user.id,
+      content_type: contentType,
+      content_id: contentId,
+      content_title: title,
+      content_url: url,
+      downloaded_at: new Date().toISOString(),
+      last_accessed_at: new Date().toISOString(),
+    }, { onConflict: 'user_id,content_id' });
+    if (error) throw error;
+    setSaved(true);
   } catch (e) {
-    console.log('[Download] CORS fetch error:', e);
+    console.error('Save to dashboard failed:', e);
+  } finally {
+    setSaving(false);
   }
-
-  // Try 2: proxy via edge function
-  try {
-    console.log('[Download] Trying proxy edge function...');
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    const res = await fetch(`${supabaseUrl}/functions/v1/download-media`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': anonKey },
-      body: JSON.stringify({ url, filename: cleanName }),
-    });
-    console.log('[Download] Proxy response status:', res.status);
-    if (res.ok) {
-      const blob = await res.blob();
-      console.log('[Download] Proxy blob size:', blob.size, 'type:', blob.type);
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = cleanName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      console.log('[Download] Download triggered via proxy');
-      setDownloading?.(false);
-      return;
-    } else {
-      const errText = await res.text();
-      console.log('[Download] Proxy error response:', errText);
-    }
-  } catch (e) {
-    console.log('[Download] Proxy error:', e);
-  }
-
-  // Fallback: open in new tab
-  console.log('[Download] All methods failed, opening in new tab');
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = cleanName;
-  a.target = '_blank';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setDownloading?.(false);
 }
 
 function fmt(s: number) {
@@ -121,8 +81,8 @@ function fmt(s: number) {
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
-function CustomPlayer({ url, title, isPremium, isAudio, thumbnail }: {
-  url: string; title: string; isPremium?: boolean; isAudio?: boolean; thumbnail?: string;
+function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type }: {
+  url: string; title: string; isPremium?: boolean; isAudio?: boolean; thumbnail?: string; mediaId?: string; type?: string;
 }) {
   const mediaRef = useRef<HTMLVideoElement & HTMLAudioElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
@@ -136,7 +96,8 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail }: {
   const [speed, setSpeed] = useState(1);
   const [showSpeed, setShowSpeed] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  const [downloading, setDownloading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const hideTimer = useRef<NodeJS.Timeout>();
 
   const resetHideTimer = () => {
@@ -158,8 +119,7 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail }: {
     const bar = progressRef.current;
     const m = mediaRef.current;
     if (!bar || !m) return;
-    const rect = bar.getBoundingClientRect();
-    m.currentTime = ((e.clientX - rect.left) / rect.width) * duration;
+    m.currentTime = ((e.clientX - bar.getBoundingClientRect().left) / bar.getBoundingClientRect().width) * duration;
     resetHideTimer();
   };
 
@@ -254,17 +214,12 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail }: {
             <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         </div>
-
         <div className="flex items-center gap-3">
-          <button onClick={() => skip(-10)} className="text-white/80 hover:text-white transition-colors">
-            <SkipBack className="w-4 h-4" />
-          </button>
+          <button onClick={() => skip(-10)} className="text-white/80 hover:text-white transition-colors"><SkipBack className="w-4 h-4" /></button>
           <button onClick={togglePlay} className="text-white hover:text-primary transition-colors">
             {playing ? <Pause className="w-6 h-6 fill-white" /> : <Play className="w-6 h-6 fill-white ml-0.5" />}
           </button>
-          <button onClick={() => skip(10)} className="text-white/80 hover:text-white transition-colors">
-            <SkipForward className="w-4 h-4" />
-          </button>
+          <button onClick={() => skip(10)} className="text-white/80 hover:text-white transition-colors"><SkipForward className="w-4 h-4" /></button>
           <span className="text-white/70 text-xs font-mono">{fmt(currentTime)} / {fmt(duration)}</span>
           <div className="flex-1" />
           <div className="flex items-center gap-1.5">
@@ -291,10 +246,14 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail }: {
             )}
           </div>
           {!isPremium && (
-            <button onClick={() => downloadViaProxy(url, title, setDownloading)} disabled={downloading}
-              className="text-white/80 hover:text-white transition-colors disabled:opacity-50" title={downloading ? "Downloading..." : "Download"}>
-              {downloading
-                ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin block" />
+            <button
+              onClick={() => saveToDashboard(url, title, type || 'video', mediaId, setSaving, setSaved)}
+              disabled={saving || saved}
+              className="text-white/80 hover:text-white transition-colors disabled:opacity-50"
+              title={saved ? "Saved to dashboard" : "Save to dashboard"}
+            >
+              {saving ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin block" />
+                : saved ? <Check className="w-4 h-4 text-green-400" />
                 : <Download className="w-4 h-4" />}
             </button>
           )}
@@ -309,10 +268,11 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail }: {
   );
 }
 
-function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl }: {
-  embedUrl: string; title: string; isPremium?: boolean; originalUrl: string;
+function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl, mediaId, type }: {
+  embedUrl: string; title: string; isPremium?: boolean; originalUrl: string; mediaId?: string; type?: string;
 }) {
-  const [downloading, setDownloading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   return (
     <div className="relative bg-black">
       <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent px-4 py-2 pointer-events-none">
@@ -331,14 +291,14 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl }: {
         <div className="bg-gray-900 px-4 py-2 flex items-center justify-between">
           <span className="text-gray-400 text-xs">Free content</span>
           <button
-            onClick={() => downloadViaProxy(originalUrl, title, setDownloading)}
-            disabled={downloading}
+            onClick={() => saveToDashboard(originalUrl, title, type || 'video', mediaId, setSaving, setSaved)}
+            disabled={saving || saved}
             className="flex items-center gap-1.5 text-xs text-white bg-primary hover:bg-primary/90 disabled:opacity-50 px-3 py-1.5 rounded transition-colors"
           >
-            {downloading
-              ? <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            {saving ? <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              : saved ? <Check className="w-3.5 h-3.5 text-green-300" />
               : <Download className="w-3.5 h-3.5" />}
-            {downloading ? 'Downloading...' : 'Download'}
+            {saving ? 'Saving...' : saved ? 'Saved!' : 'Save to Dashboard'}
           </button>
         </div>
       )}
@@ -346,7 +306,7 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl }: {
   );
 }
 
-export function MediaPlayer({ url, title, isPremium = false, type, thumbnail }: MediaPlayerProps) {
+export function MediaPlayer({ url, title, isPremium = false, type, thumbnail, mediaId }: MediaPlayerProps) {
   if (!url) return null;
 
   const ytId = getYouTubeId(url);
@@ -359,30 +319,29 @@ export function MediaPlayer({ url, title, isPremium = false, type, thumbnail }: 
 
   if (ytId) {
     const embedUrl = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&color=white`;
-    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} />;
+    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
   }
   if (vimeoId) {
     const embedUrl = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0&badge=0`;
-    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} />;
+    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
   }
   if (dailymotionId) {
     const embedUrl = `https://www.dailymotion.com/embed/video/${dailymotionId}?autoplay=1`;
-    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} />;
+    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
   }
   if (twitchId) {
     const embedUrl = `https://player.twitch.tv/?video=${twitchId}&parent=${window.location.hostname}&autoplay=true`;
-    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} />;
+    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
   }
   if (spotifyId) {
     const embedUrl = `https://open.spotify.com/embed/episode/${spotifyId}?utm_source=generator&theme=0`;
-    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} />;
+    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
   }
   if (directVideo && type !== "podcast" && type !== "audio") {
-    return <CustomPlayer url={url} title={title} isPremium={isPremium} isAudio={false} thumbnail={thumbnail} />;
+    return <CustomPlayer url={url} title={title} isPremium={isPremium} isAudio={false} thumbnail={thumbnail} mediaId={mediaId} type={type} />;
   }
   if (directAudio || type === "podcast" || type === "audio") {
-    return <CustomPlayer url={url} title={title} isPremium={isPremium} isAudio={true} thumbnail={thumbnail} />;
+    return <CustomPlayer url={url} title={title} isPremium={isPremium} isAudio={true} thumbnail={thumbnail} mediaId={mediaId} type={type} />;
   }
-  // Generic iframe for Apple Podcasts, Anchor, SoundCloud, etc.
-  return <EmbeddedPlayer embedUrl={url} title={title} isPremium={isPremium} originalUrl={url} />;
+  return <EmbeddedPlayer embedUrl={url} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
 }

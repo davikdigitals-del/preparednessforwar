@@ -57,7 +57,7 @@ function MediaModal({ item, onClose }) {
             </Button>
           </div>
         ) : item.url ? (
-          <MediaPlayer url={item.url} title={item.title} isPremium={item.isPremium} type={item.type} thumbnail={item.thumbnail} />
+          <MediaPlayer url={item.url} title={item.title} isPremium={item.isPremium} type={item.type} thumbnail={item.thumbnail} mediaId={item.id} />
         ) : (
           <div className="aspect-video bg-gray-900 flex items-center justify-center text-gray-500"><p className="text-sm">No media URL.</p></div>
         )}

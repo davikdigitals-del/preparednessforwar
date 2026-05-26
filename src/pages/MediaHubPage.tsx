@@ -62,6 +62,7 @@ function MediaModal({ item, onClose }: { item: MediaItem; onClose: () => void })
             isPremium={item.isPremium}
             type={item.type}
             thumbnail={item.thumbnail}
+            mediaId={item.id}
           />
         ) : (
           <div className="aspect-video bg-gray-900 flex items-center justify-center text-gray-500">
