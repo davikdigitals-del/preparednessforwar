@@ -1102,23 +1102,17 @@ function SuppliesTab({ user, isOnline, toast, wishlist, setWishlist, orderQueue,
   const loadProducts = async () => {
     setLoading(true);
     try {
-      if (isOnline) {
-        const { data } = await supabase
-          .from("affiliate_products")
-          .select("*")
-          .eq("is_active", true)
-          .order("is_featured", { ascending: false });
-        const products = data || [];
-        setProducts(products);
-        // Cache for offline
-        await idb.setMany("cached_affiliate_products" as any, products.map((p: any) => ({ ...p })));
-      } else {
-        const cached = await idb.getAll("cached_affiliate_products" as any);
-        setProducts(cached);
-      }
+      // Use public client — no auth needed for active products
+      const { publicSupabase } = await import("@/integrations/supabase/publicClient");
+      const { data } = await publicSupabase
+        .from("affiliate_products")
+        .select("*")
+        .eq("is_active", true)
+        .order("is_featured", { ascending: false });
+      setProducts(data || []);
     } catch (e) {
-      const cached = await idb.getAll("cached_affiliate_products" as any);
-      setProducts(cached);
+      console.error("Failed to load products:", e);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
