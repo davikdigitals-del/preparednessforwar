@@ -64,7 +64,7 @@ async function saveToDashboard(
       content_url: url,
       downloaded_at: new Date().toISOString(),
       last_accessed_at: new Date().toISOString(),
-    }, { onConflict: 'user_id,content_id' });
+    }, { onConflict: 'user_id,content_type,content_id' });
     if (error) throw error;
     setSaved(true);
   } catch (e) {
