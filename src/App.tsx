@@ -27,6 +27,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminPosts from "./pages/admin/AdminPosts";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminSections from "./pages/admin/AdminSections";
+import AdminPreparednessTemplates from "./pages/admin/AdminPreparednessTemplates";
 import AdminAlerts from "./pages/admin/AdminAlerts";
 import AdminMedia from "./pages/admin/AdminMedia";
 import AdminPodcastVideos from "./pages/admin/AdminPodcastVideos";
@@ -89,6 +90,7 @@ const App = () => (
                 <Route path="posts" element={<AdminPosts />} />
                 <Route path="categories" element={<AdminCategories />} />
                 <Route path="sections" element={<AdminSections />} />
+                <Route path="preparedness-templates" element={<AdminPreparednessTemplates />} />
                 <Route path="alerts" element={<AdminAlerts />} />
                 <Route path="banner" element={<AdminBanner />} />
                 <Route path="media" element={<AdminMedia />} />

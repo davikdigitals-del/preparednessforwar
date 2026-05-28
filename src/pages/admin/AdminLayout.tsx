@@ -120,6 +120,7 @@ export default function AdminLayout() {
         { icon: BookOpen, label: "Sections", path: "/admin/sections" },
         { icon: FileText, label: "Pages", path: "/admin/pages" },
         { icon: BookOpen, label: "Encyclopaedia", path: "/admin/encyclopaedia" },
+        { icon: BookOpen, label: "Preparedness Templates", path: "/admin/preparedness-templates" },
       ],
     },
     {

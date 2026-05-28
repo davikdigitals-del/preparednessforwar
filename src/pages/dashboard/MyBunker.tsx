@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { PreparednessPlanner } from "@/components/PreparednessPlanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -249,10 +250,10 @@ export default function MyBunker() {
           {/* Main content */}
           <main className="flex-1 min-w-0">
             {activeTab === "overview" && <OverviewTab score={readinessScore} scoreColor={scoreColor} scoreBg={scoreBg} contacts={contacts} inventory={inventory} checklists={checklists} savedArticles={savedArticles} orderQueue={orderQueue} setActiveTab={setActiveTab} isOnline={isOnline} />}
-            {activeTab === "contacts" && <ContactsTab contacts={contacts} setContacts={setContacts} user={user} isOnline={isOnline} toast={toast} />}
-            {activeTab === "inventory" && <InventoryTab inventory={inventory} setInventory={setInventory} user={user} isOnline={isOnline} toast={toast} />}
+            {activeTab === "contacts" && <ContactsTab user={user} />}
+            {activeTab === "inventory" && <InventoryTab user={user} />}
             {activeTab === "supplies" && <SuppliesTab user={user} isOnline={isOnline} toast={toast} wishlist={wishlist} setWishlist={setWishlist} setOrderQueue={setOrderQueue} orderQueue={orderQueue} />}
-            {activeTab === "bugout" && <BugoutTab plan={bugoutPlan} setPlan={setBugoutPlan} user={user} isOnline={isOnline} toast={toast} />}
+            {activeTab === "bugout" && <BugoutTab user={user} />}
             {activeTab === "notes" && <NotesTab notes={notes} setNotes={setNotes} user={user} isOnline={isOnline} toast={toast} />}
             {activeTab === "checklists" && <ChecklistsTab checklists={checklists} setChecklists={setChecklists} user={user} isOnline={isOnline} toast={toast} />}
             {activeTab === "saved" && <SavedArticlesTab articles={savedArticles} setSavedArticles={setSavedArticles} user={user} isOnline={isOnline} toast={toast} />}
@@ -346,323 +347,36 @@ function ActionItem({ text, to, setActiveTab, urgent }: any) {
     </button>
   );
 }
-
-// ── CONTACTS TAB ─────────────────────────────────────────────────────────────
-function ContactsTab({ contacts, setContacts, user, isOnline, toast }: any) {
-  const [form, setForm] = useState({ name: "", relationship: "", phone: "", email: "", address: "", notes: "", priority: 0 });
-  const [adding, setAdding] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  const handleSave = async () => {
-    if (!form.name || !user) return;
-    setSaving(true);
-    const item = { ...form, user_id: user.id, id: `contact_${Date.now()}`, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
-    try {
-      if (isOnline) {
-        const { data, error } = await supabase.from("emergency_contacts").insert({ ...form, user_id: user.id }).select().single();
-        if (error) throw error;
-        setContacts([...contacts, data]);
-        await idb.set(STORES.CONTACTS, data);
-      } else {
-        await idb.set(STORES.CONTACTS, item);
-        await idb.addToSyncQueue({ type: "contact", table: "emergency_contacts", data: item, method: "INSERT" });
-        setContacts([...contacts, item]);
-        toast({ title: "Saved offline", description: "Will sync when connected" });
-      }
-      setForm({ name: "", relationship: "", phone: "", email: "", address: "", notes: "", priority: 0 });
-      setAdding(false);
-    } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
-    } finally { setSaving(false); }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this contact?")) return;
-    if (isOnline) { await supabase.from("emergency_contacts").delete().eq("id", id); }
-    else { await idb.addToSyncQueue({ type: "contact", table: "emergency_contacts", data: { id }, method: "DELETE" }); }
-    await idb.delete(STORES.CONTACTS, id);
-    setContacts(contacts.filter((c: any) => c.id !== id));
-  };
-
+// ── CONTACTS TAB — uses admin template ───────────────────────────────────────
+function ContactsTab({ user }: any) {
+  if (!user) return null;
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="font-bold text-[#0b0c0c]">Emergency Contacts</h2>
-        <Button size="sm" onClick={() => setAdding(!adding)}><Plus className="w-4 h-4 mr-1" />Add Contact</Button>
-      </div>
-      {adding && (
-        <div className="bg-white border border-[#b1b4b6] p-5 space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><Label>Name *</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Full name" /></div>
-            <div><Label>Relationship</Label><Input value={form.relationship} onChange={e => setForm({...form, relationship: e.target.value})} placeholder="e.g. Spouse, Parent" /></div>
-            <div><Label>Phone</Label><Input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="+44 7700 000000" /></div>
-            <div><Label>Email</Label><Input value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="email@example.com" /></div>
-          </div>
-          <div><Label>Address / Location</Label><Input value={form.address} onChange={e => setForm({...form, address: e.target.value})} placeholder="Home address or rally point" /></div>
-          <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} rows={2} placeholder="Any important notes..." /></div>
-          <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={saving} size="sm"><Save className="w-4 h-4 mr-1" />{saving ? "Saving..." : "Save"}</Button>
-            <Button variant="outline" size="sm" onClick={() => setAdding(false)}>Cancel</Button>
-          </div>
-        </div>
-      )}
-      {contacts.length === 0 ? (
-        <div className="bg-white border border-[#b1b4b6] p-8 text-center">
-          <Users className="w-12 h-12 text-[#b1b4b6] mx-auto mb-3" />
-          <p className="text-[#505a5f]">No emergency contacts yet. Add contacts for family, friends, and rally points.</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {contacts.map((c: any) => (
-            <div key={c.id} className="bg-white border border-[#b1b4b6]">
-              {/* Contact header */}
-              <div className="flex items-start justify-between p-4 pb-3">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-[#0b0c0c] text-base">{c.name}</h3>
-                  {c.relationship && <p className="text-xs text-[#505a5f] mt-0.5">{c.relationship}</p>}
-                  {c.address && <p className="text-xs text-[#505a5f] mt-1">📍 {c.address}</p>}
-                  {c.email && <p className="text-xs text-[#505a5f] mt-0.5">✉️ {c.email}</p>}
-                  {c.notes && <p className="text-xs text-[#505a5f] italic mt-1">"{c.notes}"</p>}
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)} className="flex-shrink-0 ml-2">
-                  <Trash2 className="w-4 h-4 text-[#d4351c]" />
-                </Button>
-              </div>
-
-              {/* Call / SMS actions */}
-              {c.phone ? (
-                <div className="border-t border-[#f3f2f1] px-4 py-3 flex flex-wrap gap-2">
-                  <a
-                    href={`tel:${c.phone}`}
-                    className="flex items-center gap-2 bg-[#1d70b8] text-white text-sm font-bold px-4 py-2 hover:bg-[#003078] transition-colors"
-                  >
-                    <Phone className="w-4 h-4" /> {c.phone}
-                  </a>
-                  <a
-                    href={`sms:${c.phone}`}
-                    className="flex items-center gap-2 bg-[#f3f2f1] text-[#0b0c0c] text-sm font-bold px-4 py-2 border border-[#b1b4b6] hover:bg-[#e8f0f8] transition-colors"
-                  >
-                    SMS
-                  </a>
-                </div>
-              ) : (
-                <div className="border-t border-[#f3f2f1] px-4 py-2">
-                  <p className="text-xs text-[#b1b4b6]">No phone number saved</p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      <h2 className="font-bold text-[#0b0c0c] text-lg">Emergency Contact Sheet</h2>
+      <PreparednessPlanner type="emergency_contact" userId={user.id} />
     </div>
   );
 }
-
-// ── INVENTORY TAB ─────────────────────────────────────────────────────────────
-function InventoryTab({ inventory, setInventory, user, isOnline, toast }: any) {
-  const [adding, setAdding] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ category: "water", item_name: "", quantity: "", unit: "litres", target_quantity: "", notes: "" });
-
-  const categories = [
-    { value: "water", label: "💧 Water", target: "14 days supply" },
-    { value: "food", label: "🥫 Food", target: "30 days supply" },
-    { value: "medical", label: "🏥 Medical", target: "Full first aid kit" },
-    { value: "fuel", label: "⛽ Fuel", target: "Full tank + 20L reserve" },
-    { value: "communication", label: "📻 Communication", target: "Radio + batteries" },
-    { value: "shelter", label: "🏕️ Shelter", target: "Tent + sleeping bags" },
-    { value: "documents", label: "📄 Documents", target: "All IDs + copies" },
-    { value: "clothing", label: "👕 Clothing", target: "7 days per person" },
-    { value: "weapons", label: "🔒 Security", target: "As applicable" },
-    { value: "other", label: "📦 Other", target: "" },
-  ];
-
-  const grouped = categories.map(cat => ({
-    ...cat,
-    items: inventory.filter((i: any) => i.category === cat.value),
-  }));
-
-  const handleSave = async () => {
-    if (!form.item_name || !user) return;
-    setSaving(true);
-    const item = { ...form, quantity: parseFloat(form.quantity) || 0, target_quantity: parseFloat(form.target_quantity) || null, user_id: user.id, id: `inv_${Date.now()}`, created_at: new Date().toISOString(), last_updated: new Date().toISOString() };
-    try {
-      if (isOnline) {
-        const { data, error } = await supabase.from("supply_inventory").insert({ ...form, quantity: parseFloat(form.quantity) || 0, target_quantity: parseFloat(form.target_quantity) || null, user_id: user.id }).select().single();
-        if (error) throw error;
-        setInventory([...inventory, data]);
-        await idb.saveSupplyItem(data);
-      } else {
-        await idb.saveSupplyItem(item);
-        await idb.addToSyncQueue({ type: "inventory", table: "supply_inventory", data: item, method: "INSERT" });
-        setInventory([...inventory, item]);
-        toast({ title: "Saved offline", description: "Will sync when connected" });
-      }
-      setForm({ category: "water", item_name: "", quantity: "", unit: "litres", target_quantity: "", notes: "" });
-      setAdding(false);
-    } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
-    } finally { setSaving(false); }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (isOnline) await supabase.from("supply_inventory").delete().eq("id", id);
-    else await idb.addToSyncQueue({ type: "inventory", table: "supply_inventory", data: { id }, method: "DELETE" });
-    await idb.delete(STORES.SUPPLY_INVENTORY, id);
-    setInventory(inventory.filter((i: any) => i.id !== id));
-  };
-
+// ── INVENTORY TAB — uses admin template ──────────────────────────────────────
+function InventoryTab({ user }: any) {
+  if (!user) return null;
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="font-bold text-[#0b0c0c]">Supply Inventory</h2>
-        <Button size="sm" onClick={() => setAdding(!adding)}><Plus className="w-4 h-4 mr-1" />Add Item</Button>
-      </div>
-      {adding && (
-        <div className="bg-white border border-[#b1b4b6] p-5 space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Category</Label>
-              <select value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="w-full border border-[#b1b4b6] rounded-md px-3 py-2 text-sm">
-                {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-              </select>
-            </div>
-            <div><Label>Item Name *</Label><Input value={form.item_name} onChange={e => setForm({...form, item_name: e.target.value})} placeholder="e.g. Bottled water" /></div>
-            <div><Label>Quantity</Label><Input type="number" value={form.quantity} onChange={e => setForm({...form, quantity: e.target.value})} placeholder="0" /></div>
-            <div><Label>Unit</Label><Input value={form.unit} onChange={e => setForm({...form, unit: e.target.value})} placeholder="litres, days, kg, units" /></div>
-            <div><Label>Target Quantity</Label><Input type="number" value={form.target_quantity} onChange={e => setForm({...form, target_quantity: e.target.value})} placeholder="Goal amount" /></div>
-            <div><Label>Notes</Label><Input value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} placeholder="Expiry date, location..." /></div>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={saving} size="sm"><Save className="w-4 h-4 mr-1" />{saving ? "Saving..." : "Save"}</Button>
-            <Button variant="outline" size="sm" onClick={() => setAdding(false)}>Cancel</Button>
-          </div>
-        </div>
-      )}
-      <div className="space-y-4">
-        {grouped.filter(g => g.items.length > 0).map(group => (
-          <div key={group.value} className="bg-white border border-[#b1b4b6] overflow-hidden">
-            <div className="bg-[#f3f2f1] px-4 py-2 border-b border-[#b1b4b6]">
-              <h3 className="font-semibold text-sm text-[#0b0c0c]">{group.label}</h3>
-              {group.target && <p className="text-xs text-[#b1b4b6]">Target: {group.target}</p>}
-            </div>
-            <div className="divide-y divide-[#f3f2f1]">
-              {group.items.map((item: any) => {
-                const pct = item.target_quantity ? Math.min((item.quantity / item.target_quantity) * 100, 100) : null;
-                return (
-                  <div key={item.id} className="px-4 py-3 flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm text-[#0b0c0c]">{item.item_name}</p>
-                      <p className="text-xs text-[#505a5f]">{item.quantity} {item.unit}{item.target_quantity ? ` / ${item.target_quantity} ${item.unit}` : ""}</p>
-                      {pct !== null && (
-                        <div className="mt-1 w-32 bg-gray-200 rounded-full h-1.5">
-                          <div className={`h-1.5 rounded-full ${pct >= 75 ? "bg-green-500" : pct >= 40 ? "bg-[#fdf0e8]0" : "bg-red-500"}`} style={{ width: `${pct}%` }} />
-                        </div>
-                      )}
-                      {item.notes && <p className="text-xs text-[#b1b4b6] mt-0.5">{item.notes}</p>}
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)}><Trash2 className="w-4 h-4 text-[#d4351c]" /></Button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-        {inventory.length === 0 && (
-          <div className="bg-white border border-[#b1b4b6] p-8 text-center">
-            <Package className="w-12 h-12 text-[#b1b4b6] mx-auto mb-3" />
-            <p className="text-[#505a5f]">No supplies tracked yet. Start adding your inventory.</p>
-          </div>
-        )}
-      </div>
+      <h2 className="font-bold text-[#0b0c0c] text-lg">Supply Inventory</h2>
+      <PreparednessPlanner type="supply_inventory" userId={user.id} />
     </div>
   );
 }
-
-// ── BUGOUT TAB ────────────────────────────────────────────────────────────────
-function BugoutTab({ plan, setPlan, user, isOnline, toast }: any) {
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ primary_route: "", secondary_route: "", rally_point_1: "", rally_point_1_coords: "", rally_point_2: "", rally_point_2_coords: "", destination: "", destination_coords: "", vehicle_info: "", fuel_plan: "", communication_plan: "", notes: "" });
-
-  useEffect(() => { if (plan) setForm({ primary_route: plan.primary_route || "", secondary_route: plan.secondary_route || "", rally_point_1: plan.rally_point_1 || "", rally_point_1_coords: plan.rally_point_1_coords || "", rally_point_2: plan.rally_point_2 || "", rally_point_2_coords: plan.rally_point_2_coords || "", destination: plan.destination || "", destination_coords: plan.destination_coords || "", vehicle_info: plan.vehicle_info || "", fuel_plan: plan.fuel_plan || "", communication_plan: plan.communication_plan || "", notes: plan.notes || "" }); }, [plan]);
-
-  const handleSave = async () => {
-    if (!user) return;
-    setSaving(true);
-    try {
-      if (isOnline) {
-        if (plan?.id) {
-          await supabase.from("bugout_plans").update(form).eq("id", plan.id);
-        } else {
-          const { data } = await supabase.from("bugout_plans").insert({ ...form, user_id: user.id }).select().single();
-          setPlan(data);
-        }
-      } else {
-        await idb.saveBugoutPlan({ ...form, id: plan?.id || "bugout_plan", user_id: user.id });
-        await idb.addToSyncQueue({ type: "bugout", table: "bugout_plans", data: { ...form, user_id: user.id, id: plan?.id }, method: plan?.id ? "UPDATE" : "INSERT" });
-        toast({ title: "Saved offline", description: "Will sync when connected" });
-      }
-      toast({ title: "Bug-out plan saved" });
-    } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
-    } finally { setSaving(false); }
-  };
-
-  const Field = ({ label, field, placeholder, multiline }: any) => (
-    <div>
-      <Label className="text-sm font-medium text-[#0b0c0c]">{label}</Label>
-      {multiline
-        ? <Textarea value={(form as any)[field]} onChange={e => setForm({...form, [field]: e.target.value})} placeholder={placeholder} rows={3} className="mt-1" />
-        : <Input value={(form as any)[field]} onChange={e => setForm({...form, [field]: e.target.value})} placeholder={placeholder} className="mt-1" />
-      }
-    </div>
-  );
-
+// ── BUGOUT TAB — uses admin template ─────────────────────────────────────────
+function BugoutTab({ user }: any) {
+  if (!user) return null;
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="font-bold text-[#0b0c0c]">Bug-Out Plan</h2>
-        <Button size="sm" onClick={handleSave} disabled={saving}><Save className="w-4 h-4 mr-1" />{saving ? "Saving..." : "Save Plan"}</Button>
-      </div>
-      <div className="bg-white border border-[#b1b4b6] p-5 space-y-5">
-        <div>
-          <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-[#f3f2f1]">Routes</h3>
-          <div className="space-y-3">
-            <Field label="Primary Route" field="primary_route" placeholder="Main evacuation route description..." multiline />
-            <Field label="Secondary Route (Backup)" field="secondary_route" placeholder="Alternative route if primary is blocked..." multiline />
-          </div>
-        </div>
-        <div>
-          <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-[#f3f2f1]">Rally Points</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Field label="Rally Point 1" field="rally_point_1" placeholder="Location name or address" />
-            <Field label="Coordinates 1" field="rally_point_1_coords" placeholder="e.g. 51.5074, -0.1278" />
-            <Field label="Rally Point 2" field="rally_point_2" placeholder="Backup rally location" />
-            <Field label="Coordinates 2" field="rally_point_2_coords" placeholder="e.g. 51.5074, -0.1278" />
-          </div>
-        </div>
-        <div>
-          <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-[#f3f2f1]">Destination</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Field label="Final Destination" field="destination" placeholder="Safe house, bunker, family location..." />
-            <Field label="Destination Coordinates" field="destination_coords" placeholder="e.g. 51.5074, -0.1278" />
-          </div>
-        </div>
-        <div>
-          <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-[#f3f2f1]">Logistics</h3>
-          <div className="space-y-3">
-            <Field label="Vehicle Information" field="vehicle_info" placeholder="Vehicle type, registration, fuel type, range..." />
-            <Field label="Fuel Plan" field="fuel_plan" placeholder="Fuel stops, reserve cans, alternative transport..." />
-            <Field label="Communication Plan" field="communication_plan" placeholder="Radio frequencies, check-in times, code words..." />
-            <Field label="Additional Notes" field="notes" placeholder="Any other important information..." multiline />
-          </div>
-        </div>
-      </div>
+      <h2 className="font-bold text-[#0b0c0c] text-lg">Bug-Out Plan</h2>
+      <PreparednessPlanner type="bugout_plan" userId={user.id} />
     </div>
   );
-}
-
-// ── NOTES TAB ─────────────────────────────────────────────────────────────────
+}// ── NOTES TAB ─────────────────────────────────────────────────────────────────
 function NotesTab({ notes, setNotes, user, isOnline, toast }: any) {
   const [adding, setAdding] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -1385,3 +1099,4 @@ function SuppliesTab({ user, isOnline, toast, wishlist, setWishlist, orderQueue,
 
 // Missing imports needed at top - add these
 import { supabase } from "@/integrations/supabase/client";
+import { PreparednessPlanner } from "@/components/PreparednessPlanner";
