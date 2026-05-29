@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, Search, User, Globe, Mail, X, Video, Newspaper, LogOut, ChevronDown, ChevronUp, FileText, BookOpen, GraduationCap, ShoppingBag, Info, Crown, Radio, MapPin, Users } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { Menu, Search, User, Globe, Mail, X, Video, Newspaper, LogOut, ChevronDown, ChevronUp, FileText, GraduationCap, ShoppingBag } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { navSections } from "@/data/mockData";
 import { MegaMenu, MegaMenuTrigger, MegaMenuContent } from "@/components/MegaMenu";
@@ -10,6 +10,7 @@ import { useFeaturedPosts } from "@/hooks/useFeaturedPosts";
 import { useNavSections } from "@/hooks/useNavSections";
 import { useData } from "@/contexts/DataContext";
 import { SearchModal } from "@/components/SearchModal";
+import { useLang } from "@/contexts/LanguageContext";
 
 // Build a MegaMenuConfig from a navSection, injecting a live featured post if available
 function buildMenuConfig(
@@ -96,6 +97,7 @@ export function SiteHeader() {
   const featuredMap = useFeaturedPosts();
   const { sections: dbSections } = useNavSections();
   const { banner } = useData();
+  const { t } = useLang();
 
   // Cmd/Ctrl+K to open search
   useEffect(() => {
@@ -149,37 +151,26 @@ export function SiteHeader() {
             <div className="flex items-center gap-4">
               <Link to="/countries" className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors">
                 <Globe className="w-3 h-3" />
-                <span>Countries</span>
+                <span>{t.countries}</span>
               </Link>
               <Link to="/newsletter" className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors">
                 <Mail className="w-3 h-3" />
-                <span>Newsletter</span>
+                <span>{t.newsletter}</span>
               </Link>
               <Link to="/library" className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors">
                 <Newspaper className="w-3 h-3" />
-                <span>Library</span>
+                <span>{t.library}</span>
               </Link>
               <Link to="/encyclopaedia" className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors">
                 <Newspaper className="w-3 h-3" />
-                <span>Encyclopaedia</span>
+                <span>{t.encyclopaedia}</span>
               </Link>
               <Link to="/media" className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors">
                 <Video className="w-3 h-3" />
-                <span>Media Hub</span>
+                <span>{t.mediaHub}</span>
               </Link>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setSearchOpen(true)}
-                className="flex items-center gap-2 text-gray-500 hover:text-primary transition-colors group"
-                aria-label="Search"
-              >
-                <Search className="w-4 h-4" />
-                <span className="text-xs text-gray-400 group-hover:text-primary hidden xl:inline">
-                  Search... <kbd className="bg-gray-100 px-1 rounded text-[10px]">⌘K</kbd>
-                </span>
-              </button>
-            </div>
+            {/* No UI switcher — language auto-detected from IP on load */}
           </div>
         </div>
       </div>
