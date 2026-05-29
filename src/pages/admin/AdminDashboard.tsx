@@ -3,12 +3,12 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   FileText,
-  AlertTriangle,
   Image,
   Library,
   Eye,
   Plus,
   TrendingUp,
+  Megaphone,
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -17,8 +17,6 @@ export default function AdminDashboard() {
     publishedPosts: 0,
     draftPosts: 0,
     premiumPosts: 0,
-    totalAlerts: 0,
-    activeAlerts: 0,
     totalMedia: 0,
     totalLibrary: 0,
   });
@@ -32,65 +30,56 @@ export default function AdminDashboard() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      
-      // Add timeout to prevent hanging
+
       const dataPromise = Promise.all([
         supabase.from("posts").select("status, is_premium", { count: "exact" }),
-        supabase.from("alerts").select("is_active", { count: "exact" }),
         supabase.from("media_items").select("id", { count: "exact" }),
         supabase.from("library_items").select("id", { count: "exact" }),
       ]);
-      
-      const timeoutPromise = new Promise((_, reject) => 
+
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Dashboard load timeout")), 8000)
       );
-      
-      const [postsRes, alertsRes, mediaRes, libraryRes] = await Promise.race([
+
+      const [postsRes, mediaRes, libraryRes] = await Promise.race([
         dataPromise,
-        timeoutPromise
+        timeoutPromise,
       ]) as any;
 
       const posts = postsRes.data || [];
-      const alerts = alertsRes.data || [];
 
       setStats({
         totalPosts: posts.length,
         publishedPosts: posts.filter((p: any) => p.status === "published").length,
         draftPosts: posts.filter((p: any) => p.status === "draft").length,
         premiumPosts: posts.filter((p: any) => p.is_premium).length,
-        totalAlerts: alerts.length,
-        activeAlerts: alerts.filter((a: any) => a.is_active).length,
         totalMedia: mediaRes.count || 0,
         totalLibrary: libraryRes.count || 0,
       });
 
-      // Load recent posts with timeout
       const recentPromise = supabase
         .from("posts")
         .select("id, title, status, created_at, is_premium")
         .order("created_at", { ascending: false })
         .limit(5);
-        
-      const recentTimeout = new Promise((_, reject) => 
+
+      const recentTimeout = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Recent posts timeout")), 5000)
       );
-      
+
       const { data: recent } = await Promise.race([
         recentPromise,
-        recentTimeout
+        recentTimeout,
       ]) as any;
 
       setRecentPosts(recent || []);
     } catch (error) {
       console.error("Error loading dashboard:", error);
-      // Set default values on error
       setStats({
         totalPosts: 0,
         publishedPosts: 0,
         draftPosts: 0,
         premiumPosts: 0,
-        totalAlerts: 0,
-        activeAlerts: 0,
         totalMedia: 0,
         totalLibrary: 0,
       });
@@ -114,13 +103,6 @@ export default function AdminDashboard() {
       subtitle: "Premium content",
       icon: TrendingUp,
       color: "bg-amber-500",
-    },
-    {
-      title: "Active Alerts",
-      value: stats.activeAlerts,
-      subtitle: `${stats.totalAlerts} total alerts`,
-      icon: AlertTriangle,
-      color: "bg-red-500",
     },
     {
       title: "Media Items",
@@ -164,7 +146,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -208,7 +190,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 <Link
-                  to={`/admin/posts`}
+                  to="/admin/posts"
                   className="text-sm text-primary hover:underline"
                 >
                   Edit
@@ -230,12 +212,12 @@ export default function AdminDashboard() {
           <p className="text-sm text-gray-600">Create and edit articles</p>
         </Link>
         <Link
-          to="/admin/alerts"
+          to="/admin/banner"
           className="bg-white rounded-lg border border-gray-200 p-6 hover:border-primary transition-colors"
         >
-          <AlertTriangle className="w-8 h-8 text-red-500 mb-3" />
-          <h3 className="font-semibold mb-1">Emergency Alerts</h3>
-          <p className="text-sm text-gray-600">Manage critical notifications</p>
+          <Megaphone className="w-8 h-8 text-orange-500 mb-3" />
+          <h3 className="font-semibold mb-1">Banner</h3>
+          <p className="text-sm text-gray-600">Manage site-wide banner</p>
         </Link>
         <Link
           to="/admin/analytics"

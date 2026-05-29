@@ -230,3 +230,13 @@
 ::selection {
   @apply bg-primary/20 text-foreground;
 }
+
+/* News ticker marquee animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}

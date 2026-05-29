@@ -8,6 +8,7 @@ import { MegaMenu, MegaMenuTrigger, MegaMenuContent } from "@/components/MegaMen
 import type { MegaMenuConfig } from "@/components/MegaMenu";
 import { useFeaturedPosts } from "@/hooks/useFeaturedPosts";
 import { useNavSections } from "@/hooks/useNavSections";
+import { useData } from "@/contexts/DataContext";
 
 // Build a MegaMenuConfig from a navSection, injecting a live featured post if available
 function buildMenuConfig(
@@ -92,6 +93,7 @@ export function SiteHeader() {
   const { user, logout } = useAuth();
   const featuredMap = useFeaturedPosts();
   const { sections: dbSections } = useNavSections();
+  const { banner } = useData();
 
   // Use DB sections for nav, fall back to static navSections
   const activeSections = dbSections.length > 0 ? dbSections : navSections;
@@ -104,6 +106,28 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm relative">
+      {/* Scrolling news ticker banner */}
+      {banner.enabled && banner.text && (
+        <div className="bg-[#1e3a5f] text-white overflow-hidden">
+          <div className="flex items-center h-8">
+            <div className="flex-shrink-0 bg-red-600 px-3 h-full flex items-center text-xs font-bold uppercase tracking-wider">
+              LIVE
+            </div>
+            <div className="flex-1 overflow-hidden relative">
+              <div
+                className="whitespace-nowrap text-sm font-medium"
+                style={{
+                  display: "inline-block",
+                  animation: "marquee 30s linear infinite",
+                  paddingLeft: "100%",
+                }}
+              >
+                {banner.text}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Top utility bar - Hidden on mobile */}
       <div className="hidden md:block border-b border-gray-100 bg-gray-50">
         <div className="container mx-auto px-4">
