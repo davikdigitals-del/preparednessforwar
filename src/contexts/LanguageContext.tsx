@@ -189,12 +189,17 @@ function getSavedLang(): LangCode | null {
 
 async function detectLangByIP(): Promise<LangCode> {
   try {
-    // Use free IP geolocation API — no key needed
-    const res = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(3000) });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch("https://ipapi.co/json/", { signal: controller.signal });
+    clearTimeout(timer);
     if (!res.ok) throw new Error("geo failed");
     const data = await res.json();
     const countryCode = data.country_code as string;
-    return countryToLang[countryCode] || "en";
+    const detected = countryToLang[countryCode] || "en";
+    // Save so we don't re-detect on every visit
+    localStorage.setItem("prw-lang", detected);
+    return detected;
   } catch {
     // Fallback to browser language
     const browserLang = navigator.language?.toLowerCase() || "en";
@@ -209,7 +214,9 @@ async function detectLangByIP(): Promise<LangCode> {
     if (browserLang.startsWith("pt")) return "pt";
     return "en";
   }
-}interface LanguageContextType {
+}
+
+interface LanguageContextType {
   lang: LangCode;
   t: Translations;
   setLang: (lang: LangCode) => void;
@@ -235,10 +242,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<LangCode>(getSavedLang() || "en");
 
   useEffect(() => {
-    // If user has a saved preference, use it — don't override
+    // Always detect on first visit (no saved pref), skip if already set
     if (getSavedLang()) return;
-
-    // Otherwise detect by IP country
     detectLangByIP().then((detected) => {
       setLangState(detected);
       document.documentElement.dir = detected === "ar" ? "rtl" : "ltr";
