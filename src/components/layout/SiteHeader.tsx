@@ -170,7 +170,15 @@ export function SiteHeader() {
                 <span>{t.mediaHub}</span>
               </Link>
             </div>
-            {/* No UI switcher — language auto-detected from IP on load */}
+            {/* Search icon — far right of top bar */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="flex items-center gap-1.5 text-gray-600 hover:text-primary transition-colors"
+              aria-label="Search"
+            >
+              <Search className="w-3.5 h-3.5" />
+              <span className="hidden xl:inline">Search</span>
+            </button>
           </div>
         </div>
       </div>
@@ -297,10 +305,10 @@ export function SiteHeader() {
               </>
             )}
 
-            {/* Search — top right end */}
+            {/* Search — mobile only (desktop uses top bar search) */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-primary"
+              className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-primary lg:hidden"
               aria-label="Search"
             >
               <Search className="w-4 h-4 sm:w-5 sm:h-5" />
