@@ -5,10 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Megaphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useData } from "@/contexts/DataContext";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminBanner() {
   const { toast } = useToast();
+  const { setBanner } = useData();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [bannerId, setBannerId] = useState<string | null>(null);
@@ -70,6 +72,14 @@ export default function AdminBanner() {
       }
 
       if (error) throw error;
+
+      // Immediately update the DataContext so SiteHeader reflects change without refresh
+      setBanner({
+        id: bannerId || undefined,
+        text: form.text,
+        enabled: form.enabled,
+        priority: "high",
+      });
 
       toast({ title: "Banner saved", description: "Changes are now live on the site." });
     } catch (err: any) {
