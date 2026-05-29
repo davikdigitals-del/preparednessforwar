@@ -242,12 +242,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<LangCode>(getSavedLang() || "en");
 
   useEffect(() => {
-    // Always detect on first visit (no saved pref), skip if already set
-    if (getSavedLang()) return;
+    // Always detect by IP on every visit — re-translate if country changed
     detectLangByIP().then((detected) => {
       setLangState(detected);
-      document.documentElement.dir = detected === "ar" ? "rtl" : "ltr";
       document.documentElement.lang = detected;
+      document.documentElement.dir = detected === "ar" ? "rtl" : "ltr";
     });
   }, []);
 
