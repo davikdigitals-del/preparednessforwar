@@ -251,14 +251,6 @@ export function SiteHeader() {
 
           {/* Right actions */}
           <div className="flex items-center gap-1 sm:gap-2">
-            {/* Mobile search button */}
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-primary"
-              aria-label="Search"
-            >
-              <Search className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
             {/* Mobile: show user avatar/dashboard if logged in, else show login */}
             {user ? (
               <Button variant="ghost" size="sm" asChild className="lg:hidden">
@@ -304,6 +296,15 @@ export function SiteHeader() {
                 </Button>
               </>
             )}
+
+            {/* Search — top right end */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-primary"
+              aria-label="Search"
+            >
+              <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
           </div>
         </div>
       </div>
