@@ -1434,7 +1434,3 @@ function SuppliesTab({ user, isOnline, toast, wishlist, setWishlist, orderQueue,
     </div>
   );
 }
-
-// Missing imports needed at top - add these
-import { supabase } from "@/integrations/supabase/client";
-import { PreparednessPlanner } from "@/components/PreparednessPlanner";

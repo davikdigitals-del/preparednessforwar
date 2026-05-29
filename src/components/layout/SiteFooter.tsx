@@ -1,6 +1,21 @@
 import { Link } from "react-router-dom";
+import { Globe } from "lucide-react";
+import { useLang, availableLangs } from "@/contexts/LanguageContext";
+import { translatePage } from "@/hooks/useAutoTranslate";
 
 export function SiteFooter() {
+  const { lang, setLang, t } = useLang();
+
+  const handleLangChange = (newLang: string) => {
+    setLang(newLang as any);
+    // Translate immediately after React re-renders
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        translatePage(newLang);
+      });
+    });
+  };
+
   return (
     <footer className="border-t bg-background">
       <div className="container py-8 md:py-12">
@@ -10,6 +25,31 @@ export function SiteFooter() {
             <p className="text-sm text-muted-foreground">
               Your trusted source for emergency preparedness and survival intelligence.
             </p>
+
+            {/* Language Switcher */}
+            <div className="pt-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Globe className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Language</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {availableLangs.map((l) => (
+                  <button
+                    key={l.code}
+                    onClick={() => handleLangChange(l.code)}
+                    title={l.label}
+                    className={`flex items-center gap-1 px-2 py-1 text-xs rounded border transition-all ${
+                      lang === l.code
+                        ? "bg-primary text-white border-primary font-semibold"
+                        : "bg-background text-muted-foreground border-border hover:border-primary hover:text-primary"
+                    }`}
+                  >
+                    <span>{l.flag}</span>
+                    <span>{l.code.toUpperCase()}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="space-y-3">
