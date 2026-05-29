@@ -1,7 +1,6 @@
 ﻿import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { PreparednessPlanner } from "@/components/PreparednessPlanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -347,33 +346,372 @@ function ActionItem({ text, to, setActiveTab, urgent }: any) {
     </button>
   );
 }
-// ── CONTACTS TAB — uses admin template ───────────────────────────────────────
+
+// ── CONTACTS TAB ─────────────────────────────────────────────────────────────
 function ContactsTab({ user }: any) {
-  if (!user) return null;
+  const { toast } = useToast();
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const blank = { name: "", relationship: "", phone: "", phone2: "", email: "", address: "", notes: "", priority: "medium" };
+  const [form, setForm] = useState(blank);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("emergency_contacts").select("*").eq("user_id", user.id).order("priority", { ascending: false })
+      .then(({ data }) => { setContacts(data || []); setLoading(false); });
+  }, [user]);
+
+  const openAdd = () => { setForm(blank); setEditId(null); setShowForm(true); };
+  const openEdit = (c: any) => {
+    setForm({ name: c.name || "", relationship: c.relationship || "", phone: c.phone || "", phone2: c.phone2 || "", email: c.email || "", address: c.address || "", notes: c.notes || "", priority: c.priority || "medium" });
+    setEditId(c.id); setShowForm(true);
+  };
+
+  const handleSave = async () => {
+    if (!form.name.trim() || !form.phone.trim()) { toast({ title: "Name and phone are required", variant: "destructive" }); return; }
+    setSaving(true);
+    try {
+      if (editId) {
+        const { data, error } = await supabase.from("emergency_contacts").update({ ...form, updated_at: new Date().toISOString() }).eq("id", editId).eq("user_id", user.id).select().single();
+        if (error) throw error;
+        setContacts(contacts.map(c => c.id === editId ? data : c));
+        toast({ title: "Contact updated" });
+      } else {
+        const { data, error } = await supabase.from("emergency_contacts").insert({ ...form, user_id: user.id }).select().single();
+        if (error) throw error;
+        setContacts([data, ...contacts]);
+        toast({ title: "Contact saved" });
+      }
+      setShowForm(false); setEditId(null); setForm(blank);
+    } catch (e: any) { toast({ title: "Save failed", description: e.message, variant: "destructive" }); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this contact?")) return;
+    await supabase.from("emergency_contacts").delete().eq("id", id);
+    setContacts(contacts.filter(c => c.id !== id));
+    toast({ title: "Contact deleted" });
+  };
+
+  if (loading) return <div className="py-8 text-center text-[#505a5f] text-sm">Loading contacts...</div>;
+
   return (
     <div className="space-y-4">
-      <h2 className="font-bold text-[#0b0c0c] text-lg">Emergency Contact Sheet</h2>
-      <PreparednessPlanner type="emergency_contact" userId={user.id} />
+      <div className="flex items-center justify-between">
+        <h2 className="font-bold text-[#0b0c0c] text-lg">Emergency Contacts</h2>
+        <Button size="sm" onClick={openAdd}><Plus className="w-4 h-4 mr-1" />Add Contact</Button>
+      </div>
+      {showForm && (
+        <div className="bg-white border border-[#b1b4b6] p-5 space-y-4">
+          <h3 className="font-semibold text-[#0b0c0c]">{editId ? "Edit Contact" : "New Emergency Contact"}</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div><Label>Full Name *</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g. Jane Smith" /></div>
+            <div><Label>Relationship</Label><Input value={form.relationship} onChange={e => setForm({...form, relationship: e.target.value})} placeholder="e.g. Spouse, Parent, Neighbour" /></div>
+            <div><Label>Primary Phone *</Label><Input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="e.g. 07700 900000" /></div>
+            <div><Label>Secondary Phone</Label><Input type="tel" value={form.phone2} onChange={e => setForm({...form, phone2: e.target.value})} placeholder="Alternative number" /></div>
+            <div><Label>Email</Label><Input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="email@example.com" /></div>
+            <div>
+              <Label>Priority</Label>
+              <select value={form.priority} onChange={e => setForm({...form, priority: e.target.value})} className="w-full border border-[#b1b4b6] px-3 py-2 text-sm bg-white">
+                <option value="high">High — First to call</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low — Backup</option>
+              </select>
+            </div>
+            <div className="sm:col-span-2"><Label>Address</Label><Input value={form.address} onChange={e => setForm({...form, address: e.target.value})} placeholder="Home or meeting point address" /></div>
+            <div className="sm:col-span-2"><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} rows={2} placeholder="Any important notes (medical info, availability, etc.)" /></div>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button onClick={handleSave} disabled={saving} size="sm"><Save className="w-4 h-4 mr-1" />{saving ? "Saving..." : "Save Contact"}</Button>
+            <Button variant="outline" size="sm" onClick={() => { setShowForm(false); setEditId(null); }}>Cancel</Button>
+          </div>
+        </div>
+      )}
+      {contacts.length === 0 && !showForm ? (
+        <div className="bg-white border border-[#b1b4b6] p-8 text-center">
+          <Users className="w-12 h-12 text-[#b1b4b6] mx-auto mb-3" />
+          <p className="text-[#505a5f] mb-3">No emergency contacts yet.</p>
+          <Button size="sm" onClick={openAdd}><Plus className="w-4 h-4 mr-1" />Add Your First Contact</Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {contacts.map((c: any) => (
+            <div key={c.id} className="bg-white border border-[#b1b4b6] p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-semibold text-[#0b0c0c]">{c.name}</h3>
+                    {c.relationship && <span className="text-xs bg-[#f3f2f1] text-[#505a5f] px-2 py-0.5 rounded">{c.relationship}</span>}
+                    <span className={`text-xs px-2 py-0.5 rounded font-medium ${c.priority === "high" ? "bg-red-100 text-red-700" : c.priority === "medium" ? "bg-yellow-100 text-yellow-700" : "bg-gray-100 text-gray-600"}`}>{c.priority}</span>
+                  </div>
+                  <div className="mt-2 space-y-1 text-sm text-[#505a5f]">
+                    {c.phone && <p className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /><a href={`tel:${c.phone}`} className="text-[#1d70b8] hover:underline">{c.phone}</a></p>}
+                    {c.phone2 && <p className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /><a href={`tel:${c.phone2}`} className="text-[#1d70b8] hover:underline">{c.phone2}</a></p>}
+                    {c.email && <p className="flex items-center gap-2"><Globe className="w-3.5 h-3.5" /><a href={`mailto:${c.email}`} className="text-[#1d70b8] hover:underline">{c.email}</a></p>}
+                    {c.address && <p className="flex items-center gap-2"><Map className="w-3.5 h-3.5" />{c.address}</p>}
+                    {c.notes && <p className="text-xs text-[#505a5f] mt-1 italic">{c.notes}</p>}
+                  </div>
+                </div>
+                <div className="flex gap-1 flex-shrink-0">
+                  <Button variant="ghost" size="sm" onClick={() => openEdit(c)}><Edit className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-[#d4351c]" /></Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
-// ── INVENTORY TAB — uses admin template ──────────────────────────────────────
+// ── INVENTORY TAB ─────────────────────────────────────────────────────────────
 function InventoryTab({ user }: any) {
-  if (!user) return null;
+  const { toast } = useToast();
+  const [inventory, setInventory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const blank = { name: "", category: "water", quantity: "", unit: "", expiry_date: "", location: "", notes: "", minimum_quantity: "" };
+  const [form, setForm] = useState(blank);
+  const categories = ["water", "food", "medical", "communication", "tools", "clothing", "documents", "fuel", "other"];
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("supply_inventory").select("*").eq("user_id", user.id).order("category")
+      .then(({ data }) => { setInventory(data || []); setLoading(false); });
+  }, [user]);
+
+  const openAdd = () => { setForm(blank); setEditId(null); setShowForm(true); };
+  const openEdit = (item: any) => {
+    setForm({ name: item.name || "", category: item.category || "water", quantity: String(item.quantity || ""), unit: item.unit || "", expiry_date: item.expiry_date || "", location: item.location || "", notes: item.notes || "", minimum_quantity: String(item.minimum_quantity || "") });
+    setEditId(item.id); setShowForm(true);
+  };
+
+  const handleSave = async () => {
+    if (!form.name.trim()) { toast({ title: "Item name is required", variant: "destructive" }); return; }
+    setSaving(true);
+    try {
+      const payload = { ...form, quantity: Number(form.quantity) || 0, minimum_quantity: Number(form.minimum_quantity) || 0, user_id: user.id };
+      if (editId) {
+        const { data, error } = await supabase.from("supply_inventory").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", editId).eq("user_id", user.id).select().single();
+        if (error) throw error;
+        setInventory(inventory.map(i => i.id === editId ? data : i));
+        toast({ title: "Item updated" });
+      } else {
+        const { data, error } = await supabase.from("supply_inventory").insert(payload).select().single();
+        if (error) throw error;
+        setInventory([...inventory, data]);
+        toast({ title: "Item added to inventory" });
+      }
+      setShowForm(false); setEditId(null); setForm(blank);
+    } catch (e: any) { toast({ title: "Save failed", description: e.message, variant: "destructive" }); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Remove this item?")) return;
+    await supabase.from("supply_inventory").delete().eq("id", id);
+    setInventory(inventory.filter(i => i.id !== id));
+    toast({ title: "Item removed" });
+  };
+
+  const grouped = categories.reduce((acc, cat) => {
+    const items = inventory.filter(i => i.category === cat);
+    if (items.length > 0) acc[cat] = items;
+    return acc;
+  }, {} as Record<string, any[]>);
+
+  if (loading) return <div className="py-8 text-center text-[#505a5f] text-sm">Loading inventory...</div>;
+
   return (
     <div className="space-y-4">
-      <h2 className="font-bold text-[#0b0c0c] text-lg">Supply Inventory</h2>
-      <PreparednessPlanner type="supply_inventory" userId={user.id} />
+      <div className="flex items-center justify-between">
+        <h2 className="font-bold text-[#0b0c0c] text-lg">Supply Inventory</h2>
+        <Button size="sm" onClick={openAdd}><Plus className="w-4 h-4 mr-1" />Add Item</Button>
+      </div>
+      {showForm && (
+        <div className="bg-white border border-[#b1b4b6] p-5 space-y-4">
+          <h3 className="font-semibold text-[#0b0c0c]">{editId ? "Edit Item" : "Add Supply Item"}</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div><Label>Item Name *</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g. Bottled Water, First Aid Kit" /></div>
+            <div>
+              <Label>Category</Label>
+              <select value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="w-full border border-[#b1b4b6] px-3 py-2 text-sm bg-white capitalize">
+                {categories.map(c => <option key={c} value={c} className="capitalize">{c}</option>)}
+              </select>
+            </div>
+            <div><Label>Quantity</Label><Input type="number" value={form.quantity} onChange={e => setForm({...form, quantity: e.target.value})} placeholder="0" min="0" /></div>
+            <div><Label>Unit</Label><Input value={form.unit} onChange={e => setForm({...form, unit: e.target.value})} placeholder="e.g. litres, packs, units" /></div>
+            <div><Label>Expiry Date</Label><Input type="date" value={form.expiry_date} onChange={e => setForm({...form, expiry_date: e.target.value})} /></div>
+            <div><Label>Minimum Stock Alert</Label><Input type="number" value={form.minimum_quantity} onChange={e => setForm({...form, minimum_quantity: e.target.value})} placeholder="Alert when below this" min="0" /></div>
+            <div><Label>Storage Location</Label><Input value={form.location} onChange={e => setForm({...form, location: e.target.value})} placeholder="e.g. Garage shelf, Kitchen cupboard" /></div>
+            <div><Label>Notes</Label><Input value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} placeholder="Brand, condition, etc." /></div>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button onClick={handleSave} disabled={saving} size="sm"><Save className="w-4 h-4 mr-1" />{saving ? "Saving..." : "Save Item"}</Button>
+            <Button variant="outline" size="sm" onClick={() => { setShowForm(false); setEditId(null); }}>Cancel</Button>
+          </div>
+        </div>
+      )}
+      {inventory.length === 0 && !showForm ? (
+        <div className="bg-white border border-[#b1b4b6] p-8 text-center">
+          <Package className="w-12 h-12 text-[#b1b4b6] mx-auto mb-3" />
+          <p className="text-[#505a5f] mb-3">No supplies tracked yet.</p>
+          <Button size="sm" onClick={openAdd}><Plus className="w-4 h-4 mr-1" />Add First Item</Button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {Object.entries(grouped).map(([cat, items]) => (
+            <div key={cat} className="bg-white border border-[#b1b4b6] overflow-hidden">
+              <div className="px-4 py-2 bg-[#f3f2f1] border-b border-[#b1b4b6]">
+                <h3 className="font-semibold text-[#0b0c0c] capitalize text-sm">{cat} <span className="text-[#505a5f] font-normal">({items.length} items)</span></h3>
+              </div>
+              <div className="divide-y divide-[#f3f2f1]">
+                {items.map((item: any) => {
+                  const isLow = item.minimum_quantity > 0 && item.quantity <= item.minimum_quantity;
+                  const isExpiring = item.expiry_date && new Date(item.expiry_date) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                  return (
+                    <div key={item.id} className="px-4 py-3 flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-[#0b0c0c] text-sm">{item.name}</span>
+                          {isLow && <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">Low stock</span>}
+                          {isExpiring && <span className="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">Expiring soon</span>}
+                        </div>
+                        <div className="text-xs text-[#505a5f] mt-0.5 flex gap-3 flex-wrap">
+                          <span>Qty: <strong>{item.quantity} {item.unit}</strong></span>
+                          {item.expiry_date && <span>Expires: {new Date(item.expiry_date).toLocaleDateString()}</span>}
+                          {item.location && <span>📍 {item.location}</span>}
+                        </div>
+                      </div>
+                      <div className="flex gap-1 flex-shrink-0">
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(item)}><Edit className="w-3.5 h-3.5" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)}><Trash2 className="w-3.5 h-3.5 text-[#d4351c]" /></Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
-// ── BUGOUT TAB — uses admin template ─────────────────────────────────────────
+// ── BUGOUT TAB ────────────────────────────────────────────────────────────────
 function BugoutTab({ user }: any) {
-  if (!user) return null;
+  const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const emptyPlan = {
+    primary_location: "", primary_address: "", primary_route: "",
+    secondary_location: "", secondary_address: "", secondary_route: "",
+    meeting_point: "", meeting_point_address: "",
+    trigger_conditions: "", transport_method: "", fuel_plan: "",
+    bag_contents: "", documents_list: "", communication_plan: "",
+    pets_plan: "", medical_needs: "", special_considerations: "",
+    last_updated: "",
+  };
+  const [plan, setPlan] = useState(emptyPlan);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("bugout_plans").select("*").eq("user_id", user.id).maybeSingle()
+      .then(({ data }) => { if (data) setPlan({ ...emptyPlan, ...data }); setLoading(false); });
+  }, [user]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload = { ...plan, user_id: user.id, last_updated: new Date().toISOString() };
+      const { error } = await supabase.from("bugout_plans").upsert(payload, { onConflict: "user_id" });
+      if (error) throw error;
+      setSaved(true);
+      toast({ title: "Bug-Out Plan saved", description: "Your plan is stored privately" });
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e: any) { toast({ title: "Save failed", description: e.message, variant: "destructive" }); }
+    finally { setSaving(false); }
+  };
+
+  const field = (key: keyof typeof emptyPlan, label: string, placeholder: string, type: "input" | "textarea" = "input") => (
+    <div>
+      <Label className="font-semibold text-sm">{label}</Label>
+      {type === "textarea"
+        ? <Textarea value={plan[key]} onChange={e => { setPlan({...plan, [key]: e.target.value}); setSaved(false); }} rows={3} placeholder={placeholder} className="mt-1" />
+        : <Input value={plan[key]} onChange={e => { setPlan({...plan, [key]: e.target.value}); setSaved(false); }} placeholder={placeholder} className="mt-1" />
+      }
+    </div>
+  );
+
+  if (loading) return <div className="py-8 text-center text-[#505a5f] text-sm">Loading plan...</div>;
+
   return (
-    <div className="space-y-4">
-      <h2 className="font-bold text-[#0b0c0c] text-lg">Bug-Out Plan</h2>
-      <PreparednessPlanner type="bugout_plan" userId={user.id} />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="font-bold text-[#0b0c0c] text-lg">Bug-Out Plan</h2>
+        <Button onClick={handleSave} disabled={saving} size="sm">
+          {saving ? "Saving..." : saved ? "✓ Saved" : <><Save className="w-3.5 h-3.5 mr-1" />Save Plan</>}
+        </Button>
+      </div>
+      <div className="bg-blue-50 border border-blue-200 p-4 text-sm text-blue-800">
+        🔒 Your bug-out plan is private — only you can see it. Fill in as much or as little as you need.
+      </div>
+      <div className="bg-white border border-[#b1b4b6] p-5 space-y-4">
+        <h3 className="font-bold text-[#0b0c0c] flex items-center gap-2"><Map className="w-4 h-4 text-[#1d70b8]" />Primary Destination</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {field("primary_location", "Location Name", "e.g. Uncle John's Farm, Mountain Cabin")}
+          {field("primary_address", "Full Address", "Street, Town, Postcode")}
+        </div>
+        {field("primary_route", "Route Description", "Describe the route — roads, landmarks, alternatives if main road is blocked", "textarea")}
+      </div>
+      <div className="bg-white border border-[#b1b4b6] p-5 space-y-4">
+        <h3 className="font-bold text-[#0b0c0c] flex items-center gap-2"><Map className="w-4 h-4 text-[#505a5f]" />Secondary Destination (Backup)</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {field("secondary_location", "Location Name", "Backup location if primary is unreachable")}
+          {field("secondary_address", "Full Address", "Street, Town, Postcode")}
+        </div>
+        {field("secondary_route", "Route Description", "Alternative route to backup location", "textarea")}
+      </div>
+      <div className="bg-white border border-[#b1b4b6] p-5 space-y-4">
+        <h3 className="font-bold text-[#0b0c0c] flex items-center gap-2"><Users className="w-4 h-4 text-[#1d70b8]" />Family Meeting Point</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {field("meeting_point", "Meeting Point Name", "e.g. Local Church, Community Centre")}
+          {field("meeting_point_address", "Address", "Full address of meeting point")}
+        </div>
+      </div>
+      <div className="bg-white border border-[#b1b4b6] p-5 space-y-4">
+        <h3 className="font-bold text-[#0b0c0c] flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-[#f47738]" />Trigger & Transport</h3>
+        {field("trigger_conditions", "When to Bug Out", "List the conditions that would trigger evacuation (e.g. power out 48h, civil unrest, flood warning)", "textarea")}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {field("transport_method", "Transport Method", "e.g. Car (Reg: AB12 CDE), Bicycle, On foot")}
+          {field("fuel_plan", "Fuel Plan", "e.g. Keep tank above half, Jerry can in garage")}
+        </div>
+      </div>
+      <div className="bg-white border border-[#b1b4b6] p-5 space-y-4">
+        <h3 className="font-bold text-[#0b0c0c] flex items-center gap-2"><Package className="w-4 h-4 text-[#1d70b8]" />Bag & Documents</h3>
+        {field("bag_contents", "Bug-Out Bag Contents", "List key items in your bag (water, food, first aid, torch, radio, cash...)", "textarea")}
+        {field("documents_list", "Critical Documents to Grab", "Passports, birth certificates, insurance docs, USB with backups...", "textarea")}
+      </div>
+      <div className="bg-white border border-[#b1b4b6] p-5 space-y-4">
+        <h3 className="font-bold text-[#0b0c0c] flex items-center gap-2"><MessageSquare className="w-4 h-4 text-[#1d70b8]" />Communication & Special Needs</h3>
+        {field("communication_plan", "Communication Plan", "How will family members contact each other? Out-of-area contact person?", "textarea")}
+        {field("pets_plan", "Pets Plan", "Carriers, food, vet records, where pets go")}
+        {field("medical_needs", "Medical Needs", "Medications to grab, medical equipment, special dietary needs")}
+        {field("special_considerations", "Other Considerations", "Elderly family members, disabilities, infants, anything else", "textarea")}
+      </div>
+      <div className="flex items-center gap-3 pb-4">
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? "Saving..." : saved ? "✓ Saved" : "Save Bug-Out Plan"}
+        </Button>
+        {plan.last_updated && <span className="text-xs text-[#505a5f]">Last saved: {new Date(plan.last_updated).toLocaleString()}</span>}
+      </div>
     </div>
   );
 }// ── NOTES TAB ─────────────────────────────────────────────────────────────────

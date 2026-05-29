@@ -256,8 +256,8 @@ const ArticlePage = () => {
                   By <span className="text-blue-600 font-semibold">{post.author}</span>
                 </p>
                 <p className="text-xs text-gray-500">
-                  Published {formatDate(post.publishedAt)}
-                  {post.readTime && <span> Â· {post.readTime} read</span>}
+                  <span title={formatDate(post.publishedAt)}>{formatTimeAgo(post.publishedAt)}</span>
+                  {post.readTime && <span> · {post.readTime} read</span>}
                 </p>
               </div>
 
@@ -306,6 +306,14 @@ const ArticlePage = () => {
                     <button onClick={() => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`, "_blank", "noopener"); setShareOpen(false); }}
                       className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-gray-50 text-left rounded">
                       <Facebook className="w-4 h-4" /> Share on Facebook
+                    </button>
+                    <button onClick={() => { window.open(`https://wa.me/?text=${encodeURIComponent(post.title + " " + pageUrl)}`, "_blank", "noopener"); setShareOpen(false); }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-gray-50 text-left rounded">
+                      <span className="w-4 h-4 text-green-600 font-black text-xs flex items-center justify-center">W</span> Share on WhatsApp
+                    </button>
+                    <button onClick={() => { window.open(`https://t.me/share/url?url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(post.title)}`, "_blank", "noopener"); setShareOpen(false); }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-gray-50 text-left rounded">
+                      <span className="w-4 h-4 text-blue-500 font-black text-xs flex items-center justify-center">T</span> Share on Telegram
                     </button>
                   </div>
                 </div>
@@ -410,7 +418,7 @@ const ArticlePage = () => {
                   {post.author}
                 </span>
                 <span className="flex items-center gap-1.5 text-gray-600"><Clock className="w-4 h-4 text-blue-900" />{post.readTime}</span>
-                <span className="text-gray-600">Published {formatDate(post.publishedAt)}</span>
+                <span className="text-gray-600" title={formatDate(post.publishedAt)}>{formatTimeAgo(post.publishedAt)}</span>
                 <span className="flex items-center gap-1.5 text-gray-600"><Eye className="w-4 h-4 text-blue-900" />{post.viewCount?.toLocaleString()} views</span>
 
                 {/* Share dropdown */}
@@ -440,6 +448,14 @@ const ArticlePage = () => {
                         <button onClick={() => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`, "_blank", "noopener"); setShareOpen(false); }}
                           className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-primary/5 hover:text-primary transition-colors text-left">
                           <Facebook className="w-4 h-4 shrink-0" /> Share on Facebook
+                        </button>
+                        <button onClick={() => { window.open(`https://wa.me/?text=${encodeURIComponent(post.title + " " + pageUrl)}`, "_blank", "noopener"); setShareOpen(false); }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-primary/5 hover:text-primary transition-colors text-left">
+                          <span className="w-4 h-4 shrink-0 text-green-600 font-black text-xs flex items-center justify-center">W</span> Share on WhatsApp
+                        </button>
+                        <button onClick={() => { window.open(`https://t.me/share/url?url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(post.title)}`, "_blank", "noopener"); setShareOpen(false); }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-primary/5 hover:text-primary transition-colors text-left">
+                          <span className="w-4 h-4 shrink-0 text-blue-500 font-black text-xs flex items-center justify-center">T</span> Share on Telegram
                         </button>
                       </div>
                     </div>
