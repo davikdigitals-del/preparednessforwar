@@ -175,14 +175,7 @@ const ArticlePage = () => {
     }
   };
 
-  const openShare = (url: string) => {
-    const w = window.open(url, "_blank", "noopener,noreferrer,width=600,height=500");
-    if (!w) {
-      // Popup blocked — fallback to same tab
-      window.location.href = url;
-    }
-    setShareOpen(false);
-  };
+  const openShare = (_url: string) => {}; // kept for safety, unused
 
   if (!post) {
     return (
@@ -200,12 +193,62 @@ const ArticlePage = () => {
 
   const relatedPosts = publishedPosts.filter((p: any) => p.id !== post.id && p.section === post.section).slice(0, 3);
   const pageUrl = window.location.href;
+  const encodedUrl = encodeURIComponent(pageUrl);
+  const encodedTitle = encodeURIComponent(post.title);
 
   const copyLink = async () => {
-    try { await navigator.clipboard.writeText(pageUrl); } catch { /* fallback */ }
+    try {
+      await navigator.clipboard.writeText(pageUrl);
+    } catch {
+      // fallback for older browsers
+      const el = document.createElement("textarea");
+      el.value = pageUrl;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+    }
     setShareCopied(true);
-    setTimeout(() => { setShareCopied(false); setShareOpen(false); }, 2000);
+    setTimeout(() => setShareCopied(false), 2500);
   };
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: post.title, text: post.standfirst || post.title, url: pageUrl });
+        return;
+      } catch {}
+    }
+    setShareOpen(o => !o);
+  };
+
+  // Share links — using <a> tags so browsers never block them
+  const shareLinks = [
+    {
+      label: "Share on X (Twitter)",
+      href: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`,
+      icon: <FaXTwitter className="w-4 h-4 text-black" />,
+      bg: "hover:bg-gray-100",
+    },
+    {
+      label: "Share on Facebook",
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+      icon: <FaFacebook className="w-4 h-4 text-[#1877F2]" />,
+      bg: "hover:bg-blue-50",
+    },
+    {
+      label: "Share on WhatsApp",
+      href: `https://wa.me/?text=${encodeURIComponent(post.title + "\n" + pageUrl)}`,
+      icon: <FaWhatsapp className="w-4 h-4 text-[#25D366]" />,
+      bg: "hover:bg-green-50",
+    },
+    {
+      label: "Share on Telegram",
+      href: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`,
+      icon: <FaTelegram className="w-4 h-4 text-[#229ED9]" />,
+      bg: "hover:bg-sky-50",
+    },
+  ];
 
   return (
     <div className="bg-white min-h-screen">
@@ -274,7 +317,7 @@ const ArticlePage = () => {
               {/* Share / Bookmark / Report bar */}
               <div className="flex items-center gap-3 px-4 py-3 border-t border-b border-gray-200 mb-4">
                 <button
-                  onClick={() => setShareOpen(o => !o)}
+                  onClick={handleNativeShare}
                   className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 border border-blue-200 rounded px-3 py-1.5"
                 >
                   <Share2 className="w-4 h-4" /> Share
@@ -295,9 +338,9 @@ const ArticlePage = () => {
                 </button>
               </div>
 
-              {/* Share dropdown (mobile) */}
+              {/* Share panel (mobile) — shown below bar when native share unavailable */}
               {shareOpen && (
-                <div ref={shareRef} className="mx-4 mb-4 bg-white border border-gray-200 shadow-lg rounded">
+                <div className="mx-4 mb-4 bg-white border border-gray-200 shadow-lg rounded overflow-hidden">
                   <div className="p-3 border-b border-gray-100">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Article link</p>
                     <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded">
@@ -305,26 +348,22 @@ const ArticlePage = () => {
                       <span className="text-xs text-gray-500 truncate flex-1 font-mono">{pageUrl}</span>
                     </div>
                   </div>
-                  <div className="p-2 space-y-1">
+                  <div className="p-2 space-y-0.5">
                     <button onClick={copyLink} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-gray-50 text-left rounded">
                       {shareCopied ? <><Check className="w-4 h-4 text-green-600" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy link</>}
                     </button>
-                    <button onClick={() => openShare(`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(pageUrl)}`)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-gray-100 text-left rounded">
-                      <FaXTwitter className="w-4 h-4 text-black" /> Share on X
-                    </button>
-                    <button onClick={() => openShare(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-blue-50 text-left rounded">
-                      <FaFacebook className="w-4 h-4 text-[#1877F2]" /> Share on Facebook
-                    </button>
-                    <button onClick={() => openShare(`https://wa.me/?text=${encodeURIComponent(post.title + " " + pageUrl)}`)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-green-50 text-left rounded">
-                      <FaWhatsapp className="w-4 h-4 text-[#25D366]" /> Share on WhatsApp
-                    </button>
-                    <button onClick={() => openShare(`https://t.me/share/url?url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(post.title)}`)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-sky-50 text-left rounded">
-                      <FaTelegram className="w-4 h-4 text-[#229ED9]" /> Share on Telegram
-                    </button>
+                    {shareLinks.map((s) => (
+                      <a
+                        key={s.label}
+                        href={s.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setShareOpen(false)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-left rounded ${s.bg}`}
+                      >
+                        {s.icon} {s.label}
+                      </a>
+                    ))}
                   </div>
                 </div>
               )}
@@ -433,40 +472,38 @@ const ArticlePage = () => {
 
                 {/* Share dropdown */}
                 <div ref={shareRef} className="ml-auto relative">
-                  <button onClick={() => setShareOpen(o => !o)}
+                  <button
+                    onClick={() => setShareOpen(o => !o)}
                     className={`flex items-center gap-2 text-sm font-bold px-4 py-2 transition-all ${shareOpen ? "bg-blue-900 text-white" : "bg-white border-2 border-blue-900 text-blue-900 hover:bg-blue-50"}`}>
                     <Share2 className="w-4 h-4" /> Share
                   </button>
                   {shareOpen && (
-                    <div className="absolute right-0 top-full mt-1 w-72 bg-white border border-border shadow-xl z-50 animate-slide-down">
-                      <div className="p-3 border-b border-border">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Article link</p>
-                        <div className="flex items-center gap-2 bg-muted px-3 py-2">
-                          <Link2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                          <span className="text-xs text-muted-foreground truncate flex-1 font-mono">{pageUrl}</span>
+                    <div className="absolute right-0 top-full mt-1 w-72 bg-white border border-gray-200 shadow-xl z-50">
+                      <div className="p-3 border-b border-gray-100">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Article link</p>
+                        <div className="flex items-center gap-2 bg-gray-50 px-3 py-2">
+                          <Link2 className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                          <span className="text-xs text-gray-500 truncate flex-1 font-mono">{pageUrl}</span>
                         </div>
                       </div>
-                      <div className="p-2 space-y-1">
-                        <button onClick={copyLink}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold transition-colors text-left ${shareCopied ? "bg-green-50 text-green-700" : "hover:bg-gray-50"}`}>
+                      <div className="p-2 space-y-0.5">
+                        <button
+                          onClick={copyLink}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold transition-colors text-left rounded ${shareCopied ? "bg-green-50 text-green-700" : "hover:bg-gray-50"}`}>
                           {shareCopied ? <><Check className="w-4 h-4 text-green-600 shrink-0" /> Copied!</> : <><Copy className="w-4 h-4 shrink-0" /> Copy link</>}
                         </button>
-                        <button onClick={() => openShare(`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(pageUrl)}`)}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-gray-100 transition-colors text-left">
-                          <FaXTwitter className="w-4 h-4 shrink-0 text-black" /> Share on X (Twitter)
-                        </button>
-                        <button onClick={() => openShare(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`)}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-blue-50 transition-colors text-left">
-                          <FaFacebook className="w-4 h-4 shrink-0 text-[#1877F2]" /> Share on Facebook
-                        </button>
-                        <button onClick={() => openShare(`https://wa.me/?text=${encodeURIComponent(post.title + " " + pageUrl)}`)}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-green-50 transition-colors text-left">
-                          <FaWhatsapp className="w-4 h-4 shrink-0 text-[#25D366]" /> Share on WhatsApp
-                        </button>
-                        <button onClick={() => openShare(`https://t.me/share/url?url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(post.title)}`)}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-sky-50 transition-colors text-left">
-                          <FaTelegram className="w-4 h-4 shrink-0 text-[#229ED9]" /> Share on Telegram
-                        </button>
+                        {shareLinks.map((s) => (
+                          <a
+                            key={s.label}
+                            href={s.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => setShareOpen(false)}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold transition-colors text-left rounded ${s.bg}`}
+                          >
+                            {s.icon} {s.label}
+                          </a>
+                        ))}
                       </div>
                     </div>
                   )}
