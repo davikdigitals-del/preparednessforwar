@@ -4,55 +4,109 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Megaphone } from "lucide-react";
-import { useData } from "@/contexts/DataContext";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminBanner() {
-  const { banner, updateBanner } = useData();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
-  const [initialized, setInitialized] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [bannerId, setBannerId] = useState<string | null>(null);
   const [form, setForm] = useState({
     text: "",
     link: "",
     enabled: false,
   });
 
-  // Only sync from DB on first load, not after every save
+  // Load banner directly using the authenticated client
   useEffect(() => {
-    if (!initialized && (banner.text || banner.id)) {
-      setForm({
-        text: banner.text || "",
-        link: (banner as any).link || "",
-        enabled: banner.enabled ?? false,
-      });
-      setInitialized(true);
-    }
-  }, [banner, initialized]);
+    const load = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("banner_settings")
+        .select("*")
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error loading banner:", error);
+      } else if (data) {
+        setBannerId(data.id);
+        setForm({
+          text: data.text || "",
+          link: (data as any).link || "",
+          enabled: data.enabled ?? false,
+        });
+      }
+      setLoading(false);
+    };
+    load();
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateBanner({
+      const payload = {
         text: form.text,
         enabled: form.enabled,
-        priority: banner.priority || "high",
-      });
+        priority: "high",
+      };
+
+      let error;
+
+      if (bannerId) {
+        ({ error } = await supabase
+          .from("banner_settings")
+          .update(payload)
+          .eq("id", bannerId));
+      } else {
+        const { data, error: insertError } = await supabase
+          .from("banner_settings")
+          .insert(payload)
+          .select()
+          .single();
+        error = insertError;
+        if (data) setBannerId(data.id);
+      }
+
+      if (error) throw error;
+
       toast({ title: "Banner saved", description: "Changes are now live on the site." });
-    } catch (err) {
-      toast({ title: "Error", description: "Failed to save banner.", variant: "destructive" });
+    } catch (err: any) {
+      console.error("Banner save error:", err);
+      toast({
+        title: "Error saving banner",
+        description: err?.message || "Check console for details.",
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }
   };
 
-  const handleCancel = () => {
-    setForm({
-      text: banner.text || "",
-      link: (banner as any).link || "",
-      enabled: banner.enabled ?? false,
-    });
+  const handleCancel = async () => {
+    const { data } = await supabase
+      .from("banner_settings")
+      .select("*")
+      .limit(1)
+      .maybeSingle();
+    if (data) {
+      setBannerId(data.id);
+      setForm({
+        text: data.text || "",
+        link: (data as any).link || "",
+        enabled: data.enabled ?? false,
+      });
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <div className="text-gray-500">Loading banner settings...</div>
+      </div>
+    );
+  }
 
   return (
     <div>
