@@ -32,32 +32,43 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        maximumFileSizeToCacheInBytes: 20 * 1024 * 1024, // 20MB limit
-        // Cache strategies
+        // Only precache html, css and fonts — NOT js chunks (they change every build)
+        globPatterns: ["**/*.{html,css,ico,png,svg,woff2}"],
+        maximumFileSizeToCacheInBytes: 20 * 1024 * 1024,
         runtimeCaching: [
           {
-            // Cache Supabase API responses for posts
+            // JS/CSS chunks — NetworkFirst so new deploys are always picked up
+            urlPattern: /\/assets\/.*\.(js|css)$/,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "assets",
+              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 },
+              cacheableResponse: { statuses: [0, 200] },
+              networkTimeoutSeconds: 10,
+            },
+          },
+          {
+            // Supabase API
             urlPattern: /^https:\/\/xfbmpjgcfohewejdzlfw\.supabase\.co\/rest\/v1\/posts/,
             handler: "StaleWhileRevalidate",
             options: {
               cacheName: "supabase-posts",
-              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 }, // 24h
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },
           {
-            // Cache images
+            // Images
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
             handler: "CacheFirst",
             options: {
               cacheName: "images",
-              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 7 }, // 7 days
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 7 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },
           {
-            // Cache Google Fonts
+            // Google Fonts
             urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com/,
             handler: "CacheFirst",
             options: {
@@ -66,21 +77,13 @@ export default defineConfig(({ mode }) => ({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
-          {
-            // Network first for everything else, fallback to cache
-            urlPattern: /^https:\/\//,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "general",
-              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 },
-              cacheableResponse: { statuses: [0, 200] },
-              networkTimeoutSeconds: 5,
-            },
-          },
         ],
-        // Offline fallback page
+        // Offline fallback
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/api/, /^\/admin/],
+        // Force waiting SW to activate immediately on next load
+        skipWaiting: true,
+        clientsClaim: true,
       },
     }),
   ].filter(Boolean),
