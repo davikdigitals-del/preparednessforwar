@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Megaphone } from "lucide-react";
 import { useData } from "@/contexts/DataContext";
 import { useToast } from "@/hooks/use-toast";
@@ -66,10 +65,19 @@ export default function AdminBanner() {
             <span className={`text-sm font-medium ${form.enabled ? "text-green-600" : "text-gray-400"}`}>
               {form.enabled ? "ON" : "OFF"}
             </span>
-            <Switch
-              checked={form.enabled}
-              onCheckedChange={(checked) => setForm({ ...form, enabled: checked })}
-            />
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, enabled: !form.enabled })}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                form.enabled ? "bg-green-500" : "bg-gray-300"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  form.enabled ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
         </div>
 
