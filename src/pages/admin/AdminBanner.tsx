@@ -11,20 +11,24 @@ export default function AdminBanner() {
   const { banner, updateBanner } = useData();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   const [form, setForm] = useState({
     text: "",
     link: "",
     enabled: false,
   });
 
-  // Sync form with loaded banner data
+  // Only sync from DB on first load, not after every save
   useEffect(() => {
-    setForm({
-      text: banner.text || "",
-      link: (banner as any).link || "",
-      enabled: banner.enabled ?? false,
-    });
-  }, [banner]);
+    if (!initialized && (banner.text || banner.id)) {
+      setForm({
+        text: banner.text || "",
+        link: (banner as any).link || "",
+        enabled: banner.enabled ?? false,
+      });
+      setInitialized(true);
+    }
+  }, [banner, initialized]);
 
   const handleSave = async () => {
     setSaving(true);

@@ -483,9 +483,31 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (next.priority !== undefined) update.priority = next.priority;
 
     if (banner.id) {
-      await supabase.from("banner_settings").update(update).eq("id", banner.id);
+      const { error } = await supabase
+        .from("banner_settings")
+        .update(update)
+        .eq("id", banner.id);
+      if (error) throw error;
     } else {
-      await supabase.from("banner_settings").insert(update as any);
+      // No id cached — check DB for existing row first
+      const { data: existing } = await supabase
+        .from("banner_settings")
+        .select("id")
+        .limit(1)
+        .maybeSingle();
+
+      if (existing?.id) {
+        const { error } = await supabase
+          .from("banner_settings")
+          .update(update)
+          .eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("banner_settings")
+          .insert(update as any);
+        if (error) throw error;
+      }
     }
 
     await refreshBanner();
