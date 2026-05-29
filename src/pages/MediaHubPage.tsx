@@ -78,60 +78,69 @@ function MediaModal({ item, onClose }: { item: MediaItem; onClose: () => void })
 function MediaCard({ item, onClick }: { item: MediaItem; onClick: () => void }) {
   return (
     <button onClick={onClick} className="group text-left w-full bg-white border border-border hover:border-primary hover:shadow-md transition-all overflow-hidden">
-      <div className="aspect-video bg-muted relative overflow-hidden">
-        {item.thumbnail ? (
-          <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500" />
-        ) : item.type === "video" ? (
-          <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-            <Video className="w-10 h-10 text-primary/30" />
-          </div>
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-foreground/10 to-foreground/5 flex items-center justify-center">
-            <Headphones className="w-10 h-10 text-foreground/20" />
-          </div>
-        )}
+      {/* Mobile: horizontal layout. md+: vertical (thumbnail on top) */}
+      <div className="flex flex-row md:flex-col">
+        {/* Thumbnail */}
+        <div className="relative overflow-hidden w-32 h-24 flex-shrink-0 md:w-full md:h-auto md:aspect-video">
+          {item.thumbnail ? (
+            <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500" />
+          ) : item.type === "video" ? (
+            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+              <Video className="w-8 h-8 text-primary/30" />
+            </div>
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-foreground/10 to-foreground/5 flex items-center justify-center">
+              <Headphones className="w-8 h-8 text-foreground/20" />
+            </div>
+          )}
 
-        {/* Type badge */}
-        <div className="absolute top-2 left-2">
-          <span className={`flex items-center gap-1 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest ${item.type === "video" ? "bg-primary text-white" : "bg-foreground text-white"}`}>
-            {item.type === "video" ? <Video className="w-2.5 h-2.5" /> : <Headphones className="w-2.5 h-2.5" />}
-            {item.type}
-          </span>
-        </div>
-
-        {/* Premium lock badge */}
-        {item.isPremium && (
-          <div className="absolute top-2 right-2">
-            <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-black bg-yellow-500 text-black rounded">
-              <Crown className="w-2.5 h-2.5" /> PREMIUM
+          {/* Type badge */}
+          <div className="absolute top-1.5 left-1.5">
+            <span className={`flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest ${item.type === "video" ? "bg-primary text-white" : "bg-foreground text-white"}`}>
+              {item.type === "video" ? <Video className="w-2 h-2" /> : <Headphones className="w-2 h-2" />}
+              {item.type}
             </span>
           </div>
-        )}
 
-        {/* Duration */}
-        {item.duration && (
-          <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[9px] px-1.5 py-0.5 font-semibold">
-            {item.duration}
-          </div>
-        )}
+          {/* Premium badge */}
+          {item.isPremium && (
+            <div className="absolute top-1.5 right-1.5">
+              <span className="flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-black bg-yellow-500 text-black rounded">
+                <Crown className="w-2 h-2" /> PREMIUM
+              </span>
+            </div>
+          )}
 
-        {/* Play overlay */}
-        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-          <div className="w-12 h-12 bg-primary flex items-center justify-center shadow-lg">
-            <Play className="w-5 h-5 text-white ml-0.5 fill-white" />
+          {/* Duration */}
+          {item.duration && (
+            <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[9px] px-1.5 py-0.5 font-semibold">
+              {item.duration}
+            </div>
+          )}
+
+          {/* Play overlay — desktop only */}
+          <div className="hidden md:flex absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors items-center justify-center opacity-0 group-hover:opacity-100">
+            <div className="w-12 h-12 bg-primary flex items-center justify-center shadow-lg">
+              <Play className="w-5 h-5 text-white ml-0.5 fill-white" />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="p-4">
-        <h3 className="font-bold text-sm line-clamp-2 group-hover:text-primary transition-colors leading-snug">
-          {item.title}
-        </h3>
-        <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">{item.description}</p>
-        <div className="flex items-center gap-3 mt-3 text-[10px] text-muted-foreground">
-          <span className="font-semibold text-foreground/70">{item.author}</span>
-          <span className="flex items-center gap-1"><Eye className="w-2.5 h-2.5" />{(item.views / 1000).toFixed(1)}k</span>
-          <span className="flex items-center gap-1"><Clock className="w-2.5 h-2.5" />{item.duration}</span>
+        {/* Text content */}
+        <div className="p-3 md:p-4 flex-1 min-w-0 flex flex-col justify-center">
+          <h3 className="font-bold text-sm line-clamp-2 group-hover:text-primary transition-colors leading-snug">
+            {item.title}
+          </h3>
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{item.description}</p>
+          <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground flex-wrap">
+            <span className="font-semibold text-foreground/70 truncate max-w-[80px]">{item.author}</span>
+            <span className="flex items-center gap-1"><Eye className="w-2.5 h-2.5" />{(item.views / 1000).toFixed(1)}k</span>
+            <span className="flex items-center gap-1 md:hidden"><Clock className="w-2.5 h-2.5" />{item.duration}</span>
+          </div>
+          {/* Mobile play hint */}
+          <div className="flex items-center gap-1 mt-2 text-[10px] text-primary font-semibold md:hidden">
+            <Play className="w-3 h-3 fill-primary" /> Play
+          </div>
         </div>
       </div>
     </button>

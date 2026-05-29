@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Clock, Eye } from "lucide-react";
+import { Clock } from "lucide-react";
 import { formatTimeAgo } from "@/data/mockData";
 
 interface HeroSectionProps {
@@ -18,21 +18,40 @@ export default function HeroSection({ featuredPost, sidebarPosts }: HeroSectionP
           to={`/${featuredPost.section}/${featuredPost.category}/${featuredPost.id}`}
           className="group block"
         >
-          {/* Newspaper layout: text left, image right — equal halves, image fills height */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Mobile: image top, text below. Desktop: text left, image right */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
 
-            {/* Left: Text — vertically centered */}
-            <div className="flex flex-col justify-center py-2">
+            {/* Image — top on mobile (order-1), right on desktop (order-2) */}
+            <div className="w-full overflow-hidden order-1 md:order-2" style={{ minHeight: '220px' }}>
+              {featuredPost.image ? (
+                <img
+                  src={featuredPost.image}
+                  alt={featuredPost.title}
+                  className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
+                  style={{ minHeight: '220px' }}
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center" style={{ minHeight: '220px' }}>
+                  <span className="text-primary/20 font-black text-6xl">
+                    {featuredPost.title[0]}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Text — below image on mobile (order-2), left on desktop (order-1) */}
+            <div className="flex flex-col justify-center py-2 order-2 md:order-1">
               {featuredPost.isPinned && (
                 <span className="inline-block bg-primary text-white px-2 py-0.5 text-[10px] font-black uppercase tracking-widest mb-3 w-fit">
                   Featured
                 </span>
               )}
-              <h1 className="font-display font-black text-3xl md:text-4xl leading-[1.1] group-hover:text-primary transition-colors">
+              <h1 className="font-display font-black text-2xl md:text-3xl lg:text-4xl leading-[1.1] group-hover:text-primary transition-colors">
                 {featuredPost.title}
               </h1>
-              <p className="text-sm text-muted-foreground mt-4 leading-relaxed line-clamp-4">
-                {featuredPost.standfirst}
+              {/* Standfirst — always visible */}
+              <p className="text-sm text-muted-foreground mt-3 leading-relaxed line-clamp-3 md:line-clamp-4">
+                {featuredPost.standfirst?.replace(/<[^>]*>/g, "") || ""}
               </p>
               <div className="flex items-center gap-3 mt-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
@@ -42,24 +61,6 @@ export default function HeroSection({ featuredPost, sidebarPosts }: HeroSectionP
                 <span>·</span>
                 <span>{featuredPost.author}</span>
               </div>
-            </div>
-
-            {/* Right: Image — fills the full height of the card */}
-            <div className="w-full overflow-hidden" style={{ minHeight: '260px' }}>
-              {featuredPost.image ? (
-                <img
-                  src={featuredPost.image}
-                  alt={featuredPost.title}
-                  className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
-                  style={{ minHeight: '260px' }}
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center" style={{ minHeight: '260px' }}>
-                  <span className="text-primary/20 font-black text-6xl">
-                    {featuredPost.title[0]}
-                  </span>
-                </div>
-              )}
             </div>
 
           </div>
