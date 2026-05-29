@@ -9,6 +9,7 @@ import type { MegaMenuConfig } from "@/components/MegaMenu";
 import { useFeaturedPosts } from "@/hooks/useFeaturedPosts";
 import { useNavSections } from "@/hooks/useNavSections";
 import { useData } from "@/contexts/DataContext";
+import { SearchModal } from "@/components/SearchModal";
 
 // Build a MegaMenuConfig from a navSection, injecting a live featured post if available
 function buildMenuConfig(
@@ -90,10 +91,23 @@ const moreMenuConfig: MegaMenuConfig = {
 export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
   const { user, logout } = useAuth();
   const featuredMap = useFeaturedPosts();
   const { sections: dbSections } = useNavSections();
   const { banner } = useData();
+
+  // Cmd/Ctrl+K to open search
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
 
   // Use DB sections for nav, fall back to static navSections
   const activeSections = dbSections.length > 0 ? dbSections : navSections;
@@ -155,8 +169,15 @@ export function SiteHeader() {
               </Link>
             </div>
             <div className="flex items-center gap-3">
-              <button className="text-gray-600 hover:text-primary transition-colors">
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="flex items-center gap-2 text-gray-500 hover:text-primary transition-colors group"
+                aria-label="Search"
+              >
                 <Search className="w-4 h-4" />
+                <span className="text-xs text-gray-400 group-hover:text-primary hidden xl:inline">
+                  Search... <kbd className="bg-gray-100 px-1 rounded text-[10px]">⌘K</kbd>
+                </span>
               </button>
             </div>
           </div>
@@ -239,6 +260,14 @@ export function SiteHeader() {
 
           {/* Right actions */}
           <div className="flex items-center gap-1 sm:gap-2">
+            {/* Mobile search button */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-primary"
+              aria-label="Search"
+            >
+              <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
             {/* Mobile: show user avatar/dashboard if logged in, else show login */}
             {user ? (
               <Button variant="ghost" size="sm" asChild className="lg:hidden">
@@ -471,6 +500,8 @@ export function SiteHeader() {
           </div>
         </div>
       )}
+      {/* Search Modal */}
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }
