@@ -26,29 +26,23 @@ export function SiteFooter() {
               Your trusted source for emergency preparedness and survival intelligence.
             </p>
 
-            {/* Language Switcher */}
+            {/* Language Switcher — dropdown */}
             <div className="pt-2">
               <div className="flex items-center gap-2 mb-2">
                 <Globe className="w-4 h-4 text-muted-foreground" />
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Language</span>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+              <select
+                value={lang}
+                onChange={(e) => handleLangChange(e.target.value)}
+                className="w-full border border-border rounded px-3 py-2 text-sm bg-background text-foreground cursor-pointer hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+              >
                 {availableLangs.map((l) => (
-                  <button
-                    key={l.code}
-                    onClick={() => handleLangChange(l.code)}
-                    title={l.label}
-                    className={`flex items-center gap-1 px-2 py-1 text-xs rounded border transition-all ${
-                      lang === l.code
-                        ? "bg-primary text-white border-primary font-semibold"
-                        : "bg-background text-muted-foreground border-border hover:border-primary hover:text-primary"
-                    }`}
-                  >
-                    <span>{l.flag}</span>
-                    <span>{l.code.toUpperCase()}</span>
-                  </button>
+                  <option key={l.code} value={l.code}>
+                    {l.flag} {l.label}
+                  </option>
                 ))}
-              </div>
+              </select>
             </div>
           </div>
 

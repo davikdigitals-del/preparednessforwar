@@ -266,6 +266,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("prw-lang", newLang);
     document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr";
     document.documentElement.lang = newLang;
+    // translatePage handles restore + re-translate internally
     requestAnimationFrame(() => translatePage(newLang));
   };
 
