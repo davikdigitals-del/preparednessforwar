@@ -9,7 +9,6 @@ import {
   Video,
   BookOpen,
   Library,
-  AlertTriangle,
   Megaphone,
   Globe,
   Settings,
@@ -155,7 +154,6 @@ export default function AdminLayout() {
     {
       title: "SITE",
       items: [
-        { icon: AlertTriangle, label: "Emergency Alerts", path: "/admin/alerts" },
         { icon: Megaphone, label: "Banner", path: "/admin/banner" },
         { icon: Globe, label: "Countries", path: "/admin/countries" },
         { icon: Settings, label: "Site Settings", path: "/admin/settings" },

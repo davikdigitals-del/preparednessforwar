@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Megaphone } from "lucide-react";
 import { useData } from "@/contexts/DataContext";
 import { useToast } from "@/hooks/use-toast";
@@ -55,9 +56,21 @@ export default function AdminBanner() {
       <h1 className="text-3xl font-bold mb-6">Site Banner</h1>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <Megaphone className="w-6 h-6 text-primary" />
-          <h2 className="text-xl font-semibold">Announcement Banner</h2>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Megaphone className="w-6 h-6 text-primary" />
+            <h2 className="text-xl font-semibold">Announcement Banner</h2>
+          </div>
+          {/* On/Off toggle */}
+          <div className="flex items-center gap-3">
+            <span className={`text-sm font-medium ${form.enabled ? "text-green-600" : "text-gray-400"}`}>
+              {form.enabled ? "ON" : "OFF"}
+            </span>
+            <Switch
+              checked={form.enabled}
+              onCheckedChange={(checked) => setForm({ ...form, enabled: checked })}
+            />
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -85,18 +98,6 @@ export default function AdminBanner() {
             />
           </div>
 
-          <div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.enabled}
-                onChange={(e) => setForm({ ...form, enabled: e.target.checked })}
-                className="w-4 h-4"
-              />
-              <span className="text-sm font-medium">Enable banner</span>
-            </label>
-          </div>
-
           <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={handleCancel} disabled={saving}>
               Cancel
@@ -113,12 +114,19 @@ export default function AdminBanner() {
         <h3 className="font-semibold text-blue-900 mb-3">Preview</h3>
         {form.enabled && form.text ? (
           <div className="bg-[#1e3a5f] text-white overflow-hidden rounded">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-red-600 px-3 py-2 text-xs font-bold uppercase tracking-wider">
+            <div className="flex items-center h-8">
+              <div className="flex-shrink-0 bg-red-600 px-3 h-full flex items-center text-xs font-bold uppercase tracking-wider">
                 LIVE
               </div>
-              <div className="flex-1 overflow-hidden py-2 px-3">
-                <div className="whitespace-nowrap animate-[marquee_20s_linear_infinite]">
+              <div className="flex-1 overflow-hidden">
+                <div
+                  className="whitespace-nowrap text-sm font-medium"
+                  style={{
+                    display: "inline-block",
+                    animation: "marquee 20s linear infinite",
+                    paddingLeft: "100%",
+                  }}
+                >
                   {form.text}
                 </div>
               </div>
@@ -126,7 +134,7 @@ export default function AdminBanner() {
           </div>
         ) : (
           <p className="text-blue-700 text-sm">
-            Enable the banner and add text to see a preview.
+            {form.text ? "Toggle ON to preview the banner." : "Add text and toggle ON to preview."}
           </p>
         )}
       </div>
