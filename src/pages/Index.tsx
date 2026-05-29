@@ -275,7 +275,7 @@ const Index = () => {
               })}
             </div>
             <div className="p-4 border-t border-gray-200 text-center">
-              <Link to="/latest" className="text-sm text-primary font-semibold hover:underline">See more â†’</Link>
+              <Link to="/latest" className="text-sm text-primary font-semibold hover:underline">See more →</Link>
             </div>
           </div>
 
@@ -721,7 +721,7 @@ const Index = () => {
               </div>
               <div className="p-4 border-t border-gray-200 text-center">
                 <Link to="/latest" className="text-sm text-primary font-semibold hover:underline">
-                  See more â†’
+                  See more →
                 </Link>
               </div>
             </div>

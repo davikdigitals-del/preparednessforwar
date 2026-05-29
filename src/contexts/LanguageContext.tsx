@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { translatePage } from "@/hooks/useAutoTranslate";
 
 export type LangCode = "en" | "fr" | "de" | "es" | "ar" | "uk" | "pl" | "ru" | "zh" | "pt";
 
@@ -247,6 +248,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       setLangState(detected);
       document.documentElement.lang = detected;
       document.documentElement.dir = detected === "ar" ? "rtl" : "ltr";
+
+      // Translate after React renders initial content
+      // MutationObserver in translatePage will catch async Supabase data too
+      if (detected !== "en") {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            translatePage(detected);
+          });
+        });
+      }
     });
   }, []);
 
@@ -255,6 +266,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("prw-lang", newLang);
     document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr";
     document.documentElement.lang = newLang;
+    requestAnimationFrame(() => translatePage(newLang));
   };
 
   useEffect(() => {
