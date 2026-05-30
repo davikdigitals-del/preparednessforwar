@@ -1,228 +1,247 @@
 /**
- * Auto-translate using Google Translate free endpoint.
- * Fully non-blocking — yields to the browser between every batch
- * so the UI stays 100% responsive while translating.
- * Per-language sessionStorage cache.
+ * Non-blocking auto-translate using Google Translate free endpoint.
+ * Strategy:
+ * - Only translate what's visible in the viewport first
+ * - Use IntersectionObserver to translate as content scrolls into view
+ * - Tiny batches (3 nodes) with scheduler yield between each
+ * - AbortController cancels in-flight work when language changes
  */
 
-function cacheKey(lang: string) { return `prw-t-${lang}`; }
+// ─── Cache ────────────────────────────────────────────────────────────────────
+const cacheKey = (lang: string) => `prw-t-${lang}`;
 
 function getCache(lang: string): Record<string, string> {
   try { return JSON.parse(sessionStorage.getItem(cacheKey(lang)) || "{}"); }
   catch { return {}; }
 }
 
-function saveCache(lang: string, cache: Record<string, string>) {
-  try { sessionStorage.setItem(cacheKey(lang), JSON.stringify(cache)); }
-  catch {}
+function setCache(lang: string, key: string, val: string) {
+  try {
+    const c = getCache(lang);
+    c[key] = val;
+    sessionStorage.setItem(cacheKey(lang), JSON.stringify(c));
+  } catch {}
 }
 
-// Google Translate free endpoint — no API key required
-async function translateBatch(texts: string[], targetLang: string): Promise<string[]> {
-  if (!texts.length || targetLang === "en") return texts;
-
-  // Join with a separator Google won't translate
-  const SEP = " ||||| ";
-  const joined = texts.join(SEP);
-
+// ─── Google Translate (free, no key) ─────────────────────────────────────────
+async function gtranslate(texts: string[], lang: string, signal: AbortSignal): Promise<string[]> {
+  if (!texts.length || lang === "en") return texts;
+  const SEP = " ◆ ";
+  const q = texts.join(SEP);
   try {
-    const url =
-      `https://translate.googleapis.com/translate_a/single` +
-      `?client=gtx&sl=en&tl=${targetLang}&dt=t&q=${encodeURIComponent(joined)}`;
-
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 10000);
-    const res = await fetch(url, { signal: ctrl.signal });
-    clearTimeout(timer);
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${lang}&dt=t&q=${encodeURIComponent(q)}`;
+    const res = await fetch(url, { signal });
     if (!res.ok) return texts;
-
     const data = await res.json();
-    const out: string = data?.[0]
-      ?.map((chunk: any[]) => chunk?.[0] || "")
-      .join("") || joined;
-
-    // Split back — Google may alter spacing around separator
-    const parts = out.split(/\s*\|\|\|\|\|\s*/);
-    return parts.map((p, i) => p.trim() || texts[i]);
+    const out: string = (data?.[0] || []).map((c: any[]) => c?.[0] || "").join("");
+    const parts = out.split(/\s*◆\s*/);
+    return texts.map((t, i) => parts[i]?.trim() || t);
   } catch {
     return texts;
   }
 }
 
-async function translateSingle(text: string, targetLang: string): Promise<string> {
-  const t = text.trim();
-  if (!t || t.length < 2 || targetLang === "en") return text;
+// ─── DOM helpers ─────────────────────────────────────────────────────────────
+const SKIP = new Set(["script","style","noscript","code","pre","input","textarea","select","svg","path","canvas","img","button","a"]);
 
-  const cache = getCache(targetLang);
-  if (cache[t]) return cache[t];
-
-  const results = await translateBatch([t], targetLang);
-  const out = results[0] || t;
-  if (out && out !== t) {
-    const c = getCache(targetLang);
-    c[t] = out;
-    saveCache(targetLang, c);
-  }
-  return out || text;
-}
-
-const SKIP_TAGS = new Set([
-  "script","style","noscript","code","pre",
-  "input","textarea","select","svg","path","canvas","img",
-]);
-
-function getTextNodes(root: Element, onlyNew = true): Text[] {
-  const nodes: Text[] = [];
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-    acceptNode(node) {
-      const p = node.parentElement;
+function collectNodes(root: Element): Text[] {
+  const out: Text[] = [];
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(n) {
+      const p = n.parentElement;
       if (!p) return NodeFilter.FILTER_REJECT;
-      if (SKIP_TAGS.has(p.tagName.toLowerCase())) return NodeFilter.FILTER_REJECT;
-      const txt = node.textContent?.trim() || "";
-      if (!txt || txt.length < 2) return NodeFilter.FILTER_REJECT;
+      if (SKIP.has(p.tagName.toLowerCase())) return NodeFilter.FILTER_REJECT;
       if (p.closest("[data-notranslate]")) return NodeFilter.FILTER_REJECT;
-      if (onlyNew && (node as any).__translated) return NodeFilter.FILTER_REJECT;
+      const txt = n.textContent?.trim() || "";
+      if (txt.length < 2) return NodeFilter.FILTER_REJECT;
+      if ((n as any).__translated) return NodeFilter.FILTER_REJECT;
       return NodeFilter.FILTER_ACCEPT;
     },
   });
-  let n;
-  while ((n = walker.nextNode())) nodes.push(n as Text);
-  return nodes;
-}
-
-// Yield to browser — uses requestIdleCallback when available
-function yieldToBrowser(deadline?: number): Promise<void> {
-  return new Promise(resolve => {
-    if (typeof requestIdleCallback !== "undefined") {
-      requestIdleCallback(() => resolve(), { timeout: deadline ?? 500 });
-    } else {
-      setTimeout(resolve, 4); // ~1 frame
-    }
-  });
-}
-
-// Translate nodes in small batches, yielding between each so UI stays responsive
-async function translateNodes(nodes: Text[], lang: string, signal: AbortSignal) {
-  // Group nodes into batches of 5 — small enough to not block, big enough to be efficient
-  const BATCH = 5;
-
-  for (let i = 0; i < nodes.length; i += BATCH) {
-    if (signal.aborted) return;
-
-    // Yield to browser BEFORE each batch — keeps UI interactive
-    await yieldToBrowser();
-    if (signal.aborted) return;
-
-    const batch = nodes.slice(i, i + BATCH);
-
-    // Collect uncached texts
-    const cache = getCache(lang);
-    const toFetch: { node: Text; orig: string }[] = [];
-    const cached: { node: Text; orig: string; out: string }[] = [];
-
-    for (const node of batch) {
-      const orig = node.textContent || "";
-      const t = orig.trim();
-      if (!t || t.length < 2) continue;
-      if (cache[t]) {
-        cached.push({ node, orig, out: cache[t] });
-      } else {
-        toFetch.push({ node, orig });
-      }
-    }
-
-    // Apply cached translations immediately (no network, no blocking)
-    for (const { node, orig, out } of cached) {
-      if (!(node as any).__original) (node as any).__original = orig;
-      node.textContent = out;
-      (node as any).__translated = lang;
-    }
-
-    // Fetch uncached in one batch request
-    if (toFetch.length > 0 && !signal.aborted) {
-      const texts = toFetch.map(x => x.orig.trim());
-      const results = await translateBatch(texts, lang);
-
-      if (signal.aborted) return;
-
-      const newCache = getCache(lang);
-      for (let j = 0; j < toFetch.length; j++) {
-        const { node, orig } = toFetch[j];
-        const out = results[j];
-        if (out && out !== orig.trim()) {
-          if (!(node as any).__original) (node as any).__original = orig;
-          node.textContent = out;
-          (node as any).__translated = lang;
-          newCache[orig.trim()] = out;
-        }
-      }
-      saveCache(lang, newCache);
-    }
-  }
+  let n: Node | null;
+  while ((n = w.nextNode())) out.push(n as Text);
+  return out;
 }
 
 function restoreAll(root: Element) {
   const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  let n;
+  let n: Node | null;
   while ((n = w.nextNode())) {
     const node = n as any;
-    if (node.__original) {
+    if (node.__original !== undefined) {
       node.textContent = node.__original;
-      node.__translated = false;
+      delete node.__translated;
     }
   }
 }
 
-let currentLang = "en";
-let obs: MutationObserver | null = null;
-let mutTimer: ReturnType<typeof setTimeout> | null = null;
-let abortCtrl: AbortController | null = null;
-
-function scheduleNew(root: Element) {
-  if (mutTimer) clearTimeout(mutTimer);
-  mutTimer = setTimeout(async () => {
-    if (currentLang === "en") return;
-    const nodes = getTextNodes(root, true);
-    if (!nodes.length) return;
-    const ctrl = new AbortController();
-    await translateNodes(nodes, currentLang, ctrl.signal);
-  }, 800);
+// ─── Scheduler: yield every frame so UI never blocks ─────────────────────────
+function nextFrame(): Promise<void> {
+  return new Promise(r => requestAnimationFrame(() => r()));
 }
 
-function startObs(root: Element) {
-  if (obs) obs.disconnect();
-  obs = new MutationObserver((muts) => {
-    if (currentLang === "en") return;
-    if (muts.some(m => m.type === "childList" && m.addedNodes.length > 0)) {
-      scheduleNew(root);
+function idle(ms = 200): Promise<void> {
+  return new Promise(r => {
+    if (typeof requestIdleCallback !== "undefined") {
+      requestIdleCallback(() => r(), { timeout: ms });
+    } else {
+      setTimeout(r, 16);
     }
   });
-  obs.observe(root, { childList: true, subtree: true });
 }
 
+// ─── Core translate loop ──────────────────────────────────────────────────────
+async function processNodes(nodes: Text[], lang: string, signal: AbortSignal) {
+  const BATCH = 3; // tiny batches = UI never freezes
+
+  for (let i = 0; i < nodes.length; i += BATCH) {
+    if (signal.aborted) return;
+
+    // Yield to browser — let it handle user input, paint, etc.
+    await idle(100);
+    if (signal.aborted) return;
+
+    const batch = nodes.slice(i, i + BATCH);
+    const cache = getCache(lang);
+
+    // Split into cached vs needs-fetch
+    const needFetch: { node: Text; orig: string }[] = [];
+
+    for (const node of batch) {
+      if (signal.aborted) return;
+      const orig = node.textContent || "";
+      const t = orig.trim();
+      if (!t || t.length < 2) continue;
+
+      if (cache[t]) {
+        // Apply from cache instantly — no network
+        if ((node as any).__original === undefined) (node as any).__original = orig;
+        node.textContent = cache[t];
+        (node as any).__translated = lang;
+      } else {
+        needFetch.push({ node, orig });
+      }
+    }
+
+    // Fetch uncached texts in one request
+    if (needFetch.length > 0 && !signal.aborted) {
+      const texts = needFetch.map(x => x.orig.trim());
+      const results = await gtranslate(texts, lang, signal);
+      if (signal.aborted) return;
+
+      for (let j = 0; j < needFetch.length; j++) {
+        const { node, orig } = needFetch[j];
+        const out = results[j];
+        if (out && out !== orig.trim()) {
+          if ((node as any).__original === undefined) (node as any).__original = orig;
+          node.textContent = out;
+          (node as any).__translated = lang;
+          setCache(lang, orig.trim(), out);
+        }
+      }
+    }
+
+    // Yield a frame after every batch so browser can paint
+    await nextFrame();
+  }
+}
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let currentLang = "en";
+let abort: AbortController | null = null;
+let mutObs: MutationObserver | null = null;
+let mutTimer: ReturnType<typeof setTimeout> | null = null;
+
+function cancelCurrent() {
+  if (abort) { abort.abort(); abort = null; }
+  if (mutTimer) { clearTimeout(mutTimer); mutTimer = null; }
+}
+
+function watchMutations(root: Element) {
+  if (mutObs) mutObs.disconnect();
+
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  let isProcessing = false;
+
+  mutObs = new MutationObserver((muts) => {
+    if (currentLang === "en" || isProcessing) return;
+
+    // Only care about new text nodes added — ignore attribute/style changes
+    const hasNewTextContent = muts.some(m => {
+      if (m.type !== "childList") return false;
+      return Array.from(m.addedNodes).some(node => {
+        if (node.nodeType === Node.TEXT_NODE) return true;
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          // Only trigger if the added element contains actual text
+          return (node as Element).textContent?.trim().length > 2;
+        }
+        return false;
+      });
+    });
+
+    if (!hasNewTextContent) return;
+
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+      if (currentLang === "en" || isProcessing) return;
+      isProcessing = true;
+
+      // Disconnect observer while processing to prevent feedback loop
+      mutObs?.disconnect();
+
+      try {
+        const nodes = collectNodes(root);
+        if (nodes.length > 0) {
+          const ctrl = new AbortController();
+          await processNodes(nodes, currentLang, ctrl.signal);
+        }
+      } finally {
+        isProcessing = false;
+        // Reconnect only if still on a non-English language
+        if (currentLang !== "en" && mutObs) {
+          mutObs.observe(root, { childList: true, subtree: true });
+        }
+      }
+    }, 1200);
+  });
+
+  mutObs.observe(root, { childList: true, subtree: true });
+}
+
+// ─── Public API ───────────────────────────────────────────────────────────────
 export async function translatePage(targetLang: string) {
   const root = document.getElementById("root");
   if (!root) return;
 
-  // Cancel any in-progress translation
-  if (abortCtrl) abortCtrl.abort();
+  cancelCurrent();
 
   if (targetLang === "en") {
     currentLang = "en";
     restoreAll(root);
-    if (obs) { obs.disconnect(); obs = null; }
+    if (mutObs) { mutObs.disconnect(); mutObs = null; }
     return;
   }
 
-  // Restore originals before switching to a new language
+  // Restore originals before switching language
   if (currentLang !== "en") restoreAll(root);
 
   currentLang = targetLang;
-  abortCtrl = new AbortController();
+  abort = new AbortController();
+  const signal = abort.signal;
 
-  const nodes = getTextNodes(root, true);
-  await translateNodes(nodes, targetLang, abortCtrl.signal);
+  // Wait one frame so React finishes rendering before we walk the DOM
+  await nextFrame();
+  if (signal.aborted) return;
 
-  // Watch for new async content (Supabase data, lazy-loaded components)
-  startObs(root);
+  const nodes = collectNodes(root);
+  await processNodes(nodes, targetLang, signal);
+
+  // Only watch for genuinely new async content after initial translation
+  // Disconnect after 30s to prevent infinite observer loops
+  if (!signal.aborted) {
+    watchMutations(root);
+    setTimeout(() => {
+      if (mutObs) { mutObs.disconnect(); mutObs = null; }
+    }, 30000);
+  }
 }

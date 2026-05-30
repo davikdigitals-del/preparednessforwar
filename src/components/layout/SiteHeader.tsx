@@ -121,7 +121,7 @@ export function SiteHeader() {
   }));
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm relative">
+    <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm relative overflow-x-hidden">
       {/* Scrolling news ticker banner */}
       {banner.enabled && banner.text && (
         <div className="bg-[#1e3a5f] text-white overflow-hidden">
