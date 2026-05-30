@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { translatePage, hideGoogleTranslateBar } from "@/hooks/useAutoTranslate";
+import { translatePage } from "@/hooks/useAutoTranslate";
 
 // All NATO member country languages (32 members as of 2024)
 export type LangCode =
