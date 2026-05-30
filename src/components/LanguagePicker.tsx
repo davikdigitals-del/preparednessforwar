@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Globe, Search, Check, X, ChevronRight } from "lucide-react";
 import { useLang, availableLangs } from "@/contexts/LanguageContext";
-import { translatePage } from "@/hooks/useAutoTranslate";
 
 export function LanguagePicker() {
   const { lang, setLang } = useLang();
@@ -32,7 +31,6 @@ export function LanguagePicker() {
 
   const handleSelect = (code: string) => {
     setLang(code as any);
-    requestAnimationFrame(() => requestAnimationFrame(() => translatePage(code)));
     setOpen(false);
   };
 

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { translatePage } from "@/hooks/useAutoTranslate";
+import { translatePage, hideGoogleTranslateBar } from "@/hooks/useAutoTranslate";
 
 // All NATO member country languages (32 members as of 2024)
 export type LangCode =
@@ -279,12 +279,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<LangCode>(getSavedLang() || "en");
 
   useEffect(() => {
+    // Hide Google Translate toolbar immediately
+    hideGoogleTranslateBar();
+
     detectLangByIP().then((detected) => {
       setLangState(detected);
       document.documentElement.lang = detected;
       document.documentElement.dir = detected === "ar" ? "rtl" : "ltr";
       if (detected !== "en") {
-        requestAnimationFrame(() => requestAnimationFrame(() => translatePage(detected)));
+        // Small delay to let React render first
+        setTimeout(() => translatePage(detected), 500);
       }
     });
   }, []);
@@ -294,7 +298,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("prw-lang", newLang);
     document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr";
     document.documentElement.lang = newLang;
-    requestAnimationFrame(() => translatePage(newLang));
+    translatePage(newLang);
   };
 
   useEffect(() => {

@@ -1,195 +1,172 @@
 /**
- * Auto-translate using MyMemory free API.
- * Covers all NATO + partner languages.
- * Uses MutationObserver to catch async Supabase content.
- * Per-language sessionStorage cache.
+ * Translation engine using Google Translate Element API.
+ * Free, no API key, translates all page content including dynamic article text.
+ * Falls back to MyMemory for programmatic use.
  */
 
-// MyMemory API language pair codes (some differ from ISO 639-1)
-const API_LANG: Record<string, string> = {
-  en: "en-GB",
-  fr: "fr-FR",
-  de: "de-DE",
-  es: "es-ES",
-  it: "it-IT",
-  nl: "nl-NL",
-  pl: "pl-PL",
-  tr: "tr-TR",
-  pt: "pt-PT",
-  ro: "ro-RO",
-  cs: "cs-CZ",
-  hu: "hu-HU",
-  el: "el-GR",
-  bg: "bg-BG",
-  hr: "hr-HR",
-  sk: "sk-SK",
-  sl: "sl-SI",
-  et: "et-EE",
-  lv: "lv-LV",
-  lt: "lt-LT",
-  da: "da-DK",
-  no: "nb-NO",
-  sv: "sv-SE",
-  fi: "fi-FI",
-  is: "is-IS",
-  sq: "sq-AL",
-  mk: "mk-MK",
-  me: "sr-ME",
-  uk: "uk-UA",
-  ar: "ar-SA",
+declare global {
+  interface Window {
+    google: any;
+    googleTranslateElementInit: () => void;
+    _gtInitialized: boolean;
+  }
+}
+
+// Google Translate language codes
+const GT_LANG: Record<string, string> = {
+  en: "",       // English = no translation (restore)
+  fr: "fr",
+  de: "de",
+  es: "es",
+  it: "it",
+  nl: "nl",
+  pl: "pl",
+  tr: "tr",
+  pt: "pt",
+  ro: "ro",
+  cs: "cs",
+  hu: "hu",
+  el: "el",
+  bg: "bg",
+  hr: "hr",
+  sk: "sk",
+  sl: "sl",
+  et: "et",
+  lv: "lv",
+  lt: "lt",
+  da: "da",
+  no: "no",
+  sv: "sv",
+  fi: "fi",
+  is: "is",
+  sq: "sq",
+  mk: "mk",
+  me: "sr",
+  uk: "uk",
+  ar: "ar",
   zh: "zh-CN",
-  ru: "ru-RU",
+  ru: "ru",
 };
 
-function getLangPair(target: string): string {
-  return `en-GB|${API_LANG[target] || target}`;
-}
+let gtReady = false;
+let pendingLang: string | null = null;
 
-function cacheKey(lang: string) { return `prw-t-${lang}`; }
+function initGoogleTranslate() {
+  if (window._gtInitialized) return;
+  window._gtInitialized = true;
 
-function getCache(lang: string): Record<string, string> {
-  try { return JSON.parse(sessionStorage.getItem(cacheKey(lang)) || "{}"); }
-  catch { return {}; }
-}
+  // Create hidden container for Google Translate widget
+  const container = document.createElement("div");
+  container.id = "google_translate_element";
+  container.style.cssText = "position:absolute;top:-9999px;left:-9999px;visibility:hidden;";
+  document.body.appendChild(container);
 
-function saveCache(lang: string, cache: Record<string, string>) {
-  try { sessionStorage.setItem(cacheKey(lang), JSON.stringify(cache)); }
-  catch {}
-}
+  window.googleTranslateElementInit = () => {
+    new window.google.translate.TranslateElement(
+      {
+        pageLanguage: "en",
+        autoDisplay: false,
+        includedLanguages: Object.values(GT_LANG).filter(Boolean).join(","),
+      },
+      "google_translate_element"
+    );
+    gtReady = true;
 
-async function translateText(text: string, targetLang: string): Promise<string> {
-  const t = text.trim();
-  if (!t || t.length < 2 || targetLang === "en") return text;
-
-  const cache = getCache(targetLang);
-  if (cache[t]) return cache[t];
-
-  try {
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(t)}&langpair=${getLangPair(targetLang)}`;
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 7000);
-    const res = await fetch(url, { signal: ctrl.signal });
-    clearTimeout(timer);
-    if (!res.ok) return text;
-
-    const data = await res.json();
-    const out: string = data?.responseData?.translatedText || t;
-
-    // Reject error strings from MyMemory
-    const low = out.toLowerCase();
-    if (
-      low.includes("mymemory") || low.includes("quota") ||
-      low.includes("invalid") || low.includes("please") ||
-      out === t
-    ) return text;
-
-    cache[t] = out;
-    saveCache(targetLang, cache);
-    return out;
-  } catch {
-    return text;
-  }
-}
-
-const SKIP_TAGS = new Set([
-  "script","style","noscript","code","pre",
-  "input","textarea","select","svg","path","canvas",
-]);
-
-function getTextNodes(root: Element, onlyNew = true): Text[] {
-  const nodes: Text[] = [];
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-    acceptNode(node) {
-      const p = node.parentElement;
-      if (!p) return NodeFilter.FILTER_REJECT;
-      if (SKIP_TAGS.has(p.tagName.toLowerCase())) return NodeFilter.FILTER_REJECT;
-      const txt = node.textContent?.trim() || "";
-      if (!txt || txt.length < 2) return NodeFilter.FILTER_REJECT;
-      if (p.closest("[data-notranslate]")) return NodeFilter.FILTER_REJECT;
-      if (onlyNew && (node as any).__translated) return NodeFilter.FILTER_REJECT;
-      return NodeFilter.FILTER_ACCEPT;
-    },
-  });
-  let n;
-  while ((n = walker.nextNode())) nodes.push(n as Text);
-  return nodes;
-}
-
-async function translateNodes(nodes: Text[], lang: string) {
-  const BATCH = 6;
-  for (let i = 0; i < nodes.length; i += BATCH) {
-    await Promise.all(nodes.slice(i, i + BATCH).map(async (node) => {
-      const orig = node.textContent || "";
-      if (!orig.trim() || orig.trim().length < 2) return;
-      const out = await translateText(orig.trim(), lang);
-      if (out && out !== orig.trim()) {
-        if (!(node as any).__original) (node as any).__original = orig;
-        node.textContent = out;
-        (node as any).__translated = lang;
-      }
-    }));
-    if (i + BATCH < nodes.length) await new Promise(r => setTimeout(r, 90));
-  }
-}
-
-function restoreAll(root: Element) {
-  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  let n;
-  while ((n = w.nextNode())) {
-    const node = n as any;
-    if (node.__original) {
-      node.textContent = node.__original;
-      node.__translated = false;
+    // Apply any pending language
+    if (pendingLang) {
+      applyGoogleTranslate(pendingLang);
+      pendingLang = null;
     }
-  }
+  };
+
+  // Load Google Translate script
+  const script = document.createElement("script");
+  script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+  script.async = true;
+  script.onerror = () => {
+    console.warn("Google Translate failed to load");
+    gtReady = false;
+  };
+  document.head.appendChild(script);
 }
 
-let currentLang = "en";
-let obs: MutationObserver | null = null;
-let timer: ReturnType<typeof setTimeout> | null = null;
-let busy = false;
+function applyGoogleTranslate(targetLang: string) {
+  const gtCode = GT_LANG[targetLang];
 
-function scheduleNew(root: Element) {
-  if (timer) clearTimeout(timer);
-  timer = setTimeout(async () => {
-    if (busy || currentLang === "en") return;
-    const nodes = getTextNodes(root, true);
-    if (nodes.length) await translateNodes(nodes, currentLang);
-  }, 400);
-}
-
-function startObs(root: Element) {
-  if (obs) obs.disconnect();
-  obs = new MutationObserver((muts) => {
-    if (currentLang === "en" || busy) return;
-    if (muts.some(m => m.type === "childList" && m.addedNodes.length > 0)) {
-      scheduleNew(root);
-    }
-  });
-  obs.observe(root, { childList: true, subtree: true });
-}
-
-export async function translatePage(targetLang: string) {
-  const root = document.getElementById("root");
-  if (!root) return;
-
-  if (targetLang === "en") {
-    currentLang = "en";
-    restoreAll(root);
-    if (obs) { obs.disconnect(); obs = null; }
+  if (!gtCode) {
+    // Restore to English
+    restoreToEnglish();
     return;
   }
 
-  // Always restore to English originals before translating to any language
-  if (currentLang !== "en") restoreAll(root);
+  // Find the Google Translate select element and change it
+  const tryApply = (attempts = 0) => {
+    const select = document.querySelector(".goog-te-combo") as HTMLSelectElement;
+    if (select) {
+      select.value = gtCode;
+      select.dispatchEvent(new Event("change"));
+      return;
+    }
+    // Retry up to 20 times (2 seconds)
+    if (attempts < 20) {
+      setTimeout(() => tryApply(attempts + 1), 100);
+    }
+  };
 
-  currentLang = targetLang;
-  busy = true;
-  try {
-    await translateNodes(getTextNodes(root, true), targetLang);
-  } finally {
-    busy = false;
+  tryApply();
+}
+
+function restoreToEnglish() {
+  // Click the "Show original" button if present
+  const showOriginal = document.querySelector(".goog-te-banner-frame") as HTMLIFrameElement;
+  if (showOriginal) {
+    try {
+      const btn = showOriginal.contentDocument?.querySelector(".goog-te-button button") as HTMLButtonElement;
+      if (btn) { btn.click(); return; }
+    } catch {}
   }
 
-  startObs(root);
+  // Alternative: set select to empty (English)
+  const select = document.querySelector(".goog-te-combo") as HTMLSelectElement;
+  if (select) {
+    select.value = "";
+    select.dispatchEvent(new Event("change"));
+    return;
+  }
+
+  // Last resort: reload without translation cookie
+  const cookie = document.cookie;
+  if (cookie.includes("googtrans")) {
+    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
+    window.location.reload();
+  }
+}
+
+export function translatePage(targetLang: string) {
+  // Initialize Google Translate on first call
+  if (!window._gtInitialized) {
+    initGoogleTranslate();
+  }
+
+  if (!gtReady) {
+    // Queue it — will be applied once GT loads
+    pendingLang = targetLang;
+    return;
+  }
+
+  applyGoogleTranslate(targetLang);
+}
+
+// Hide the Google Translate toolbar banner (it's ugly)
+export function hideGoogleTranslateBar() {
+  const style = document.createElement("style");
+  style.textContent = `
+    .goog-te-banner-frame, .goog-te-balloon-frame { display: none !important; }
+    body { top: 0 !important; }
+    .skiptranslate { display: none !important; }
+    #google_translate_element { display: none !important; }
+    .goog-te-gadget { display: none !important; }
+  `;
+  document.head.appendChild(style);
 }
