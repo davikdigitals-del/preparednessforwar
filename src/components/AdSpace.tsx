@@ -127,8 +127,9 @@ export function AdSpace({ location, className = "" }: AdSpaceProps) {
   return (
     <div className={`ad-space ${className}`}>
       {ad.html_content ? (
-        // Custom HTML ad
+        // Custom HTML ad — key forces full remount when ad changes, preventing React DOM conflicts
         <div
+          key={ad.id}
           className="cursor-pointer"
           onClick={handleClick}
           dangerouslySetInnerHTML={{ __html: ad.html_content }}

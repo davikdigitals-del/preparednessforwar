@@ -78,8 +78,7 @@ export function ReCaptcha({
       if (!containerRef.current || isRendered) return;
 
       try {
-        // Clear any existing content in the container
-        containerRef.current.innerHTML = '';
+        // isRendered guard above already prevents double-render — no need to clear innerHTML
         
         widgetIdRef.current = window.grecaptcha.render(containerRef.current, {
           sitekey: siteKey,
