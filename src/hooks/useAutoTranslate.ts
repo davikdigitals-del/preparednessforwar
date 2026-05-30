@@ -1,217 +1,195 @@
 /**
  * Auto-translate using MyMemory free API.
- * Uses MutationObserver to catch dynamically loaded content.
- * Caches translations in sessionStorage per language.
+ * Covers all NATO + partner languages.
+ * Uses MutationObserver to catch async Supabase content.
+ * Per-language sessionStorage cache.
  */
 
-// MyMemory uses different codes for some languages
-const LANG_CODE_MAP: Record<string, string> = {
-  zh: "zh-CN",
+// MyMemory API language pair codes (some differ from ISO 639-1)
+const API_LANG: Record<string, string> = {
+  en: "en-GB",
+  fr: "fr-FR",
+  de: "de-DE",
+  es: "es-ES",
+  it: "it-IT",
+  nl: "nl-NL",
+  pl: "pl-PL",
+  tr: "tr-TR",
+  pt: "pt-PT",
+  ro: "ro-RO",
+  cs: "cs-CZ",
+  hu: "hu-HU",
+  el: "el-GR",
+  bg: "bg-BG",
+  hr: "hr-HR",
+  sk: "sk-SK",
+  sl: "sl-SI",
+  et: "et-EE",
+  lv: "lv-LV",
+  lt: "lt-LT",
+  da: "da-DK",
+  no: "nb-NO",
+  sv: "sv-SE",
+  fi: "fi-FI",
+  is: "is-IS",
+  sq: "sq-AL",
+  mk: "mk-MK",
+  me: "sr-ME",
   uk: "uk-UA",
-  pt: "pt-BR",
+  ar: "ar-SA",
+  zh: "zh-CN",
+  ru: "ru-RU",
 };
 
-function apiLang(code: string): string {
-  return LANG_CODE_MAP[code] || code;
+function getLangPair(target: string): string {
+  return `en-GB|${API_LANG[target] || target}`;
 }
 
-function getCacheKey(lang: string) {
-  return `prw-trans-${lang}`;
-}
+function cacheKey(lang: string) { return `prw-t-${lang}`; }
 
 function getCache(lang: string): Record<string, string> {
-  try {
-    return JSON.parse(sessionStorage.getItem(getCacheKey(lang)) || "{}");
-  } catch {
-    return {};
-  }
+  try { return JSON.parse(sessionStorage.getItem(cacheKey(lang)) || "{}"); }
+  catch { return {}; }
 }
 
 function saveCache(lang: string, cache: Record<string, string>) {
-  try {
-    sessionStorage.setItem(getCacheKey(lang), JSON.stringify(cache));
-  } catch {}
+  try { sessionStorage.setItem(cacheKey(lang), JSON.stringify(cache)); }
+  catch {}
 }
 
 async function translateText(text: string, targetLang: string): Promise<string> {
-  const trimmed = text.trim();
-  if (!trimmed || trimmed.length < 2 || targetLang === "en") return text;
+  const t = text.trim();
+  if (!t || t.length < 2 || targetLang === "en") return text;
 
   const cache = getCache(targetLang);
-  if (cache[trimmed]) return cache[trimmed];
+  if (cache[t]) return cache[t];
 
   try {
-    const langPair = `en|${apiLang(targetLang)}`;
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(trimmed)}&langpair=${langPair}`;
-
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 6000);
-    const res = await fetch(url, { signal: controller.signal });
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(t)}&langpair=${getLangPair(targetLang)}`;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 7000);
+    const res = await fetch(url, { signal: ctrl.signal });
     clearTimeout(timer);
-
     if (!res.ok) return text;
+
     const data = await res.json();
-    const translated: string = data?.responseData?.translatedText || trimmed;
+    const out: string = data?.responseData?.translatedText || t;
 
-    // Ignore MyMemory error responses
+    // Reject error strings from MyMemory
+    const low = out.toLowerCase();
     if (
-      translated.toLowerCase().includes("mymemory") ||
-      translated.toLowerCase().includes("quota") ||
-      translated.toLowerCase().includes("invalid") ||
-      translated === trimmed
-    ) {
-      return text;
-    }
+      low.includes("mymemory") || low.includes("quota") ||
+      low.includes("invalid") || low.includes("please") ||
+      out === t
+    ) return text;
 
-    cache[trimmed] = translated;
+    cache[t] = out;
     saveCache(targetLang, cache);
-    return translated;
+    return out;
   } catch {
     return text;
   }
 }
 
-// Tags whose text content should NOT be translated
 const SKIP_TAGS = new Set([
-  "script", "style", "noscript", "code", "pre",
-  "input", "textarea", "select", "svg", "path",
+  "script","style","noscript","code","pre",
+  "input","textarea","select","svg","path","canvas",
 ]);
 
-// Collect all translatable text nodes
-function getTextNodes(root: Element, onlyUntranslated = true): Text[] {
+function getTextNodes(root: Element, onlyNew = true): Text[] {
   const nodes: Text[] = [];
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
-      const parent = node.parentElement;
-      if (!parent) return NodeFilter.FILTER_REJECT;
-      const tag = parent.tagName.toLowerCase();
-      if (SKIP_TAGS.has(tag)) return NodeFilter.FILTER_REJECT;
-      const text = node.textContent?.trim() || "";
-      if (!text || text.length < 2) return NodeFilter.FILTER_REJECT;
-      if (parent.closest("[data-notranslate]")) return NodeFilter.FILTER_REJECT;
-      if (onlyUntranslated && (node as any).__translated) return NodeFilter.FILTER_REJECT;
+      const p = node.parentElement;
+      if (!p) return NodeFilter.FILTER_REJECT;
+      if (SKIP_TAGS.has(p.tagName.toLowerCase())) return NodeFilter.FILTER_REJECT;
+      const txt = node.textContent?.trim() || "";
+      if (!txt || txt.length < 2) return NodeFilter.FILTER_REJECT;
+      if (p.closest("[data-notranslate]")) return NodeFilter.FILTER_REJECT;
+      if (onlyNew && (node as any).__translated) return NodeFilter.FILTER_REJECT;
       return NodeFilter.FILTER_ACCEPT;
     },
   });
-  let node;
-  while ((node = walker.nextNode())) nodes.push(node as Text);
+  let n;
+  while ((n = walker.nextNode())) nodes.push(n as Text);
   return nodes;
 }
 
-// Translate a list of text nodes in batches
-async function translateNodes(nodes: Text[], targetLang: string) {
-  const BATCH = 8;
+async function translateNodes(nodes: Text[], lang: string) {
+  const BATCH = 6;
   for (let i = 0; i < nodes.length; i += BATCH) {
-    const batch = nodes.slice(i, i + BATCH);
-    await Promise.all(
-      batch.map(async (node) => {
-        const original = node.textContent || "";
-        if (!original.trim() || original.trim().length < 2) return;
-        const translated = await translateText(original.trim(), targetLang);
-        if (translated && translated !== original.trim()) {
-          // Store original for restoration
-          if (!(node as any).__original) {
-            (node as any).__original = original;
-          }
-          node.textContent = translated;
-          (node as any).__translated = targetLang;
-        }
-      })
-    );
-    if (i + BATCH < nodes.length) {
-      await new Promise((r) => setTimeout(r, 80));
-    }
-  }
-}
-
-// Restore all nodes to their original English text
-function restoreOriginals(root: Element) {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  let node;
-  while ((node = walker.nextNode())) {
-    const n = node as any;
-    if (n.__original) {
-      n.textContent = n.__original;
-      n.__translated = false;
-    }
-  }
-}
-
-// Reset translated flag so nodes can be re-translated to a new language
-function resetTranslatedFlags(root: Element) {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  let node;
-  while ((node = walker.nextNode())) {
-    const n = node as any;
-    if (n.__translated) {
-      n.__translated = false;
-      // Restore to original so we translate from English, not from previous translation
-      if (n.__original) {
-        n.textContent = n.__original;
+    await Promise.all(nodes.slice(i, i + BATCH).map(async (node) => {
+      const orig = node.textContent || "";
+      if (!orig.trim() || orig.trim().length < 2) return;
+      const out = await translateText(orig.trim(), lang);
+      if (out && out !== orig.trim()) {
+        if (!(node as any).__original) (node as any).__original = orig;
+        node.textContent = out;
+        (node as any).__translated = lang;
       }
+    }));
+    if (i + BATCH < nodes.length) await new Promise(r => setTimeout(r, 90));
+  }
+}
+
+function restoreAll(root: Element) {
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let n;
+  while ((n = w.nextNode())) {
+    const node = n as any;
+    if (node.__original) {
+      node.textContent = node.__original;
+      node.__translated = false;
     }
   }
 }
 
 let currentLang = "en";
-let observer: MutationObserver | null = null;
-let translateTimer: ReturnType<typeof setTimeout> | null = null;
-let isTranslating = false;
+let obs: MutationObserver | null = null;
+let timer: ReturnType<typeof setTimeout> | null = null;
+let busy = false;
 
-function scheduleTranslate(root: Element) {
-  if (translateTimer) clearTimeout(translateTimer);
-  translateTimer = setTimeout(async () => {
-    if (isTranslating || currentLang === "en") return;
+function scheduleNew(root: Element) {
+  if (timer) clearTimeout(timer);
+  timer = setTimeout(async () => {
+    if (busy || currentLang === "en") return;
     const nodes = getTextNodes(root, true);
-    if (nodes.length > 0) {
-      await translateNodes(nodes, currentLang);
-    }
+    if (nodes.length) await translateNodes(nodes, currentLang);
   }, 400);
 }
 
-function startObserver(root: Element) {
-  if (observer) observer.disconnect();
-  observer = new MutationObserver((mutations) => {
-    if (currentLang === "en" || isTranslating) return;
-    const hasNew = mutations.some(
-      (m) => m.type === "childList" && m.addedNodes.length > 0
-    );
-    if (hasNew) scheduleTranslate(root);
+function startObs(root: Element) {
+  if (obs) obs.disconnect();
+  obs = new MutationObserver((muts) => {
+    if (currentLang === "en" || busy) return;
+    if (muts.some(m => m.type === "childList" && m.addedNodes.length > 0)) {
+      scheduleNew(root);
+    }
   });
-  observer.observe(root, { childList: true, subtree: true });
+  obs.observe(root, { childList: true, subtree: true });
 }
 
 export async function translatePage(targetLang: string) {
   const root = document.getElementById("root");
   if (!root) return;
 
-  // Switching back to English — restore all originals
   if (targetLang === "en") {
     currentLang = "en";
-    restoreOriginals(root);
-    if (observer) { observer.disconnect(); observer = null; }
+    restoreAll(root);
+    if (obs) { obs.disconnect(); obs = null; }
     return;
   }
 
-  // Switching to a different non-English language
-  if (targetLang !== currentLang && currentLang !== "en") {
-    // Restore originals first so we translate from English
-    restoreOriginals(root);
-  } else if (targetLang !== currentLang) {
-    // Was English, switching to new lang — reset flags
-    resetTranslatedFlags(root);
-  }
+  // Always restore to English originals before translating to any language
+  if (currentLang !== "en") restoreAll(root);
 
   currentLang = targetLang;
-  isTranslating = true;
-
+  busy = true;
   try {
-    const nodes = getTextNodes(root, true);
-    await translateNodes(nodes, targetLang);
+    await translateNodes(getTextNodes(root, true), targetLang);
   } finally {
-    isTranslating = false;
+    busy = false;
   }
 
-  // Keep watching for new DOM content (async Supabase data)
-  startObserver(root);
+  startObs(root);
 }
