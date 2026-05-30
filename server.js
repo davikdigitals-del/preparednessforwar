@@ -1,6 +1,7 @@
 import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { existsSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -9,52 +10,66 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const distDir = join(__dirname, 'dist');
 
-// Serve static files with correct MIME types and long cache for assets
-app.use(express.static(distDir, {
+// ── Static assets (JS/CSS/images) — long cache, hashed filenames ─────────────
+app.use('/assets', (req, res, next) => {
+  // Verify the file actually exists before serving
+  const filePath = join(distDir, 'assets', req.path);
+  if (!existsSync(filePath)) {
+    // Asset not found — don't fall through to SPA, return 404
+    return res.status(404).send('Asset not found');
+  }
+  next();
+}, express.static(join(distDir, 'assets'), {
   maxAge: '1y',
-  etag: true,
+  immutable: true,
+  etag: false,
   setHeaders: (res, filePath) => {
-    // JS and CSS — set correct MIME types explicitly
     if (filePath.endsWith('.js')) {
       res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
     } else if (filePath.endsWith('.css')) {
       res.setHeader('Content-Type', 'text/css; charset=utf-8');
-    } else if (filePath.endsWith('.html')) {
-      // HTML — no cache so new deploys are picked up immediately
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    }
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  },
+}));
+
+// ── Other static files (manifest, icons, sw.js, etc.) ────────────────────────
+app.use(express.static(distDir, {
+  maxAge: 0,
+  etag: true,
+  index: false, // Don't auto-serve index.html here — we handle it below
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
     }
   },
 }));
 
-// SPA fallback — ONLY for non-asset requests
-app.get('*', (req, res, next) => {
+// ── SPA fallback — serve index.html for all non-asset routes ─────────────────
+app.get('*', (req, res) => {
   const path = req.path;
 
-  // Never serve index.html for asset requests — return 404 instead
-  if (
-    path.startsWith('/assets/') ||
-    path.endsWith('.js') ||
-    path.endsWith('.css') ||
-    path.endsWith('.map') ||
-    path.endsWith('.woff') ||
-    path.endsWith('.woff2') ||
-    path.endsWith('.png') ||
-    path.endsWith('.jpg') ||
-    path.endsWith('.svg') ||
-    path.endsWith('.ico') ||
-    path.endsWith('.webmanifest') ||
-    path.endsWith('.json')
-  ) {
+  // Hard 404 for any asset-like path that wasn't found above
+  const assetExtensions = ['.js', '.css', '.map', '.woff', '.woff2', '.ttf',
+    '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.webmanifest', '.txt'];
+  if (assetExtensions.some(ext => path.endsWith(ext))) {
     return res.status(404).send('Not found');
   }
 
-  // All other routes — serve index.html for React Router
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.setHeader('Clear-Site-Data', '"cache"');
+  // Serve index.html with aggressive no-cache headers
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+  // Tell browser to clear its cache for this origin
+  if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
+    res.setHeader('Clear-Site-Data', '"cache"');
+  }
   res.sendFile(join(distDir, 'index.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

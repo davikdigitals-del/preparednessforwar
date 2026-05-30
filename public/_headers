@@ -1,21 +1,20 @@
-# Cloudflare Pages headers
-
-# JS assets — correct MIME type, long cache
-/assets/*.js
-  Content-Type: application/javascript; charset=utf-8
-  Cache-Control: public, max-age=31536000, immutable
-
-# CSS assets
-/assets/*.css
-  Content-Type: text/css; charset=utf-8
-  Cache-Control: public, max-age=31536000, immutable
-
-# HTML — never cache, clear stale SW caches
+# HTML — never cache, always fetch fresh
 /*.html
-  Cache-Control: no-cache, no-store, must-revalidate
-  Clear-Site-Data: "cache"
+  Cache-Control: no-store, no-cache, must-revalidate
+  Pragma: no-cache
 
-# Root
+# Root — same
 /
-  Cache-Control: no-cache, no-store, must-revalidate
-  Clear-Site-Data: "cache"
+  Cache-Control: no-store, no-cache, must-revalidate
+  Pragma: no-cache
+
+# Hashed JS/CSS assets — cache forever (filename changes on each build)
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Service worker — never cache
+/sw.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/registerSW.js
+  Cache-Control: no-store, no-cache, must-revalidate
