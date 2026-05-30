@@ -279,16 +279,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<LangCode>(getSavedLang() || "en");
 
   useEffect(() => {
-    // Hide Google Translate toolbar immediately
-    hideGoogleTranslateBar();
-
     detectLangByIP().then((detected) => {
       setLangState(detected);
       document.documentElement.lang = detected;
       document.documentElement.dir = detected === "ar" ? "rtl" : "ltr";
       if (detected !== "en") {
-        // Small delay to let React render first
-        setTimeout(() => translatePage(detected), 500);
+        requestAnimationFrame(() => requestAnimationFrame(() => translatePage(detected)));
       }
     });
   }, []);
