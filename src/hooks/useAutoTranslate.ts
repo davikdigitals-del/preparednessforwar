@@ -1,10 +1,9 @@
 /**
  * Non-blocking auto-translate using Google Translate free endpoint.
- * Strategy:
- * - Only translate what's visible in the viewport first
- * - Use IntersectionObserver to translate as content scrolls into view
- * - Tiny batches (3 nodes) with scheduler yield between each
- * - AbortController cancels in-flight work when language changes
+ *
+ * SAFE approach: wraps translated text in a <span data-translated>
+ * instead of mutating React-owned text nodes directly.
+ * This prevents React's DOM reconciliation from crashing.
  */
 
 // ─── Cache ────────────────────────────────────────────────────────────────────
@@ -42,45 +41,63 @@ async function gtranslate(texts: string[], lang: string, signal: AbortSignal): P
 }
 
 // ─── DOM helpers ─────────────────────────────────────────────────────────────
-const SKIP = new Set(["script","style","noscript","code","pre","input","textarea","select","svg","path","canvas","img","button","a"]);
+const SKIP_TAGS = new Set([
+  "script","style","noscript","code","pre","input","textarea",
+  "select","svg","path","canvas","img","button","a","option",
+]);
 
-function collectNodes(root: Element): Text[] {
-  const out: Text[] = [];
-  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-    acceptNode(n) {
-      const p = n.parentElement;
-      if (!p) return NodeFilter.FILTER_REJECT;
-      if (SKIP.has(p.tagName.toLowerCase())) return NodeFilter.FILTER_REJECT;
-      if (p.closest("[data-notranslate]")) return NodeFilter.FILTER_REJECT;
-      const txt = n.textContent?.trim() || "";
-      if (txt.length < 2) return NodeFilter.FILTER_REJECT;
-      if ((n as any).__translated) return NodeFilter.FILTER_REJECT;
-      return NodeFilter.FILTER_ACCEPT;
+// Find elements (not text nodes) that contain only a single text node
+// and are safe to translate — these are "leaf" elements React won't split
+function getLeafElements(root: Element): Element[] {
+  const results: Element[] = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
+    acceptNode(el) {
+      const element = el as Element;
+      const tag = element.tagName.toLowerCase();
+
+      // Skip tags we never translate
+      if (SKIP_TAGS.has(tag)) return NodeFilter.FILTER_REJECT;
+
+      // Skip elements already translated
+      if (element.hasAttribute("data-translated")) return NodeFilter.FILTER_REJECT;
+
+      // Skip elements marked no-translate
+      if (element.closest("[data-notranslate]")) return NodeFilter.FILTER_REJECT;
+
+      // Only accept elements whose ONLY child is a single text node
+      const children = element.childNodes;
+      if (children.length === 1 && children[0].nodeType === Node.TEXT_NODE) {
+        const txt = (children[0] as Text).textContent?.trim() || "";
+        if (txt.length >= 2) return NodeFilter.FILTER_ACCEPT;
+      }
+
+      return NodeFilter.FILTER_SKIP;
     },
   });
+
   let n: Node | null;
-  while ((n = w.nextNode())) out.push(n as Text);
-  return out;
+  while ((n = walker.nextNode())) results.push(n as Element);
+  return results;
 }
 
+// Restore all translated elements back to original
 function restoreAll(root: Element) {
-  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  let n: Node | null;
-  while ((n = w.nextNode())) {
-    const node = n as any;
-    if (node.__original !== undefined) {
-      node.textContent = node.__original;
-      delete node.__translated;
+  root.querySelectorAll("[data-translated]").forEach(el => {
+    const orig = el.getAttribute("data-original");
+    if (orig !== null) {
+      el.textContent = orig;
+      el.removeAttribute("data-translated");
+      el.removeAttribute("data-original");
     }
-  }
+  });
 }
 
-// ─── Scheduler: yield every frame so UI never blocks ─────────────────────────
+// ─── Scheduler ───────────────────────────────────────────────────────────────
 function nextFrame(): Promise<void> {
   return new Promise(r => requestAnimationFrame(() => r()));
 }
 
-function idle(ms = 200): Promise<void> {
+function idle(ms = 150): Promise<void> {
   return new Promise(r => {
     if (typeof requestIdleCallback !== "undefined") {
       requestIdleCallback(() => r(), { timeout: ms });
@@ -91,57 +108,56 @@ function idle(ms = 200): Promise<void> {
 }
 
 // ─── Core translate loop ──────────────────────────────────────────────────────
-async function processNodes(nodes: Text[], lang: string, signal: AbortSignal) {
-  const BATCH = 3; // tiny batches = UI never freezes
+async function processElements(elements: Element[], lang: string, signal: AbortSignal) {
+  const BATCH = 8;
 
-  for (let i = 0; i < nodes.length; i += BATCH) {
+  for (let i = 0; i < elements.length; i += BATCH) {
     if (signal.aborted) return;
-
-    // Yield to browser — let it handle user input, paint, etc.
     await idle(100);
     if (signal.aborted) return;
 
-    const batch = nodes.slice(i, i + BATCH);
+    const batch = elements.slice(i, i + BATCH);
     const cache = getCache(lang);
+    const needFetch: { el: Element; orig: string }[] = [];
 
-    // Split into cached vs needs-fetch
-    const needFetch: { node: Text; orig: string }[] = [];
-
-    for (const node of batch) {
+    for (const el of batch) {
       if (signal.aborted) return;
-      const orig = node.textContent || "";
-      const t = orig.trim();
-      if (!t || t.length < 2) continue;
+      // Re-check: element might have been removed from DOM or already translated
+      if (!document.contains(el)) continue;
+      if (el.hasAttribute("data-translated")) continue;
 
-      if (cache[t]) {
-        // Apply from cache instantly — no network
-        if ((node as any).__original === undefined) (node as any).__original = orig;
-        node.textContent = cache[t];
-        (node as any).__translated = lang;
+      const orig = el.textContent?.trim() || "";
+      if (!orig || orig.length < 2) continue;
+
+      if (cache[orig]) {
+        // Apply from cache — safe: set textContent on the element, not the text node
+        el.setAttribute("data-original", orig);
+        el.setAttribute("data-translated", lang);
+        el.textContent = cache[orig];
       } else {
-        needFetch.push({ node, orig });
+        needFetch.push({ el, orig });
       }
     }
 
-    // Fetch uncached texts in one request
     if (needFetch.length > 0 && !signal.aborted) {
-      const texts = needFetch.map(x => x.orig.trim());
+      const texts = needFetch.map(x => x.orig);
       const results = await gtranslate(texts, lang, signal);
       if (signal.aborted) return;
 
       for (let j = 0; j < needFetch.length; j++) {
-        const { node, orig } = needFetch[j];
+        const { el, orig } = needFetch[j];
+        if (!document.contains(el)) continue;
+        if (el.hasAttribute("data-translated")) continue;
         const out = results[j];
-        if (out && out !== orig.trim()) {
-          if ((node as any).__original === undefined) (node as any).__original = orig;
-          node.textContent = out;
-          (node as any).__translated = lang;
-          setCache(lang, orig.trim(), out);
+        if (out && out !== orig) {
+          el.setAttribute("data-original", orig);
+          el.setAttribute("data-translated", lang);
+          el.textContent = out;
+          setCache(lang, orig, out);
         }
       }
     }
 
-    // Yield a frame after every batch so browser can paint
     await nextFrame();
   }
 }
@@ -160,52 +176,47 @@ function cancelCurrent() {
 function watchMutations(root: Element) {
   if (mutObs) mutObs.disconnect();
 
-  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
   let isProcessing = false;
 
   mutObs = new MutationObserver((muts) => {
     if (currentLang === "en" || isProcessing) return;
 
-    // Only care about new text nodes added — ignore attribute/style changes
-    const hasNewTextContent = muts.some(m => {
-      if (m.type !== "childList") return false;
-      return Array.from(m.addedNodes).some(node => {
-        if (node.nodeType === Node.TEXT_NODE) return true;
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          // Only trigger if the added element contains actual text
-          return (node as Element).textContent?.trim().length > 2;
-        }
-        return false;
-      });
-    });
+    // Only care about new elements added to the DOM
+    const hasNew = muts.some(m =>
+      m.type === "childList" &&
+      Array.from(m.addedNodes).some(n =>
+        n.nodeType === Node.ELEMENT_NODE &&
+        (n as Element).textContent?.trim().length > 2
+      )
+    );
+    if (!hasNew) return;
 
-    if (!hasNewTextContent) return;
-
-    if (debounceTimer) clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(async () => {
+    if (mutTimer) clearTimeout(mutTimer);
+    mutTimer = setTimeout(async () => {
       if (currentLang === "en" || isProcessing) return;
       isProcessing = true;
-
-      // Disconnect observer while processing to prevent feedback loop
       mutObs?.disconnect();
-
       try {
-        const nodes = collectNodes(root);
-        if (nodes.length > 0) {
+        const els = getLeafElements(root);
+        if (els.length > 0) {
           const ctrl = new AbortController();
-          await processNodes(nodes, currentLang, ctrl.signal);
+          await processElements(els, currentLang, ctrl.signal);
         }
       } finally {
         isProcessing = false;
-        // Reconnect only if still on a non-English language
-        if (currentLang !== "en" && mutObs) {
-          mutObs.observe(root, { childList: true, subtree: true });
+        if (currentLang !== "en") {
+          mutObs?.observe(root, { childList: true, subtree: true });
         }
       }
-    }, 1200);
+    }, 1000);
   });
 
   mutObs.observe(root, { childList: true, subtree: true });
+
+  // Auto-stop after 20s — page should be fully loaded by then
+  setTimeout(() => {
+    if (mutObs) { mutObs.disconnect(); mutObs = null; }
+  }, 20000);
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -222,26 +233,18 @@ export async function translatePage(targetLang: string) {
     return;
   }
 
-  // Restore originals before switching language
+  // Restore before switching language
   if (currentLang !== "en") restoreAll(root);
 
   currentLang = targetLang;
   abort = new AbortController();
   const signal = abort.signal;
 
-  // Wait one frame so React finishes rendering before we walk the DOM
   await nextFrame();
   if (signal.aborted) return;
 
-  const nodes = collectNodes(root);
-  await processNodes(nodes, targetLang, signal);
+  const elements = getLeafElements(root);
+  await processElements(elements, targetLang, signal);
 
-  // Only watch for genuinely new async content after initial translation
-  // Disconnect after 30s to prevent infinite observer loops
-  if (!signal.aborted) {
-    watchMutations(root);
-    setTimeout(() => {
-      if (mutObs) { mutObs.disconnect(); mutObs = null; }
-    }, 30000);
-  }
+  if (!signal.aborted) watchMutations(root);
 }
