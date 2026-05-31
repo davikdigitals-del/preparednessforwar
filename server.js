@@ -73,3 +73,7 @@ app.get('*', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// Keep-alive endpoint — ping this with UptimeRobot every 5 minutes
+// to prevent Render free tier from sleeping
+app.get('/ping', (_req, res) => res.send('pong'));
