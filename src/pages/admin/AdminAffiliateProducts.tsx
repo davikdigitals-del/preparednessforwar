@@ -175,53 +175,107 @@ export default function AdminAffiliateProducts() {
   const handleScrapeUrl = async () => {
     if (!scrapeUrl.trim()) return;
     setScraping(true);
+
+    // Always save the URL first
+    setFormData(prev => ({ ...prev, affiliate_url: scrapeUrl }));
+
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const res = await fetch(`${supabaseUrl}/functions/v1/scrape-product`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify({ url: scrapeUrl }),
+      // Use allorigins CORS proxy to fetch the product page
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(scrapeUrl)}`;
+      const res = await fetch(proxyUrl);
+      if (!res.ok) throw new Error("Could not fetch page");
+      const json = await res.json();
+      const html: string = json.contents || "";
+
+      if (!html) throw new Error("Empty response");
+
+      // Parse HTML using DOMParser
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+
+      // Extract Open Graph / meta tags
+      const getMeta = (prop: string) =>
+        doc.querySelector(`meta[property="${prop}"]`)?.getAttribute("content") ||
+        doc.querySelector(`meta[name="${prop}"]`)?.getAttribute("content") || "";
+
+      const ogTitle = getMeta("og:title") || doc.querySelector("title")?.textContent || "";
+      const ogDesc = getMeta("og:description") || getMeta("description") || "";
+      const ogImage = getMeta("og:image") || "";
+      const ogPrice =
+        getMeta("product:price:amount") ||
+        getMeta("og:price:amount") ||
+        getMeta("twitter:data1") || "";
+
+      // Amazon-specific selectors
+      const amazonTitle = doc.querySelector("#productTitle")?.textContent?.trim() || "";
+      const amazonPrice =
+        doc.querySelector(".a-price .a-offscreen")?.textContent?.trim() ||
+        doc.querySelector("#priceblock_ourprice")?.textContent?.trim() ||
+        doc.querySelector("#priceblock_dealprice")?.textContent?.trim() || "";
+      const amazonDesc =
+        doc.querySelector("#productDescription p")?.textContent?.trim() ||
+        doc.querySelector("#feature-bullets")?.textContent?.trim() || "";
+      const amazonImage =
+        doc.querySelector("#landingImage")?.getAttribute("src") ||
+        doc.querySelector("#imgBlkFront")?.getAttribute("src") || "";
+
+      // Collect all images from og:image and img tags
+      const images: string[] = [];
+      if (ogImage) images.push(ogImage);
+      if (amazonImage && !images.includes(amazonImage)) images.push(amazonImage);
+      doc.querySelectorAll("img[src]").forEach(img => {
+        const src = img.getAttribute("src") || "";
+        if (src.startsWith("http") && src.includes("image") && !images.includes(src)) {
+          images.push(src);
+        }
       });
-      const data = await res.json();
 
-      if (data.blocked) {
-        // Still save the URL even if scraping failed
-        setFormData(prev => ({ ...prev, affiliate_url: scrapeUrl }));
-        toast({ 
-          title: "Could not auto-fill details", 
-          description: "This site blocks automated requests. The URL has been saved — please fill in the name, price and description manually.",
-          variant: "destructive" 
-        });
-        return;
-      }
-      if (data.error) throw new Error(data.error);
+      const name = amazonTitle || ogTitle || "";
+      const description = amazonDesc || ogDesc || "";
+      const image_url = amazonImage || ogImage || images[0] || "";
 
-      setScrapedImages(data.images || []);
-      setScrapedVideo(data.video_url || "");
+      // Parse price — strip currency symbols
+      const rawPrice = amazonPrice || ogPrice || "";
+      const priceNum = parseFloat(rawPrice.replace(/[^0-9.]/g, "")) || 0;
+
+      // Detect affiliate network from URL
+      const url = scrapeUrl.toLowerCase();
+      const affiliate_network =
+        url.includes("amazon") ? "amazon" :
+        url.includes("shareasale") ? "shareasale" :
+        url.includes("cj.com") || url.includes("commission") ? "cj" : "custom";
+
+      setScrapedImages(images.slice(0, 8));
 
       setFormData(prev => ({
         ...prev,
         affiliate_url: scrapeUrl,
-        name: data.name || prev.name,
-        description: data.description || prev.description,
-        image_url: data.image_url || prev.image_url,
-        price: data.price ?? prev.price,
-        currency: "GBP", // always save in GBP — scraper auto-converts
-        affiliate_network: data.affiliate_network || prev.affiliate_network,
-        images: data.images || [],
-        video_url: data.video_url || "",
+        name: name || prev.name,
+        description: description || prev.description,
+        image_url: image_url || prev.image_url,
+        price: priceNum || prev.price,
+        affiliate_network,
       }));
 
-      const got = [data.name && 'name', data.image_url && 'image', data.video_url && 'video', data.price && 'price'].filter(Boolean);
-      toast({
-        title: "Details fetched!",
-        description: `Got: ${got.join(', ')}${!data.price ? ' (price not available — enter manually)' : ''}`
-      });
+      const got = [name && "name", image_url && "image", priceNum && "price", description && "description"].filter(Boolean);
+
+      if (got.length === 0) {
+        toast({
+          title: "URL saved — fill details manually",
+          description: "This site blocks automated scraping. The URL has been saved. Please fill in the product details manually.",
+        });
+      } else {
+        toast({
+          title: "Details fetched!",
+          description: `Auto-filled: ${got.join(", ")}`,
+        });
+      }
     } catch (err: any) {
-      toast({ title: "Could not fetch details", description: err.message, variant: "destructive" });
+      // Even on error, URL is already saved
+      toast({
+        title: "URL saved — fill details manually",
+        description: "Could not auto-fetch details. The URL has been saved — please fill in the name, price and description manually.",
+      });
     } finally {
       setScraping(false);
     }
