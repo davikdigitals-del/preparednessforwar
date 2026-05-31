@@ -20,12 +20,11 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: "dist",
     chunkSizeWarningLimit: 600,
+    cssCodeSplit: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          // Core React
           "vendor-react": ["react", "react-dom", "react-router-dom"],
-          // UI components
           "vendor-radix": [
             "@radix-ui/react-dialog",
             "@radix-ui/react-select",
@@ -35,12 +34,11 @@ export default defineConfig(({ mode }) => ({
             "@radix-ui/react-popover",
             "@radix-ui/react-tooltip",
           ],
-          // Supabase
           "vendor-supabase": ["@supabase/supabase-js"],
-          // Charts & heavy libs
           "vendor-charts": ["recharts"],
-          // Icons
           "vendor-icons": ["lucide-react", "react-icons"],
+          "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
+          "vendor-query": ["@tanstack/react-query"],
         },
       },
     },
