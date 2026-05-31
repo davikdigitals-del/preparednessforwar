@@ -40,11 +40,13 @@ export function MegaMenuContent({
       ref={contentRef}
       id={`mega-menu-${menuId}`}
       className={[
-        'absolute left-0 top-full w-full bg-white shadow-2xl border-t-2 border-primary z-50',
+        // Position fixed relative to viewport, below the header
+        'fixed left-0 right-0 bg-white shadow-2xl border-t-2 border-primary z-[100]',
         'animate-in fade-in slide-in-from-top-1 duration-150',
         'motion-reduce:animate-none',
         className,
       ].filter(Boolean).join(' ')}
+      style={{ top: 'var(--header-height, 112px)' }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       role="region"

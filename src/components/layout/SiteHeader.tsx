@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, Search, User, Globe, Mail, X, Video, Newspaper, LogOut, ChevronDown, ChevronUp, FileText, GraduationCap, ShoppingBag } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { navSections } from "@/data/mockData";
 import { MegaMenu, MegaMenuTrigger, MegaMenuContent } from "@/components/MegaMenu";
@@ -99,7 +99,23 @@ export function SiteHeader() {
   const { banner } = useData();
   const { t } = useLang();
 
-  // Cmd/Ctrl+K to open search
+  const headerRef = useRef<HTMLElement>(null);
+
+  // Update --header-height CSS variable so MegaMenu dropdown positions correctly
+  useEffect(() => {
+    const updateHeight = () => {
+      if (headerRef.current) {
+        document.documentElement.style.setProperty(
+          '--header-height',
+          `${headerRef.current.offsetHeight}px`
+        );
+      }
+    };
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    if (headerRef.current) observer.observe(headerRef.current);
+    return () => observer.disconnect();
+  }, [banner.enabled, banner.text]);
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -121,7 +137,7 @@ export function SiteHeader() {
   }));
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm relative overflow-x-hidden">
+    <header ref={headerRef} className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm relative">
       {/* Scrolling news ticker banner */}
       {banner.enabled && banner.text && (
         <div className="bg-[#1e3a5f] text-white overflow-hidden">
@@ -213,7 +229,7 @@ export function SiteHeader() {
           </div>
 
           {/* Desktop Navigation with Mega Menu */}
-          <nav className="hidden lg:flex items-center">
+          <nav className="hidden lg:flex items-center relative">
             <MegaMenu>
               {/* Trigger row */}
               <div className="flex items-center gap-0">
