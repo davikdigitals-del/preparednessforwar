@@ -51,7 +51,7 @@ export default function AdminCategories() {
         .from("nav_sections")
         .select("id, title, slug")
         .eq("is_active", true)
-        .order("display_order");
+        .order("title");
 
       if (error) throw error;
       setSections(data || []);
