@@ -177,111 +177,67 @@ export default function AdminAffiliateProducts() {
     setScraping(true);
 
     const url = scrapeUrl.trim();
-    // Always save the URL immediately
     setFormData(prev => ({ ...prev, affiliate_url: url }));
 
     try {
-      // ── Extract product name from URL slug (works for Amazon + most sites) ──
-      // Matches: /Product-Name-Here/dp/ or /product-name-here/
-      const slugMatch =
-        url.match(/\/([A-Za-z0-9][A-Za-z0-9-]{5,}(?:\s|[A-Za-z0-9-])*?)\/dp\//i) ||
-        url.match(/\/([A-Za-z0-9][A-Za-z0-9-]{5,})(?:\?|$)/i);
-
-      const slugName = slugMatch?.[1]
-        ?.replace(/-/g, " ")
-        ?.replace(/\b\w/g, c => c.toUpperCase())
-        ?.trim() || "";
-
-      // Detect network
+      // ── Step 1: Extract name from URL slug immediately ─────────────────────
       const isAmazon = url.includes("amazon.");
       const affiliate_network = isAmazon ? "amazon"
+        : url.includes("ebay.") ? "custom"
         : url.includes("shareasale") ? "shareasale"
         : url.includes("cj.com") ? "cj" : "custom";
 
-      // Set name from slug immediately so user sees something right away
+      // Extract product name from URL path
+      const pathParts = new URL(url).pathname.split("/").filter(Boolean);
+      const slugPart = pathParts.find(p => p.length > 10 && p.includes("-")) || pathParts[0] || "";
+      const slugName = slugPart
+        .replace(/[_-]+/g, " ")
+        .replace(/\b\w/g, c => c.toUpperCase())
+        .replace(/\s+/g, " ")
+        .trim()
+        .substring(0, 80);
+
       if (slugName) {
-        setFormData(prev => ({
-          ...prev,
-          affiliate_url: url,
-          name: prev.name || slugName,
-          affiliate_network,
-        }));
+        setFormData(prev => ({ ...prev, name: prev.name || slugName, affiliate_network }));
       }
 
-      // ── Try to fetch full page via CORS proxy ─────────────────────────────
-      let html = "";
-      const proxies = [
-        `https://corsproxy.io/?${encodeURIComponent(url)}`,
-        `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-      ];
-
-      for (const proxy of proxies) {
-        try {
-          const ctrl = new AbortController();
-          const timer = setTimeout(() => ctrl.abort(), 7000);
-          const res = await fetch(proxy, { signal: ctrl.signal });
-          clearTimeout(timer);
-          if (!res.ok) continue;
-          // allorigins wraps in JSON, corsproxy returns raw
-          const text = await res.text();
-          try {
-            const json = JSON.parse(text);
-            html = json.contents || text;
-          } catch {
-            html = text;
-          }
-          if (html && html.length > 1000) break;
-        } catch { continue; }
-      }
-
+      // ── Step 2: Try jsonlink.io — free OG scraper API, no key needed ───────
       let name = slugName;
       let description = "";
       let image_url = "";
       let price = 0;
-      const images: string[] = [];
 
-      if (html && html.length > 1000) {
-        // Use a detached template element — never attached to document.body
-        // so React's reconciler never sees it
-        const template = document.createElement("template");
-        template.innerHTML = html;
-        const doc = template.content;
+      try {
+        const ogRes = await fetch(
+          `https://jsonlink.io/api/extract?url=${encodeURIComponent(url)}`,
+          { signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined }
+        );
+        if (ogRes.ok) {
+          const og = await ogRes.json();
+          name = og.title || slugName;
+          description = og.description || "";
+          image_url = og.images?.[0] || "";
+          if (image_url) setScrapedImages([image_url]);
+        }
+      } catch {}
 
-        const getMeta = (prop: string) => {
-          const el = doc.querySelector(`meta[property="${prop}"]`) ||
-            doc.querySelector(`meta[name="${prop}"]`);
-          return el?.getAttribute("content") || "";
-        };
-
-        // Generic OG tags
-        name = doc.querySelector("#productTitle")?.textContent?.trim()
-          || getMeta("og:title")
-          || doc.querySelector("title")?.textContent?.trim()
-          || slugName;
-
-        description =
-          doc.querySelector("#productDescription p")?.textContent?.trim() ||
-          doc.querySelector("#feature-bullets .a-list-item")?.textContent?.trim() ||
-          getMeta("og:description") ||
-          getMeta("description") || "";
-
-        image_url =
-          doc.querySelector("#landingImage")?.getAttribute("data-old-hires") ||
-          doc.querySelector("#landingImage")?.getAttribute("src") ||
-          doc.querySelector("#imgBlkFront")?.getAttribute("src") ||
-          getMeta("og:image") || "";
-
-        const rawPrice =
-          doc.querySelector(".a-price .a-offscreen")?.textContent ||
-          doc.querySelector("#priceblock_ourprice")?.textContent ||
-          getMeta("product:price:amount") ||
-          getMeta("og:price:amount") || "";
-        price = parseFloat(rawPrice.replace(/[^0-9.]/g, "")) || 0;
-
-        if (image_url) images.push(image_url);
+      // ── Step 3: Try opengraph.io as fallback ───────────────────────────────
+      if (!image_url) {
+        try {
+          const ogRes2 = await fetch(
+            `https://api.linkpreview.net/?key=free&q=${encodeURIComponent(url)}`,
+            { signal: AbortSignal.timeout ? AbortSignal.timeout(6000) : undefined }
+          );
+          if (ogRes2.ok) {
+            const og2 = await ogRes2.json();
+            name = name || og2.title || slugName;
+            description = description || og2.description || "";
+            image_url = image_url || og2.image || "";
+            if (image_url) setScrapedImages([image_url]);
+          }
+        } catch {}
       }
 
-      setScrapedImages(images);
       setFormData(prev => ({
         ...prev,
         affiliate_url: url,
@@ -292,20 +248,20 @@ export default function AdminAffiliateProducts() {
         affiliate_network,
       }));
 
-      const got = [name && "name", image_url && "image", price && "price", description && "description"].filter(Boolean);
+      const got = [name && name !== slugName && "name", image_url && "image", description && "description"].filter(Boolean);
       toast({
-        title: got.length > 1 ? "Details fetched!" : "URL & name saved",
-        description: got.length > 1
-          ? `Auto-filled: ${got.join(", ")}`
+        title: got.length > 0 ? "Details fetched!" : "URL saved",
+        description: got.length > 0
+          ? `Auto-filled: ${got.join(", ")}. Add price manually.`
           : isAmazon
-            ? "Amazon blocks automated fetching. Name extracted from URL — please add price and image manually."
-            : "URL saved — please fill in the remaining details manually.",
+            ? "Amazon blocks auto-fetch. Name extracted from URL — add price & image manually."
+            : "URL saved — please fill in the details manually.",
       });
 
     } catch {
       toast({
         title: "URL saved",
-        description: "Could not auto-fetch details. Please fill in the product details manually.",
+        description: "Could not auto-fetch details. Please fill in manually.",
       });
     } finally {
       setScraping(false);
