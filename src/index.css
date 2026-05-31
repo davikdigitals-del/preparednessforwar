@@ -6,7 +6,8 @@
 
 @layer base {
   :root {
-    color-scheme: light only;
+    color-scheme: light;
+    -webkit-color-scheme: light;
     /* British Blue & White Brand Colors */
     --background: 0 0% 100%;
     --foreground: 222 47% 11%;
