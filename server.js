@@ -28,6 +28,10 @@ app.use('/assets', (req, res, next) => {
       res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
     } else if (filePath.endsWith('.css')) {
       res.setHeader('Content-Type', 'text/css; charset=utf-8');
+    } else if (filePath.endsWith('.woff2')) {
+      res.setHeader('Content-Type', 'font/woff2');
+    } else if (filePath.endsWith('.woff')) {
+      res.setHeader('Content-Type', 'font/woff');
     }
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
   },
@@ -53,7 +57,7 @@ app.get('*', (req, res) => {
 
   // Hard 404 for any asset-like path that wasn't found above
   const assetExtensions = ['.js', '.css', '.map', '.woff', '.woff2', '.ttf',
-    '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.webmanifest', '.txt'];
+    '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.webmanifest', '.txt', '.json'];
   if (assetExtensions.some(ext => path.endsWith(ext))) {
     return res.status(404).send('Not found');
   }
