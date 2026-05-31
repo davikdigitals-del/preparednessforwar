@@ -241,12 +241,17 @@ export default function AdminAffiliateProducts() {
       const images: string[] = [];
 
       if (html && html.length > 1000) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, "text/html");
+        // Use a detached template element — never attached to document.body
+        // so React's reconciler never sees it
+        const template = document.createElement("template");
+        template.innerHTML = html;
+        const doc = template.content;
 
-        const getMeta = (prop: string) =>
-          doc.querySelector(`meta[property="${prop}"]`)?.getAttribute("content") ||
-          doc.querySelector(`meta[name="${prop}"]`)?.getAttribute("content") || "";
+        const getMeta = (prop: string) => {
+          const el = doc.querySelector(`meta[property="${prop}"]`) ||
+            doc.querySelector(`meta[name="${prop}"]`);
+          return el?.getAttribute("content") || "";
+        };
 
         // Generic OG tags
         name = doc.querySelector("#productTitle")?.textContent?.trim()

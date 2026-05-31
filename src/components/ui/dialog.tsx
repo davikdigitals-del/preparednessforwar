@@ -3,7 +3,30 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-const Dialog = DialogPrimitive.Root
+// Safe Dialog wrapper — defers onOpenChange(false) by one frame so Radix's
+// portal finishes unmounting before React processes the next state batch.
+// This prevents the "insertBefore/removeChild: node is not a child" crash.
+const Dialog = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>
+>(({ onOpenChange, ...props }, _ref) => {
+  const safeOnOpenChange = React.useCallback(
+    (open: boolean) => {
+      if (!open && onOpenChange) {
+        // Defer close to let Radix portal finish unmounting
+        requestAnimationFrame(() => {
+          onOpenChange(false);
+        });
+      } else if (onOpenChange) {
+        onOpenChange(open);
+      }
+    },
+    [onOpenChange]
+  );
+  return <DialogPrimitive.Root {...props} onOpenChange={safeOnOpenChange} />;
+});
+Dialog.displayName = "Dialog";
+
 const DialogTrigger = DialogPrimitive.Trigger
 const DialogPortal = DialogPrimitive.Portal
 const DialogClose = DialogPrimitive.Close
@@ -29,7 +52,10 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       aria-describedby={undefined}
-      className={cn("fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg sm:rounded-lg", className)}
+      className={cn(
+        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg sm:rounded-lg",
+        className
+      )}
       {...props}
     >
       {children}
@@ -39,14 +65,6 @@ const DialogContent = React.forwardRef<
     </DialogPrimitive.Content>
   </DialogPortal>
 ))
-
-const DialogDescription = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />
-))
-DialogDescription.displayName = DialogPrimitive.Description.displayName
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -62,4 +80,22 @@ const DialogTitle = React.forwardRef<
 ))
 DialogTitle.displayName = DialogPrimitive.Title.displayName
 
-export { Dialog, DialogPortal, DialogOverlay, DialogClose, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription }
+const DialogDescription = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Description>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Description ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />
+))
+DialogDescription.displayName = DialogPrimitive.Description.displayName
+
+export {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogClose,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+}

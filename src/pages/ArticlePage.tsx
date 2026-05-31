@@ -222,13 +222,21 @@ const ArticlePage = () => {
     try {
       await navigator.clipboard.writeText(pageUrl);
     } catch {
-      // fallback for older browsers
-      const el = document.createElement("textarea");
-      el.value = pageUrl;
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand("copy");
-      document.body.removeChild(el);
+      // Fallback: use a detached textarea (never appended to DOM)
+      try {
+        const el = document.createElement("textarea");
+        el.value = pageUrl;
+        el.style.position = "fixed";
+        el.style.opacity = "0";
+        el.style.pointerEvents = "none";
+        // Append to a safe container outside React's root
+        const container = document.getElementById("google_translate_element") || document.documentElement;
+        container.appendChild(el);
+        el.focus();
+        el.select();
+        document.execCommand("copy");
+        container.removeChild(el);
+      } catch {}
     }
     setShareCopied(true);
     setTimeout(() => setShareCopied(false), 2500);
