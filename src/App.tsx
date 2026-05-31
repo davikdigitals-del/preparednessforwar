@@ -3,77 +3,93 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Suspense, lazy } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DataProvider } from "@/contexts/DataContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+
+// Core public pages — loaded immediately
 import Index from "./pages/Index";
-import SectionPage from "./pages/SectionPage";
 import ArticlePage from "./pages/ArticlePage";
-import CountriesPage from "./pages/CountriesPage";
-import NotificationsPage from "./pages/NotificationsPage";
-import NotFound from "./pages/NotFound";
 import PublicLayout from "./pages/PublicLayout";
-import SignInPage from "./pages/SignInPage";
-import SignUpPage from "./pages/SignUpPage";
-import AdminLoginPage from "./pages/AdminLoginPage";
-import MemberDashboard from "./pages/MemberDashboard";
-import LibraryPage from "./pages/LibraryPage";
-import EncyclopaediaPage from "./pages/EncyclopaediaPage";
-import MediaHubPage from "./pages/MediaHubPage";
-import AboutPage from "./pages/AboutPage";
-import LegalPage from "./pages/LegalPage";
-import LatestPage from "./pages/LatestPage";
-import AdminLayout from "./pages/admin/AdminLayout";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminPosts from "./pages/admin/AdminPosts";
-import AdminCategories from "./pages/admin/AdminCategories";
-import AdminSections from "./pages/admin/AdminSections";
-import AdminPreparednessTemplates from "./pages/admin/AdminPreparednessTemplates";
-import AdminAlerts from "./pages/admin/AdminAlerts";
-import AdminMedia from "./pages/admin/AdminMedia";
-import AdminPodcastVideos from "./pages/admin/AdminPodcastVideos";
-import AdminPages from "./pages/admin/AdminPages";
-import AdminLibrary from "./pages/admin/AdminLibrary";
-import AdminEncyclopaedia from "./pages/admin/AdminEncyclopaedia";
-import AdminBanner from "./pages/admin/AdminBanner";
-import AdminSiteSettings from "./pages/admin/AdminSiteSettings";
-import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
-import AdminAnalytics from "./pages/admin/AdminAnalytics";
-import AdminMembers from "./pages/admin/AdminMembers";
-import AdminCountries from "./pages/admin/AdminCountries";
-import AdminReports from "./pages/admin/AdminReports";
-import AdminComments from "./pages/admin/AdminComments";
-import AdminMemberReports from "./pages/admin/AdminMemberReports";
-import AdminCourses from "./pages/admin/AdminCourses";
-import AdminCourseBuilder from "./pages/admin/AdminCourseBuilder";
-import AdminEnrollments from "./pages/admin/AdminEnrollments";
-import AdminAffiliateProducts from "./pages/admin/AdminAffiliateProducts";
-import AdminSponsors from "./pages/admin/AdminSponsors";
-import AdminAdvertisements from "./pages/admin/AdminAdvertisements";
-import AdminRevenue from "./pages/admin/AdminRevenue";
-import AdminAds from "./pages/admin/AdminAds";
-import AdminSponsorshipInquiries from "./pages/admin/AdminSponsorshipInquiries";
-import NewsletterPage from "./pages/NewsletterPage";
-import SubscribePage from "./pages/SubscribePage";
-import MemberSubscription from "./pages/MemberSubscription";
-import TagPage from "./pages/TagPage";
-import CoursesPage from "./pages/CoursesPage";
-import CourseDetailPage from "./pages/CourseDetailPage";
-import CoursePlayerPage from "./pages/CoursePlayerPage";
-import MyCoursesPage from "./pages/MyCoursesPage";
-import CheckoutPage from "./pages/CheckoutPage";
-import ShopPage from "./pages/ShopPage";
-import CommunityReports from "./pages/CommunityReports";
-import SubmitReport from "./pages/dashboard/SubmitReport";
-import MyReports from "./pages/dashboard/MyReports";
-import OfflineContentManager from "./pages/dashboard/OfflineContentManager";
-import MyBunker from "./pages/dashboard/MyBunker";
-import DashboardHome from "./pages/dashboard/DashboardHome";
-import TrainingAcademy from "./pages/dashboard/TrainingAcademy";
-import AdvertiseWithUs from "./pages/dashboard/AdvertiseWithUs";
-import SponsorshipInquiry from "./pages/dashboard/SponsorshipInquiry";
+import NotFound from "./pages/NotFound";
+
+// Lazy-loaded pages — only loaded when visited
+const SectionPage = lazy(() => import("./pages/SectionPage"));
+const CountriesPage = lazy(() => import("./pages/CountriesPage"));
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
+const SignInPage = lazy(() => import("./pages/SignInPage"));
+const SignUpPage = lazy(() => import("./pages/SignUpPage"));
+const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
+const MemberDashboard = lazy(() => import("./pages/MemberDashboard"));
+const LibraryPage = lazy(() => import("./pages/LibraryPage"));
+const EncyclopaediaPage = lazy(() => import("./pages/EncyclopaediaPage"));
+const MediaHubPage = lazy(() => import("./pages/MediaHubPage"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const LegalPage = lazy(() => import("./pages/LegalPage"));
+const LatestPage = lazy(() => import("./pages/LatestPage"));
+const NewsletterPage = lazy(() => import("./pages/NewsletterPage"));
+const SubscribePage = lazy(() => import("./pages/SubscribePage"));
+const MemberSubscription = lazy(() => import("./pages/MemberSubscription"));
+const TagPage = lazy(() => import("./pages/TagPage"));
+const CoursesPage = lazy(() => import("./pages/CoursesPage"));
+const CourseDetailPage = lazy(() => import("./pages/CourseDetailPage"));
+const CoursePlayerPage = lazy(() => import("./pages/CoursePlayerPage"));
+const MyCoursesPage = lazy(() => import("./pages/MyCoursesPage"));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
+const ShopPage = lazy(() => import("./pages/ShopPage"));
+const CommunityReports = lazy(() => import("./pages/CommunityReports"));
+
+// Dashboard pages
+const SubmitReport = lazy(() => import("./pages/dashboard/SubmitReport"));
+const MyReports = lazy(() => import("./pages/dashboard/MyReports"));
+const OfflineContentManager = lazy(() => import("./pages/dashboard/OfflineContentManager"));
+const MyBunker = lazy(() => import("./pages/dashboard/MyBunker"));
+const DashboardHome = lazy(() => import("./pages/dashboard/DashboardHome"));
+const TrainingAcademy = lazy(() => import("./pages/dashboard/TrainingAcademy"));
+const AdvertiseWithUs = lazy(() => import("./pages/dashboard/AdvertiseWithUs"));
+const SponsorshipInquiry = lazy(() => import("./pages/dashboard/SponsorshipInquiry"));
+
+// Admin pages — all lazy loaded (never needed by public users)
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminPosts = lazy(() => import("./pages/admin/AdminPosts"));
+const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
+const AdminSections = lazy(() => import("./pages/admin/AdminSections"));
+const AdminPreparednessTemplates = lazy(() => import("./pages/admin/AdminPreparednessTemplates"));
+const AdminAlerts = lazy(() => import("./pages/admin/AdminAlerts"));
+const AdminMedia = lazy(() => import("./pages/admin/AdminMedia"));
+const AdminPodcastVideos = lazy(() => import("./pages/admin/AdminPodcastVideos"));
+const AdminPages = lazy(() => import("./pages/admin/AdminPages"));
+const AdminLibrary = lazy(() => import("./pages/admin/AdminLibrary"));
+const AdminEncyclopaedia = lazy(() => import("./pages/admin/AdminEncyclopaedia"));
+const AdminBanner = lazy(() => import("./pages/admin/AdminBanner"));
+const AdminSiteSettings = lazy(() => import("./pages/admin/AdminSiteSettings"));
+const AdminSubscriptions = lazy(() => import("./pages/admin/AdminSubscriptions"));
+const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
+const AdminMembers = lazy(() => import("./pages/admin/AdminMembers"));
+const AdminCountries = lazy(() => import("./pages/admin/AdminCountries"));
+const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
+const AdminComments = lazy(() => import("./pages/admin/AdminComments"));
+const AdminMemberReports = lazy(() => import("./pages/admin/AdminMemberReports"));
+const AdminCourses = lazy(() => import("./pages/admin/AdminCourses"));
+const AdminCourseBuilder = lazy(() => import("./pages/admin/AdminCourseBuilder"));
+const AdminEnrollments = lazy(() => import("./pages/admin/AdminEnrollments"));
+const AdminAffiliateProducts = lazy(() => import("./pages/admin/AdminAffiliateProducts"));
+const AdminSponsors = lazy(() => import("./pages/admin/AdminSponsors"));
+const AdminAdvertisements = lazy(() => import("./pages/admin/AdminAdvertisements"));
+const AdminRevenue = lazy(() => import("./pages/admin/AdminRevenue"));
+const AdminAds = lazy(() => import("./pages/admin/AdminAds"));
+const AdminSponsorshipInquiries = lazy(() => import("./pages/admin/AdminSponsorshipInquiries"));
 
 const queryClient = new QueryClient();
+
+// Loading fallback for lazy routes
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -84,6 +100,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/admin-login" element={<AdminLoginPage />} />
               <Route path="/admin" element={<AdminLayout />}>
@@ -159,6 +176,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
+            </Suspense>
           </BrowserRouter>
         </TooltipProvider>
         </LanguageProvider>
