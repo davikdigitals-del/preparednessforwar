@@ -32,7 +32,7 @@ export default function AdminDashboard() {
       setLoading(true);
 
       const dataPromise = Promise.all([
-        supabase.from("posts").select("status, is_premium", { count: "exact" }),
+        supabase.from("posts").select("is_published, is_premium", { count: "exact" }),
         supabase.from("media_items").select("id", { count: "exact" }),
         supabase.from("library_items").select("id", { count: "exact" }),
       ]);
@@ -50,8 +50,8 @@ export default function AdminDashboard() {
 
       setStats({
         totalPosts: posts.length,
-        publishedPosts: posts.filter((p: any) => p.status === "published").length,
-        draftPosts: posts.filter((p: any) => p.status === "draft").length,
+        publishedPosts: posts.filter((p: any) => p.is_published === true).length,
+        draftPosts: posts.filter((p: any) => !p.is_published).length,
         premiumPosts: posts.filter((p: any) => p.is_premium).length,
         totalMedia: mediaRes.count || 0,
         totalLibrary: libraryRes.count || 0,

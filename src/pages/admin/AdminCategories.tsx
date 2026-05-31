@@ -48,7 +48,7 @@ export default function AdminCategories() {
   const fetchSections = async () => {
     try {
       const { data, error } = await supabase
-        .from("sections")
+        .from("nav_sections")
         .select("id, title, slug")
         .eq("is_active", true)
         .order("display_order");

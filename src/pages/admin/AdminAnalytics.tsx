@@ -64,7 +64,7 @@ export default function AdminAnalytics() {
 
         // Get premium members
         const { count: premiumMembers } = await supabase
-          .from('subscriptions')
+          .from('user_subscriptions')
           .select('*', { count: 'exact', head: true })
           .eq('status', 'active');
 

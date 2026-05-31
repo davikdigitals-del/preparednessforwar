@@ -326,7 +326,7 @@ export default function AdminSubscriptions() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="GBP">GBP (£)</SelectItem>
-                      <SelectItem value="GBP">USD ($)</SelectItem>
+                      <SelectItem value="USD">USD ($)</SelectItem>
                       <SelectItem value="EUR">EUR (€)</SelectItem>
                     </SelectContent>
                   </Select>

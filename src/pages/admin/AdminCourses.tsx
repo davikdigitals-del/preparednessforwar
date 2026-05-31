@@ -546,7 +546,7 @@ export default function AdminCourses() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="GBP">USD ($)</SelectItem>
+                        <SelectItem value="USD">USD ($)</SelectItem>
                         <SelectItem value="GBP">GBP (£)</SelectItem>
                         <SelectItem value="EUR">EUR (€)</SelectItem>
                       </SelectContent>
