@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { OfflineService } from "./services/OfflineService";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 // Register service worker for offline capability
 if ('serviceWorker' in navigator) {
@@ -9,11 +10,21 @@ if ('serviceWorker' in navigator) {
     OfflineService.registerServiceWorker().then((registered) => {
       if (registered) {
         console.log('✅ PWA: Service Worker registered - Offline mode enabled');
-      } else {
-        console.warn('⚠️ PWA: Service Worker not supported');
       }
     });
   });
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Remove the initial loader once React mounts
+const removeLoader = () => {
+  const loader = document.getElementById("initial-loader");
+  if (loader) loader.remove();
+};
+
+const root = createRoot(document.getElementById("root")!);
+root.render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+);
+removeLoader();
