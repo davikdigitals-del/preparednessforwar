@@ -1,16 +1,25 @@
-// This service worker unregisters itself and clears all caches.
-// It exists only to clean up old cached assets that caused MIME type errors.
+// v2 — force clears all caches and unregisters itself
+// This fixes black screen on mobile caused by stale cached assets
 
-self.addEventListener('install', () => {
+const CACHE_VERSION = 'v2-' + Date.now();
+
+self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys()
-      .then((cacheNames) => Promise.all(cacheNames.map((name) => caches.delete(name))))
-      .then(() => self.registration.unregister())
-      .then(() => self.clients.matchAll())
-      .then((clients) => clients.forEach((client) => client.navigate(client.url)))
+    (async () => {
+      // Delete ALL caches
+      const keys = await caches.keys();
+      await Promise.all(keys.map(key => caches.delete(key)));
+      // Unregister this service worker
+      await self.registration.unregister();
+      // Force reload all open tabs
+      const clients = await self.clients.matchAll({ type: 'window' });
+      for (const client of clients) {
+        client.navigate(client.url);
+      }
+    })()
   );
 });
