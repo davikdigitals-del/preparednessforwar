@@ -176,145 +176,107 @@ export default function AdminAffiliateProducts() {
     if (!scrapeUrl.trim()) return;
     setScraping(true);
 
-    // Always save the URL first
-    setFormData(prev => ({ ...prev, affiliate_url: scrapeUrl }));
+    const url = scrapeUrl.trim();
+    // Always save the URL immediately
+    setFormData(prev => ({ ...prev, affiliate_url: url }));
 
     try {
-      const url = scrapeUrl.trim();
+      // ── Extract product name from URL slug (works for Amazon + most sites) ──
+      // Matches: /Product-Name-Here/dp/ or /product-name-here/
+      const slugMatch =
+        url.match(/\/([A-Za-z0-9][A-Za-z0-9-]{5,}(?:\s|[A-Za-z0-9-])*?)\/dp\//i) ||
+        url.match(/\/([A-Za-z0-9][A-Za-z0-9-]{5,})(?:\?|$)/i);
 
-      // ── Amazon: extract from URL structure + Open Library API ──────────────
-      if (url.includes("amazon")) {
-        // Extract ASIN from URL
-        const asinMatch = url.match(/\/([A-Z0-9]{10})(?:[/?]|$)/);
-        const asin = asinMatch?.[1];
+      const slugName = slugMatch?.[1]
+        ?.replace(/-/g, " ")
+        ?.replace(/\b\w/g, c => c.toUpperCase())
+        ?.trim() || "";
 
-        // Extract product name from URL slug
-        const slugMatch = url.match(/amazon\.[a-z.]+\/([^/]+)\/dp\//);
-        const slugName = slugMatch?.[1]
-          ?.replace(/-/g, " ")
-          ?.replace(/\b\w/g, c => c.toUpperCase()) || "";
+      // Detect network
+      const isAmazon = url.includes("amazon.");
+      const affiliate_network = isAmazon ? "amazon"
+        : url.includes("shareasale") ? "shareasale"
+        : url.includes("cj.com") ? "cj" : "custom";
 
-        // Try Amazon Product Advertising API via public endpoint
-        // Use Open Graph via a reliable proxy
-        let name = slugName;
-        let image_url = "";
-        let description = "";
-        let price = 0;
-
-        // Try fetching via corsproxy.io
-        try {
-          const proxyRes = await fetch(
-            `https://corsproxy.io/?${encodeURIComponent(url)}`,
-            { signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined }
-          );
-          if (proxyRes.ok) {
-            const html = await proxyRes.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, "text/html");
-
-            const titleEl = doc.querySelector("#productTitle");
-            if (titleEl) name = titleEl.textContent?.trim() || name;
-
-            const priceEl =
-              doc.querySelector(".a-price .a-offscreen") ||
-              doc.querySelector("#priceblock_ourprice") ||
-              doc.querySelector("#priceblock_dealprice") ||
-              doc.querySelector(".a-price-whole");
-            if (priceEl) {
-              price = parseFloat(priceEl.textContent?.replace(/[^0-9.]/g, "") || "0") || 0;
-            }
-
-            const imgEl =
-              doc.querySelector("#landingImage") ||
-              doc.querySelector("#imgBlkFront") ||
-              doc.querySelector(".a-dynamic-image");
-            if (imgEl) {
-              image_url =
-                imgEl.getAttribute("data-old-hires") ||
-                imgEl.getAttribute("src") || "";
-            }
-
-            const descEl =
-              doc.querySelector("#productDescription p") ||
-              doc.querySelector("#feature-bullets .a-list-item");
-            if (descEl) description = descEl.textContent?.trim() || "";
-          }
-        } catch {}
-
-        // If we got at least a name from the URL slug, that's enough
+      // Set name from slug immediately so user sees something right away
+      if (slugName) {
         setFormData(prev => ({
           ...prev,
           affiliate_url: url,
-          name: name || prev.name,
-          description: description || prev.description,
-          image_url: image_url || prev.image_url,
-          price: price || prev.price,
-          affiliate_network: "amazon",
+          name: prev.name || slugName,
+          affiliate_network,
         }));
-
-        if (image_url) setScrapedImages([image_url]);
-
-        const got = [name && "name", image_url && "image", price && "price"].filter(Boolean);
-        toast({
-          title: got.length > 1 ? "Details fetched!" : "URL saved — some details auto-filled",
-          description: got.length > 0
-            ? `Auto-filled: ${got.join(", ")}. Check and complete any missing fields.`
-            : "Amazon blocks automated fetching. URL saved — please fill in the details manually.",
-        });
-        return;
       }
 
-      // ── Non-Amazon: try multiple CORS proxies ───────────────────────────────
+      // ── Try to fetch full page via CORS proxy ─────────────────────────────
+      let html = "";
       const proxies = [
         `https://corsproxy.io/?${encodeURIComponent(url)}`,
         `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
       ];
 
-      let html = "";
       for (const proxy of proxies) {
         try {
-          const res = await fetch(proxy, {
-            signal: AbortSignal.timeout ? AbortSignal.timeout(6000) : undefined,
-          });
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 7000);
+          const res = await fetch(proxy, { signal: ctrl.signal });
+          clearTimeout(timer);
           if (!res.ok) continue;
-          const data = await res.json().catch(() => null);
-          html = data?.contents || await res.text();
-          if (html && html.length > 500) break;
-        } catch {}
+          // allorigins wraps in JSON, corsproxy returns raw
+          const text = await res.text();
+          try {
+            const json = JSON.parse(text);
+            html = json.contents || text;
+          } catch {
+            html = text;
+          }
+          if (html && html.length > 1000) break;
+        } catch { continue; }
       }
 
-      if (!html || html.length < 500) {
-        toast({
-          title: "URL saved",
-          description: "Could not auto-fetch details — this site may block scrapers. Please fill in the details manually.",
-        });
-        return;
-      }
-
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, "text/html");
-
-      const getMeta = (prop: string) =>
-        doc.querySelector(`meta[property="${prop}"]`)?.getAttribute("content") ||
-        doc.querySelector(`meta[name="${prop}"]`)?.getAttribute("content") || "";
-
-      const name = getMeta("og:title") || doc.querySelector("title")?.textContent?.trim() || "";
-      const description = getMeta("og:description") || getMeta("description") || "";
-      const image_url = getMeta("og:image") || "";
-      const rawPrice =
-        getMeta("product:price:amount") ||
-        getMeta("og:price:amount") || "";
-      const price = parseFloat(rawPrice.replace(/[^0-9.]/g, "")) || 0;
-
-      const affiliate_network =
-        url.includes("shareasale") ? "shareasale" :
-        url.includes("cj.com") ? "cj" : "custom";
-
+      let name = slugName;
+      let description = "";
+      let image_url = "";
+      let price = 0;
       const images: string[] = [];
-      if (image_url) images.push(image_url);
-      setScrapedImages(images);
 
+      if (html && html.length > 1000) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+
+        const getMeta = (prop: string) =>
+          doc.querySelector(`meta[property="${prop}"]`)?.getAttribute("content") ||
+          doc.querySelector(`meta[name="${prop}"]`)?.getAttribute("content") || "";
+
+        // Generic OG tags
+        name = doc.querySelector("#productTitle")?.textContent?.trim()
+          || getMeta("og:title")
+          || doc.querySelector("title")?.textContent?.trim()
+          || slugName;
+
+        description =
+          doc.querySelector("#productDescription p")?.textContent?.trim() ||
+          doc.querySelector("#feature-bullets .a-list-item")?.textContent?.trim() ||
+          getMeta("og:description") ||
+          getMeta("description") || "";
+
+        image_url =
+          doc.querySelector("#landingImage")?.getAttribute("data-old-hires") ||
+          doc.querySelector("#landingImage")?.getAttribute("src") ||
+          doc.querySelector("#imgBlkFront")?.getAttribute("src") ||
+          getMeta("og:image") || "";
+
+        const rawPrice =
+          doc.querySelector(".a-price .a-offscreen")?.textContent ||
+          doc.querySelector("#priceblock_ourprice")?.textContent ||
+          getMeta("product:price:amount") ||
+          getMeta("og:price:amount") || "";
+        price = parseFloat(rawPrice.replace(/[^0-9.]/g, "")) || 0;
+
+        if (image_url) images.push(image_url);
+      }
+
+      setScrapedImages(images);
       setFormData(prev => ({
         ...prev,
         affiliate_url: url,
@@ -327,16 +289,18 @@ export default function AdminAffiliateProducts() {
 
       const got = [name && "name", image_url && "image", price && "price", description && "description"].filter(Boolean);
       toast({
-        title: got.length > 0 ? "Details fetched!" : "URL saved",
-        description: got.length > 0
+        title: got.length > 1 ? "Details fetched!" : "URL & name saved",
+        description: got.length > 1
           ? `Auto-filled: ${got.join(", ")}`
-          : "Could not extract details. Please fill in manually.",
+          : isAmazon
+            ? "Amazon blocks automated fetching. Name extracted from URL — please add price and image manually."
+            : "URL saved — please fill in the remaining details manually.",
       });
 
     } catch {
       toast({
         title: "URL saved",
-        description: "Could not auto-fetch details. Please fill in the product name, price and image manually.",
+        description: "Could not auto-fetch details. Please fill in the product details manually.",
       });
     } finally {
       setScraping(false);
