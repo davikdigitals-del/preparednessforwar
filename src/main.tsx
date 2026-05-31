@@ -15,11 +15,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Remove the initial loader once React mounts
-const removeLoader = () => {
-  const loader = document.getElementById("initial-loader");
-  if (loader) loader.remove();
-};
 
 const root = createRoot(document.getElementById("root")!);
 root.render(
@@ -27,4 +22,9 @@ root.render(
     <App />
   </ErrorBoundary>
 );
-removeLoader();
+
+// Remove loading screen after React mounts
+requestAnimationFrame(() => {
+  const loader = document.getElementById("loader");
+  if (loader) loader.style.display = "none";
+});

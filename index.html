@@ -3,80 +3,62 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Prevent mobile browsers from serving stale cached version -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
     <title>Preparedness for War</title>
     <meta name="description" content="Preparedness for War - Comprehensive preparedness intelligence platform">
-    <meta name="author" content="Preparedness for War" />
-
-    <!-- Allow browser built-in translation (Chrome, Safari, Edge) -->
-    <!-- Do NOT add <meta name="google" content="notranslate"> -->
-
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1e40af">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PrepForWar">
+    <link rel="manifest" href="/manifest.json">
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Preparedness for War">
     <meta property="og:description" content="Preparedness for War - Comprehensive preparedness intelligence platform">
     <meta property="og:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ba9ebb98-ba96-46d5-b656-5b56fdd724c5/id-preview-94056b60--c53a0ef3-c395-4e6b-a0ec-e90ca64062a3.lovable.app-1772414540507.png">
-
-    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Preparedness for War">
     <meta name="twitter:description" content="Preparedness for War - Comprehensive preparedness intelligence platform">
     <meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ba9ebb98-ba96-46d5-b656-5b56fdd724c5/id-preview-94056b60--c53a0ef3-c395-4e6b-a0ec-e90ca64062a3.lovable.app-1772414540507.png">
 
-    <!--
-      Set lang attribute from saved preference before React loads.
-      This ensures browser translation triggers correctly on first paint.
-    -->
     <script>
-      (function() {
-        try {
-          var saved = localStorage.getItem('prw-lang');
-          if (saved) {
-            document.documentElement.lang = saved;
-            document.documentElement.dir = saved === 'ar' ? 'rtl' : 'ltr';
-          }
-        } catch(e) {}
-      })();
+      try {
+        var s = localStorage.getItem('prw-lang');
+        if (s) { document.documentElement.lang = s; document.documentElement.dir = s === 'ar' ? 'rtl' : 'ltr'; }
+      } catch(e) {}
     </script>
+
+    <style>
+      body { margin: 0; background: #ffffff; }
+      #root { min-height: 100vh; background: #ffffff; }
+      #loader { position: fixed; inset: 0; background: #fff; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+      #loader-spin { width: 36px; height: 36px; border: 4px solid #e5e7eb; border-top-color: #1d4ed8; border-radius: 50%; animation: spin 0.8s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
   </head>
 
-  <body style="background:#ffffff;margin:0">
-    <!-- Google Translate element — OUTSIDE #root so GT never touches React's DOM -->
-    <div id="google_translate_element" style="display:none"></div>
+  <body>
+    <!-- Loading screen — removed by React after mount -->
+    <div id="loader"><div id="loader-spin"></div></div>
 
-    <div id="root" style="background:#ffffff;min-height:100vh">
-      <!-- Shows while JS loads on slow mobile connections -->
-      <div id="initial-loader" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#ffffff">
-        <div style="text-align:center">
-          <div style="width:40px;height:40px;border:4px solid #e5e7eb;border-top-color:#1d4ed8;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px"></div>
-          <p style="color:#6b7280;font-size:14px;font-family:sans-serif">Loading...</p>
-        </div>
-      </div>
-    </div>
-    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+    <!-- Google Translate container — outside React root -->
+    <div id="google_translate_element" style="display:none;position:absolute"></div>
+
+    <div id="root"></div>
+
     <script type="module" src="/src/main.tsx"></script>
 
-    <!-- Google Translate Widget — loads after React -->
+    <!-- Google Translate — loaded last, async, won't block page -->
     <script>
-      function googleTranslateElementInit() {
-        new google.translate.TranslateElement({
-          pageLanguage: 'en',
-          autoDisplay: false,
-          layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-        }, 'google_translate_element');
-      }
+      window.googleTranslateElementInit = function() {
+        try {
+          new window.google.translate.TranslateElement({
+            pageLanguage: 'en', autoDisplay: false
+          }, 'google_translate_element');
+        } catch(e) {}
+      };
     </script>
-    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
+    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
   </body>
 </html>
