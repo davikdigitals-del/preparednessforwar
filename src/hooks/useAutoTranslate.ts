@@ -6,6 +6,10 @@
  * When a language is selected, we set the googtrans cookie and
  * trigger the GT select element. GT handles all DOM translation
  * via its own iframe overlay.
+ *
+ * Switching back to English: GT has no reliable JS API to restore
+ * the original text without a reload. We clear the cookie and reload —
+ * the page comes back in English with no translation active.
  */
 
 // Map our lang codes to Google Translate codes
@@ -21,36 +25,19 @@ const GT_CODES: Record<string, string> = {
 function setGTCookie(lang: string) {
   const gtLang = GT_CODES[lang] || lang;
   const val = lang === "en" ? "" : `/en/${gtLang}`;
-  // Set on both root path and current domain
   document.cookie = `googtrans=${val}; path=/`;
   document.cookie = `googtrans=${val}; path=/; domain=${location.hostname}`;
 }
 
 function triggerGTSelect(lang: string) {
   const gtLang = GT_CODES[lang] || lang;
-  // Find the Google Translate combo box
   const select = document.querySelector(".goog-te-combo") as HTMLSelectElement | null;
   if (select) {
-    select.value = lang === "en" ? "" : gtLang;
+    select.value = gtLang;
     select.dispatchEvent(new Event("change", { bubbles: true }));
     return true;
   }
   return false;
-}
-
-function restoreOriginal() {
-  // Click the "Show original" button if GT bar is visible
-  const iframe = document.querySelector(".goog-te-banner-frame") as HTMLIFrameElement | null;
-  if (iframe) {
-    try {
-      const doc = iframe.contentDocument || iframe.contentWindow?.document;
-      const btn = doc?.querySelector("a.goog-te-banner-frame") as HTMLElement | null;
-      btn?.click();
-    } catch {}
-  }
-  // Also try the restore button in the GT bar
-  const restoreBtn = document.querySelector(".goog-te-gadget a") as HTMLElement | null;
-  restoreBtn?.click();
 }
 
 let currentLang = "en";
@@ -65,14 +52,11 @@ export async function translatePage(targetLang: string): Promise<void> {
   retryCount = 0;
 
   if (targetLang === "en") {
-    setGTCookie("en");
-    restoreOriginal();
-    // If restore didn't work, reload without cookie
-    setTimeout(() => {
-      if (document.documentElement.lang !== "en") {
-        window.location.reload();
-      }
-    }, 500);
+    // Clear the googtrans cookie on both path variants, then reload.
+    // This is the only reliable way to restore original text with GT.
+    document.cookie = "googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = `googtrans=; path=/; domain=${location.hostname}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+    window.location.reload();
     return;
   }
 
