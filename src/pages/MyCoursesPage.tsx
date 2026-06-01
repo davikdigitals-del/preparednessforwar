@@ -14,19 +14,20 @@ interface EnrollmentWithCourse extends CourseEnrollment {
 }
 
 export default function MyCoursesPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [enrollments, setEnrollments] = useState<EnrollmentWithCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
+    if (authLoading) return; // wait for auth to finish loading
     if (user) {
       fetchEnrollments();
     } else {
       navigate("/login");
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   const fetchEnrollments = async () => {
     try {
