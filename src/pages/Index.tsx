@@ -124,7 +124,11 @@ const Index = () => {
                 <h1 className="text-xl font-bold leading-tight mb-2 text-gray-900 group-hover:text-primary transition-colors">
                   {heroPost.title}
                 </h1>
-                <p className="text-gray-600 text-sm leading-relaxed">{heroPost.standfirst}</p>
+                {heroPost.standfirst && (
+                  <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
+                    {String(heroPost.standfirst).replace(/<[^>]*>/g, "")}
+                  </p>
+                )}
               </Link>
             </div>
           )}
