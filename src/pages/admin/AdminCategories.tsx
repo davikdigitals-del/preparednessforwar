@@ -241,7 +241,8 @@ export default function AdminCategories() {
                 value={formData.section_id}
                 onChange={(e) => setFormData({ ...formData, section_id: e.target.value })}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-48 overflow-y-auto"
+                size={Math.min(sections.length + 1, 6)}
+                className="w-full px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-y-auto"
               >
                 <option value="">Select a section...</option>
                 {sections.map((section) => (
