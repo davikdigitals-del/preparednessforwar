@@ -18,70 +18,60 @@ export default function ResetPasswordPage() {
   const [done, setDone] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
   const [linkError, setLinkError] = useState("");
+  // Store tokens privately — never call setSession so the header stays logged out
+  const [accessToken, setAccessToken] = useState("");
+  const [refreshToken, setRefreshToken] = useState("");
 
   useEffect(() => {
-    // Supabase can send tokens two ways:
-    // 1. PKCE flow: ?code=xxx (newer default)
-    // 2. Implicit flow: #access_token=xxx&type=recovery (older)
-
     const searchParams = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
 
-    // Check for errors first
+    // Check for errors
     const errorCode = searchParams.get("error_code") || hashParams.get("error_code");
     if (errorCode) {
       setLinkError("This reset link has expired or already been used. Please request a new one.");
       return;
     }
 
-    // PKCE flow — ?code=xxx
+    // Implicit flow — #access_token=xxx&type=recovery
+    const at = hashParams.get("access_token");
+    const rt = hashParams.get("refresh_token") || "";
+    const type = hashParams.get("type");
+
+    if (at && type === "recovery") {
+      // Store tokens in state only — do NOT call setSession (would log user in visibly)
+      setAccessToken(at);
+      setRefreshToken(rt);
+      setSessionReady(true);
+      // Clean the URL so token isn't visible
+      window.history.replaceState(null, "", window.location.pathname);
+      return;
+    }
+
+    // PKCE flow — ?code=xxx (fallback, less common with implicit flowType)
     const code = searchParams.get("code");
     if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-        if (error) {
+      supabase.auth.exchangeCodeForSession(code).then(({ data, error }) => {
+        if (error || !data.session) {
           setLinkError("This reset link has expired or already been used. Please request a new one.");
         } else {
+          // Sign out immediately to keep header in logged-out state
+          // but store tokens for the password update call
+          setAccessToken(data.session.access_token);
+          setRefreshToken(data.session.refresh_token);
+          supabase.auth.signOut();
           setSessionReady(true);
-          // Clean the URL
           window.history.replaceState(null, "", window.location.pathname);
         }
       });
       return;
     }
 
-    // Implicit flow — #access_token=xxx&type=recovery
-    const accessToken = hashParams.get("access_token");
-    const refreshToken = hashParams.get("refresh_token");
-    const type = hashParams.get("type");
-
-    if (accessToken && type === "recovery") {
-      supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken || "" })
-        .then(({ error }) => {
-          if (error) {
-            setLinkError("This reset link has expired or already been used. Please request a new one.");
-          } else {
-            setSessionReady(true);
-            window.history.replaceState(null, "", window.location.pathname);
-          }
-        });
-      return;
-    }
-
-    // Nothing in URL — wait briefly for PASSWORD_RECOVERY event
-    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setSessionReady(true);
-      }
-    });
-
+    // No token found — show expired after short wait
     const timer = setTimeout(() => {
       setLinkError("This reset link has expired or already been used. Please request a new one.");
-    }, 4000);
-
-    return () => {
-      listener.subscription.unsubscribe();
-      clearTimeout(timer);
-    };
+    }, 3000);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,14 +88,28 @@ export default function ResetPasswordPage() {
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password });
+
+    // Set session temporarily just to update the password, then sign out
+    const { error: sessionError } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (sessionError) {
+      setError("Session expired. Please request a new reset link.");
+      setLoading(false);
+      return;
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({ password });
+    // Always sign out after — user must log in manually with new password
+    await supabase.auth.signOut();
     setLoading(false);
 
-    if (error) {
-      setError(error.message || "Failed to update password. Please request a new reset link.");
+    if (updateError) {
+      setError(updateError.message || "Failed to update password. Please request a new reset link.");
     } else {
       setDone(true);
-      await supabase.auth.signOut();
       setTimeout(() => navigate("/login"), 3000);
     }
   };
