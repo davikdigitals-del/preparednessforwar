@@ -216,7 +216,8 @@ export default function AdminAffiliateProducts() {
           name = og.title || slugName;
           description = og.description || "";
           image_url = og.images?.[0] || "";
-          if (image_url) setScrapedImages([image_url]);
+          price = og.price || 0;
+          if (og.images?.length > 0) setScrapedImages(og.images.slice(0, 6));
         }
       } catch {}
 
@@ -230,7 +231,7 @@ export default function AdminAffiliateProducts() {
         affiliate_network,
       }));
 
-      const got = [name && name !== slugName && "name", image_url && "image", description && "description"].filter(Boolean);
+      const got = [name && name !== slugName && "name", image_url && "image", description && "description", price && "price"].filter(Boolean);
       toast({
         title: got.length > 0 ? "Details fetched!" : "URL saved",
         description: got.length > 0

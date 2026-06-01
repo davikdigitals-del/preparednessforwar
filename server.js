@@ -48,28 +48,81 @@ app.get('/api/og-meta', async (req, res) => {
     });
 
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
     const html = await response.text();
 
-    // Parse meta tags with regex — no external parser needed
-    const getMeta = (property) => {
-      const match =
-        html.match(new RegExp(`<meta[^>]+property=["']${property}["'][^>]+content=["']([^"']+)["']`, 'i')) ||
-        html.match(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+property=["']${property}["']`, 'i')) ||
-        html.match(new RegExp(`<meta[^>]+name=["']${property}["'][^>]+content=["']([^"']+)["']`, 'i')) ||
-        html.match(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+name=["']${property}["']`, 'i'));
-      return match ? match[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim() : '';
+    // Parse a meta tag by property or name
+    const getMeta = (prop) => {
+      const patterns = [
+        new RegExp(`<meta[^>]+property=["']${prop}["'][^>]+content=["']([^"']+)["']`, 'i'),
+        new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+property=["']${prop}["']`, 'i'),
+        new RegExp(`<meta[^>]+name=["']${prop}["'][^>]+content=["']([^"']+)["']`, 'i'),
+        new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+name=["']${prop}["']`, 'i'),
+      ];
+      for (const re of patterns) {
+        const m = html.match(re);
+        if (m) return m[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
+      }
+      return '';
     };
 
+    // Title
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
     const pageTitle = titleMatch ? titleMatch[1].trim() : '';
-
     const title = getMeta('og:title') || getMeta('twitter:title') || pageTitle;
+
+    // Description
     const description = getMeta('og:description') || getMeta('twitter:description') || getMeta('description');
-    const image = getMeta('og:image') || getMeta('twitter:image');
+
+    // Images — collect all og:image and twitter:image occurrences
+    const images = [];
+    const ogImageRe = /<meta[^>]+(?:property=["']og:image["']|name=["']twitter:image["'])[^>]+content=["']([^"']+)["']/gi;
+    const ogImageRe2 = /<meta[^>]+content=["']([^"']+)["'][^>]+(?:property=["']og:image["']|name=["']twitter:image["'])/gi;
+    let m;
+    while ((m = ogImageRe.exec(html)) !== null) images.push(m[1]);
+    while ((m = ogImageRe2.exec(html)) !== null) images.push(m[1]);
+    // Also grab first <img> with a large src as fallback
+    if (images.length === 0) {
+      const imgMatch = html.match(/<img[^>]+src=["'](https?:\/\/[^"']+\.(jpg|jpeg|png|webp)[^"']*)["']/i);
+      if (imgMatch) images.push(imgMatch[1]);
+    }
+
+    // Price — try JSON-LD first, then common patterns
+    let price = '';
+    const jsonLdMatch = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+    if (jsonLdMatch) {
+      for (const block of jsonLdMatch) {
+        try {
+          const json = JSON.parse(block.replace(/<script[^>]*>|<\/script>/gi, ''));
+          const offers = json.offers || (Array.isArray(json) && json[0]?.offers);
+          if (offers) {
+            const p = offers.price || offers.lowPrice || (Array.isArray(offers) && offers[0]?.price);
+            if (p) { price = String(p); break; }
+          }
+        } catch {}
+      }
+    }
+    // Fallback: look for price patterns in HTML
+    if (!price) {
+      const pricePatterns = [
+        /["']price["']\s*:\s*["']?([\d.]+)["']?/i,
+        /itemprop=["']price["'][^>]+content=["']([\d.]+)["']/i,
+        /class=["'][^"']*price[^"']*["'][^>]*>\s*[£$€]?\s*([\d,]+\.?\d*)/i,
+      ];
+      for (const re of pricePatterns) {
+        const pm = html.match(re);
+        if (pm) { price = pm[1].replace(/,/g, ''); break; }
+      }
+    }
+
     const siteName = getMeta('og:site_name');
 
-    return res.json({ title, description, images: image ? [image] : [], site_name: siteName });
+    return res.json({
+      title,
+      description,
+      images: [...new Set(images)], // deduplicate
+      price: price ? parseFloat(price) : null,
+      site_name: siteName,
+    });
   } catch (err) {
     return res.status(502).json({ error: 'Could not fetch metadata', detail: err.message });
   }
