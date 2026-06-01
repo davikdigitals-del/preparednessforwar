@@ -107,9 +107,10 @@ const Index = () => {
         <div className="lg:hidden">
           {/* Hero Section */}
           {heroPost && (
-            <div className="mb-5">
+            <div className="mb-6">
               <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group block">
-                <div className="aspect-[16/9] bg-gray-200 overflow-hidden relative mb-3 rounded-sm">
+                {/* Full-width image, no rounded corners — newspaper style */}
+                <div className="w-full bg-gray-200 overflow-hidden relative mb-0" style={{ aspectRatio: '16/9' }}>
                   {heroPost.image ? (
                     <img src={heroPost.image} alt={heroPost.title} className="w-full h-full object-cover" />
                   ) : (
@@ -121,14 +122,17 @@ const Index = () => {
                     </div>
                   )}
                 </div>
-                <h1 className="text-xl font-bold leading-tight mb-2 text-gray-900 group-hover:text-primary transition-colors">
-                  {heroPost.title}
-                </h1>
-                {heroPost.standfirst && (
-                  <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
-                    {String(heroPost.standfirst).replace(/<[^>]*>/g, "")}
-                  </p>
-                )}
+                {/* Text block below image — tight spacing like BBC/Guardian */}
+                <div className="pt-3 pb-4 border-b border-gray-200">
+                  <h1 className="text-2xl font-black leading-tight mb-2 text-gray-900 group-hover:text-primary transition-colors">
+                    {heroPost.title}
+                  </h1>
+                  {heroPost.standfirst && (
+                    <p className="text-gray-600 text-base leading-relaxed">
+                      {String(heroPost.standfirst).replace(/<[^>]*>/g, "")}
+                    </p>
+                  )}
+                </div>
               </Link>
             </div>
           )}
