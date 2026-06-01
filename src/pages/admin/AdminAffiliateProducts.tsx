@@ -72,25 +72,32 @@ export default function AdminAffiliateProducts() {
     
     try {
       if (editingProduct) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("affiliate_products")
           .update(formData)
-          .eq("id", editingProduct.id);
+          .eq("id", editingProduct.id)
+          .select()
+          .single();
 
         if (error) throw error;
+        // Optimistic update — replace in local list immediately
+        if (data) setProducts(prev => prev.map(p => p.id === editingProduct.id ? data as AffiliateProduct : p));
         toast({ title: "Success", description: "Product updated successfully" });
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("affiliate_products")
-          .insert([formData]);
+          .insert([formData])
+          .select()
+          .single();
 
         if (error) throw error;
+        // Optimistic insert — prepend to local list immediately
+        if (data) setProducts(prev => [data as AffiliateProduct, ...prev]);
         toast({ title: "Success", description: "Product created successfully" });
       }
 
       setDialogOpen(false);
       resetForm();
-      fetchProducts();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
@@ -135,8 +142,9 @@ export default function AdminAffiliateProducts() {
         .eq("id", id);
 
       if (error) throw error;
+      // Optimistic delete — remove from local list immediately
+      setProducts(prev => prev.filter(p => p.id !== id));
       toast({ title: "Success", description: "Product deleted successfully" });
-      fetchProducts();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }

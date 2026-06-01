@@ -26,6 +26,34 @@ export default function ShopPage() {
 
   useEffect(() => {
     fetchProducts();
+
+    // Realtime subscription — reflect admin changes instantly, no refresh needed
+    const channel = supabase
+      .channel("shop-affiliate-products")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "affiliate_products" },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            const p = payload.new as AffiliateProduct;
+            if (p.is_active) setProducts(prev => [p, ...prev]);
+          } else if (payload.eventType === "UPDATE") {
+            const p = payload.new as AffiliateProduct;
+            setProducts(prev =>
+              p.is_active
+                ? prev.some(x => x.id === p.id)
+                  ? prev.map(x => x.id === p.id ? p : x)
+                  : [p, ...prev]
+                : prev.filter(x => x.id !== p.id)
+            );
+          } else if (payload.eventType === "DELETE") {
+            setProducts(prev => prev.filter(x => x.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const fetchProducts = async () => {
