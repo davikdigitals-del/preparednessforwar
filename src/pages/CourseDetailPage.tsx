@@ -29,29 +29,42 @@ export default function CourseDetailPage() {
   const fetchCourseData = async () => {
     try {
       setLoading(true);
-      
-      const [courseResult, modulesResult, reviewsResult] = await Promise.all([
-        supabase.from("courses").select("*").eq("slug", slug).eq("is_published", true).single(),
+
+      // Try exact slug match first, then prefix match for timestamp-suffixed slugs
+      let courseResult = await supabase
+        .from("courses")
+        .select("*")
+        .eq("slug", slug)
+        .eq("is_published", true)
+        .maybeSingle();
+
+      if (!courseResult.error && !courseResult.data) {
+        const prefixResult = await supabase
+          .from("courses")
+          .select("*")
+          .like("slug", `${slug}%`)
+          .eq("is_published", true)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        courseResult = prefixResult;
+      }
+
+      if (courseResult.error) throw courseResult.error;
+
+      const [modulesResult, reviewsResult] = await Promise.all([
         supabase
           .from("course_modules")
-          .select(`
-            *,
-            lessons:course_lessons(*)
-          `)
+          .select(`*, lessons:course_lessons(*)`)
           .eq("is_published", true)
           .order("order_index", { ascending: true }),
         supabase
           .from("course_reviews")
-          .select(`
-            *,
-            user:profiles(email, full_name)
-          `)
+          .select(`*, user:profiles(email, full_name)`)
           .eq("is_published", true)
           .order("created_at", { ascending: false })
           .limit(10),
       ]);
-
-      if (courseResult.error) throw courseResult.error;
       
       setCourse(courseResult.data);
       

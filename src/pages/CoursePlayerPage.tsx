@@ -33,13 +33,33 @@ export default function CoursePlayerPage() {
     try {
       setLoading(true);
       
-      const courseResult = await supabase
+      // Try exact slug match first, then prefix match (handles timestamp-suffixed slugs)
+      let courseResult = await supabase
         .from("courses")
         .select("*")
         .eq("slug", slug)
-        .single();
+        .maybeSingle();
+
+      // If not found by exact slug, try prefix match (e.g. "we-move" matches "we-move-lx7k2")
+      if (!courseResult.error && !courseResult.data) {
+        const prefixResult = await supabase
+          .from("courses")
+          .select("*")
+          .like("slug", `${slug}%`)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        courseResult = prefixResult;
+      }
 
       if (courseResult.error) throw courseResult.error;
+      
+      if (!courseResult.data) {
+        setCourse(null);
+        setLoading(false);
+        return;
+      }
+      
       setCourse(courseResult.data);
 
       // Check enrollment
@@ -206,10 +226,21 @@ export default function CoursePlayerPage() {
     );
   }
 
-  if (!course || !currentLesson) {
+  if (!course) {
     return (
       <div className="container py-12 text-center">
-        <h1 className="text-3xl font-bold mb-4">Course Not Available</h1>
+        <h1 className="text-3xl font-bold mb-4">Course Not Found</h1>
+        <p className="text-gray-500 mb-6">This course doesn't exist or may have been removed.</p>
+        <Button onClick={() => navigate("/courses")}>Browse Courses</Button>
+      </div>
+    );
+  }
+
+  if (!currentLesson) {
+    return (
+      <div className="container py-12 text-center">
+        <h1 className="text-3xl font-bold mb-2">{course.title}</h1>
+        <p className="text-gray-500 mb-6">This course has no lessons yet. Check back soon.</p>
         <Button onClick={() => navigate("/my-courses")}>Back to My Courses</Button>
       </div>
     );
