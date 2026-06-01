@@ -20,49 +20,62 @@ export default function ResetPasswordPage() {
   const [linkError, setLinkError] = useState("");
 
   useEffect(() => {
-    // Supabase puts the tokens in the URL hash: #access_token=...&type=recovery
-    // We need to extract them and set the session manually.
-    const hash = window.location.hash;
+    // Supabase can send tokens two ways:
+    // 1. PKCE flow: ?code=xxx (newer default)
+    // 2. Implicit flow: #access_token=xxx&type=recovery (older)
 
-    // Check for error in hash or query string
-    const params = new URLSearchParams(hash.replace("#", "?"));
-    const errorCode = params.get("error_code") || new URLSearchParams(window.location.search).get("error_code");
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+
+    // Check for errors first
+    const errorCode = searchParams.get("error_code") || hashParams.get("error_code");
     if (errorCode) {
       setLinkError("This reset link has expired or already been used. Please request a new one.");
       return;
     }
 
-    const accessToken = params.get("access_token");
-    const refreshToken = params.get("refresh_token");
-    const type = params.get("type");
+    // PKCE flow — ?code=xxx
+    const code = searchParams.get("code");
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) {
+          setLinkError("This reset link has expired or already been used. Please request a new one.");
+        } else {
+          setSessionReady(true);
+          // Clean the URL
+          window.history.replaceState(null, "", window.location.pathname);
+        }
+      });
+      return;
+    }
+
+    // Implicit flow — #access_token=xxx&type=recovery
+    const accessToken = hashParams.get("access_token");
+    const refreshToken = hashParams.get("refresh_token");
+    const type = hashParams.get("type");
 
     if (accessToken && type === "recovery") {
-      // Set the session using the tokens from the URL
       supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken || "" })
         .then(({ error }) => {
           if (error) {
             setLinkError("This reset link has expired or already been used. Please request a new one.");
           } else {
             setSessionReady(true);
-            // Clean the hash from the URL
             window.history.replaceState(null, "", window.location.pathname);
           }
         });
       return;
     }
 
-    // Fallback: listen for PASSWORD_RECOVERY event (some Supabase versions)
+    // Nothing in URL — wait briefly for PASSWORD_RECOVERY event
     const { data: listener } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         setSessionReady(true);
       }
     });
 
-    // If no token in hash after 4 seconds, show expired message
     const timer = setTimeout(() => {
-      if (!sessionReady) {
-        setLinkError("This reset link has expired or already been used. Please request a new one.");
-      }
+      setLinkError("This reset link has expired or already been used. Please request a new one.");
     }, 4000);
 
     return () => {
