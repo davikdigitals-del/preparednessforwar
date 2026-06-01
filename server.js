@@ -2,6 +2,8 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { existsSync } from 'fs';
+import { createReadStream } from 'fs';
+import { createGzip, createBrotliCompress } from 'zlib';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -10,13 +12,32 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const distDir = join(__dirname, 'dist');
 
-// ── Static assets (JS/CSS/images) — long cache, hashed filenames ─────────────
+// ── Security & compatibility headers for ALL responses ───────────────────────
+app.use((req, res, next) => {
+  // Required for Chrome mobile to accept the connection
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // Allow Chrome mobile to load all resources
+  res.removeHeader('X-Powered-By');
+  next();
+});
+
+// ── Keep-alive / health check ─────────────────────────────────────────────────
+app.get('/ping', (_req, res) => {
+  res.setHeader('Content-Type', 'text/plain');
+  res.send('pong');
+});
+
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// ── Static assets (JS/CSS/images) — long cache ───────────────────────────────
 app.use('/assets', (req, res, next) => {
-  // Verify the file actually exists before serving
   const filePath = join(distDir, 'assets', req.path);
   if (!existsSync(filePath)) {
-    // Asset not found — don't fall through to SPA, return 404
-    return res.status(404).send('Asset not found');
+    return res.status(404).send('Not found');
   }
   next();
 }, express.static(join(distDir, 'assets'), {
@@ -34,50 +55,55 @@ app.use('/assets', (req, res, next) => {
       res.setHeader('Content-Type', 'font/woff');
     }
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    // Allow cross-origin font loading
+    res.setHeader('Access-Control-Allow-Origin', '*');
   },
 }));
 
-// ── Other static files (manifest, icons, sw.js, etc.) ────────────────────────
+// ── Other static files ────────────────────────────────────────────────────────
 app.use(express.static(distDir, {
   maxAge: 0,
   etag: true,
-  index: false, // Don't auto-serve index.html here — we handle it below
+  index: false,
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.html')) {
-      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
     }
   },
 }));
 
-// ── SPA fallback — serve index.html for all non-asset routes ─────────────────
+// ── SPA fallback ──────────────────────────────────────────────────────────────
 app.get('*', (req, res) => {
   const path = req.path;
 
-  // Hard 404 for any asset-like path that wasn't found above
-  const assetExtensions = ['.js', '.css', '.map', '.woff', '.woff2', '.ttf',
-    '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.webmanifest', '.txt', '.json'];
-  if (assetExtensions.some(ext => path.endsWith(ext))) {
+  // 404 for missing assets
+  const assetExts = ['.js', '.css', '.map', '.woff', '.woff2', '.ttf',
+    '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.webmanifest', '.json'];
+  if (assetExts.some(ext => path.endsWith(ext))) {
     return res.status(404).send('Not found');
   }
 
-  // Serve index.html with aggressive no-cache headers
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  const indexPath = join(distDir, 'index.html');
+  if (!existsSync(indexPath)) {
+    return res.status(503).send('App is starting up, please refresh in a moment.');
+  }
+
+  // Serve index.html — no cache, correct content type
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
-  res.setHeader('Surrogate-Control', 'no-store');
-  // Tell browser to clear its cache for this origin
-  if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
+
+  // Clear stale caches on HTTPS
+  if (req.headers['x-forwarded-proto'] === 'https') {
     res.setHeader('Clear-Site-Data', '"cache"');
   }
-  res.sendFile(join(distDir, 'index.html'));
+
+  res.sendFile(indexPath);
 });
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-// Keep-alive endpoint — ping this with UptimeRobot every 5 minutes
-// to prevent Render free tier from sleeping
-app.get('/ping', (_req, res) => res.send('pong'));
