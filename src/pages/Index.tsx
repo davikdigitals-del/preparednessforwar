@@ -127,11 +127,18 @@ const Index = () => {
                   <h1 className="text-2xl font-black leading-tight mb-2 text-gray-900 group-hover:text-primary transition-colors">
                     {heroPost.title}
                   </h1>
-                  {heroPost.standfirst && (
-                    <p className="text-gray-600 text-base leading-relaxed">
-                      {String(heroPost.standfirst).replace(/<[^>]*>/g, "")}
-                    </p>
-                  )}
+                  {(() => {
+                    const text = heroPost.standfirst
+                      ? String(heroPost.standfirst).replace(/<[^>]*>/g, "").trim()
+                      : heroPost.body
+                        ? String(heroPost.body).replace(/<[^>]*>/g, "").trim().substring(0, 200)
+                        : "";
+                    return text ? (
+                      <p className="text-gray-600 text-base leading-relaxed">
+                        {text}{!heroPost.standfirst && text.length >= 200 ? "…" : ""}
+                      </p>
+                    ) : null;
+                  })()}
                 </div>
               </Link>
             </div>
