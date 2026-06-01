@@ -19,6 +19,8 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     outDir: "dist",
+    // Explicit target ensures compatibility with older Android Chrome (80+)
+    target: ['chrome80', 'firefox78', 'safari13', 'edge88'],
     chunkSizeWarningLimit: 600,
     cssCodeSplit: true,
     rollupOptions: {

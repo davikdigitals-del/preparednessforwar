@@ -1,25 +1,27 @@
-// v2 — force clears all caches and unregisters itself
-// This fixes black screen on mobile caused by stale cached assets
+﻿// v3 — minimal passthrough service worker
+// Cleans up old caches from previous versions without causing reload loops
 
-const CACHE_VERSION = 'v2-' + Date.now();
+const CACHE_NAME = 'pfw-v3';
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
-      // Delete ALL caches
+      // Delete any caches from old versions (v1, v2, etc.)
       const keys = await caches.keys();
-      await Promise.all(keys.map(key => caches.delete(key)));
-      // Unregister this service worker
-      await self.registration.unregister();
-      // Force reload all open tabs
-      const clients = await self.clients.matchAll({ type: 'window' });
-      for (const client of clients) {
-        client.navigate(client.url);
-      }
+      await Promise.all(
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+      );
+      // Take control of all open tabs immediately
+      await self.clients.claim();
     })()
   );
+});
+
+// Passthrough fetch — no caching, let the browser handle it normally
+self.addEventListener('fetch', (event) => {
+  event.respondWith(fetch(event.request));
 });

@@ -1,4 +1,4 @@
-import express from 'express';
+﻿import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { existsSync } from 'fs';
@@ -10,7 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const distDir = join(__dirname, 'dist');
 
-// ── Security & compatibility headers for ALL responses ───────────────────────
+// ÔöÇÔöÇ Security & compatibility headers for ALL responses ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 app.use((req, res, next) => {
   // Required for Chrome mobile to accept the connection
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -21,7 +21,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── Keep-alive / health check ─────────────────────────────────────────────────
+// ÔöÇÔöÇ Keep-alive / health check ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 app.get('/ping', (_req, res) => {
   res.setHeader('Content-Type', 'text/plain');
   res.send('pong');
@@ -31,7 +31,7 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ── Static assets (JS/CSS/images) — long cache ───────────────────────────────
+// ÔöÇÔöÇ Static assets (JS/CSS/images) ÔÇö long cache ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 app.use('/assets', (req, res, next) => {
   const filePath = join(distDir, 'assets', req.path);
   if (!existsSync(filePath)) {
@@ -58,7 +58,7 @@ app.use('/assets', (req, res, next) => {
   },
 }));
 
-// ── Other static files ────────────────────────────────────────────────────────
+// ÔöÇÔöÇ Other static files ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 app.use(express.static(distDir, {
   maxAge: 0,
   etag: true,
@@ -72,7 +72,7 @@ app.use(express.static(distDir, {
   },
 }));
 
-// ── SPA fallback ──────────────────────────────────────────────────────────────
+// ÔöÇÔöÇ SPA fallback ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 app.get('*', (req, res) => {
   const path = req.path;
 
@@ -88,16 +88,11 @@ app.get('*', (req, res) => {
     return res.status(503).send('App is starting up, please refresh in a moment.');
   }
 
-  // Serve index.html — no cache, correct content type
+  // Serve index.html ÔÇö no cache, correct content type
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
-
-  // Clear stale caches on HTTPS
-  if (req.headers['x-forwarded-proto'] === 'https') {
-    res.setHeader('Clear-Site-Data', '"cache"');
-  }
 
   res.sendFile(indexPath);
 });
@@ -105,3 +100,4 @@ app.get('*', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
+

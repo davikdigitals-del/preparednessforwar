@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import { useEffect } from "react";
 import App from "./App.tsx";
 import "./index.css";
 import { OfflineService } from "./services/OfflineService";
@@ -15,16 +16,19 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// Wrapper that removes the loader only after React has committed to the DOM
+function AppWithLoaderRemoval() {
+  useEffect(() => {
+    const loader = document.getElementById("loader");
+    if (loader) loader.remove();
+  }, []);
+
+  return (
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  );
+}
 
 const root = createRoot(document.getElementById("root")!);
-root.render(
-  <ErrorBoundary>
-    <App />
-  </ErrorBoundary>
-);
-
-// Remove loading screen after React mounts
-requestAnimationFrame(() => {
-  const loader = document.getElementById("loader");
-  if (loader) loader.style.display = "none";
-});
+root.render(<AppWithLoaderRemoval />);

@@ -1,8 +1,8 @@
-{
+﻿{
   "name": "Preparedness For War - Member Portal",
   "short_name": "PFW Portal",
   "description": "Offline-capable member portal for war preparedness and survival training",
-  "start_url": "/dashboard",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#1e40af",
