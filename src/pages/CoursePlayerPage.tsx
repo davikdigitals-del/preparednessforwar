@@ -11,7 +11,7 @@ import type { Course, CourseModule, CourseLesson, CourseEnrollment } from "@/typ
 export default function CoursePlayerPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [enrollment, setEnrollment] = useState<CourseEnrollment | null>(null);
@@ -21,12 +21,13 @@ export default function CoursePlayerPage() {
   const { toast } = useToast();
 
   useEffect(() => {
+    if (authLoading) return;
     if (slug && user) {
       fetchCourseData();
     } else if (!user) {
       navigate("/login");
     }
-  }, [slug, user]);
+  }, [slug, user, authLoading]);
 
   const fetchCourseData = async () => {
     try {

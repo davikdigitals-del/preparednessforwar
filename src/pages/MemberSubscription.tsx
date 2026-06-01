@@ -32,7 +32,7 @@ interface UserSubscription {
 }
 
 export default function MemberSubscription() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { isPremium, plan: currentPlan } = usePremiumStatus();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -42,6 +42,7 @@ export default function MemberSubscription() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       navigate("/login");
       return;

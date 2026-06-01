@@ -12,7 +12,7 @@ import type { Course } from "@/types/monetization";
 export default function CheckoutPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -27,15 +27,15 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       navigate("/login");
       return;
     }
-
     if (courseId) {
       fetchCourse();
     }
-  }, [courseId, user]);
+  }, [courseId, user, authLoading]);
 
   const fetchCourse = async () => {
     try {
