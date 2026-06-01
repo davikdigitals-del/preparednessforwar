@@ -17,7 +17,7 @@ export const supabase = (() => {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        flowType: 'pkce',
+        flowType: 'implicit',
         // Use a consistent storage key to prevent multiple instances
         storageKey: 'prw-auth-token',
       },
