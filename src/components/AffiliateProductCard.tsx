@@ -1,5 +1,5 @@
 ﻿import { useState } from "react";
-import { ExternalLink, TrendingUp, Star, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { ExternalLink, TrendingUp, Star, ChevronLeft, ChevronRight, Play, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import type { AffiliateProduct } from "@/types/monetization";
@@ -44,7 +44,6 @@ export function AffiliateProductCard({ product, onTrackClick }: AffiliateProduct
               FEATURED
             </span>
           )}
-          {/* Gallery indicator */}
           {product.images && product.images.length > 1 && (
             <span className="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded">
               1/{product.images.length}
@@ -84,7 +83,7 @@ export function AffiliateProductCard({ product, onTrackClick }: AffiliateProduct
   );
 }
 
-/* -- Product Preview Modal -- */
+/* ── Product Preview Modal ── */
 function ProductPreviewModal({
   product, open, onClose, onBuy, currencySymbol,
 }: {
@@ -97,50 +96,71 @@ function ProductPreviewModal({
   const [activeImg, setActiveImg] = useState(0);
   const [videoPlaying, setVideoPlaying] = useState(false);
 
-  // Build image gallery — prefer images array, fall back to image_url
+  // Build gallery — prefer images array, fall back to image_url
   const images: string[] = product.images?.length
     ? product.images
     : product.image_url ? [product.image_url] : [];
 
   const videoUrl = product.video_url || "";
+  const hasMultiple = images.length > 1 || !!videoUrl;
 
-  const prev = () => setActiveImg(i => (i - 1 + images.length) % images.length);
-  const next = () => setActiveImg(i => (i + 1) % images.length);
+  const prev = () => { setActiveImg(i => (i - 1 + images.length) % images.length); setVideoPlaying(false); };
+  const next = () => { setActiveImg(i => (i + 1) % images.length); setVideoPlaying(false); };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-full p-0 overflow-hidden max-h-[95vh] overflow-y-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2">
+      {/* Use a raw fixed overlay so we control sizing precisely */}
+      <DialogContent className="max-w-3xl w-full p-0 gap-0 overflow-hidden rounded-xl">
+        <div className="flex flex-col md:flex-row max-h-[90vh]">
 
-          {/* Left — Image/Video Gallery */}
-          <div className="bg-gray-50 p-4 flex flex-col gap-3">
-            {/* Main image/video */}
-            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
+          {/* ── LEFT: Gallery ── */}
+          <div className="md:w-[45%] flex-shrink-0 flex flex-col bg-white border-r border-gray-100">
+
+            {/* Main viewer — fills the panel */}
+            <div className="relative flex-1 min-h-[280px] md:min-h-0 bg-gray-50 flex items-center justify-center overflow-hidden">
               {videoPlaying && videoUrl ? (
-                <video src={videoUrl} controls autoPlay className="w-full h-full object-contain" />
+                <video
+                  src={videoUrl}
+                  controls
+                  autoPlay
+                  className="w-full h-full object-contain"
+                />
               ) : images.length > 0 ? (
-                <img src={images[activeImg]} alt={product.name} className="w-full h-full object-contain" />
+                <img
+                  src={images[activeImg]}
+                  alt={product.name}
+                  className="w-full h-full object-contain"
+                  style={{ maxHeight: "420px" }}
+                />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-300">No image</div>
+                <div className="flex items-center justify-center text-gray-300 p-12">
+                  <TrendingUp className="w-16 h-16" />
+                </div>
               )}
 
-              {/* Prev/Next arrows */}
+              {/* Prev / Next arrows — only when multiple images */}
               {images.length > 1 && !videoPlaying && (
                 <>
-                  <button onClick={prev} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 shadow hover:bg-white">
-                    <ChevronLeft className="w-4 h-4" />
+                  <button
+                    onClick={prev}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-1.5 shadow-md transition-all"
+                  >
+                    <ChevronLeft className="w-5 h-5 text-gray-700" />
                   </button>
-                  <button onClick={next} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 shadow hover:bg-white">
-                    <ChevronRight className="w-4 h-4" />
+                  <button
+                    onClick={next}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-1.5 shadow-md transition-all"
+                  >
+                    <ChevronRight className="w-5 h-5 text-gray-700" />
                   </button>
                 </>
               )}
 
-              {/* Video play button */}
+              {/* Video play button overlay */}
               {videoUrl && !videoPlaying && (
                 <button
                   onClick={() => setVideoPlaying(true)}
-                  className="absolute bottom-2 right-2 bg-blue-900 text-white rounded-full p-2 shadow-lg hover:bg-blue-800"
+                  className="absolute bottom-3 right-3 bg-blue-900 hover:bg-blue-800 text-white rounded-full p-2.5 shadow-lg transition-all"
                 >
                   <Play className="w-4 h-4 fill-white" />
                 </button>
@@ -148,13 +168,17 @@ function ProductPreviewModal({
             </div>
 
             {/* Thumbnail strip */}
-            {(images.length > 1 || videoUrl) && (
-              <div className="flex gap-2 overflow-x-auto pb-1">
+            {hasMultiple && (
+              <div className="flex gap-2 p-3 overflow-x-auto border-t border-gray-100 bg-white">
                 {images.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => { setActiveImg(i); setVideoPlaying(false); }}
-                    className={`w-14 h-14 shrink-0 rounded border-2 overflow-hidden transition-all ${activeImg === i && !videoPlaying ? 'border-blue-900' : 'border-gray-200'}`}
+                    className={`w-14 h-14 shrink-0 rounded-md border-2 overflow-hidden transition-all ${
+                      activeImg === i && !videoPlaying
+                        ? "border-blue-900 ring-1 ring-blue-900"
+                        : "border-gray-200 hover:border-gray-400"
+                    }`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>
@@ -162,7 +186,9 @@ function ProductPreviewModal({
                 {videoUrl && (
                   <button
                     onClick={() => setVideoPlaying(true)}
-                    className={`w-14 h-14 shrink-0 rounded border-2 overflow-hidden bg-gray-800 flex items-center justify-center transition-all ${videoPlaying ? 'border-blue-900' : 'border-gray-200'}`}
+                    className={`w-14 h-14 shrink-0 rounded-md border-2 overflow-hidden bg-gray-900 flex items-center justify-center transition-all ${
+                      videoPlaying ? "border-blue-900 ring-1 ring-blue-900" : "border-gray-200 hover:border-gray-400"
+                    }`}
                   >
                     <Play className="w-5 h-5 text-white fill-white" />
                   </button>
@@ -171,57 +197,72 @@ function ProductPreviewModal({
             )}
           </div>
 
-          {/* Right — Product Details */}
-          <div className="p-5 flex flex-col gap-4">
-            {/* Category */}
-            <div>
+          {/* ── RIGHT: Details ── */}
+          <div className="flex-1 flex flex-col overflow-y-auto">
+            {/* Close button */}
+            <div className="flex items-center justify-between px-5 pt-4 pb-2">
               <span className="text-xs font-bold text-blue-900 uppercase tracking-wide bg-blue-50 px-2 py-1 rounded">
                 {product.category}
               </span>
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            {/* Title */}
-            <h2 className="font-bold text-xl leading-snug">{product.name}</h2>
+            <div className="px-5 pb-5 flex flex-col gap-4 flex-1">
+              {/* Title */}
+              <h2 className="font-bold text-lg leading-snug text-gray-900">{product.name}</h2>
 
-            {/* Price */}
-            <div className="flex items-baseline gap-2">
-              {product.price ? (
-                <span className="text-3xl font-black text-gray-900">
-                  {currencySymbol}{product.price}
-                </span>
-              ) : (
-                <span className="text-lg text-gray-500">Check price on site</span>
-              )}
-              {product.is_featured && (
-                <span className="flex items-center gap-1 text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
-                  <Star className="w-3 h-3 fill-orange-500" /> Featured
-                </span>
-              )}
-            </div>
-
-            {/* Description */}
-            {product.description && (
-              <div>
-                <h3 className="text-sm font-bold text-gray-700 mb-1">About this product</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  {product.description.split(' | ').map((line, i) => (
-                    <span key={i} className="block mb-1">• {line}</span>
-                  ))}
-                </p>
+              {/* Price */}
+              <div className="flex items-baseline gap-2">
+                {product.price ? (
+                  <span className="text-3xl font-black text-gray-900">
+                    {currencySymbol}{product.price}
+                  </span>
+                ) : (
+                  <span className="text-lg text-gray-500">Check price on site</span>
+                )}
+                {product.is_featured && (
+                  <span className="flex items-center gap-1 text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
+                    <Star className="w-3 h-3 fill-orange-500" /> Featured
+                  </span>
+                )}
               </div>
-            )}
 
-            {/* Network */}
-            <div className="text-xs text-gray-400 border-t pt-3">
-              Available via <span className="font-semibold capitalize">{product.affiliate_network}</span>
+              {/* Description */}
+              {product.description && (
+                <div>
+                  <h3 className="text-sm font-bold text-gray-700 mb-2">About this product</h3>
+                  <div className="text-sm text-gray-600 leading-relaxed space-y-1">
+                    {product.description.split(' | ').map((line, i) => (
+                      <p key={i} className="flex gap-2">
+                        <span className="text-gray-400 mt-0.5">•</span>
+                        <span>{line.trim()}</span>
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Spacer */}
+              <div className="flex-1" />
+
+              {/* Network */}
+              <p className="text-xs text-gray-400 border-t pt-3">
+                Available via <span className="font-semibold capitalize">{product.affiliate_network}</span>
+              </p>
+
+              {/* CTA */}
+              <Button size="lg" className="w-full" onClick={onBuy}>
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Buy Now
+              </Button>
             </div>
-
-            {/* CTA */}
-            <Button size="lg" className="w-full mt-auto" onClick={onBuy}>
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Buy Now
-            </Button>
           </div>
+
         </div>
       </DialogContent>
     </Dialog>
