@@ -201,23 +201,23 @@ export default function AdminAffiliateProducts() {
         setFormData(prev => ({ ...prev, name: prev.name || slugName, affiliate_network }));
       }
 
-      // ── Step 2: Fetch OG metadata via server proxy (avoids CORS) ──────────
+      // ── Step 2: Fetch metadata via Supabase Edge Function ─────────────────
       let name = slugName;
       let description = "";
       let image_url = "";
       let price = 0;
 
       try {
-        const ogRes = await fetch(
-          `/api/og-meta?url=${encodeURIComponent(url)}`
-        );
-        if (ogRes.ok) {
-          const og = await ogRes.json();
-          name = og.title || slugName;
-          description = og.description || "";
-          image_url = og.images?.[0] || "";
-          price = og.price || 0;
-          if (og.images?.length > 0) setScrapedImages(og.images.slice(0, 6));
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data, error } = await supabase.functions.invoke("scrape-product", {
+          body: { url },
+        });
+        if (!error && data) {
+          name = data.title || slugName;
+          description = data.description || "";
+          image_url = data.images?.[0] || "";
+          price = data.price || 0;
+          if (data.images?.length > 0) setScrapedImages(data.images.slice(0, 6));
         }
       } catch {}
 

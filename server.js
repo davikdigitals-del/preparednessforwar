@@ -31,100 +31,131 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// OG metadata scraper — fetches and parses OG/meta tags server-side (no CORS, no API key)
+// OG metadata scraper — uses Jina AI reader (free, no key, handles JS sites like Amazon)
 app.get('/api/og-meta', async (req, res) => {
   const url = req.query.url;
   if (!url) return res.status(400).json({ error: 'Missing url param' });
 
   try {
-    const response = await fetch(url, {
+    // Jina Reader API — free, no key needed, renders JS, works on Amazon/eBay etc.
+    const jinaUrl = `https://r.jina.ai/${url}`;
+    const jinaRes = await fetch(jinaUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept': 'application/json',
+        'X-Return-Format': 'json',
+        'X-With-Images-Summary': 'true',
+        'X-With-Generated-Alt': 'true',
       },
-      signal: AbortSignal.timeout(10000),
-      redirect: 'follow',
+      signal: AbortSignal.timeout(20000),
     });
 
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const html = await response.text();
+    if (jinaRes.ok) {
+      const data = await jinaRes.json();
+      const content = data.data || data;
+      const text = content.text || content.content || '';
 
-    // Parse a meta tag by property or name
-    const getMeta = (prop) => {
-      const patterns = [
-        new RegExp(`<meta[^>]+property=["']${prop}["'][^>]+content=["']([^"']+)["']`, 'i'),
-        new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+property=["']${prop}["']`, 'i'),
-        new RegExp(`<meta[^>]+name=["']${prop}["'][^>]+content=["']([^"']+)["']`, 'i'),
-        new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+name=["']${prop}["']`, 'i'),
+      // Extract price from content text
+      let price = null;
+      const pricePatterns = [
+        /\$\s*([\d,]+\.?\d{0,2})/,
+        /£\s*([\d,]+\.?\d{0,2})/,
+        /€\s*([\d,]+\.?\d{0,2})/,
+        /"price":\s*"?([\d.]+)"?/i,
       ];
-      for (const re of patterns) {
-        const m = html.match(re);
-        if (m) return m[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
+      for (const re of pricePatterns) {
+        const m = text.match(re);
+        if (m) { price = parseFloat(m[1].replace(/,/g, '')); break; }
       }
-      return '';
-    };
 
-    // Title
-    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    const pageTitle = titleMatch ? titleMatch[1].trim() : '';
-    const title = getMeta('og:title') || getMeta('twitter:title') || pageTitle;
+      // Collect images from Jina images map
+      const images = [];
+      if (content.images && typeof content.images === 'object') {
+        Object.values(content.images).forEach(img => {
+          if (typeof img === 'string' && img.startsWith('http')) images.push(img);
+        });
+      }
+      // Extract markdown image URLs from content
+      const mdImgs = [...text.matchAll(/!\[[^\]]*\]\((https?:\/\/[^)]+)\)/g)].map(m => m[1]);
+      images.push(...mdImgs);
 
-    // Description
-    const description = getMeta('og:description') || getMeta('twitter:description') || getMeta('description');
+      // For Amazon — derive image from ASIN using their CDN
+      if (images.length === 0 && url.includes('amazon.')) {
+        const asinMatch = url.match(/\/dp\/([A-Z0-9]{10})/i) || url.match(/\/product\/([A-Z0-9]{10})/i);
+        if (asinMatch) {
+          const asin = asinMatch[1];
+          images.push(`https://images-na.ssl-images-amazon.com/images/P/${asin}.01.LZZZZZZZ.jpg`);
+          images.push(`https://m.media-amazon.com/images/P/${asin}.jpg`);
+        }
+      }
 
-    // Images — collect all og:image and twitter:image occurrences
-    const images = [];
-    const ogImageRe = /<meta[^>]+(?:property=["']og:image["']|name=["']twitter:image["'])[^>]+content=["']([^"']+)["']/gi;
-    const ogImageRe2 = /<meta[^>]+content=["']([^"']+)["'][^>]+(?:property=["']og:image["']|name=["']twitter:image["'])/gi;
-    let m;
-    while ((m = ogImageRe.exec(html)) !== null) images.push(m[1]);
-    while ((m = ogImageRe2.exec(html)) !== null) images.push(m[1]);
-    // Also grab first <img> with a large src as fallback
-    if (images.length === 0) {
-      const imgMatch = html.match(/<img[^>]+src=["'](https?:\/\/[^"']+\.(jpg|jpeg|png|webp)[^"']*)["']/i);
-      if (imgMatch) images.push(imgMatch[1]);
+      return res.json({
+        title: content.title || '',
+        description: content.description || text.substring(0, 200),
+        images: [...new Set(images)].slice(0, 6),
+        price,
+        site_name: new URL(url).hostname.replace('www.', ''),
+      });
     }
 
-    // Price — try JSON-LD first, then common patterns
-    let price = '';
-    const jsonLdMatch = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
-    if (jsonLdMatch) {
-      for (const block of jsonLdMatch) {
+    throw new Error(`Jina returned ${jinaRes.status}`);
+  } catch (err) {
+    // Fallback: plain HTML scrape
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+        },
+        signal: AbortSignal.timeout(10000),
+        redirect: 'follow',
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const html = await response.text();
+
+      const getMeta = (prop) => {
+        const patterns = [
+          new RegExp(`<meta[^>]+property=["']${prop}["'][^>]+content=["']([^"']+)["']`, 'i'),
+          new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+property=["']${prop}["']`, 'i'),
+          new RegExp(`<meta[^>]+name=["']${prop}["'][^>]+content=["']([^"']+)["']`, 'i'),
+          new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+name=["']${prop}["']`, 'i'),
+        ];
+        for (const re of patterns) {
+          const m = html.match(re);
+          if (m) return m[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
+        }
+        return '';
+      };
+
+      const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+      const title = getMeta('og:title') || getMeta('twitter:title') || (titleMatch ? titleMatch[1].trim() : '');
+      const description = getMeta('og:description') || getMeta('twitter:description') || getMeta('description');
+
+      const images = [];
+      const ogRe = /<meta[^>]+(?:property=["']og:image["']|name=["']twitter:image["'])[^>]+content=["']([^"']+)["']/gi;
+      const ogRe2 = /<meta[^>]+content=["']([^"']+)["'][^>]+(?:property=["']og:image["']|name=["']twitter:image["'])/gi;
+      let m;
+      while ((m = ogRe.exec(html)) !== null) images.push(m[1]);
+      while ((m = ogRe2.exec(html)) !== null) images.push(m[1]);
+
+      let price = null;
+      const jsonLdBlocks = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
+      for (const block of jsonLdBlocks) {
         try {
           const json = JSON.parse(block.replace(/<script[^>]*>|<\/script>/gi, ''));
           const offers = json.offers || (Array.isArray(json) && json[0]?.offers);
           if (offers) {
             const p = offers.price || offers.lowPrice || (Array.isArray(offers) && offers[0]?.price);
-            if (p) { price = String(p); break; }
+            if (p) { price = parseFloat(p); break; }
           }
         } catch {}
       }
-    }
-    // Fallback: look for price patterns in HTML
-    if (!price) {
-      const pricePatterns = [
-        /["']price["']\s*:\s*["']?([\d.]+)["']?/i,
-        /itemprop=["']price["'][^>]+content=["']([\d.]+)["']/i,
-        /class=["'][^"']*price[^"']*["'][^>]*>\s*[£$€]?\s*([\d,]+\.?\d*)/i,
-      ];
-      for (const re of pricePatterns) {
-        const pm = html.match(re);
-        if (pm) { price = pm[1].replace(/,/g, ''); break; }
-      }
-    }
 
-    const siteName = getMeta('og:site_name');
-
-    return res.json({
-      title,
-      description,
-      images: [...new Set(images)], // deduplicate
-      price: price ? parseFloat(price) : null,
-      site_name: siteName,
-    });
-  } catch (err) {
-    return res.status(502).json({ error: 'Could not fetch metadata', detail: err.message });
+      return res.json({ title, description, images: [...new Set(images)].slice(0, 6), price, site_name: getMeta('og:site_name') });
+    } catch (fallbackErr) {
+      return res.status(502).json({ error: 'Could not fetch metadata', detail: fallbackErr.message });
+    }
   }
 });
 
