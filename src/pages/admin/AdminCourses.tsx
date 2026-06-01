@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Edit, Trash2, Search, BookOpen, Users, Star, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -72,19 +72,24 @@ export default function AdminCourses() {
     }
   };
 
-  const generateSlug = (title: string) => {
-    return title
+  const generateSlug = (title: string, suffix?: string) => {
+    const base = title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
+    return suffix ? `${base}-${suffix}` : base;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      const slug = formData.slug || generateSlug(formData.title);
-      
+      // Make slug unique on new inserts by appending a short timestamp suffix
+      const baseSlug = formData.slug || generateSlug(formData.title);
+      const slug = editingCourse
+        ? baseSlug
+        : `${baseSlug}-${Date.now().toString(36)}`;
+
       const courseData = {
         ...formData,
         slug,
@@ -93,25 +98,30 @@ export default function AdminCourses() {
       };
 
       if (editingCourse) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("courses")
           .update(courseData)
-          .eq("id", editingCourse.id);
+          .eq("id", editingCourse.id)
+          .select()
+          .single();
 
         if (error) throw error;
+        if (data) setCourses(prev => prev.map(c => c.id === editingCourse.id ? data as Course : c));
         toast({ title: "Success", description: "Course updated successfully" });
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("courses")
-          .insert([courseData]);
+          .insert([courseData])
+          .select()
+          .single();
 
         if (error) throw error;
+        if (data) setCourses(prev => [data as Course, ...prev]);
         toast({ title: "Success", description: "Course created successfully" });
       }
 
       setDialogOpen(false);
       resetForm();
-      fetchCourses();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -158,8 +168,8 @@ export default function AdminCourses() {
         .eq("id", id);
 
       if (error) throw error;
+      setCourses(prev => prev.filter(c => c.id !== id));
       toast({ title: "Success", description: "Course deleted successfully" });
-      fetchCourses();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -399,10 +409,12 @@ export default function AdminCourses() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="course-dialog-desc">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingCourse ? "Edit Course" : "Create New Course"}</DialogTitle>
-            <p id="course-dialog-desc" className="sr-only">Course creation and editing form</p>
+            <DialogDescription>
+              {editingCourse ? "Update the course details below." : "Fill in the details to create a new course."}
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Info */}
