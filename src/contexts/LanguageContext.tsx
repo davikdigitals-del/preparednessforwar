@@ -103,80 +103,6 @@ const translations: Record<LangCode, Translations> = {
   ru: T("Страны","Рассылка","Библиотека","Энциклопедия","Медиацентр","Войти","Зарегистрироваться","Панель","Выйти","Быстрый доступ","Главная навигация","Аккаунт","Отчёты сообщества","Курсы","Магазин","Поиск статей, медиа...","Нет результатов для","Быстрые ссылки","Последние статьи","Рекомендуемое","ПРЯМОЙ ЭФИР","Читать далее","Смотреть всё","Загрузка...","RU"),
 };
 
-// Country code → language mapping (comprehensive)
-const countryToLang: Record<string, LangCode> = {
-  // English
-  US:"en", GB:"en", CA:"en", AU:"en", NZ:"en", IE:"en", ZA:"en",
-  // French
-  FR:"fr", BE:"fr", LU:"fr", MC:"fr", SN:"fr", CI:"fr", CM:"fr",
-  MG:"fr", ML:"fr", BF:"fr", NE:"fr", TD:"fr", GN:"fr", BJ:"fr",
-  TG:"fr", RW:"fr", BI:"fr", DJ:"fr", KM:"fr", MU:"fr", CH:"fr",
-  // German
-  DE:"de", AT:"de", LI:"de",
-  // Spanish
-  ES:"es", MX:"es", CO:"es", PE:"es", VE:"es", CL:"es", EC:"es",
-  GT:"es", CU:"es", BO:"es", DO:"es", HN:"es", PY:"es", SV:"es",
-  NI:"es", CR:"es", PA:"es", UY:"es",
-  // Italian
-  IT:"it", SM:"it", VA:"it",
-  // Dutch
-  NL:"nl",
-  // Polish
-  PL:"pl",
-  // Turkish
-  TR:"tr",
-  // Portuguese
-  PT:"pt", BR:"pt", AO:"pt", MZ:"pt", CV:"pt", GW:"pt", ST:"pt",
-  // Romanian
-  RO:"ro", MD:"ro",
-  // Czech
-  CZ:"cs",
-  // Hungarian
-  HU:"hu",
-  // Greek
-  GR:"el", CY:"el",
-  // Bulgarian
-  BG:"bg",
-  // Croatian
-  HR:"hr",
-  // Slovak
-  SK:"sk",
-  // Slovenian
-  SI:"sl",
-  // Estonian
-  EE:"et",
-  // Latvian
-  LV:"lv",
-  // Lithuanian
-  LT:"lt",
-  // Danish
-  DK:"da",
-  // Norwegian
-  NO:"no",
-  // Swedish
-  SE:"sv",
-  // Finnish
-  FI:"fi",
-  // Icelandic
-  IS:"is",
-  // Albanian
-  AL:"sq", XK:"sq",
-  // Macedonian
-  MK:"mk",
-  // Montenegrin
-  ME:"me",
-  // Ukrainian
-  UA:"uk",
-  // Arabic
-  SA:"ar", EG:"ar", AE:"ar", IQ:"ar", SY:"ar", JO:"ar", LB:"ar",
-  KW:"ar", QA:"ar", BH:"ar", OM:"ar", YE:"ar", LY:"ar", TN:"ar",
-  DZ:"ar", MA:"ar", SD:"ar", SO:"ar",
-  // Chinese
-  CN:"zh", TW:"zh", HK:"zh", SG:"zh",
-  // Russian
-  RU:"ru", BY:"ru", KZ:"ru", KG:"ru",
-};
-
 export const availableLangs: { code: LangCode; label: string; flag: string; region: string }[] = [
   // Core NATO / English-speaking
   { code: "en", label: "English",       flag: "🇬🇧", region: "NATO" },
@@ -202,7 +128,6 @@ export const availableLangs: { code: LangCode; label: string; flag: string; regi
   { code: "bg", label: "Български",     flag: "🇧🇬", region: "NATO" },
   { code: "hr", label: "Hrvatski",      flag: "🇭🇷", region: "NATO" },
   { code: "sl", label: "Slovenščina",   flag: "🇸🇮", region: "NATO" },
-  { code: "sk", label: "Slovenčina",    flag: "🇸🇰", region: "NATO" },
   // Baltic
   { code: "et", label: "Eesti",         flag: "🇪🇪", region: "NATO" },
   { code: "lv", label: "Latviešu",      flag: "🇱🇻", region: "NATO" },
@@ -220,50 +145,12 @@ export const availableLangs: { code: LangCode; label: string; flag: string; regi
   { code: "ru", label: "Русский",       flag: "🇷🇺", region: "Global" },
 ];
 
-// Deduplicate (sk appeared twice above)
-const seen = new Set<string>();
-const uniqueLangs = availableLangs.filter(l => {
-  if (seen.has(l.code)) return false;
-  seen.add(l.code);
-  return true;
-});
-// Re-export deduplicated
-(availableLangs as any).length = 0;
-uniqueLangs.forEach(l => (availableLangs as any).push(l));
-
 function getSavedLang(): LangCode | null {
   try {
     const saved = localStorage.getItem("prw-lang") as LangCode | null;
     if (saved && translations[saved]) return saved;
   } catch {}
   return null;
-}
-
-async function detectLangByIP(): Promise<LangCode> {
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 4000);
-    const res = await fetch("https://ipapi.co/json/", { signal: controller.signal });
-    clearTimeout(timer);
-    if (!res.ok) throw new Error("geo failed");
-    const data = await res.json();
-    const detected = countryToLang[data.country_code as string] || "en";
-    localStorage.setItem("prw-lang", detected);
-    return detected;
-  } catch {
-    const b = navigator.language?.toLowerCase() || "en";
-    const map: Record<string, LangCode> = {
-      fr:"fr", de:"de", es:"es", it:"it", nl:"nl", pl:"pl", tr:"tr",
-      pt:"pt", ro:"ro", cs:"cs", hu:"hu", el:"el", bg:"bg", hr:"hr",
-      sk:"sk", sl:"sl", et:"et", lv:"lv", lt:"lt", da:"da", no:"no",
-      sv:"sv", fi:"fi", is:"is", sq:"sq", mk:"mk", uk:"uk", ar:"ar",
-      zh:"zh", ru:"ru",
-    };
-    for (const [prefix, code] of Object.entries(map)) {
-      if (b.startsWith(prefix)) return code;
-    }
-    return "en";
-  }
 }
 
 interface LanguageContextType {
@@ -279,14 +166,21 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<LangCode>(getSavedLang() || "en");
 
   useEffect(() => {
-    detectLangByIP().then((detected) => {
-      setLangState(detected);
-      document.documentElement.lang = detected;
-      document.documentElement.dir = detected === "ar" ? "rtl" : "ltr";
-      if (detected !== "en") {
-        requestAnimationFrame(() => requestAnimationFrame(() => translatePage(detected)));
+    // Never auto-detect language. Default is always English.
+    // Only restore a previously saved user preference.
+    const saved = getSavedLang();
+    if (saved) {
+      document.documentElement.lang = saved;
+      document.documentElement.dir = saved === "ar" ? "rtl" : "ltr";
+      if (saved !== "en") {
+        requestAnimationFrame(() => requestAnimationFrame(() => translatePage(saved)));
       }
-    });
+      return;
+    }
+    // First visit — set English as default
+    localStorage.setItem("prw-lang", "en");
+    document.documentElement.lang = "en";
+    document.documentElement.dir = "ltr";
   }, []);
 
   const setLang = (newLang: LangCode) => {
