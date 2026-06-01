@@ -212,12 +212,16 @@ export default function AdminAffiliateProducts() {
         const { data, error } = await supabase.functions.invoke("scrape-product", {
           body: { url },
         });
-        if (!error && data) {
-          name = data.title || slugName;
+        if (!error && data && !data.blocked) {
+          name = data.name || slugName;
           description = data.description || "";
-          image_url = data.images?.[0] || "";
+          image_url = data.image_url || data.images?.[0] || "";
           price = data.price || 0;
-          if (data.images?.length > 0) setScrapedImages(data.images.slice(0, 6));
+          if (data.images?.length > 0) setScrapedImages(data.images.slice(0, 8));
+          if (data.video_url) setScrapedVideo(data.video_url);
+          if (data.affiliate_network) {
+            setFormData(prev => ({ ...prev, affiliate_network: data.affiliate_network }));
+          }
         }
       } catch {}
 
@@ -231,11 +235,16 @@ export default function AdminAffiliateProducts() {
         affiliate_network,
       }));
 
-      const got = [name && name !== slugName && "name", image_url && "image", description && "description", price && "price"].filter(Boolean);
+      const got = [
+        name && name !== slugName && "name",
+        image_url && "image",
+        description && "description",
+        price && "price",
+      ].filter(Boolean);
       toast({
         title: got.length > 0 ? "Details fetched!" : "URL saved",
         description: got.length > 0
-          ? `Auto-filled: ${got.join(", ")}. Add price manually.`
+          ? `Auto-filled: ${got.join(", ")}. Review and save.`
           : isAmazon
             ? "Amazon blocks auto-fetch. Name extracted from URL — add price & image manually."
             : "URL saved — please fill in the details manually.",
