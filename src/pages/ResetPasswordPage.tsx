@@ -17,16 +17,58 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
+  const [linkError, setLinkError] = useState("");
 
-  // Supabase sends the user back with a session via the URL hash.
-  // We need to wait for onAuthStateChange to pick it up.
   useEffect(() => {
+    // Supabase puts the tokens in the URL hash: #access_token=...&type=recovery
+    // We need to extract them and set the session manually.
+    const hash = window.location.hash;
+
+    // Check for error in hash or query string
+    const params = new URLSearchParams(hash.replace("#", "?"));
+    const errorCode = params.get("error_code") || new URLSearchParams(window.location.search).get("error_code");
+    if (errorCode) {
+      setLinkError("This reset link has expired or already been used. Please request a new one.");
+      return;
+    }
+
+    const accessToken = params.get("access_token");
+    const refreshToken = params.get("refresh_token");
+    const type = params.get("type");
+
+    if (accessToken && type === "recovery") {
+      // Set the session using the tokens from the URL
+      supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken || "" })
+        .then(({ error }) => {
+          if (error) {
+            setLinkError("This reset link has expired or already been used. Please request a new one.");
+          } else {
+            setSessionReady(true);
+            // Clean the hash from the URL
+            window.history.replaceState(null, "", window.location.pathname);
+          }
+        });
+      return;
+    }
+
+    // Fallback: listen for PASSWORD_RECOVERY event (some Supabase versions)
     const { data: listener } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         setSessionReady(true);
       }
     });
-    return () => listener.subscription.unsubscribe();
+
+    // If no token in hash after 4 seconds, show expired message
+    const timer = setTimeout(() => {
+      if (!sessionReady) {
+        setLinkError("This reset link has expired or already been used. Please request a new one.");
+      }
+    }, 4000);
+
+    return () => {
+      listener.subscription.unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,15 +89,15 @@ export default function ResetPasswordPage() {
     setLoading(false);
 
     if (error) {
-      setError(error.message || "Failed to update password. The link may have expired.");
+      setError(error.message || "Failed to update password. Please request a new reset link.");
     } else {
       setDone(true);
-      // Sign out so user logs in fresh with new password
       await supabase.auth.signOut();
-      setTimeout(() => navigate("/signin"), 3000);
+      setTimeout(() => navigate("/login"), 3000);
     }
   };
 
+  // ── Success ───────────────────────────────────────────────────────────────
   if (done) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center py-12">
@@ -72,18 +114,17 @@ export default function ResetPasswordPage() {
     );
   }
 
-  if (!sessionReady) {
+  // ── Expired / invalid link ────────────────────────────────────────────────
+  if (linkError) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center py-12">
         <Card className="w-full max-w-md mx-4">
           <CardContent className="pt-8 pb-8 text-center">
-            <AlertCircle className="w-14 h-14 text-yellow-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold mb-2">Verifying reset link…</h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              If this takes more than a few seconds, your link may have expired.
-            </p>
-            <Button variant="outline" onClick={() => navigate("/signin")}>
-              Back to Sign In
+            <AlertCircle className="w-14 h-14 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">Link expired</h2>
+            <p className="text-sm text-muted-foreground mb-6">{linkError}</p>
+            <Button className="w-full" onClick={() => navigate("/login")}>
+              Request a new reset link
             </Button>
           </CardContent>
         </Card>
@@ -91,6 +132,22 @@ export default function ResetPasswordPage() {
     );
   }
 
+  // ── Verifying ─────────────────────────────────────────────────────────────
+  if (!sessionReady) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center py-12">
+        <Card className="w-full max-w-md mx-4">
+          <CardContent className="pt-8 pb-8 text-center">
+            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">Verifying reset link…</h2>
+            <p className="text-sm text-muted-foreground">Just a moment.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // ── Set new password form ─────────────────────────────────────────────────
   return (
     <div className="min-h-[70vh] flex items-center justify-center py-12">
       <Card className="w-full max-w-md mx-4">
