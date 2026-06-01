@@ -1,11 +1,63 @@
-﻿import { useState, useEffect } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, ChevronDown, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+// ── Section dropdown component ────────────────────────────────────────────────
+function SectionDropdown({ sections, value, onChange }: {
+  sections: any[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = sections.find(s => s.id === value);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md bg-white text-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+      >
+        <span className={selected ? "text-gray-900" : "text-gray-400"}>
+          {selected ? selected.title : "Select a section..."}
+        </span>
+        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-52 overflow-y-auto">
+          {sections.map((section) => (
+            <button
+              key={section.id}
+              type="button"
+              onClick={() => { onChange(section.id); setOpen(false); }}
+              className="w-full flex items-center justify-between px-3 py-2.5 text-sm text-left hover:bg-blue-50 transition-colors border-b border-gray-50 last:border-0"
+            >
+              <span className={value === section.id ? "font-semibold text-blue-600" : "text-gray-900"}>
+                {section.title}
+              </span>
+              {value === section.id && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -235,40 +287,13 @@ export default function AdminCategories() {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="section_id">Section *</Label>
-              <div className="w-full border border-gray-300 rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
-                <div className="max-h-44 overflow-y-auto">
-                  {/* Placeholder option */}
-                  <div
-                    onClick={() => setFormData({ ...formData, section_id: "" })}
-                    className={`px-3 py-2 text-sm cursor-pointer select-none ${
-                      formData.section_id === ""
-                        ? "bg-blue-600 text-white"
-                        : "text-gray-400 hover:bg-gray-50"
-                    }`}
-                  >
-                    Select a section...
-                  </div>
-                  {sections.map((section) => (
-                    <div
-                      key={section.id}
-                      onClick={() => setFormData({ ...formData, section_id: section.id })}
-                      className={`px-3 py-2 text-sm cursor-pointer select-none border-t border-gray-100 ${
-                        formData.section_id === section.id
-                          ? "bg-blue-600 text-white"
-                          : "text-gray-900 hover:bg-blue-50"
-                      }`}
-                    >
-                      {section.title}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* Hidden input to satisfy required validation */}
-              <input type="hidden" value={formData.section_id} required />
-              <p className="text-xs text-gray-500 mt-1">
-                Categories must belong to a section
-              </p>
+              <Label>Section *</Label>
+              <SectionDropdown
+                sections={sections}
+                value={formData.section_id}
+                onChange={(id) => setFormData({ ...formData, section_id: id })}
+              />
+              <p className="text-xs text-gray-500 mt-1">Categories must belong to a section</p>
             </div>
 
             <div>
