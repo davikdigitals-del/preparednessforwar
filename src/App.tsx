@@ -21,6 +21,7 @@ const CountriesPage = lazy(() => import("./pages/CountriesPage"));
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const SignInPage = lazy(() => import("./pages/SignInPage"));
 const SignUpPage = lazy(() => import("./pages/SignUpPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
 const MemberDashboard = lazy(() => import("./pages/MemberDashboard"));
 const LibraryPage = lazy(() => import("./pages/LibraryPage"));
@@ -139,7 +140,9 @@ const App = () => (
               <Route element={<PublicLayout />}>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<SignInPage />} />
+                <Route path="/signin" element={<SignInPage />} />
                 <Route path="/signup" element={<SignUpPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/subscribe" element={<SubscribePage />} />
                 <Route path="/dashboard" element={<MemberDashboard />} />
                 <Route path="/dashboard/home" element={<DashboardHome />} />

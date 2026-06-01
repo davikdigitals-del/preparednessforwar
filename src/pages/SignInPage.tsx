@@ -6,14 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReCaptcha } from "@/components/ReCaptcha";
-import { Eye, EyeOff } from "lucide-react";
-import { FaGoogle, FaApple, FaDiscord } from "react-icons/fa";
-
-console.log('Icons imported:', { FaGoogle, FaApple, FaDiscord });
+import { Eye, EyeOff, ArrowLeft, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function SignInPage() {
   const { login, signInWithGoogle, signInWithApple, signInWithDiscord } = useAuth();
   const navigate = useNavigate();
+
+  // Sign-in state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -21,32 +21,128 @@ export default function SignInPage() {
   const [recaptchaToken, setRecaptchaToken] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // Forgot password state
+  const [view, setView] = useState<"signin" | "forgot" | "sent">("signin");
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetError, setResetError] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+
   const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
   const recaptchaEnabled = !!recaptchaSiteKey;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
+
     if (recaptchaEnabled && !recaptchaToken) {
       setError("Please complete the reCAPTCHA verification.");
       return;
     }
-    
+
     setLoading(true);
     const ok = await login(email, password);
-    
+
     if (ok) {
-      // Small delay to ensure state propagates
       await new Promise(resolve => setTimeout(resolve, 100));
       navigate("/dashboard");
     } else {
       setError("Invalid credentials. Please check your email and password.");
     }
-    
+
     setLoading(false);
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError("");
+
+    if (!resetEmail.trim()) {
+      setResetError("Please enter your email address.");
+      return;
+    }
+
+    setResetLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setResetLoading(false);
+
+    if (error) {
+      setResetError(error.message || "Something went wrong. Please try again.");
+    } else {
+      setView("sent");
+    }
+  };
+
+  // ── Forgot password — sent confirmation ──────────────────────────────────
+  if (view === "sent") {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center py-12">
+        <Card className="w-full max-w-md mx-4">
+          <CardContent className="pt-8 pb-8 text-center">
+            <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">Check your inbox</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              We sent a password reset link to <strong>{resetEmail}</strong>. Check your spam folder if you don't see it within a minute.
+            </p>
+            <Button variant="outline" className="w-full" onClick={() => { setView("signin"); setResetEmail(""); }}>
+              Back to Sign In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // ── Forgot password — email form ─────────────────────────────────────────
+  if (view === "forgot") {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center py-12">
+        <Card className="w-full max-w-md mx-4">
+          <CardHeader className="text-center">
+            <div className="w-12 h-12 bg-blue-900 flex items-center justify-center mx-auto mb-3">
+              <span className="font-display font-bold text-lg text-white">PH</span>
+            </div>
+            <CardTitle className="font-display text-2xl">Reset Password</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Enter your email and we'll send you a reset link
+            </p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              {resetError && (
+                <p className="text-sm text-destructive bg-destructive/10 p-2 rounded">{resetError}</p>
+              )}
+              <div>
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={resetEmail}
+                  onChange={e => setResetEmail(e.target.value)}
+                  required
+                  placeholder="you@example.com"
+                  autoFocus
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={resetLoading}>
+                {resetLoading ? "Sending..." : "Send Reset Link"}
+              </Button>
+              <button
+                type="button"
+                onClick={() => { setView("signin"); setResetError(""); }}
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Back to Sign In
+              </button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // ── Sign in form ──────────────────────────────────────────────────────────
   return (
     <div className="min-h-[70vh] flex items-center justify-center py-12">
       <Card className="w-full max-w-md mx-4">
@@ -65,14 +161,23 @@ export default function SignInPage() {
               <Input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@example.com" />
             </div>
             <div>
-              <Label>Password</Label>
+              <div className="flex items-center justify-between mb-1">
+                <Label>Password</Label>
+                <button
+                  type="button"
+                  onClick={() => { setResetEmail(email); setView("forgot"); setResetError(""); }}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <div className="relative">
-                <Input 
-                  type={showPassword ? "text" : "password"} 
-                  value={password} 
-                  onChange={e => setPassword(e.target.value)} 
-                  required 
-                  placeholder="••••••••" 
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  placeholder="••••••••"
                   minLength={6}
                   className="pr-10"
                 />
@@ -86,7 +191,7 @@ export default function SignInPage() {
                 </button>
               </div>
             </div>
-            
+
             {recaptchaEnabled && (
               <div className="flex justify-center">
                 <ReCaptcha
@@ -98,11 +203,11 @@ export default function SignInPage() {
                 />
               </div>
             )}
-            
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
             </Button>
-            
+
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
@@ -152,7 +257,7 @@ export default function SignInPage() {
                 </svg>
               </Button>
             </div>
-            
+
             <p className="text-sm text-center text-muted-foreground">
               Don't have an account?{" "}
               <Link to="/signup" className="text-alert hover:underline font-semibold">Create one</Link>
