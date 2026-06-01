@@ -31,6 +31,23 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// OG metadata proxy — fetches product metadata server-side to avoid CORS
+app.get('/api/og-meta', async (req, res) => {
+  const url = req.query.url;
+  if (!url) return res.status(400).json({ error: 'Missing url param' });
+  try {
+    const response = await fetch(
+      `https://jsonlink.io/api/extract?url=${encodeURIComponent(url)}`,
+      { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PFWBot/1.0)' } }
+    );
+    if (!response.ok) throw new Error(`jsonlink ${response.status}`);
+    const data = await response.json();
+    return res.json(data);
+  } catch {
+    return res.status(502).json({ error: 'Could not fetch metadata' });
+  }
+});
+
 // ÔöÇÔöÇ Static assets (JS/CSS/images) ÔÇö long cache ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 app.use('/assets', (req, res, next) => {
   const filePath = join(distDir, 'assets', req.path);

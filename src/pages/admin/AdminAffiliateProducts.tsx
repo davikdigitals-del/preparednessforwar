@@ -201,7 +201,7 @@ export default function AdminAffiliateProducts() {
         setFormData(prev => ({ ...prev, name: prev.name || slugName, affiliate_network }));
       }
 
-      // ── Step 2: Try jsonlink.io — free OG scraper API, no key needed ───────
+      // ── Step 2: Fetch OG metadata via server proxy (avoids CORS) ──────────
       let name = slugName;
       let description = "";
       let image_url = "";
@@ -209,8 +209,7 @@ export default function AdminAffiliateProducts() {
 
       try {
         const ogRes = await fetch(
-          `https://jsonlink.io/api/extract?url=${encodeURIComponent(url)}`,
-          { signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined }
+          `/api/og-meta?url=${encodeURIComponent(url)}`
         );
         if (ogRes.ok) {
           const og = await ogRes.json();
@@ -220,23 +219,6 @@ export default function AdminAffiliateProducts() {
           if (image_url) setScrapedImages([image_url]);
         }
       } catch {}
-
-      // ── Step 3: Try opengraph.io as fallback ───────────────────────────────
-      if (!image_url) {
-        try {
-          const ogRes2 = await fetch(
-            `https://api.linkpreview.net/?key=free&q=${encodeURIComponent(url)}`,
-            { signal: AbortSignal.timeout ? AbortSignal.timeout(6000) : undefined }
-          );
-          if (ogRes2.ok) {
-            const og2 = await ogRes2.json();
-            name = name || og2.title || slugName;
-            description = description || og2.description || "";
-            image_url = image_url || og2.image || "";
-            if (image_url) setScrapedImages([image_url]);
-          }
-        } catch {}
-      }
 
       setFormData(prev => ({
         ...prev,
