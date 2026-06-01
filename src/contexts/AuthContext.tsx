@@ -158,6 +158,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const handleAuthChange = async (event: string, session: any) => {
       if (debounceTimer) clearTimeout(debounceTimer);
 
+      // Ignore all auth events on the reset-password page —
+      // that page manages its own session temporarily and signs out immediately after.
+      if (window.location.pathname.includes("/reset-password")) {
+        return;
+      }
+
       // Immediately clear user on sign out
       if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESH_FAILED' || event === 'USER_DELETED') {
         lastProcessedUserId = null;
