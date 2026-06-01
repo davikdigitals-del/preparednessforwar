@@ -212,6 +212,8 @@ export default function AdminAffiliateProducts() {
       let description = "";
       let image_url = "";
       let price = 0;
+      let fetchedImages: string[] = [];
+      let fetchedVideo = "";
 
       try {
         const { supabase } = await import("@/integrations/supabase/client");
@@ -223,10 +225,16 @@ export default function AdminAffiliateProducts() {
           description = data.description || "";
           image_url = data.image_url || data.images?.[0] || "";
           price = data.price || 0;
-          if (data.images?.length > 0) setScrapedImages(data.images.slice(0, 8));
-          if (data.video_url) setScrapedVideo(data.video_url);
+          if (data.images?.length > 0) {
+            fetchedImages = data.images.slice(0, 8);
+            setScrapedImages(fetchedImages);
+          }
+          if (data.video_url) {
+            fetchedVideo = data.video_url;
+            setScrapedVideo(fetchedVideo);
+          }
           if (data.affiliate_network) {
-            setFormData(prev => ({ ...prev, affiliate_network: data.affiliate_network }));
+            affiliate_network = data.affiliate_network;
           }
         }      } catch {}
 
@@ -236,8 +244,8 @@ export default function AdminAffiliateProducts() {
         name: name || prev.name,
         description: description || prev.description,
         image_url: image_url || prev.image_url,
-        images: scrapedImages.length > 0 ? scrapedImages : prev.images,
-        video_url: scrapedVideo || prev.video_url,
+        images: fetchedImages.length > 0 ? fetchedImages : prev.images,
+        video_url: fetchedVideo || prev.video_url,
         price: price || prev.price,
         affiliate_network,
       }));
