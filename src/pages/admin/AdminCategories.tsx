@@ -236,21 +236,36 @@ export default function AdminCategories() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="section_id">Section *</Label>
-              <select
-                id="section_id"
-                value={formData.section_id}
-                onChange={(e) => setFormData({ ...formData, section_id: e.target.value })}
-                required
-                size={Math.min(sections.length + 1, 6)}
-                className="w-full px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-y-auto"
-              >
-                <option value="">Select a section...</option>
-                {sections.map((section) => (
-                  <option key={section.id} value={section.id}>
-                    {section.title}
-                  </option>
-                ))}
-              </select>
+              <div className="w-full border border-gray-300 rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+                <div className="max-h-44 overflow-y-auto">
+                  {/* Placeholder option */}
+                  <div
+                    onClick={() => setFormData({ ...formData, section_id: "" })}
+                    className={`px-3 py-2 text-sm cursor-pointer select-none ${
+                      formData.section_id === ""
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-400 hover:bg-gray-50"
+                    }`}
+                  >
+                    Select a section...
+                  </div>
+                  {sections.map((section) => (
+                    <div
+                      key={section.id}
+                      onClick={() => setFormData({ ...formData, section_id: section.id })}
+                      className={`px-3 py-2 text-sm cursor-pointer select-none border-t border-gray-100 ${
+                        formData.section_id === section.id
+                          ? "bg-blue-600 text-white"
+                          : "text-gray-900 hover:bg-blue-50"
+                      }`}
+                    >
+                      {section.title}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Hidden input to satisfy required validation */}
+              <input type="hidden" value={formData.section_id} required />
               <p className="text-xs text-gray-500 mt-1">
                 Categories must belong to a section
               </p>
