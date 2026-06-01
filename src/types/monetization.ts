@@ -168,7 +168,9 @@ export interface AffiliateProduct {
   description?: string;
   category: string;
   image_url?: string;
-  
+  images?: string[];
+  video_url?: string;
+
   // Affiliate
   affiliate_url: string;
   affiliate_network: string;
@@ -356,6 +358,8 @@ export interface AffiliateProductFormData {
   description?: string;
   category: string;
   image_url?: string;
+  images?: string[];
+  video_url?: string;
   affiliate_url: string;
   affiliate_network: string;
   commission_rate?: number;

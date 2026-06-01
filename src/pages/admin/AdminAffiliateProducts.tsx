@@ -26,6 +26,8 @@ export default function AdminAffiliateProducts() {
     description: "",
     category: "survival-gear",
     image_url: "",
+    images: [],
+    video_url: "",
     affiliate_url: "",
     affiliate_network: "amazon",
     commission_rate: 0,
@@ -101,6 +103,8 @@ export default function AdminAffiliateProducts() {
       description: product.description || "",
       category: product.category,
       image_url: product.image_url || "",
+      images: product.images || [],
+      video_url: product.video_url || "",
       affiliate_url: product.affiliate_url,
       affiliate_network: product.affiliate_network,
       commission_rate: product.commission_rate || 0,
@@ -148,6 +152,8 @@ export default function AdminAffiliateProducts() {
       description: "",
       category: "survival-gear",
       image_url: "",
+      images: [],
+      video_url: "",
       affiliate_url: "",
       affiliate_network: "amazon",
       commission_rate: 0,
@@ -222,8 +228,7 @@ export default function AdminAffiliateProducts() {
           if (data.affiliate_network) {
             setFormData(prev => ({ ...prev, affiliate_network: data.affiliate_network }));
           }
-        }
-      } catch {}
+        }      } catch {}
 
       setFormData(prev => ({
         ...prev,
@@ -231,6 +236,8 @@ export default function AdminAffiliateProducts() {
         name: name || prev.name,
         description: description || prev.description,
         image_url: image_url || prev.image_url,
+        images: scrapedImages.length > 0 ? scrapedImages : prev.images,
+        video_url: scrapedVideo || prev.video_url,
         price: price || prev.price,
         affiliate_network,
       }));

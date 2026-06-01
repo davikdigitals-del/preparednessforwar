@@ -17,7 +17,7 @@ export function AffiliateProductCard({ product, onTrackClick }: AffiliateProduct
     window.open(product.affiliate_url, "_blank", "noopener,noreferrer");
   };
 
-  const currencySymbol = "£"; // All prices in GBP
+  const currencySymbol = "£";
 
   return (
     <>
@@ -42,6 +42,12 @@ export function AffiliateProductCard({ product, onTrackClick }: AffiliateProduct
           {product.is_featured && (
             <span className="absolute top-2 left-2 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">
               FEATURED
+            </span>
+          )}
+          {/* Gallery indicator */}
+          {product.images && product.images.length > 1 && (
+            <span className="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded">
+              1/{product.images.length}
             </span>
           )}
         </div>
@@ -78,7 +84,7 @@ export function AffiliateProductCard({ product, onTrackClick }: AffiliateProduct
   );
 }
 
-/* â”€â”€ Product Preview Modal â”€â”€ */
+/* -- Product Preview Modal -- */
 function ProductPreviewModal({
   product, open, onClose, onBuy, currencySymbol,
 }: {
@@ -91,12 +97,12 @@ function ProductPreviewModal({
   const [activeImg, setActiveImg] = useState(0);
   const [videoPlaying, setVideoPlaying] = useState(false);
 
-  // Build image gallery â€” use images array if available, else just image_url
-  const images: string[] = (product as any).images?.length
-    ? (product as any).images
+  // Build image gallery — prefer images array, fall back to image_url
+  const images: string[] = product.images?.length
+    ? product.images
     : product.image_url ? [product.image_url] : [];
 
-  const videoUrl = (product as any).video_url || "";
+  const videoUrl = product.video_url || "";
 
   const prev = () => setActiveImg(i => (i - 1 + images.length) % images.length);
   const next = () => setActiveImg(i => (i + 1) % images.length);
@@ -106,7 +112,7 @@ function ProductPreviewModal({
       <DialogContent className="max-w-4xl w-full p-0 overflow-hidden max-h-[95vh] overflow-y-auto">
         <div className="grid grid-cols-1 md:grid-cols-2">
 
-          {/* Left â€” Image/Video Gallery */}
+          {/* Left — Image/Video Gallery */}
           <div className="bg-gray-50 p-4 flex flex-col gap-3">
             {/* Main image/video */}
             <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
@@ -142,13 +148,13 @@ function ProductPreviewModal({
             </div>
 
             {/* Thumbnail strip */}
-            {images.length > 1 && (
+            {(images.length > 1 || videoUrl) && (
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {images.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => { setActiveImg(i); setVideoPlaying(false); }}
-                    className={`w-14 h-14 shrink-0 rounded border-2 overflow-hidden transition-all ${activeImg === i ? 'border-blue-900' : 'border-gray-200'}`}
+                    className={`w-14 h-14 shrink-0 rounded border-2 overflow-hidden transition-all ${activeImg === i && !videoPlaying ? 'border-blue-900' : 'border-gray-200'}`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>
@@ -165,7 +171,7 @@ function ProductPreviewModal({
             )}
           </div>
 
-          {/* Right â€” Product Details */}
+          {/* Right — Product Details */}
           <div className="p-5 flex flex-col gap-4">
             {/* Category */}
             <div>
@@ -197,9 +203,9 @@ function ProductPreviewModal({
             {product.description && (
               <div>
                 <h3 className="text-sm font-bold text-gray-700 mb-1">About this product</h3>
-                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+                <p className="text-sm text-gray-600 leading-relaxed">
                   {product.description.split(' | ').map((line, i) => (
-                    <span key={i} className="block mb-1">â€¢ {line}</span>
+                    <span key={i} className="block mb-1">• {line}</span>
                   ))}
                 </p>
               </div>
