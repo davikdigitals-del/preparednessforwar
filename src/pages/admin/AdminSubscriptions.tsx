@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -281,7 +281,7 @@ export default function AdminSubscriptions() {
               Add Plan
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent aria-describedby={undefined} className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>{editingPlan ? "Edit Plan" : "Create New Plan"}</DialogTitle>
             </DialogHeader>

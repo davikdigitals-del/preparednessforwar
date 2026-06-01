@@ -102,7 +102,7 @@ export default function LibraryPage() {
       {filtered.length === 0 && <p className="text-center text-muted-foreground py-16">No items found in the library.</p>}
 
       <Dialog open={!!previewItem} onOpenChange={() => setPreviewItem(null)}>
-        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="font-display">{previewItem?.title}</DialogTitle>
           </DialogHeader>

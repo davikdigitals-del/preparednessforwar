@@ -215,7 +215,7 @@ export default function AdminPreparednessTemplates() {
 
       {/* Template Dialog */}
       <Dialog open={templateDialog} onOpenChange={setTemplateDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent aria-describedby={undefined} className="max-w-md">
           <DialogHeader><DialogTitle>{editingTemplate ? "Edit Template" : "New Template"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             {!editingTemplate && (
@@ -249,7 +249,7 @@ export default function AdminPreparednessTemplates() {
 
       {/* Field Dialog */}
       <Dialog open={fieldDialog} onOpenChange={setFieldDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent aria-describedby={undefined} className="max-w-md">
           <DialogHeader><DialogTitle>{editingField ? "Edit Field" : "Add Field"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div>

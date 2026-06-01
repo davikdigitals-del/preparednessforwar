@@ -146,7 +146,7 @@ export default function AdminMemberReports() {
                   Review
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent aria-describedby={undefined} className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Review Report</DialogTitle>
                 </DialogHeader>

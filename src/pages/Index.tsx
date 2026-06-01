@@ -40,7 +40,7 @@ function MediaModal({ item, onClose }) {
   const isPremiumLocked = item.isPremium && !hasPremiumAccess;
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl p-0 overflow-hidden gap-0 bg-black border-gray-800">
+      <DialogContent className="max-w-3xl p-0 overflow-hidden gap-0 bg-black border-gray-800" aria-describedby={undefined}>
         <DialogHeader className="px-5 pt-4 pb-3 border-b border-gray-800 bg-gray-900">
           <DialogTitle className="text-sm font-bold line-clamp-1 pr-8 text-white flex items-center gap-2">
             {item.title}

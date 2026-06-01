@@ -110,7 +110,7 @@ function ProductPreviewModal({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       {/* Use a raw fixed overlay so we control sizing precisely */}
-      <DialogContent className="max-w-3xl w-full p-0 gap-0 overflow-hidden rounded-xl">
+      <DialogContent className="max-w-3xl w-full p-0 gap-0 overflow-hidden rounded-xl" aria-describedby={undefined}>
         <div className="flex flex-col md:flex-row max-h-[90vh]">
 
           {/* ── LEFT: Gallery ── */}

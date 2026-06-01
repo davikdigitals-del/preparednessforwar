@@ -70,7 +70,7 @@ function VideoModal({ item, onClose }: { item: MediaItem; onClose: () => void })
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl p-0 overflow-hidden">
+      <DialogContent aria-describedby={undefined} className="max-w-3xl p-0 overflow-hidden">
         <DialogHeader className="px-5 pt-4 pb-2">
           <DialogTitle className="text-sm font-bold line-clamp-1 pr-8">{item.title}</DialogTitle>
         </DialogHeader>

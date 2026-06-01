@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -295,7 +295,7 @@ export default function AdminSections() {
 
       {/* Section Dialog */}
       <Dialog open={sectionDialog} onOpenChange={setSectionDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent aria-describedby={undefined} className="max-w-md">
           <DialogHeader>
             <DialogTitle>{editingSection ? "Edit Section" : "New Section"}</DialogTitle>
           </DialogHeader>
@@ -319,7 +319,7 @@ export default function AdminSections() {
 
       {/* Category Dialog */}
       <Dialog open={catDialog} onOpenChange={setCatDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent aria-describedby={undefined} className="max-w-md">
           <DialogHeader>
             <DialogTitle>{editingCat ? "Edit Category" : "New Category"}</DialogTitle>
           </DialogHeader>
@@ -342,7 +342,7 @@ export default function AdminSections() {
 
       {/* Tool Dialog */}
       <Dialog open={toolDialog} onOpenChange={setToolDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent aria-describedby={undefined} className="max-w-md">
           <DialogHeader>
             <DialogTitle>{editingTool ? "Edit Quick Link" : "New Quick Link"}</DialogTitle>
           </DialogHeader>

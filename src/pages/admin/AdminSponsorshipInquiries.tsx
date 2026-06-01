@@ -174,7 +174,7 @@ export default function AdminSponsorshipInquiries() {
 
       {/* Detail Dialog */}
       <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent aria-describedby={undefined} className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selected?.company_name}</DialogTitle>
           </DialogHeader>

@@ -224,7 +224,7 @@ export default function AdminAdRequests() {
 
       {/* Review Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent aria-describedby={undefined} className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Review Ad Request</DialogTitle>
           </DialogHeader>

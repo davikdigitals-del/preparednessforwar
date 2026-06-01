@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   Clock, Eye, Share2, ChevronRight, Tag, ArrowLeft, Play,
@@ -642,7 +642,7 @@ const ArticlePage = () => {
 
       {/* Report Dialog */}
       <Dialog open={reportOpen} onOpenChange={setReportOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent aria-describedby={undefined} className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Flag className="w-5 h-5 text-red-600" />
