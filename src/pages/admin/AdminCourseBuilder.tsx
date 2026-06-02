@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, GripVertical, ArrowLeft, Video, FileText, HelpCircle, Download } from "lucide-react";
+import { Plus, Edit, Trash2, GripVertical, ArrowLeft, Video, FileText, HelpCircle, Download, Upload, Link2, X, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/FileUpload";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,6 +25,17 @@ export default function AdminCourseBuilder() {
   const [editingLesson, setEditingLesson] = useState<CourseLesson | null>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<string>("");
   const { toast } = useToast();
+
+  // Bulk episode upload state (episode-type courses only)
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkModuleId, setBulkModuleId] = useState<string>("");
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [bulkEpisodes, setBulkEpisodes] = useState<Array<{
+    title: string;
+    video_url: string;
+    duration: string;
+    is_preview: boolean;
+  }>>([{ title: "", video_url: "", duration: "", is_preview: false }]);
 
   const [moduleFormData, setModuleFormData] = useState({
     title: "",
@@ -236,6 +247,67 @@ export default function AdminCourseBuilder() {
     });
   };
 
+  // ── Bulk episode helpers ────────────────────────────────────────────────
+  const addBulkRow = () =>
+    setBulkEpisodes(prev => [...prev, { title: "", video_url: "", duration: "", is_preview: false }]);
+
+  const removeBulkRow = (i: number) =>
+    setBulkEpisodes(prev => prev.filter((_, idx) => idx !== i));
+
+  const updateBulkRow = (i: number, field: string, value: string | boolean) =>
+    setBulkEpisodes(prev => prev.map((ep, idx) => idx === i ? { ...ep, [field]: value } : ep));
+
+  // Paste a block of URLs (one per line) and auto-create rows
+  const handleBulkPaste = (raw: string) => {
+    const lines = raw.split("\n").map(l => l.trim()).filter(Boolean);
+    if (!lines.length) return;
+    setBulkEpisodes(lines.map((url, i) => ({
+      title: `Episode ${i + 1}`,
+      video_url: url,
+      duration: "",
+      is_preview: false,
+    })));
+  };
+
+  const handleBulkSave = async () => {
+    if (!bulkModuleId) {
+      toast({ title: "Select a module first", variant: "destructive" });
+      return;
+    }
+    const valid = bulkEpisodes.filter(ep => ep.video_url.trim());
+    if (!valid.length) {
+      toast({ title: "Add at least one video URL", variant: "destructive" });
+      return;
+    }
+    setBulkSaving(true);
+    try {
+      const module = modules.find(m => m.id === bulkModuleId);
+      const existingCount = module?.lessons?.length || 0;
+      const rows = valid.map((ep, i) => ({
+        course_id: id,
+        module_id: bulkModuleId,
+        title: ep.title || `Episode ${existingCount + i + 1}`,
+        content_type: "video" as const,
+        video_url: ep.video_url.trim(),
+        video_duration: parseInt(ep.duration) || 0,
+        is_preview: ep.is_preview,
+        is_published: true,
+        order_index: existingCount + i,
+      }));
+      const { error } = await supabase.from("course_lessons").insert(rows);
+      if (error) throw error;
+      toast({ title: "Success", description: `${rows.length} episode${rows.length > 1 ? "s" : ""} added` });
+      setBulkDialogOpen(false);
+      setBulkEpisodes([{ title: "", video_url: "", duration: "", is_preview: false }]);
+      setBulkModuleId("");
+      fetchCourseData();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setBulkSaving(false);
+    }
+  };
+
   const getContentIcon = (type: string) => {
     switch (type) {
       case "video": return <Video className="w-4 h-4" />;
@@ -277,12 +349,29 @@ export default function AdminCourseBuilder() {
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-bold">{course.title}</h1>
-          <p className="text-muted-foreground mt-1">Build your course curriculum</p>
+          <p className="text-muted-foreground mt-1">
+            {course.course_type === 'episode' ? 'Episode Series Builder' : 'Course Curriculum Builder'}
+          </p>
         </div>
-        <Button onClick={() => { resetModuleForm(); setModuleDialogOpen(true); }}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Module
-        </Button>
+        <div className="flex items-center gap-2">
+          {course.course_type === 'episode' && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setBulkModuleId(modules[0]?.id || "");
+                setBulkEpisodes([{ title: "", video_url: "", duration: "", is_preview: false }]);
+                setBulkDialogOpen(true);
+              }}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Add Episodes
+            </Button>
+          )}
+          <Button onClick={() => { resetModuleForm(); setModuleDialogOpen(true); }}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Module
+          </Button>
+        </div>
       </div>
 
       {/* Course Stats */}
@@ -365,6 +454,20 @@ export default function AdminCourseBuilder() {
                     <Plus className="w-4 h-4 mr-2" />
                     Add Lesson
                   </Button>
+                  {course.course_type === 'episode' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setBulkModuleId(module.id);
+                        setBulkEpisodes([{ title: "", video_url: "", duration: "", is_preview: false }]);
+                        setBulkDialogOpen(true);
+                      }}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Bulk Add
+                    </Button>
+                  )}
                 </div>
               </div>
 
@@ -616,6 +719,123 @@ export default function AdminCourseBuilder() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+      {/* Bulk Episode Upload Dialog */}
+      <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Video className="w-5 h-5 text-purple-700" />
+              Bulk Add Episodes
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Module selector */}
+            <div>
+              <Label>Module *</Label>
+              <Select value={bulkModuleId} onValueChange={setBulkModuleId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select module" />
+                </SelectTrigger>
+                <SelectContent>
+                  {modules.map((m, i) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      Module {i + 1}: {m.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Paste block */}
+            <div className="bg-gray-50 border rounded-lg p-4">
+              <Label className="text-sm font-semibold mb-2 block">
+                Paste URLs (one per line) — auto-fills the table below
+              </Label>
+              <Textarea
+                placeholder={"https://youtu.be/abc\nhttps://youtu.be/def\nhttps://youtu.be/ghi"}
+                rows={4}
+                className="font-mono text-xs"
+                onChange={(e) => handleBulkPaste(e.target.value)}
+              />
+            </div>
+
+            {/* Episode rows */}
+            <div className="space-y-2">
+              <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-gray-500 px-1">
+                <span className="col-span-4">Title</span>
+                <span className="col-span-5">Video URL</span>
+                <span className="col-span-1 text-center">Min</span>
+                <span className="col-span-1 text-center">Free</span>
+                <span className="col-span-1" />
+              </div>
+
+              {bulkEpisodes.map((ep, i) => (
+                <div key={i} className="grid grid-cols-12 gap-2 items-center bg-white border rounded-lg px-2 py-2">
+                  <Input
+                    className="col-span-4 text-sm h-8"
+                    placeholder={`Episode ${i + 1}`}
+                    value={ep.title}
+                    onChange={(e) => updateBulkRow(i, "title", e.target.value)}
+                  />
+                  <div className="col-span-5 flex items-center gap-1">
+                    <Link2 className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <Input
+                      className="text-sm h-8"
+                      placeholder="https://..."
+                      value={ep.video_url}
+                      onChange={(e) => updateBulkRow(i, "video_url", e.target.value)}
+                    />
+                  </div>
+                  <Input
+                    className="col-span-1 text-sm h-8 text-center"
+                    type="number"
+                    placeholder="0"
+                    value={ep.duration}
+                    onChange={(e) => updateBulkRow(i, "duration", e.target.value)}
+                  />
+                  <div className="col-span-1 flex justify-center">
+                    <Checkbox
+                      checked={ep.is_preview}
+                      onCheckedChange={(v) => updateBulkRow(i, "is_preview", v as boolean)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeBulkRow(i)}
+                    className="col-span-1 flex justify-center text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+
+              <Button type="button" variant="outline" size="sm" onClick={addBulkRow} className="w-full">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Row
+              </Button>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t">
+              <p className="text-xs text-gray-500">
+                {bulkEpisodes.filter(e => e.video_url.trim()).length} episodes ready to save
+              </p>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={() => setBulkDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleBulkSave} disabled={bulkSaving}>
+                  {bulkSaving ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+                  ) : (
+                    <><Upload className="w-4 h-4 mr-2" /> Save All Episodes</>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
