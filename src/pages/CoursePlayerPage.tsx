@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, ChevronRight, CheckCircle, Play, FileText, HelpCircle, Download, Menu, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle, Play, FileText, HelpCircle, Download, Menu, X, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MediaPlayer } from "@/components/MediaPlayer";
 import type { Course, CourseModule, CourseLesson, CourseEnrollment } from "@/types/monetization";
@@ -12,7 +12,7 @@ import type { Course, CourseModule, CourseLesson, CourseEnrollment } from "@/typ
 export default function CoursePlayerPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAdmin } = useAuth();
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [enrollment, setEnrollment] = useState<CourseEnrollment | null>(null);
@@ -239,10 +239,28 @@ export default function CoursePlayerPage() {
 
   if (!currentLesson) {
     return (
-      <div className="container py-12 text-center">
-        <h1 className="text-3xl font-bold mb-2">{course.title}</h1>
-        <p className="text-gray-500 mb-6">This course has no lessons yet. Check back soon.</p>
-        <Button onClick={() => navigate("/my-courses")}>Back to My Courses</Button>
+      <div className="container py-16 text-center max-w-lg mx-auto">
+        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Play className="w-8 h-8 text-gray-400" />
+        </div>
+        <h1 className="text-2xl font-bold mb-2">{course.title}</h1>
+        <p className="text-gray-500 mb-6">
+          This course has no lessons yet. Check back soon.
+        </p>
+        {isAdmin && (
+          <Link
+            to={`/admin/courses/${course.id}/builder`}
+            className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-blue-900 text-white text-sm font-semibold rounded hover:bg-blue-800 transition-colors"
+          >
+            <Settings className="w-4 h-4" />
+            Add Lessons in Builder
+          </Link>
+        )}
+        <div className="mt-3">
+          <Button variant="outline" onClick={() => navigate("/my-courses")}>
+            Back to My Courses
+          </Button>
+        </div>
       </div>
     );
   }
