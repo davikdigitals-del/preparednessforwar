@@ -324,14 +324,6 @@ export default function AdminMembers() {
                         {new Date(member.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleManageSubscription(member)}
-                        >
-                          <Edit className="w-4 h-4 mr-1" />
-                          Manage
-                        </Button>
                       </td>
                     </tr>
                   );
