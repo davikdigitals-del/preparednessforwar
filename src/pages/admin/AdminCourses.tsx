@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Search, BookOpen, Users, Star, DollarSign } from "lucide-react";
+import { Plus, Edit, Trash2, Search, BookOpen, Users, Star, DollarSign, Clapperboard } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/FileUpload";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,6 +16,7 @@ import type { Course, CourseFormData } from "@/types/monetization";
 
 export default function AdminCourses() {
   const [courses, setCourses] = useState<Course[]>([]);
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
@@ -392,9 +394,20 @@ export default function AdminCourses() {
                         {course.is_featured && (
                           <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Featured</span>
                         )}
+                        {course.course_type === 'episode' && (
+                          <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">Episodes</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        title="Open Builder"
+                        onClick={() => navigate(`/admin/courses/${course.id}/builder`)}
+                      >
+                        <Clapperboard className="w-4 h-4" />
+                      </Button>
                       <Button variant="ghost" size="sm" onClick={() => handleEdit(course)}>
                         <Edit className="w-4 h-4" />
                       </Button>
@@ -590,7 +603,26 @@ export default function AdminCourses() {
               )}
             </div>
 
-            {/* Course Details */}
+            {/* Episode Videos — episode type only */}
+            {formData.course_type === 'episode' && !editingCourse && (
+            <div className="space-y-4 border-t pt-4">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                🎬 Episodes
+                <span className="text-xs font-normal text-gray-500">(add after saving, or paste URLs below to pre-fill)</span>
+              </h3>
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-sm text-purple-800">
+                <p className="font-semibold mb-1">How episode series work:</p>
+                <ol className="list-decimal list-inside space-y-1 text-xs">
+                  <li>Create the series here (title, thumbnail, pricing)</li>
+                  <li>After saving, click <strong>Builder</strong> on the series row to open the episode builder</li>
+                  <li>Use <strong>Bulk Add Episodes</strong> to paste multiple YouTube/video URLs at once</li>
+                </ol>
+              </div>
+            </div>
+            )}
+
+            {/* Course Details — course type only */}
+            {formData.course_type === 'course' && (
             <div className="space-y-4 border-t pt-4">
               <h3 className="font-semibold text-lg">Course Details</h3>
               
@@ -641,8 +673,10 @@ export default function AdminCourses() {
                 </Select>
               </div>
             </div>
+            )}
 
-            {/* What You'll Learn */}
+            {/* What You'll Learn — course type only */}
+            {formData.course_type === 'course' && (
             <div className="space-y-4 border-t pt-4">
               <h3 className="font-semibold text-lg">What Students Will Learn</h3>
               
@@ -669,8 +703,10 @@ export default function AdminCourses() {
                 </ul>
               )}
             </div>
+            )}
 
-            {/* Requirements */}
+            {/* Requirements — course type only */}
+            {formData.course_type === 'course' && (
             <div className="space-y-4 border-t pt-4">
               <h3 className="font-semibold text-lg">Requirements</h3>
               
@@ -697,6 +733,7 @@ export default function AdminCourses() {
                 </ul>
               )}
             </div>
+            )}
 
             {/* Geographic Targeting */}
             <div className="space-y-4 border-t pt-4">
