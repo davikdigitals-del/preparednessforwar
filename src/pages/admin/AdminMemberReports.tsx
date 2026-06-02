@@ -154,74 +154,75 @@ export default function AdminMemberReports() {
           </div>
         )}
 
-        <div className="flex gap-2">
-          {report.status === 'pending' && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button size="sm" onClick={() => setSelectedReport(report)}>
-                  Review
-                </Button>
-              </DialogTrigger>
-              <DialogContent aria-describedby={undefined} className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Review Report</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="font-semibold mb-2">{report.title}</h3>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{report.content}</p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Admin Notes (Optional)</Label>
-                    <Textarea
-                      value={adminNotes}
-                      onChange={(e) => setAdminNotes(e.target.value)}
-                      placeholder="Internal notes about this report..."
-                      rows={3}
-                    />
-                  </div>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex gap-2">
+            {report.status === 'pending' && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="sm" onClick={() => setSelectedReport(report)}>
+                    Review
+                  </Button>
+                </DialogTrigger>
+                <DialogContent aria-describedby={undefined} className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Review Report</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="font-semibold mb-2">{report.title}</h3>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">{report.content}</p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Admin Notes (Optional)</Label>
+                      <Textarea
+                        value={adminNotes}
+                        onChange={(e) => setAdminNotes(e.target.value)}
+                        placeholder="Internal notes about this report..."
+                        rows={3}
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label>Rejection Reason (Required if rejecting)</Label>
-                    <Textarea
-                      value={rejectionReason}
-                      onChange={(e) => setRejectionReason(e.target.value)}
-                      placeholder="Explain why this report is being rejected..."
-                      rows={3}
-                    />
-                  </div>
+                    <div className="space-y-2">
+                      <Label>Rejection Reason (Required if rejecting)</Label>
+                      <Textarea
+                        value={rejectionReason}
+                        onChange={(e) => setRejectionReason(e.target.value)}
+                        placeholder="Explain why this report is being rejected..."
+                        rows={3}
+                      />
+                    </div>
 
-                  <div className="flex gap-2">
-                    <Button onClick={() => handleApprove(report.id)} className="flex-1">
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Approve & Publish
-                    </Button>
-                    <Button variant="destructive" onClick={() => handleReject(report.id)} className="flex-1">
-                      <XCircle className="w-4 h-4 mr-2" />
-                      Reject
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button onClick={() => handleApprove(report.id)} className="flex-1">
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Approve & Publish
+                      </Button>
+                      <Button variant="destructive" onClick={() => handleReject(report.id)} className="flex-1">
+                        <XCircle className="w-4 h-4 mr-2" />
+                        Reject
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
+                </DialogContent>
+              </Dialog>
+            )}
 
-          {report.status === 'approved' && (
-            <Button
-              size="sm"
-              variant={report.is_featured ? "default" : "outline"}
-              onClick={() => handleToggleFeatured(report.id, report.is_featured)}
-            >
-              <Star className="w-4 h-4 mr-2" />
-              {report.is_featured ? 'Unfeature' : 'Feature'}
-            </Button>
-          )}
+            {report.status === 'approved' && (
+              <Button
+                size="sm"
+                variant={report.is_featured ? "default" : "outline"}
+                onClick={() => handleToggleFeatured(report.id, report.is_featured)}
+              >
+                <Star className="w-4 h-4 mr-2" />
+                {report.is_featured ? 'Unfeature' : 'Feature'}
+              </Button>
+            )}
+          </div>
 
           <Button
             size="sm"
-            variant="ghost"
-            className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto"
+            variant="destructive"
             onClick={() => handleDelete(report.id)}
           >
             <Trash2 className="w-4 h-4 mr-1" />
