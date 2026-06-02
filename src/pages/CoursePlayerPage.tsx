@@ -276,8 +276,8 @@ export default function CoursePlayerPage() {
         className="bg-white border-b border-gray-200 sticky z-20"
         style={{ top: 'var(--header-height, 98px)' }}
       >
-        <div className="px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <Button
               variant="ghost"
               size="sm"
@@ -285,24 +285,31 @@ export default function CoursePlayerPage() {
             >
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
-            <div>
-              <h1 className="font-semibold text-lg">{course.title}</h1>
-              <p className="text-sm text-gray-600">
+            <div className="min-w-0">
+              <h1 className="font-semibold text-sm sm:text-lg truncate">{course.title}</h1>
+              <p className="text-xs sm:text-sm text-gray-600">
                 {enrollment?.progress_percentage}% Complete
               </p>
             </div>
           </div>
-          <Button variant="outline" onClick={() => navigate("/my-courses")}>
-            Exit Course
+          <Button variant="outline" size="sm" onClick={() => navigate("/my-courses")} className="shrink-0">
+            <span className="hidden sm:inline">Exit Course</span>
+            <X className="w-4 h-4 sm:hidden" />
           </Button>
         </div>
         <Progress value={enrollment?.progress_percentage || 0} className="h-1 rounded-none" />
       </div>
 
       <div className="flex">
-        {/* Sidebar */}
+        {/* Sidebar — overlay on mobile, fixed on desktop */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/40 z-10 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
         <aside
-          className={`fixed left-0 bottom-0 w-80 bg-white border-r border-gray-200 overflow-y-auto transition-transform z-10 ${
+          className={`fixed left-0 bottom-0 w-72 sm:w-80 bg-white border-r border-gray-200 overflow-y-auto transition-transform z-20 ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
           style={{ top: 'calc(var(--header-height, 98px) + 57px)' }}
@@ -345,13 +352,13 @@ export default function CoursePlayerPage() {
         </aside>
 
         {/* Main Content */}
-        <main className={`flex-1 transition-all ${sidebarOpen ? "ml-80" : "ml-0"}`}>
-          <div className="max-w-5xl mx-auto p-6">
+        <main className={`flex-1 transition-all min-w-0 ${sidebarOpen ? "lg:ml-80" : "ml-0"}`}>
+          <div className="max-w-5xl mx-auto p-3 sm:p-6">
             {/* Lesson Header */}
-            <div className="mb-6">
-              <h2 className="text-3xl font-bold mb-2">{currentLesson.title}</h2>
+            <div className="mb-4 sm:mb-6">
+              <h2 className="text-xl sm:text-3xl font-bold mb-2">{currentLesson.title}</h2>
               {currentLesson.description && (
-                <p className="text-gray-600">{currentLesson.description}</p>
+                <p className="text-gray-600 text-sm sm:text-base">{currentLesson.description}</p>
               )}
             </div>
 

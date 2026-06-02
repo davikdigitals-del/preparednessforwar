@@ -78,26 +78,26 @@ export default function CoursesPage() {
   return (
     <div className="bg-white min-h-screen">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-16">
-        <div className="container">
+      <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-8 sm:py-16">
+        <div className="container px-4">
           <div className="max-w-3xl">
-            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
+            <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-bold mb-3">
               Learn Survival & Preparedness Skills
             </h1>
-            <p className="text-xl text-blue-100 mb-8">
+            <p className="text-sm sm:text-xl text-blue-100 mb-4 sm:mb-8">
               Expert-led online courses to help you and your family prepare for any emergency
             </p>
-            <div className="flex gap-4 text-sm">
+            <div className="flex flex-wrap gap-3 sm:gap-4 text-sm">
               <div className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5" />
+                <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span>{courses.length} Courses</span>
               </div>
               <div className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
+                <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span>{courses.reduce((sum, c) => sum + c.enrollment_count, 0)} Students</span>
               </div>
               <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 fill-white" />
+                <Star className="w-4 h-4 sm:w-5 sm:h-5 fill-white" />
                 <span>Expert Instructors</span>
               </div>
             </div>
@@ -105,7 +105,7 @@ export default function CoursesPage() {
         </div>
       </div>
 
-      <div className="container py-12">
+      <div className="container px-4 py-8 sm:py-12">
         {/* Featured Courses */}
         {featuredCourses.length > 0 && (
           <div className="mb-12">
@@ -211,7 +211,7 @@ export default function CoursesPage() {
           <p className="text-lg text-gray-700 mb-6 max-w-2xl mx-auto">
             Join thousands of students learning essential survival and preparedness skills from expert instructors.
           </p>
-          <div className="flex justify-center gap-4">
+          <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
             <Link
               to="/subscribe"
               className="px-6 py-3 bg-blue-900 text-white font-semibold rounded hover:bg-blue-800 transition-colors"

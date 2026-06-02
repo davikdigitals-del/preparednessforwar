@@ -84,16 +84,16 @@ export default function MyCoursesPage() {
         <PortalBreadcrumb items={[{ label: "My Courses" }]} />
       </div>
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-12">
-        <div className="container">
-          <h1 className="font-display text-4xl font-bold mb-4">My Learning Dashboard</h1>
-          <p className="text-xl text-blue-100">Track your progress and continue your learning journey</p>
+      <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-8 sm:py-12">
+        <div className="container px-4">
+          <h1 className="font-display text-2xl sm:text-4xl font-bold mb-2 sm:mb-4">My Learning Dashboard</h1>
+          <p className="text-sm sm:text-xl text-blue-100">Track your progress and continue your learning journey</p>
         </div>
       </div>
 
-      <div className="container py-12">
+      <div className="container px-4 py-8 sm:py-12">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-12">
           <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
             <div className="flex items-center justify-between mb-2">
               <BookOpen className="w-8 h-8 text-blue-600" />

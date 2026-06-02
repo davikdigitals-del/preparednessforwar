@@ -243,14 +243,14 @@ export default function AdminMemberReports() {
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Member Reports</h1>
+    <div className="p-4 sm:p-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Member Reports</h1>
         <p className="text-muted-foreground">Review and manage community field reports</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-3xl font-bold text-orange-600">{pendingReports.length}</p>

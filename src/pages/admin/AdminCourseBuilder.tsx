@@ -405,19 +405,19 @@ export default function AdminCourseBuilder() {
         ) : (
           modules.map((module, moduleIndex) => (
             <div key={module.id} className="bg-white rounded-lg border">
-              <div className="p-4 border-b bg-gray-50 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <GripVertical className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <h3 className="font-semibold">
+              <div className="p-3 sm:p-4 border-b bg-gray-50 flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+                <div className="flex items-center gap-3 min-w-0">
+                  <GripVertical className="w-5 h-5 text-gray-400 shrink-0" />
+                  <div className="min-w-0">
+                    <h3 className="font-semibold truncate">
                       Module {moduleIndex + 1}: {module.title}
                     </h3>
                     {module.description && (
-                      <p className="text-sm text-gray-600">{module.description}</p>
+                      <p className="text-sm text-gray-600 truncate">{module.description}</p>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 flex-wrap">
                   {!module.is_published && (
                     <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">Draft</span>
                   )}
@@ -764,7 +764,7 @@ export default function AdminCourseBuilder() {
 
             {/* Episode rows */}
             <div className="space-y-2">
-              <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-gray-500 px-1">
+              <div className="hidden sm:grid sm:grid-cols-12 gap-2 text-xs font-semibold text-gray-500 px-1">
                 <span className="col-span-4">Title</span>
                 <span className="col-span-5">Video URL</span>
                 <span className="col-span-1 text-center">Min</span>
@@ -773,42 +773,45 @@ export default function AdminCourseBuilder() {
               </div>
 
               {bulkEpisodes.map((ep, i) => (
-                <div key={i} className="grid grid-cols-12 gap-2 items-center bg-white border rounded-lg px-2 py-2">
+                <div key={i} className="flex flex-col sm:grid sm:grid-cols-12 gap-2 bg-white border rounded-lg p-3 sm:px-2 sm:py-2">
                   <Input
-                    className="col-span-4 text-sm h-8"
-                    placeholder={`Episode ${i + 1}`}
+                    className="sm:col-span-4 text-sm h-8"
+                    placeholder={`Episode ${i + 1} title`}
                     value={ep.title}
                     onChange={(e) => updateBulkRow(i, "title", e.target.value)}
                   />
-                  <div className="col-span-5 flex items-center gap-1">
+                  <div className="sm:col-span-5 flex items-center gap-1">
                     <Link2 className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                     <Input
                       className="text-sm h-8"
-                      placeholder="https://..."
+                      placeholder="https://youtu.be/..."
                       value={ep.video_url}
                       onChange={(e) => updateBulkRow(i, "video_url", e.target.value)}
                     />
                   </div>
-                  <Input
-                    className="col-span-1 text-sm h-8 text-center"
-                    type="number"
-                    placeholder="0"
-                    value={ep.duration}
-                    onChange={(e) => updateBulkRow(i, "duration", e.target.value)}
-                  />
-                  <div className="col-span-1 flex justify-center">
-                    <Checkbox
-                      checked={ep.is_preview}
-                      onCheckedChange={(v) => updateBulkRow(i, "is_preview", v as boolean)}
+                  <div className="flex items-center gap-3 sm:contents">
+                    <Input
+                      className="sm:col-span-1 text-sm h-8 w-20 sm:w-auto text-center"
+                      type="number"
+                      placeholder="min"
+                      value={ep.duration}
+                      onChange={(e) => updateBulkRow(i, "duration", e.target.value)}
                     />
+                    <label className="flex items-center gap-1.5 text-xs text-gray-600 sm:col-span-1 sm:justify-center">
+                      <Checkbox
+                        checked={ep.is_preview}
+                        onCheckedChange={(v) => updateBulkRow(i, "is_preview", v as boolean)}
+                      />
+                      Free
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => removeBulkRow(i)}
+                      className="ml-auto sm:col-span-1 sm:flex sm:justify-center text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeBulkRow(i)}
-                    className="col-span-1 flex justify-center text-gray-400 hover:text-red-500 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
                 </div>
               ))}
 
