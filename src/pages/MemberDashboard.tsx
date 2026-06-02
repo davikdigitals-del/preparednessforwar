@@ -75,6 +75,20 @@ export default function MemberDashboard() {
     }
   };
 
+  const navItems = [
+    { label: "Overview", to: "/dashboard", icon: Activity },
+    { label: "My Learning", to: "/my-courses", icon: GraduationCap },
+    { label: "Intelligence Hub", to: "/latest", icon: Newspaper },
+    { label: "Content Library", to: "/library", icon: BookOpen },
+    { label: "Videos & Podcasts", to: "/media", icon: Video },
+    { label: "Field Reports", to: "/dashboard/my-reports", icon: FileText },
+    { label: "My Bunker", to: "/dashboard/my-bunker", icon: Shield },
+    { label: "Survival Guides", to: "/survival-guides", icon: Map },
+    { label: "Advertise", to: "/dashboard/advertise", icon: Megaphone },
+    { label: "Sponsorship", to: "/dashboard/sponsorship", icon: Handshake },
+    { label: "My Subscription", to: "/my-subscription", icon: Crown },
+  ];
+
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#f3f2f1]">
       <div className="text-center">
@@ -190,19 +204,7 @@ export default function MemberDashboard() {
             </div>
             <nav className="p-4">
               <ul className="space-y-0 border-l-4 border-[#1d70b8]">
-                {[
-                  { label: "Overview", to: "/dashboard", icon: Activity },
-                  { label: "Training Academy", to: "/dashboard/training", icon: GraduationCap },
-                  { label: "Intelligence Hub", to: "/latest", icon: Newspaper },
-                  { label: "Content Library", to: "/library", icon: BookOpen },
-                  { label: "Videos & Podcasts", to: "/media", icon: Video },
-                  { label: "Field Reports", to: "/dashboard/my-reports", icon: FileText },
-                  { label: "My Bunker", to: "/dashboard/my-bunker", icon: Shield },
-                  { label: "Survival Guides", to: "/survival-guides", icon: Map },
-                  { label: "Advertise", to: "/dashboard/advertise", icon: Megaphone },
-                  { label: "Sponsorship", to: "/dashboard/sponsorship", icon: Handshake },
-                  { label: "My Subscription", to: "/my-subscription", icon: Crown },
-                ].map(item => (
+                {navItems.map(item => (
                   <li key={item.to}>
                     <Link
                       to={item.to}
@@ -230,19 +232,7 @@ export default function MemberDashboard() {
             <nav>
               <p className="text-xs font-bold text-[#505a5f] uppercase tracking-wider mb-3">Navigation</p>
               <ul className="space-y-0 border-l-4 border-[#1d70b8]">
-                {[
-                  { label: "Overview", to: "/dashboard", icon: Activity },
-                  { label: "Training Academy", to: "/dashboard/training", icon: GraduationCap },
-                  { label: "Intelligence Hub", to: "/latest", icon: Newspaper },
-                  { label: "Content Library", to: "/library", icon: BookOpen },
-                  { label: "Videos & Podcasts", to: "/media", icon: Video },
-                  { label: "Field Reports", to: "/dashboard/my-reports", icon: FileText },
-                  { label: "My Bunker", to: "/dashboard/my-bunker", icon: Shield },
-                  { label: "Survival Guides", to: "/survival-guides", icon: Map },
-                  { label: "Advertise", to: "/dashboard/advertise", icon: Megaphone },
-                  { label: "Sponsorship", to: "/dashboard/sponsorship", icon: Handshake },
-                  { label: "My Subscription", to: "/my-subscription", icon: Crown },
-                ].map(item => (
+                {navItems.map(item => (
                   <li key={item.to}>
                     <Link
                       to={item.to}
@@ -337,9 +327,9 @@ export default function MemberDashboard() {
                 {[
                   {
                     icon: GraduationCap,
-                    title: "Training Academy",
+                    title: "My Learning",
                     desc: "Access your enrolled survival and preparedness courses. Track progress and continue training.",
-                    links: [{ label: "My courses", to: "/dashboard/training" }, { label: "Browse all courses", to: "/courses" }],
+                    links: [{ label: "My courses", to: "/my-courses" }, { label: "Browse all courses", to: "/courses" }],
                     tag: stats.coursesEnrolled > 0 ? `${stats.coursesEnrolled} enrolled` : null,
                   },
                   {

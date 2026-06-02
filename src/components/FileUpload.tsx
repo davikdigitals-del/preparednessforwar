@@ -158,12 +158,25 @@ export function FileUpload({ type, currentUrl = "", onUrlChange, label, uploadId
               <img src={preview} alt="Preview" className="w-full h-full object-cover" />
             </div>
           ) : (
-            <div className="aspect-video bg-muted flex items-center justify-center">
-              <div className="text-center">
-                <Video className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">Video URL added</p>
-                <p className="text-xs text-muted-foreground mt-1 px-4 truncate max-w-md">{preview}</p>
-              </div>
+            <div className="aspect-video bg-black flex items-center justify-center">
+              {/youtube|youtu\.be|vimeo|dailymotion|twitch|spotify/i.test(preview) ? (
+                <div className="text-center text-white">
+                  <Video className="w-10 h-10 mx-auto mb-2 opacity-60" />
+                  <p className="text-sm font-medium">Embedded video URL saved</p>
+                  <p className="text-xs text-gray-400 mt-1 px-4 break-all">{preview}</p>
+                </div>
+              ) : (
+                <video
+                  src={preview}
+                  controls
+                  className="w-full h-full"
+                  preload="metadata"
+                >
+                  <p className="text-white text-sm p-4">
+                    URL saved: {preview}
+                  </p>
+                </video>
+              )}
             </div>
           )}
           <Button type="button" variant="destructive" size="sm" className="absolute top-2 right-2" onClick={handleClear}>

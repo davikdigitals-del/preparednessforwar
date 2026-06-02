@@ -34,8 +34,17 @@ function getSpotifyId(url: string) {
   const m = url.match(/spotify\.com\/episode\/([a-zA-Z0-9]+)/);
   return m ? m[1] : null;
 }
-function isDirectVideo(url: string) { return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url); }
-function isDirectAudio(url: string) { return /\.(mp3|wav|ogg|m4a|aac|flac)(\?|$)/i.test(url); }
+function isDirectVideo(url: string) {
+  return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url)
+    || url.includes('/storage/v1/object/public/post-videos')
+    || url.includes('/storage/v1/object/public/course-videos')
+    || url.includes('/storage/v1/object/public/videos');
+}
+function isDirectAudio(url: string) {
+  return /\.(mp3|wav|ogg|m4a|aac|flac)(\?|$)/i.test(url)
+    || url.includes('/storage/v1/object/public/post-audios')
+    || url.includes('/storage/v1/object/public/podcasts');
+}
 
 // Save media to member's dashboard offline content
 async function saveToDashboard(
