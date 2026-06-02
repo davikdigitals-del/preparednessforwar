@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { publicSupabase } from "@/integrations/supabase/publicClient";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, BookOpen, Clock, Users, Star, Filter } from "lucide-react";
@@ -22,14 +23,15 @@ export default function CoursesPage() {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data, error } = await publicSupabase
         .from("courses")
         .select("*")
         .eq("is_published", true)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setCourses(data || []);
+      // Normalise course_type for rows created before the column existed
+      setCourses((data || []).map(c => ({ ...c, course_type: c.course_type || 'course' })));
     } catch (error) {
       console.error("Error fetching courses:", error);
     } finally {

@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { publicSupabase } from "@/integrations/supabase/publicClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ export default function CourseDetailPage() {
       setLoading(true);
 
       // Try exact slug match first, then prefix match for timestamp-suffixed slugs
-      let courseResult = await supabase
+      let courseResult = await publicSupabase
         .from("courses")
         .select("*")
         .eq("slug", slug)
@@ -39,7 +40,7 @@ export default function CourseDetailPage() {
         .maybeSingle();
 
       if (!courseResult.error && !courseResult.data) {
-        const prefixResult = await supabase
+        const prefixResult = await publicSupabase
           .from("courses")
           .select("*")
           .like("slug", `${slug}%`)
@@ -53,12 +54,12 @@ export default function CourseDetailPage() {
       if (courseResult.error) throw courseResult.error;
 
       const [modulesResult, reviewsResult] = await Promise.all([
-        supabase
+        publicSupabase
           .from("course_modules")
           .select(`*, lessons:course_lessons(*)`)
           .eq("is_published", true)
           .order("order_index", { ascending: true }),
-        supabase
+        publicSupabase
           .from("course_reviews")
           .select(`*, user:profiles(email, full_name)`)
           .eq("is_published", true)
@@ -66,7 +67,7 @@ export default function CourseDetailPage() {
           .limit(10),
       ]);
       
-      setCourse(courseResult.data);
+      setCourse(courseResult.data ? { ...courseResult.data, course_type: courseResult.data.course_type || 'course' } : null);
       
       if (courseResult.data) {
         const modulesData = modulesResult.data?.filter(m => m.course_id === courseResult.data.id) || [];

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Clock, Users, Star, BookOpen, Crown, Play, ChevronDown, ChevronUp, Lock, FileText, HelpCircle, Download, X, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { publicSupabase } from "@/integrations/supabase/publicClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ export function CourseCard({ course, featured = false }: CourseCardProps) {
   const fetchModules = async () => {
     setLoadingModules(true);
     try {
-      const { data } = await supabase
+      const { data } = await publicSupabase
         .from("course_modules")
         .select("*, lessons:course_lessons(*)")
         .eq("course_id", course.id)
