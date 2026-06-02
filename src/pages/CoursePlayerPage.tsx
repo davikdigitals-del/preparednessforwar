@@ -272,7 +272,10 @@ export default function CoursePlayerPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top Bar */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
+      <div
+        className="bg-white border-b border-gray-200 sticky z-20"
+        style={{ top: 'var(--header-height, 98px)' }}
+      >
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
@@ -299,9 +302,10 @@ export default function CoursePlayerPage() {
       <div className="flex">
         {/* Sidebar */}
         <aside
-          className={`fixed top-[73px] left-0 bottom-0 w-80 bg-white border-r border-gray-200 overflow-y-auto transition-transform z-10 ${
+          className={`fixed left-0 bottom-0 w-80 bg-white border-r border-gray-200 overflow-y-auto transition-transform z-10 ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
+          style={{ top: 'calc(var(--header-height, 98px) + 57px)' }}
         >
           <div className="p-4">
             <h2 className="font-semibold text-lg mb-4">Course Content</h2>
