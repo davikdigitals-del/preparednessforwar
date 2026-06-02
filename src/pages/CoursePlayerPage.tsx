@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { publicSupabase } from "@/integrations/supabase/publicClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -35,7 +36,7 @@ export default function CoursePlayerPage() {
       setLoading(true);
       
       // Try exact slug match first, then prefix match (handles timestamp-suffixed slugs)
-      let courseResult = await supabase
+      let courseResult = await publicSupabase
         .from("courses")
         .select("*")
         .eq("slug", slug)
@@ -43,7 +44,7 @@ export default function CoursePlayerPage() {
 
       // If not found by exact slug, try prefix match (e.g. "we-move" matches "we-move-lx7k2")
       if (!courseResult.error && !courseResult.data) {
-        const prefixResult = await supabase
+        const prefixResult = await publicSupabase
           .from("courses")
           .select("*")
           .like("slug", `${slug}%`)
@@ -84,7 +85,7 @@ export default function CoursePlayerPage() {
       setEnrollment(enrollmentResult.data);
 
       // Fetch modules and lessons
-      const modulesResult = await supabase
+      const modulesResult = await publicSupabase
         .from("course_modules")
         .select(`
           *,

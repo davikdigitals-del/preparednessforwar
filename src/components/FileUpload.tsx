@@ -138,15 +138,16 @@ export function FileUpload({ type, currentUrl = "", onUrlChange, label, uploadId
           <div className="flex gap-2">
             <Input
               type="url"
-              placeholder={`Enter ${type} URL`}
+              placeholder={`Paste ${type === 'video' ? 'YouTube, Vimeo or direct video' : 'image'} URL`}
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleUrlSubmit()}
+              onBlur={() => urlInput.trim() && handleUrlSubmit()}
             />
-            <Button type="button" onClick={handleUrlSubmit} variant="secondary">Add</Button>
+            <Button type="button" onClick={handleUrlSubmit} variant="secondary">Use</Button>
           </div>
           {type === "video" && (
-            <p className="text-xs text-muted-foreground">Supports YouTube, Vimeo, and direct video URLs</p>
+            <p className="text-xs text-muted-foreground">Supports YouTube, Vimeo, and direct video URLs. Paste URL — it saves automatically.</p>
           )}
         </TabsContent>
       </Tabs>
