@@ -41,6 +41,7 @@ export default function AdminCourses() {
     requirements: [],
     is_published: false,
     is_featured: false,
+    course_type: "course",
     country_codes: [],
   });
 
@@ -153,6 +154,7 @@ export default function AdminCourses() {
       requirements: course.requirements || [],
       is_published: course.is_published,
       is_featured: course.is_featured,
+      course_type: course.course_type || "course",
       country_codes: course.country_codes || [],
     });
     setDialogOpen(true);
@@ -201,6 +203,7 @@ export default function AdminCourses() {
       requirements: [],
       is_published: false,
       is_featured: false,
+      course_type: "course",
       country_codes: [],
     });
     setWhatYouLearnInput("");
@@ -440,6 +443,25 @@ export default function AdminCourses() {
                   placeholder="auto-generated-from-title"
                 />
                 <p className="text-xs text-gray-500 mt-1">Leave empty to auto-generate from title</p>
+              </div>
+
+              <div>
+                <Label htmlFor="course_type">Content Type *</Label>
+                <Select
+                  value={formData.course_type}
+                  onValueChange={(value: 'course' | 'episode') => setFormData({ ...formData, course_type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="course">Course — full structured learning path</SelectItem>
+                    <SelectItem value="episode">Episode Series — direct play from listing</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Episode series shows a "View Episodes" button on the course card for direct playback.
+                </p>
               </div>
 
               <div>

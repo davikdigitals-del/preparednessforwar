@@ -35,6 +35,7 @@ export interface Course {
   // Status
   is_published: boolean;
   is_featured: boolean;
+  course_type: 'course' | 'episode';
   
   // Stats
   enrollment_count: number;
@@ -350,6 +351,7 @@ export interface CourseFormData {
   requirements: string[];
   is_published: boolean;
   is_featured: boolean;
+  course_type: 'course' | 'episode';
   country_codes?: string[];
 }
 

@@ -170,98 +170,100 @@ export function CourseCard({ course, featured = false }: CourseCardProps) {
             )}
           </div>
 
-          {/* ── Episodes toggle button ── */}
-          <button
-            onClick={() => setExpanded(e => !e)}
-            className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-200 rounded-lg text-sm font-medium text-gray-700 hover:text-blue-900 transition-all"
-          >
-            <span className="flex items-center gap-2">
-              <Play className="w-4 h-4" />
-              {expanded ? "Hide Episodes" : "View Episodes"}
-            </span>
-            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
+          {/* ── CTA button ── */}
+          {course.course_type === 'episode' ? (
+            <>
+              {/* Episodes toggle button — only for episode type */}
+              <button
+                onClick={() => setExpanded(e => !e)}
+                className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-200 rounded-lg text-sm font-medium text-gray-700 hover:text-blue-900 transition-all"
+              >
+                <span className="flex items-center gap-2">
+                  <Play className="w-4 h-4" />
+                  {expanded ? "Hide Episodes" : "View Episodes"}
+                </span>
+                {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
 
-          {/* ── Episodes list ── */}
-          {expanded && (
-            <div className="mt-3 border border-gray-200 rounded-lg overflow-hidden">
-              {loadingModules ? (
-                <div className="py-6 text-center">
-                  <div className="w-6 h-6 border-2 border-blue-900 border-t-transparent rounded-full animate-spin mx-auto" />
-                </div>
-              ) : allLessons.length === 0 ? (
-                <p className="py-4 text-center text-sm text-gray-400">No episodes available yet</p>
-              ) : (
-                <div className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
-                  {allLessons.map((lesson, idx) => {
-                    const playable = canPlay(lesson);
-                    const isVideo = lesson.content_type === "video" && !!lesson.video_url;
-                    return (
-                      <div
-                        key={lesson.id}
-                        onClick={() => isVideo && handlePlay(lesson)}
-                        className={`flex items-center gap-3 px-3 py-2.5 transition-colors ${
-                          isVideo && playable
-                            ? "cursor-pointer hover:bg-blue-50 group"
-                            : "cursor-default"
-                        }`}
+              {/* ── Episodes list ── */}
+              {expanded && (
+                <div className="mt-3 border border-gray-200 rounded-lg overflow-hidden">
+                  {loadingModules ? (
+                    <div className="py-6 text-center">
+                      <div className="w-6 h-6 border-2 border-blue-900 border-t-transparent rounded-full animate-spin mx-auto" />
+                    </div>
+                  ) : allLessons.length === 0 ? (
+                    <p className="py-4 text-center text-sm text-gray-400">No episodes available yet</p>
+                  ) : (
+                    <div className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
+                      {allLessons.map((lesson, idx) => {
+                        const playable = canPlay(lesson);
+                        const isVideo = lesson.content_type === "video" && !!lesson.video_url;
+                        return (
+                          <div
+                            key={lesson.id}
+                            onClick={() => isVideo && handlePlay(lesson)}
+                            className={`flex items-center gap-3 px-3 py-2.5 transition-colors ${
+                              isVideo && playable
+                                ? "cursor-pointer hover:bg-blue-50 group"
+                                : "cursor-default"
+                            }`}
+                          >
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                              isVideo && playable
+                                ? "bg-blue-100 text-blue-900 group-hover:bg-blue-900 group-hover:text-white"
+                                : "bg-gray-100 text-gray-400"
+                            }`}>
+                              {!playable ? (
+                                <Lock className="w-3.5 h-3.5" />
+                              ) : isVideo ? (
+                                <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                              ) : (
+                                lessonIcon(lesson)
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-sm font-medium truncate ${playable ? "text-gray-800" : "text-gray-400"}`}>
+                                {idx + 1}. {lesson.title}
+                              </p>
+                              <p className="text-xs text-gray-400 capitalize flex items-center gap-1">
+                                {lesson.content_type}
+                                {lesson.video_duration ? ` · ${lesson.video_duration} min` : ""}
+                                {lesson.is_preview && (
+                                  <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-semibold">FREE</span>
+                                )}
+                              </p>
+                            </div>
+                            {!playable && <Lock className="w-3.5 h-3.5 text-gray-300 shrink-0" />}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {!enrolled && !course.is_free && (
+                    <div className="p-3 bg-blue-50 border-t border-blue-100 text-center">
+                      <p className="text-xs text-gray-600 mb-2">
+                        {course.price > 0 ? `£${course.price} · ` : ""}Enroll to access all episodes
+                      </p>
+                      <Link
+                        to={`/courses/${course.slug}`}
+                        className="inline-block px-4 py-1.5 bg-blue-900 text-white text-xs font-semibold rounded hover:bg-blue-800 transition-colors"
                       >
-                        {/* Episode number / play button */}
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${
-                          isVideo && playable
-                            ? "bg-blue-100 text-blue-900 group-hover:bg-blue-900 group-hover:text-white"
-                            : "bg-gray-100 text-gray-400"
-                        }`}>
-                          {!playable ? (
-                            <Lock className="w-3.5 h-3.5" />
-                          ) : isVideo ? (
-                            <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
-                          ) : (
-                            lessonIcon(lesson)
-                          )}
-                        </div>
-
-                        {/* Title */}
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-medium truncate ${playable ? "text-gray-800" : "text-gray-400"}`}>
-                            {idx + 1}. {lesson.title}
-                          </p>
-                          <p className="text-xs text-gray-400 capitalize flex items-center gap-1">
-                            {lesson.content_type}
-                            {lesson.video_duration ? ` · ${lesson.video_duration} min` : ""}
-                            {lesson.is_preview && (
-                              <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-semibold">
-                                FREE
-                              </span>
-                            )}
-                          </p>
-                        </div>
-
-                        {/* Lock / enrolled badge */}
-                        {!playable && (
-                          <Lock className="w-3.5 h-3.5 text-gray-300 shrink-0" />
-                        )}
-                      </div>
-                    );
-                  })}
+                        Enroll Now
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
-
-              {/* Enroll CTA at bottom of episode list */}
-              {!enrolled && !course.is_free && (
-                <div className="p-3 bg-blue-50 border-t border-blue-100 text-center">
-                  <p className="text-xs text-gray-600 mb-2">
-                    {course.price > 0 ? `£${course.price} · ` : ""}Enroll to access all episodes
-                  </p>
-                  <Link
-                    to={`/courses/${course.slug}`}
-                    className="inline-block px-4 py-1.5 bg-blue-900 text-white text-xs font-semibold rounded hover:bg-blue-800 transition-colors"
-                  >
-                    Enroll Now
-                  </Link>
-                </div>
-              )}
-            </div>
+            </>
+          ) : (
+            /* Regular course — just a link to the detail page */
+            <Link
+              to={`/courses/${course.slug}`}
+              className="w-full block text-center px-3 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-lg text-sm font-semibold transition-colors"
+            >
+              View Course
+            </Link>
           )}
         </div>
       </div>
