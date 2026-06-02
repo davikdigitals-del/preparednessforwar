@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, ChevronRight, CheckCircle, Lock, Play, FileText, HelpCircle, Download, Menu, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle, Play, FileText, HelpCircle, Download, Menu, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { MediaPlayer } from "@/components/MediaPlayer";
 import type { Course, CourseModule, CourseLesson, CourseEnrollment } from "@/types/monetization";
 
 export default function CoursePlayerPage() {
@@ -333,20 +334,22 @@ export default function CoursePlayerPage() {
 
             {/* Lesson Content */}
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
-              {currentLesson.content_type === "video" && currentLesson.video_url && (
-                <div className="aspect-video bg-black">
-                  <video
-                    src={currentLesson.video_url}
-                    controls
-                    className="w-full h-full"
-                    controlsList="nodownload noplaybackrate"
-                    disablePictureInPicture
-                    onContextMenu={(e) => e.preventDefault()}
-                  >
-                    Your browser does not support the video tag.
-                  </video>
+              {currentLesson.content_type === "video" && currentLesson.video_url ? (
+                <MediaPlayer
+                  url={currentLesson.video_url}
+                  title={currentLesson.title}
+                  isPremium={true}
+                  type="video"
+                  thumbnail={course.thumbnail_url}
+                />
+              ) : currentLesson.content_type === "video" && !currentLesson.video_url ? (
+                <div className="aspect-video bg-gray-100 flex items-center justify-center text-gray-400">
+                  <div className="text-center">
+                    <Play className="w-12 h-12 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">No video URL set for this lesson</p>
+                  </div>
                 </div>
-              )}
+              ) : null}
 
               {currentLesson.content_type === "text" && currentLesson.text_content && (
                 <div className="p-8 prose max-w-none">
