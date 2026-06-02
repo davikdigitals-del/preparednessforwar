@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { CheckCircle, XCircle, Eye, Clock, Star } from "lucide-react";
+import { CheckCircle, XCircle, Eye, Clock, Star, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { MemberReport } from "@/types/memberPortal";
 
@@ -101,6 +101,22 @@ export default function AdminMemberReports() {
 
       toast({ title: "Updated", description: `Report ${!currentStatus ? 'featured' : 'unfeatured'}` });
       fetchReports();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleDelete = async (reportId: string) => {
+    if (!confirm("Permanently delete this report? This cannot be undone.")) return;
+    try {
+      const { error } = await supabase
+        .from("member_reports")
+        .delete()
+        .eq("id", reportId);
+
+      if (error) throw error;
+      setReports(prev => prev.filter(r => r.id !== reportId));
+      toast({ title: "Deleted", description: "Report permanently deleted" });
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
@@ -201,6 +217,16 @@ export default function AdminMemberReports() {
               {report.is_featured ? 'Unfeature' : 'Feature'}
             </Button>
           )}
+
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto"
+            onClick={() => handleDelete(report.id)}
+          >
+            <Trash2 className="w-4 h-4 mr-1" />
+            Delete
+          </Button>
         </div>
       </CardContent>
     </Card>
