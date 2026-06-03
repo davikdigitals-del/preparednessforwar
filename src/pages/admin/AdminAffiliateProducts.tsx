@@ -196,7 +196,7 @@ export default function AdminAffiliateProducts() {
     try {
       // ── Step 1: Extract name from URL slug immediately ─────────────────────
       const isAmazon = url.includes("amazon.");
-      const affiliate_network = isAmazon ? "amazon"
+      let affiliate_network = isAmazon ? "amazon"
         : url.includes("ebay.") ? "custom"
         : url.includes("shareasale") ? "shareasale"
         : url.includes("cj.com") ? "cj" : "custom";

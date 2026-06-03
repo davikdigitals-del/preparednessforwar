@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 const COOKIE_CONSENT_KEY = "pfw-cookie-consent";
@@ -179,7 +179,7 @@ export default function CookieConsent() {
                   like page navigation, access to secure areas, and remember your preferences.
                 </p>
               </div>
-              <Switch
+              <Checkbox
                 checked={true}
                 disabled
                 className="mt-1"
@@ -197,10 +197,10 @@ export default function CookieConsent() {
                   reporting information anonymously. This helps us improve our content and user experience.
                 </p>
               </div>
-              <Switch
+              <Checkbox
                 checked={preferences.analytics}
                 onCheckedChange={(checked) =>
-                  setPreferences({ ...preferences, analytics: checked })
+                  setPreferences({ ...preferences, analytics: checked as boolean })
                 }
                 className="mt-1"
               />
@@ -217,10 +217,10 @@ export default function CookieConsent() {
                   These cookies help us show you content that might be of interest to you.
                 </p>
               </div>
-              <Switch
+              <Checkbox
                 checked={preferences.marketing}
                 onCheckedChange={(checked) =>
-                  setPreferences({ ...preferences, marketing: checked })
+                  setPreferences({ ...preferences, marketing: checked as boolean })
                 }
                 className="mt-1"
               />
