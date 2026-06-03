@@ -18,7 +18,7 @@ export default function CoursePlayerPage() {
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [enrollment, setEnrollment] = useState<CourseEnrollment | null>(null);
   const [currentLesson, setCurrentLesson] = useState<CourseLesson | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -313,8 +313,7 @@ export default function CoursePlayerPage() {
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
           style={{ top: 'calc(var(--header-height, 98px) + 57px)' }}
-        >
-          <div className="p-4">
+        >          <div className="p-4">
             <h2 className="font-semibold text-lg mb-4">Course Content</h2>
             <div className="space-y-2">
               {modules.map((module, moduleIndex) => (
@@ -351,8 +350,8 @@ export default function CoursePlayerPage() {
           </div>
         </aside>
 
-        {/* Main Content */}
-        <main className={`flex-1 transition-all min-w-0 ${sidebarOpen ? "lg:ml-80" : "ml-0"}`}>
+        {/* Main Content — full width on mobile, offset on desktop when sidebar open */}
+        <main className={`flex-1 min-w-0 transition-all ${sidebarOpen ? "lg:ml-80" : ""}`}>
           <div className="max-w-5xl mx-auto p-3 sm:p-6">
             {/* Lesson Header */}
             <div className="mb-4 sm:mb-6">
