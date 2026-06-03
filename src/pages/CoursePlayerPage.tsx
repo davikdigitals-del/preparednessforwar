@@ -271,11 +271,11 @@ export default function CoursePlayerPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Hide the site header on this page */}
+      <style>{`header.sticky { display: none !important; } body { padding-top: 0 !important; }`}</style>
+
       {/* Top Bar */}
-      <div
-        className="bg-white border-b border-gray-200 sticky z-20"
-        style={{ top: 'var(--header-height, 98px)' }}
-      >
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
         <div className="px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <Button
@@ -301,18 +301,18 @@ export default function CoursePlayerPage() {
       </div>
 
       <div className="flex">
-        {/* Sidebar — overlay on mobile, fixed on desktop */}
+        {/* Sidebar — overlay on mobile, static on desktop */}
         {sidebarOpen && (
           <div
             className="fixed inset-0 bg-black/40 z-10 lg:hidden"
+            style={{ top: 0 }}
             onClick={() => setSidebarOpen(false)}
           />
         )}
         <aside
-          className={`fixed left-0 bottom-0 w-72 sm:w-80 bg-white border-r border-gray-200 overflow-y-auto transition-transform z-20 ${
+          className={`fixed top-[57px] left-0 bottom-0 w-72 sm:w-80 bg-white border-r border-gray-200 overflow-y-auto transition-transform z-20 ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
-          style={{ top: 'calc(var(--header-height, 98px) + 57px)' }}
         >          <div className="p-4">
             <h2 className="font-semibold text-lg mb-4">Course Content</h2>
             <div className="space-y-2">
