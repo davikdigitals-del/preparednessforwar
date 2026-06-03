@@ -102,8 +102,8 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <CookieConsent />
           <BrowserRouter>
+            <CookieConsent />
             <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
             <Routes>
