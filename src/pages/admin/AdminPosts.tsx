@@ -34,6 +34,7 @@ export default function AdminPosts() {
     video_url: "",
     is_premium: false,
     is_published: true,
+    is_featured: false,
     country_codes: [] as string[],
   });
 
@@ -175,6 +176,7 @@ export default function AdminPosts() {
       video_url: post.video_url || "",
       is_premium: post.is_premium,
       is_published: post.is_published,
+      is_featured: post.is_featured || false,
       country_codes: post.country_codes || [],
     });
     setDialogOpen(true);
@@ -223,6 +225,7 @@ export default function AdminPosts() {
       video_url: "",
       is_premium: false,
       is_published: true,
+      is_featured: false,
       country_codes: [],
     });
   };
@@ -317,9 +320,14 @@ export default function AdminPosts() {
                       {sections.find(s => s.slug === post.section)?.title || post.section || "-"}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-xs rounded-full ${post.is_published ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
-                        {post.is_published ? "Published" : "Draft"}
-                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        <span className={`px-2 py-1 text-xs rounded-full ${post.is_published ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
+                          {post.is_published ? "Published" : "Draft"}
+                        </span>
+                        {post.is_featured && (
+                          <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">📌 Pinned</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1">
@@ -337,6 +345,18 @@ export default function AdminPosts() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        title={post.is_featured ? "Unpin post" : "Pin post (shows in menu featured)"}
+                        onClick={async () => {
+                          await supabase.from("posts").update({ is_featured: !post.is_featured }).eq("id", post.id);
+                          fetchPosts();
+                        }}
+                        className={post.is_featured ? "text-blue-600" : "text-gray-400"}
+                      >
+                        📌
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -529,7 +549,18 @@ export default function AdminPosts() {
               </p>
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-wrap">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={formData.is_featured}
+                  onChange={(e) =>
+                    setFormData({ ...formData, is_featured: e.target.checked })
+                  }
+                />
+                <span className="text-sm">📌 Pin (Featured in menu)</span>
+              </label>
+
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"

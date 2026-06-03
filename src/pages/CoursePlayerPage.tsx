@@ -405,29 +405,34 @@ export default function CoursePlayerPage() {
             </div>
 
             {/* Lesson Actions */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 gap-2">
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => previousLesson && handleLessonChange(previousLesson)}
                 disabled={!previousLesson}
+                className="shrink-0"
               >
-                <ChevronLeft className="w-4 h-4 mr-2" />
-                Previous
+                <ChevronLeft className="w-4 h-4" />
+                <span className="hidden sm:inline ml-1">Previous</span>
               </Button>
 
               {!isLessonCompleted(currentLesson.id) && (
-                <Button onClick={handleLessonComplete}>
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Mark as Complete
+                <Button onClick={handleLessonComplete} size="sm" className="flex-1 sm:flex-none">
+                  <CheckCircle className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Mark as Complete</span>
+                  <span className="sm:hidden ml-1">Done</span>
                 </Button>
               )}
 
               <Button
+                size="sm"
                 onClick={() => nextLesson && handleLessonChange(nextLesson)}
                 disabled={!nextLesson}
+                className="shrink-0"
               >
-                Next
-                <ChevronRight className="w-4 h-4 ml-2" />
+                <span className="hidden sm:inline mr-1">Next</span>
+                <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
 
