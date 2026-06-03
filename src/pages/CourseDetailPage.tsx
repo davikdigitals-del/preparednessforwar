@@ -5,7 +5,7 @@ import { publicSupabase } from "@/integrations/supabase/publicClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { Button } from "@/components/ui/button";
-import { Clock, Users, Star, BookOpen, Globe, Award, CheckCircle, Play, Lock, Crown } from "lucide-react";
+import { Clock, Users, Star, BookOpen, Globe, Award, CheckCircle, Play, Lock, Crown, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Course, CourseModule, CourseReview } from "@/types/monetization";
 
@@ -168,6 +168,12 @@ export default function CourseDetailPage() {
   const totalLessons = modules.reduce((sum, m) => sum + (m.lessons?.length || 0), 0);
   const previewLessons = modules.flatMap(m => m.lessons?.filter(l => l.is_preview) || []);
 
+  const languageNames: Record<string, string> = {
+    en: "English", es: "Spanish", fr: "French", de: "German",
+    it: "Italian", pt: "Portuguese", ar: "Arabic", zh: "Chinese",
+    ja: "Japanese", ru: "Russian", hi: "Hindi", sw: "Swahili",
+  };
+
   return (
     <div className="bg-white min-h-screen">
       {/* Hero Section */}
@@ -177,8 +183,9 @@ export default function CourseDetailPage() {
             {/* Left: Course Info */}
             <div className="lg:col-span-2">
               <div className="mb-4">
-                <Link to="/courses" className="text-red-200 hover:text-white text-sm">
-                  â† Back to Training Programs
+                <Link to="/courses" className="text-red-200 hover:text-white text-sm flex items-center gap-1">
+                  <ChevronLeft className="w-4 h-4" />
+                  Back to Training Programs
                 </Link>
               </div>
               
@@ -203,7 +210,7 @@ export default function CourseDetailPage() {
                 )}
                 <div className="flex items-center gap-2">
                   <Globe className="w-5 h-5" />
-                  <span className="capitalize">{course.language}</span>
+                  <span>{languageNames[course.language] || course.language}</span>
                 </div>
               </div>
 
@@ -340,7 +347,7 @@ export default function CourseDetailPage() {
                 <ul className="space-y-2">
                   {course.requirements.map((req, index) => (
                     <li key={index} className="flex items-start gap-2 text-gray-700">
-                      <span className="text-blue-600 mt-1">â€¢</span>
+                      <span className="text-blue-600 mt-1">•</span>
                       <span>{req}</span>
                     </li>
                   ))}
