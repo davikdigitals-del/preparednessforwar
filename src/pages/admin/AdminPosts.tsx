@@ -34,7 +34,7 @@ export default function AdminPosts() {
     video_url: "",
     is_premium: false,
     is_published: true,
-    is_featured: false,
+    is_pinned: false,
     country_codes: [] as string[],
   });
 
@@ -176,7 +176,7 @@ export default function AdminPosts() {
       video_url: post.video_url || "",
       is_premium: post.is_premium,
       is_published: post.is_published,
-      is_featured: post.is_featured || false,
+      is_pinned: post.is_pinned || false,
       country_codes: post.country_codes || [],
     });
     setDialogOpen(true);
@@ -225,7 +225,7 @@ export default function AdminPosts() {
       video_url: "",
       is_premium: false,
       is_published: true,
-      is_featured: false,
+      is_pinned: false,
       country_codes: [],
     });
   };
@@ -324,7 +324,7 @@ export default function AdminPosts() {
                         <span className={`px-2 py-1 text-xs rounded-full ${post.is_published ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
                           {post.is_published ? "Published" : "Draft"}
                         </span>
-                        {post.is_featured && (
+                        {post.is_pinned && (
                           <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">📌 Pinned</span>
                         )}
                       </div>
@@ -553,12 +553,12 @@ export default function AdminPosts() {
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={formData.is_featured}
+                  checked={formData.is_pinned}
                   onChange={(e) =>
-                    setFormData({ ...formData, is_featured: e.target.checked })
+                    setFormData({ ...formData, is_pinned: e.target.checked })
                   }
                 />
-                <span className="text-sm">📌 Pin (Featured in menu)</span>
+                <span className="text-sm">📌 Pin (shows as Featured in section menu)</span>
               </label>
 
               <label className="flex items-center gap-2">
