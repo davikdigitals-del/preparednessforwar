@@ -15,7 +15,7 @@ export function useFeaturedPosts() {
   const [featuredMap, setFeaturedMap] = useState<Record<string, FeaturedPost>>({});
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchFeaturedPosts = async () => {
       const { data } = await supabase
         .from("posts")
         .select("id, title, image, section, category, standfirst, is_pinned, published_at")
@@ -43,7 +43,30 @@ export function useFeaturedPosts() {
       setFeaturedMap(map);
     };
 
-    fetch();
+    // Initial fetch
+    fetchFeaturedPosts();
+
+    // Set up realtime subscription for posts changes
+    const channel = supabase
+      .channel("posts-featured-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "posts",
+        },
+        () => {
+          // Refetch when any post changes (including pin/unpin)
+          fetchFeaturedPosts();
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return featuredMap;
