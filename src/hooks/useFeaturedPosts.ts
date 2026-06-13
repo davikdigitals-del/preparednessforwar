@@ -16,14 +16,20 @@ export function useFeaturedPosts() {
 
   useEffect(() => {
     const fetchFeaturedPosts = async () => {
-      const { data } = await supabase
+      console.log("🔍 Fetching featured posts...");
+      const { data, error } = await supabase
         .from("posts")
         .select("id, title, image, section, category, standfirst, is_pinned, published_at")
         .eq("status", "published")
         .eq("is_pinned", true) // Only get pinned posts
         .order("published_at", { ascending: false });
 
-      if (!data) return;
+      console.log("📊 Featured posts query result:", { data, error });
+
+      if (!data) {
+        console.log("❌ No data returned");
+        return;
+      }
 
       // Group posts by section, max 2 per section
       const map: Record<string, FeaturedPost[]> = {};
@@ -43,6 +49,7 @@ export function useFeaturedPosts() {
           });
         }
       }
+      console.log("✅ Featured map created:", map);
       setFeaturedMap(map);
     };
 

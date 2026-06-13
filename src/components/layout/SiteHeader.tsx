@@ -17,6 +17,8 @@ function buildMenuConfig(
   section: (typeof navSections)[number],
   featuredPosts?: { id: string; title: string; image: string | null; category: string; standfirst: string | null }[]
 ): MegaMenuConfig {
+  console.log(`🔧 Building menu for section: ${section.slug}`, { featuredPosts });
+  
   // Only use real pinned posts from database, ignore mock data
   const featuredItems = featuredPosts && featuredPosts.length > 0
     ? featuredPosts.map(post => ({
@@ -27,6 +29,8 @@ function buildMenuConfig(
         href: `/${section.slug}/${post.category}/${post.id}`,
       }))
     : []; // No fallback to mock data
+  
+  console.log(`✨ Featured items for ${section.slug}:`, featuredItems);
 
   return {
     menuId: section.slug,
