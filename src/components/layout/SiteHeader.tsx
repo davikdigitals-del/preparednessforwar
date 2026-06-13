@@ -12,26 +12,21 @@ import { useData } from "@/contexts/DataContext";
 import { SearchModal } from "@/components/SearchModal";
 import { useLang } from "@/contexts/LanguageContext";
 
-// Build a MegaMenuConfig from a navSection, injecting a live featured post if available
+// Build a MegaMenuConfig from a navSection, injecting live featured posts if available
 function buildMenuConfig(
   section: (typeof navSections)[number],
-  featuredPost?: { id: string; title: string; image: string | null; category: string; standfirst: string | null }
+  featuredPosts?: { id: string; title: string; image: string | null; category: string; standfirst: string | null }[]
 ): MegaMenuConfig {
-  const featuredItems = featuredPost
-    ? [{
-        id: featuredPost.id,
-        title: featuredPost.title,
-        description: featuredPost.standfirst?.replace(/<[^>]*>/g, '').substring(0, 80) || "",
-        imageUrl: featuredPost.image || "/placeholder.svg",
-        href: `/${section.slug}/${featuredPost.category}/${featuredPost.id}`,
-      }]
-    : (section.featured ?? []).map((f) => ({
-        id: f.slug,
-        title: f.title,
-        description: "",
-        imageUrl: f.image ?? "/placeholder.svg",
-        href: `/${section.slug}/${f.slug}`,
-      }));
+  // Only use real pinned posts from database, ignore mock data
+  const featuredItems = featuredPosts && featuredPosts.length > 0
+    ? featuredPosts.map(post => ({
+        id: post.id,
+        title: post.title,
+        description: post.standfirst?.replace(/<[^>]*>/g, '').substring(0, 80) || "",
+        imageUrl: post.image || "/placeholder.svg",
+        href: `/${section.slug}/${post.category}/${post.id}`,
+      }))
+    : []; // No fallback to mock data
 
   return {
     menuId: section.slug,

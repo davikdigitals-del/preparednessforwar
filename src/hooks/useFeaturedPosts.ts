@@ -10,9 +10,9 @@ export interface FeaturedPost {
   standfirst: string | null;
 }
 
-// Returns a map of section slug -> latest featured/pinned post
+// Returns a map of section slug -> up to 2 pinned posts
 export function useFeaturedPosts() {
-  const [featuredMap, setFeaturedMap] = useState<Record<string, FeaturedPost>>({});
+  const [featuredMap, setFeaturedMap] = useState<Record<string, FeaturedPost[]>>({});
 
   useEffect(() => {
     const fetchFeaturedPosts = async () => {
@@ -20,24 +20,27 @@ export function useFeaturedPosts() {
         .from("posts")
         .select("id, title, image, section, category, standfirst, is_pinned, published_at")
         .eq("status", "published")
-        .order("is_pinned", { ascending: false })
-        .order("published_at", { ascending: false })
-        .limit(100);
+        .eq("is_pinned", true) // Only get pinned posts
+        .order("published_at", { ascending: false });
 
       if (!data) return;
 
-      // Pick the best post per section (pinned first, then latest)
-      const map: Record<string, FeaturedPost> = {};
+      // Group posts by section, max 2 per section
+      const map: Record<string, FeaturedPost[]> = {};
       for (const post of data) {
         if (!map[post.section]) {
-          map[post.section] = {
+          map[post.section] = [];
+        }
+        // Only add if section has less than 2 posts
+        if (map[post.section].length < 2) {
+          map[post.section].push({
             id: post.id,
             title: post.title,
             image: post.image,
             section: post.section,
             category: post.category,
             standfirst: post.standfirst,
-          };
+          });
         }
       }
       setFeaturedMap(map);

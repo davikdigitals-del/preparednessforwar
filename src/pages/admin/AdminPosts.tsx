@@ -348,12 +348,34 @@ export default function AdminPosts() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        title={post.is_featured ? "Unpin post" : "Pin post (shows in menu featured)"}
+                        title={post.is_pinned ? "Unpin post" : "Pin post (shows as Featured in section menu)"}
                         onClick={async () => {
-                          await supabase.from("posts").update({ is_featured: !post.is_featured }).eq("id", post.id);
+                          // If trying to pin, check if section already has 2 pinned posts
+                          if (!post.is_pinned) {
+                            const { data: pinnedPosts } = await supabase
+                              .from("posts")
+                              .select("id")
+                              .eq("section", post.section)
+                              .eq("is_pinned", true);
+                            
+                            if (pinnedPosts && pinnedPosts.length >= 2) {
+                              toast({
+                                title: "Maximum Limit Reached",
+                                description: `This section already has 2 featured posts in the menu. Please unpin one first.`,
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+                          }
+                          
+                          await supabase.from("posts").update({ is_pinned: !post.is_pinned }).eq("id", post.id);
+                          toast({
+                            title: post.is_pinned ? "Post Unpinned" : "Post Pinned",
+                            description: post.is_pinned ? "Removed from menu featured" : "Added to menu featured",
+                          });
                           fetchPosts();
                         }}
-                        className={post.is_featured ? "text-blue-600" : "text-gray-400"}
+                        className={post.is_pinned ? "text-blue-600" : "text-gray-400"}
                       >
                         📌
                       </Button>
