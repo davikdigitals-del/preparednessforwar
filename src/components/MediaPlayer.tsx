@@ -1,7 +1,7 @@
 ﻿import { useState, useRef, useEffect } from "react";
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize, PictureInPicture2,
-  Download, SkipBack, SkipForward, Settings, Check
+  Download, SkipBack, SkipForward, Settings, Check, X
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -270,10 +270,11 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
     <div
       ref={containerRef}
       className={`relative bg-black select-none transition-all duration-300 ${
-        isAudio ? "rounded-xl overflow-hidden" : expanded ? "fixed inset-4 z-50 rounded-lg" : "w-full"
+        isAudio ? "rounded-xl overflow-hidden" : expanded ? "w-full aspect-video" : "w-full"
       }`}
+      style={expanded && !isAudio ? { minHeight: '70vh', maxHeight: '85vh' } : undefined}
       onMouseMove={resetHideTimer}
-      onClick={isAudio ? undefined : togglePlay}
+      onClick={isAudio ? undefined : (expanded ? undefined : togglePlay)}
     >
       {isAudio ? (
         <>
@@ -308,7 +309,7 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
             onClick={(e) => {
               e.stopPropagation();
               // Toggle controls on tap (like MX Player)
-              if (fullscreen) {
+              if (fullscreen || expanded) {
                 setShowControls(!showControls);
                 if (!showControls) {
                   resetHideTimer();
@@ -409,43 +410,48 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl, mediaId, type
   const [expanded, setExpanded] = useState(false);
   
   return (
-    <div className={`relative bg-black transition-all duration-300 ${
-      expanded ? "fixed inset-4 z-50 rounded-lg" : "w-full h-full"
-    }`}>
-      <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent px-4 py-2 flex items-center justify-between">
-        <p className="text-white text-sm font-semibold line-clamp-1">{title}</p>
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="text-white/80 hover:text-white transition-colors ml-2"
-          title={expanded ? "Normal size" : "Expand video"}
-        >
-          {expanded ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
-        </button>
-      </div>
-      <div className="w-full h-full min-h-[400px] aspect-video">
-        <iframe
-          src={embedUrl}
-          title={title}
-          className="w-full h-full"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
-          allowFullScreen
-        />
-      </div>
-      {!isPremium && !expanded && (
-        <div className="bg-gray-900 px-4 py-2 flex items-center justify-between">
-          <span className="text-gray-400 text-xs">Free content</span>
-          <button
-            onClick={() => saveToDashboard(originalUrl, title, type || 'video', mediaId, setSaving, setSaved)}
-            disabled={saving || saved}
-            className="flex items-center gap-1.5 text-xs text-white bg-primary hover:bg-primary/90 disabled:opacity-50 px-3 py-1.5 rounded transition-colors"
-          >
-            {saving ? <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-              : saved ? <Check className="w-3.5 h-3.5 text-green-300" />
-              : <Download className="w-3.5 h-3.5" />}
-            {saving ? 'Saving...' : saved ? 'Saved!' : 'Save to Dashboard'}
-          </button>
+    <div 
+      className="relative bg-black transition-all duration-300 w-full"
+      style={expanded ? { minHeight: '70vh', maxHeight: '85vh' } : undefined}
+    >
+      <div className={`w-full h-full ${expanded ? "flex flex-col" : ""}`}>
+        <div className="relative">
+          <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent px-4 py-2 flex items-center justify-between">
+            <p className="text-white text-sm font-semibold line-clamp-1">{title}</p>
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="text-white/80 hover:text-white transition-colors ml-2"
+              title={expanded ? "Normal size" : "Expand video"}
+            >
+              {expanded ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+            </button>
+          </div>
+          <div className={`w-full ${expanded ? "h-[70vh]" : "min-h-[400px] aspect-video"}`}>
+            <iframe
+              src={embedUrl}
+              title={title}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
+              allowFullScreen
+            />
+          </div>
         </div>
-      )}
+        {!isPremium && !expanded && (
+          <div className="bg-gray-900 px-4 py-2 flex items-center justify-between">
+            <span className="text-gray-400 text-xs">Free content</span>
+            <button
+              onClick={() => saveToDashboard(originalUrl, title, type || 'video', mediaId, setSaving, setSaved)}
+              disabled={saving || saved}
+              className="flex items-center gap-1.5 text-xs text-white bg-primary hover:bg-primary/90 disabled:opacity-50 px-3 py-1.5 rounded transition-colors"
+            >
+              {saving ? <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                : saved ? <Check className="w-3.5 h-3.5 text-green-300" />
+                : <Download className="w-3.5 h-3.5" />}
+              {saving ? 'Saving...' : saved ? 'Saved!' : 'Save to Dashboard'}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
