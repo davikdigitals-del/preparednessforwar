@@ -350,30 +350,73 @@ export default function AdminPosts() {
                         size="sm"
                         title={post.is_pinned ? "Unpin post" : "Pin post (shows as Featured in section menu)"}
                         onClick={async () => {
-                          // If trying to pin, check if section already has 2 pinned posts
-                          if (!post.is_pinned) {
-                            const { data: pinnedPosts } = await supabase
-                              .from("posts")
-                              .select("id")
-                              .eq("section", post.section)
-                              .eq("is_pinned", true);
+                          try {
+                            console.log("📌 Pin button clicked for post:", post.id, "Current is_pinned:", post.is_pinned);
                             
-                            if (pinnedPosts && pinnedPosts.length >= 2) {
+                            // If trying to pin, check if section already has 2 pinned posts
+                            if (!post.is_pinned) {
+                              const { data: pinnedPosts, error: checkError } = await supabase
+                                .from("posts")
+                                .select("id")
+                                .eq("section", post.section)
+                                .eq("is_pinned", true);
+                              
+                              console.log("Current pinned posts in section:", pinnedPosts, checkError);
+                              
+                              if (checkError) {
+                                console.error("Error checking pinned posts:", checkError);
+                                toast({
+                                  title: "Error",
+                                  description: checkError.message,
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+                              
+                              if (pinnedPosts && pinnedPosts.length >= 2) {
+                                toast({
+                                  title: "Maximum Limit Reached",
+                                  description: `This section already has 2 featured posts in the menu. Please unpin one first.`,
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+                            }
+                            
+                            const newPinnedState = !post.is_pinned;
+                            console.log("Updating is_pinned to:", newPinnedState);
+                            
+                            const { error: updateError } = await supabase
+                              .from("posts")
+                              .update({ is_pinned: newPinnedState })
+                              .eq("id", post.id);
+                            
+                            if (updateError) {
+                              console.error("Update error:", updateError);
                               toast({
-                                title: "Maximum Limit Reached",
-                                description: `This section already has 2 featured posts in the menu. Please unpin one first.`,
+                                title: "Update Failed",
+                                description: updateError.message,
                                 variant: "destructive",
                               });
                               return;
                             }
+                            
+                            console.log("✅ Update successful!");
+                            
+                            toast({
+                              title: post.is_pinned ? "Post Unpinned" : "Post Pinned",
+                              description: post.is_pinned ? "Removed from menu featured" : "Added to menu featured",
+                            });
+                            
+                            fetchPosts();
+                          } catch (err: any) {
+                            console.error("Exception in pin handler:", err);
+                            toast({
+                              title: "Error",
+                              description: err.message || "Failed to update post",
+                              variant: "destructive",
+                            });
                           }
-                          
-                          await supabase.from("posts").update({ is_pinned: !post.is_pinned }).eq("id", post.id);
-                          toast({
-                            title: post.is_pinned ? "Post Unpinned" : "Post Pinned",
-                            description: post.is_pinned ? "Removed from menu featured" : "Added to menu featured",
-                          });
-                          fetchPosts();
                         }}
                         className={post.is_pinned ? "text-blue-600" : "text-gray-400"}
                       >
