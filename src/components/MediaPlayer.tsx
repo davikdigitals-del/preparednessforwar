@@ -108,6 +108,8 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [pipSupported, setPipSupported] = useState(false);
+  const [controlsTimeout, setControlsTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [expanded, setExpanded] = useState(false);
   const hideTimer = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
@@ -116,11 +118,27 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
 
   const resetHideTimer = () => {
     setShowControls(true);
-    clearTimeout(hideTimer.current);
-    if (!isAudio) hideTimer.current = setTimeout(() => setShowControls(false), 3000);
+    if (hideTimer.current) {
+      clearTimeout(hideTimer.current);
+    }
+    if (controlsTimeout) {
+      clearTimeout(controlsTimeout);
+    }
+    // Hide controls after 5 seconds when in fullscreen or playing
+    if (!isAudio && (fullscreen || playing)) {
+      const timeout = setTimeout(() => setShowControls(false), 5000);
+      setControlsTimeout(timeout);
+      hideTimer.current = timeout;
+    }
   };
 
-  useEffect(() => { resetHideTimer(); return () => clearTimeout(hideTimer.current); }, []);
+  useEffect(() => {
+    resetHideTimer();
+    return () => {
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      if (controlsTimeout) clearTimeout(controlsTimeout);
+    };
+  }, [fullscreen, playing]);
 
   const togglePlay = () => {
     const m = mediaRef.current;
@@ -195,6 +213,11 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
     }
   };
 
+  const toggleExpand = () => {
+    setExpanded(!expanded);
+    resetHideTimer();
+  };
+
   const togglePip = async () => {
     const video = mediaRef.current;
     if (!video || isAudio) return;
@@ -246,7 +269,9 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
   return (
     <div
       ref={containerRef}
-      className={`relative bg-black select-none ${isAudio ? "rounded-xl overflow-hidden" : "w-full"}`}
+      className={`relative bg-black select-none transition-all duration-300 ${
+        isAudio ? "rounded-xl overflow-hidden" : expanded ? "fixed inset-4 z-50 rounded-lg" : "w-full"
+      }`}
       onMouseMove={resetHideTimer}
       onClick={isAudio ? undefined : togglePlay}
     >
@@ -280,7 +305,16 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
             onTimeUpdate={() => setCurrentTime(mediaRef.current?.currentTime || 0)}
             onLoadedMetadata={() => setDuration(mediaRef.current?.duration || 0)}
             onEnded={() => setPlaying(false)}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              // Toggle controls on tap (like MX Player)
+              if (fullscreen) {
+                setShowControls(!showControls);
+                if (!showControls) {
+                  resetHideTimer();
+                }
+              }
+            }}
           />
           {!playing && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -293,8 +327,10 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
       )}
 
       <div
-        className={`${isAudio ? "" : "absolute bottom-0 left-0 right-0"} bg-gradient-to-t from-black/90 to-transparent px-4 pb-3 pt-8 transition-opacity duration-300 ${showControls || isAudio ? "opacity-100" : "opacity-0"}`}
+        className={`${isAudio ? "" : "absolute bottom-0 left-0 right-0"} bg-gradient-to-t from-black/90 to-transparent px-4 pb-3 pt-8 transition-opacity duration-300 ${showControls || isAudio ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         onClick={(e) => e.stopPropagation()}
+        onMouseMove={resetHideTimer}
+        onTouchStart={resetHideTimer}
       >
         <div ref={progressRef} className="w-full h-1.5 bg-white/20 rounded-full cursor-pointer mb-3 group" onClick={seek}>
           <div className="h-full bg-primary rounded-full relative" style={{ width: `${pct}%` }}>
@@ -350,7 +386,12 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
             </button>
           )}
           {!isAudio && (
-            <button onClick={toggleFullscreen} className="text-white/80 hover:text-white transition-colors">
+            <button onClick={toggleExpand} className="text-white/80 hover:text-white transition-colors" title={expanded ? "Normal size" : "Expand video"}>
+              {expanded ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+            </button>
+          )}
+          {!isAudio && !expanded && (
+            <button onClick={toggleFullscreen} className="text-white/80 hover:text-white transition-colors" title="Fullscreen">
               {fullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
             </button>
           )}
@@ -365,10 +406,21 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl, mediaId, type
 }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  
   return (
-    <div className="relative bg-black w-full h-full">
-      <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent px-4 py-2 pointer-events-none">
+    <div className={`relative bg-black transition-all duration-300 ${
+      expanded ? "fixed inset-4 z-50 rounded-lg" : "w-full h-full"
+    }`}>
+      <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent px-4 py-2 flex items-center justify-between">
         <p className="text-white text-sm font-semibold line-clamp-1">{title}</p>
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-white/80 hover:text-white transition-colors ml-2"
+          title={expanded ? "Normal size" : "Expand video"}
+        >
+          {expanded ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+        </button>
       </div>
       <div className="w-full h-full min-h-[400px] aspect-video">
         <iframe
@@ -379,7 +431,7 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl, mediaId, type
           allowFullScreen
         />
       </div>
-      {!isPremium && (
+      {!isPremium && !expanded && (
         <div className="bg-gray-900 px-4 py-2 flex items-center justify-between">
           <span className="text-gray-400 text-xs">Free content</span>
           <button

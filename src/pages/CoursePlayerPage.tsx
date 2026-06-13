@@ -275,13 +275,14 @@ export default function CoursePlayerPage() {
       <style>{`header.sticky { display: none !important; } body { padding-top: 0 !important; }`}</style>
 
       {/* Top Bar */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="relative z-50"
             >
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
@@ -305,6 +306,7 @@ export default function CoursePlayerPage() {
         {sidebarOpen && (
           <div
             className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+            style={{ top: '57px' }}
             onClick={() => setSidebarOpen(false)}
             aria-label="Close sidebar"
           />
@@ -314,7 +316,7 @@ export default function CoursePlayerPage() {
         <aside
           className={`
             fixed lg:relative
-            top-0 left-0
+            left-0
             h-screen lg:h-auto
             w-80 lg:w-96
             bg-white border-r border-gray-200
@@ -324,7 +326,7 @@ export default function CoursePlayerPage() {
             ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0 lg:w-0 lg:border-0"}
           `}
           style={{ 
-            marginTop: "57px", 
+            top: "57px",
             height: "calc(100vh - 57px)",
           }}
         >          <div className="p-4">
