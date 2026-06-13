@@ -1,6 +1,6 @@
 ﻿import { useState, useRef, useEffect } from "react";
 import {
-  Play, Pause, Volume2, VolumeX, Maximize, Minimize,
+  Play, Pause, Volume2, VolumeX, Maximize, Minimize, PictureInPicture2,
   Download, SkipBack, SkipForward, Settings, Check
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -107,7 +107,12 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
   const [showControls, setShowControls] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [pipSupported, setPipSupported] = useState(false);
   const hideTimer = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    setPipSupported(document.pictureInPictureEnabled || false);
+  }, []);
 
   const resetHideTimer = () => {
     setShowControls(true);
@@ -187,6 +192,21 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
       }
     } catch (err) {
       console.error("Fullscreen toggle error:", err);
+    }
+  };
+
+  const togglePip = async () => {
+    const video = mediaRef.current;
+    if (!video || isAudio) return;
+
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      } else {
+        await video.requestPictureInPicture();
+      }
+    } catch (err) {
+      console.error("PiP toggle error:", err);
     }
   };
 
@@ -322,6 +342,11 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
               {saving ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin block" />
                 : saved ? <Check className="w-4 h-4 text-green-400" />
                 : <Download className="w-4 h-4" />}
+            </button>
+          )}
+          {!isAudio && pipSupported && (
+            <button onClick={togglePip} className="text-white/80 hover:text-white transition-colors" title="Picture-in-Picture">
+              <PictureInPicture2 className="w-4 h-4" />
             </button>
           )}
           {!isAudio && (
