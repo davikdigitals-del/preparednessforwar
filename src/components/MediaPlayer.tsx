@@ -228,7 +228,7 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
           <video
             ref={mediaRef as any}
             src={url}
-            className="w-full aspect-video"
+            className="w-full h-full object-contain"
             poster={thumbnail}
             onTimeUpdate={() => setCurrentTime(mediaRef.current?.currentTime || 0)}
             onLoadedMetadata={() => setDuration(mediaRef.current?.duration || 0)}
@@ -314,11 +314,11 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl, mediaId, type
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   return (
-    <div className="relative bg-black">
+    <div className="relative bg-black w-full h-full">
       <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent px-4 py-2 pointer-events-none">
         <p className="text-white text-sm font-semibold line-clamp-1">{title}</p>
       </div>
-      <div className="aspect-video">
+      <div className="w-full h-full min-h-[400px] aspect-video">
         <iframe
           src={embedUrl}
           title={title}

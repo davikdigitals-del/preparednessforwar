@@ -16,6 +16,38 @@ export function CourseVideoPlayer({ url, title, thumbnail, courseId }: CourseVid
   const pipVideoRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
+  // Lock screen orientation to landscape when in full-width on mobile
+  useEffect(() => {
+    const lockOrientation = async () => {
+      if (isFullWidth && window.screen?.orientation?.lock) {
+        try {
+          await window.screen.orientation.lock('landscape');
+        } catch (error) {
+          console.log('Screen orientation lock not supported or failed:', error);
+        }
+      } else if (!isFullWidth && window.screen?.orientation?.unlock) {
+        try {
+          window.screen.orientation.unlock();
+        } catch (error) {
+          console.log('Screen orientation unlock failed:', error);
+        }
+      }
+    };
+
+    lockOrientation();
+
+    return () => {
+      // Unlock orientation when component unmounts or full-width is exited
+      if (window.screen?.orientation?.unlock) {
+        try {
+          window.screen.orientation.unlock();
+        } catch (error) {
+          // Ignore errors on cleanup
+        }
+      }
+    };
+  }, [isFullWidth]);
+
   useEffect(() => {
     // Setup Intersection Observer to detect when video scrolls out of view
     if (!videoContainerRef.current) return;
@@ -62,22 +94,23 @@ export function CourseVideoPlayer({ url, title, thumbnail, courseId }: CourseVid
       {/* Main Video Container */}
       <div
         ref={videoContainerRef}
-        className={`relative bg-black transition-all duration-300 ${
+        className={`relative transition-all duration-300 ${
           isFullWidth 
-            ? "fixed inset-0 z-40 m-0 rounded-none" 
-            : "rounded-lg overflow-hidden w-full"
+            ? "fixed inset-0 z-50 bg-black m-0" 
+            : "bg-black rounded-lg overflow-hidden w-full"
         }`}
       >
         {/* Full Width Toggle Button - Always visible */}
         <button
           onClick={toggleFullWidth}
-          className="absolute top-3 right-3 z-30 bg-black/70 hover:bg-black/90 text-white p-2.5 rounded-lg backdrop-blur-sm transition-all shadow-lg"
+          className="absolute top-4 right-4 z-50 bg-black/80 hover:bg-black/95 text-white p-3 rounded-lg backdrop-blur-sm transition-all shadow-xl border border-white/20"
           title={isFullWidth ? "Exit full width" : "Enter full width"}
         >
-          {isFullWidth ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+          {isFullWidth ? <Minimize2 className="w-6 h-6" /> : <Maximize2 className="w-6 h-6" />}
         </button>
 
-        <div className={isFullWidth ? "h-screen flex items-center justify-center" : ""}>
+        {/* Video Player - Full height when in full-width mode */}
+        <div className={isFullWidth ? "h-screen w-screen" : "w-full"}>
           <MediaPlayer
             url={url}
             title={title}
