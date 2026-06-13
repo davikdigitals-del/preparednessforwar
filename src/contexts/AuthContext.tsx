@@ -276,6 +276,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      // Save last sign-in method
+      localStorage.setItem('lastSignInMethod', 'email');
+      
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error || !data.user) {
@@ -346,15 +349,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
+    // Save last sign-in method
+    localStorage.setItem('lastSignInMethod', 'google');
+    
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/dashboard`,
+        queryParams: {
+          // Auto-create account if doesn't exist
+          access_type: 'offline',
+          prompt: 'consent',
+        },
       },
     });
   };
 
   const signInWithApple = async () => {
+    // Save last sign-in method
+    localStorage.setItem('lastSignInMethod', 'apple');
+    
     await supabase.auth.signInWithOAuth({
       provider: "apple",
       options: {
@@ -364,6 +378,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithDiscord = async () => {
+    // Save last sign-in method
+    localStorage.setItem('lastSignInMethod', 'discord');
+    
     await supabase.auth.signInWithOAuth({
       provider: "discord",
       options: {

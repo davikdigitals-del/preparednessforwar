@@ -20,6 +20,7 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [lastSignInMethod, setLastSignInMethod] = useState<string | null>(null);
 
   // Forgot password state
   const [view, setView] = useState<"signin" | "forgot" | "sent">("signin");
@@ -29,6 +30,12 @@ export default function SignInPage() {
 
   const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
   const recaptchaEnabled = !!recaptchaSiteKey;
+
+  // Get last sign-in method on mount
+  useState(() => {
+    const lastMethod = localStorage.getItem('lastSignInMethod');
+    setLastSignInMethod(lastMethod);
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,12 +224,24 @@ export default function SignInPage() {
               </div>
             </div>
 
+            {lastSignInMethod && (
+              <div className="text-center mb-3">
+                <p className="text-xs text-muted-foreground">
+                  Last used: <span className="font-semibold text-primary capitalize">{lastSignInMethod === 'email' ? 'Email & Password' : lastSignInMethod}</span>
+                </p>
+              </div>
+            )}
+
             <div className="grid grid-cols-3 gap-3">
               <Button
                 type="button"
                 variant="outline"
                 onClick={signInWithGoogle}
-                className="w-full hover:bg-gray-50 flex items-center justify-center transition-colors"
+                className={`w-full flex items-center justify-center transition-all ${
+                  lastSignInMethod === 'google' 
+                    ? 'ring-2 ring-primary ring-offset-2 bg-blue-50 hover:bg-blue-100' 
+                    : 'hover:bg-gray-50'
+                }`}
                 title="Sign in with Google"
               >
                 <svg width="20" height="20" viewBox="0 0 48 48">
@@ -237,7 +256,11 @@ export default function SignInPage() {
                 type="button"
                 variant="outline"
                 onClick={signInWithApple}
-                className="w-full hover:bg-gray-50 flex items-center justify-center transition-colors"
+                className={`w-full flex items-center justify-center transition-all ${
+                  lastSignInMethod === 'apple' 
+                    ? 'ring-2 ring-primary ring-offset-2 bg-gray-50 hover:bg-gray-100' 
+                    : 'hover:bg-gray-50'
+                }`}
                 title="Sign in with Apple"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="#000000">
@@ -249,7 +272,11 @@ export default function SignInPage() {
                 type="button"
                 variant="outline"
                 onClick={signInWithDiscord}
-                className="w-full hover:bg-indigo-50 flex items-center justify-center transition-colors"
+                className={`w-full flex items-center justify-center transition-all ${
+                  lastSignInMethod === 'discord' 
+                    ? 'ring-2 ring-primary ring-offset-2 bg-indigo-50 hover:bg-indigo-100' 
+                    : 'hover:bg-indigo-50'
+                }`}
                 title="Sign in with Discord"
               >
                 <svg width="20" height="20" viewBox="0 0 71 55" fill="#5865F2">
