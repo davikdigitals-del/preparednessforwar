@@ -18,7 +18,7 @@ export default function CoursePlayerPage() {
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [enrollment, setEnrollment] = useState<CourseEnrollment | null>(null);
   const [currentLesson, setCurrentLesson] = useState<CourseLesson | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -300,19 +300,33 @@ export default function CoursePlayerPage() {
         <Progress value={enrollment?.progress_percentage || 0} className="h-1 rounded-none" />
       </div>
 
-      <div className="flex">
-        {/* Sidebar — overlay on mobile/tablet, static on desktop */}
+      <div className="flex relative">
+        {/* Sidebar overlay backdrop - only on mobile */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/40 z-10 lg:hidden"
-            style={{ top: 0 }}
+            className="fixed inset-0 bg-black/50 z-30 lg:hidden"
             onClick={() => setSidebarOpen(false)}
+            aria-label="Close sidebar"
           />
         )}
+        
+        {/* Sidebar */}
         <aside
-          className={`fixed top-[57px] left-0 bottom-0 w-72 sm:w-80 md:w-96 bg-white border-r border-gray-200 overflow-y-auto transition-transform z-20 lg:translate-x-0 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+          className={`
+            fixed lg:relative
+            top-0 left-0
+            h-screen lg:h-auto
+            w-80 lg:w-96
+            bg-white border-r border-gray-200
+            overflow-y-auto
+            transform transition-transform duration-300 ease-in-out
+            z-40 lg:z-10
+            ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0 lg:w-0 lg:border-0"}
+          `}
+          style={{ 
+            marginTop: "57px", 
+            height: "calc(100vh - 57px)",
+          }}
         >          <div className="p-4">
             <h2 className="font-semibold text-lg mb-4">Course Content</h2>
             <div className="space-y-2">
@@ -350,8 +364,8 @@ export default function CoursePlayerPage() {
           </div>
         </aside>
 
-        {/* Main Content — full width on mobile, offset on desktop when sidebar open */}
-        <main className={`flex-1 min-w-0 transition-all ${sidebarOpen ? "lg:ml-80" : ""}`}>
+        {/* Main Content */}
+        <main className="flex-1 min-w-0 w-full">
           <div className="max-w-6xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
             {/* Lesson Header */}
             <div className="mb-4 sm:mb-6">
