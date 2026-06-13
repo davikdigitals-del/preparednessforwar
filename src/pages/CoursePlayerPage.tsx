@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ChevronLeft, ChevronRight, CheckCircle, Play, FileText, HelpCircle, Download, Menu, X, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { MediaPlayer } from "@/components/MediaPlayer";
+import { CourseVideoPlayer } from "@/components/CourseVideoPlayer";
 import type { Course, CourseModule, CourseLesson, CourseEnrollment } from "@/types/monetization";
 
 export default function CoursePlayerPage() {
@@ -301,7 +301,7 @@ export default function CoursePlayerPage() {
       </div>
 
       <div className="flex">
-        {/* Sidebar — overlay on mobile, static on desktop */}
+        {/* Sidebar — overlay on mobile/tablet, static on desktop */}
         {sidebarOpen && (
           <div
             className="fixed inset-0 bg-black/40 z-10 lg:hidden"
@@ -310,7 +310,7 @@ export default function CoursePlayerPage() {
           />
         )}
         <aside
-          className={`fixed top-[57px] left-0 bottom-0 w-72 sm:w-80 bg-white border-r border-gray-200 overflow-y-auto transition-transform z-20 ${
+          className={`fixed top-[57px] left-0 bottom-0 w-72 sm:w-80 md:w-96 bg-white border-r border-gray-200 overflow-y-auto transition-transform z-20 lg:translate-x-0 ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >          <div className="p-4">
@@ -352,10 +352,10 @@ export default function CoursePlayerPage() {
 
         {/* Main Content — full width on mobile, offset on desktop when sidebar open */}
         <main className={`flex-1 min-w-0 transition-all ${sidebarOpen ? "lg:ml-80" : ""}`}>
-          <div className="max-w-5xl mx-auto p-3 sm:p-6">
+          <div className="max-w-6xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
             {/* Lesson Header */}
             <div className="mb-4 sm:mb-6">
-              <h2 className="text-xl sm:text-3xl font-bold mb-2">{currentLesson.title}</h2>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">{currentLesson.title}</h2>
               {currentLesson.description && (
                 <p className="text-gray-600 text-sm sm:text-base">{currentLesson.description}</p>
               )}
@@ -364,12 +364,11 @@ export default function CoursePlayerPage() {
             {/* Lesson Content */}
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
               {currentLesson.content_type === "video" && currentLesson.video_url ? (
-                <MediaPlayer
+                <CourseVideoPlayer
                   url={currentLesson.video_url}
                   title={currentLesson.title}
-                  isPremium={true}
-                  type="video"
                   thumbnail={course.thumbnail_url}
+                  courseId={course.id}
                 />
               ) : currentLesson.content_type === "video" && !currentLesson.video_url ? (
                 <div className="aspect-video bg-gray-100 flex items-center justify-center text-gray-400">
