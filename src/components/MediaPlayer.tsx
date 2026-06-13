@@ -270,9 +270,14 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
     <div
       ref={containerRef}
       className={`relative bg-black select-none transition-all duration-300 ${
-        isAudio ? "rounded-xl overflow-hidden" : expanded ? "w-full aspect-video" : "w-full"
+        isAudio ? "rounded-xl overflow-hidden" : expanded ? "fixed left-0 right-0 z-[100] mx-auto" : "w-full"
       }`}
-      style={expanded && !isAudio ? { minHeight: '70vh', maxHeight: '85vh' } : undefined}
+      style={expanded && !isAudio ? { 
+        width: '95vw',
+        maxWidth: '1800px',
+        top: '80px',
+        height: 'calc(95vh - 100px)'
+      } : undefined}
       onMouseMove={resetHideTimer}
       onClick={isAudio ? undefined : (expanded ? undefined : togglePlay)}
     >
@@ -411,11 +416,18 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl, mediaId, type
   
   return (
     <div 
-      className="relative bg-black transition-all duration-300 w-full"
-      style={expanded ? { minHeight: '70vh', maxHeight: '85vh' } : undefined}
+      className={`relative bg-black transition-all duration-300 ${
+        expanded ? "fixed left-0 right-0 z-[100] mx-auto" : "w-full"
+      }`}
+      style={expanded ? { 
+        width: '95vw',
+        maxWidth: '1800px',
+        top: '80px',
+        height: 'calc(95vh - 100px)'
+      } : undefined}
     >
       <div className={`w-full h-full ${expanded ? "flex flex-col" : ""}`}>
-        <div className="relative">
+        <div className="relative flex-1">
           <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent px-4 py-2 flex items-center justify-between">
             <p className="text-white text-sm font-semibold line-clamp-1">{title}</p>
             <button
@@ -426,11 +438,11 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl, mediaId, type
               {expanded ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
             </button>
           </div>
-          <div className={`w-full ${expanded ? "h-[70vh]" : "min-h-[400px] aspect-video"}`}>
+          <div className="w-full h-full">
             <iframe
               src={embedUrl}
               title={title}
-              className="w-full h-full"
+              className={`w-full ${expanded ? "h-full" : "min-h-[400px] aspect-video"}`}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
               allowFullScreen
             />
