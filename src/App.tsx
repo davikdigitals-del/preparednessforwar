@@ -42,6 +42,7 @@ const MyCoursesPage = lazy(() => import("./pages/MyCoursesPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const ShopPage = lazy(() => import("./pages/ShopPage"));
 const CommunityReports = lazy(() => import("./pages/CommunityReports"));
+const DebugFeaturedPosts = lazy(() => import("./pages/DebugFeaturedPosts"));
 
 // Dashboard pages
 const SubmitReport = lazy(() => import("./pages/dashboard/SubmitReport"));
@@ -164,6 +165,7 @@ const App = () => (
                 <Route path="/checkout/course/:courseId" element={<CheckoutPage />} />
                 <Route path="/shop" element={<ShopPage />} />
                 <Route path="/community-reports" element={<CommunityReports />} />
+                <Route path="/debug/featured-posts" element={<DebugFeaturedPosts />} />
                 <Route path="/countries" element={<CountriesPage />} />
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/latest" element={<LatestPage />} />
