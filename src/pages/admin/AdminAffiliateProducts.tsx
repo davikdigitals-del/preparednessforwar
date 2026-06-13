@@ -222,6 +222,7 @@ export default function AdminAffiliateProducts() {
       let price = 0;
       let fetchedImages: string[] = [];
       let fetchedVideo = "";
+      let scraped_affiliate_network = affiliate_network;
 
       try {
         const { supabase } = await import("@/integrations/supabase/client");
@@ -242,7 +243,7 @@ export default function AdminAffiliateProducts() {
             setScrapedVideo(fetchedVideo);
           }
           if (data.affiliate_network) {
-            affiliate_network = data.affiliate_network;
+            scraped_affiliate_network = data.affiliate_network;
           }
         }      } catch {}
 
@@ -255,7 +256,7 @@ export default function AdminAffiliateProducts() {
         images: fetchedImages.length > 0 ? fetchedImages : prev.images,
         video_url: fetchedVideo || prev.video_url,
         price: price || prev.price,
-        affiliate_network,
+        affiliate_network: scraped_affiliate_network,
       }));
 
       const got = [
