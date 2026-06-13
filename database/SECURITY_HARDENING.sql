@@ -339,23 +339,29 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- 12. SECURITY VIEWS FOR MONITORING
 -- ========================================
 
--- View for monitoring suspicious activity
-CREATE OR REPLACE VIEW suspicious_activity AS
-SELECT 
-  al.user_id,
-  p.email,
-  al.action,
-  al.table_name,
-  COUNT(*) as action_count,
-  MAX(al.created_at) as last_action
-FROM audit_log al
-LEFT JOIN profiles p ON al.user_id = p.id
-WHERE al.created_at > NOW() - INTERVAL '1 hour'
-GROUP BY al.user_id, p.email, al.action, al.table_name
-HAVING COUNT(*) > 50  -- More than 50 actions per hour is suspicious
-ORDER BY action_count DESC;
+-- First check if audit_log table exists before creating views
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'audit_log') THEN
+    -- View for monitoring suspicious activity
+    CREATE OR REPLACE VIEW suspicious_activity AS
+    SELECT 
+      al.user_id,
+      p.email,
+      al.action,
+      al.table_name,
+      COUNT(*) as action_count,
+      MAX(al.created_at) as last_action
+    FROM audit_log al
+    LEFT JOIN profiles p ON al.user_id = p.id
+    WHERE al.created_at > NOW() - INTERVAL '1 hour'
+    GROUP BY al.user_id, p.email, al.action, al.table_name
+    HAVING COUNT(*) > 50  -- More than 50 actions per hour is suspicious
+    ORDER BY action_count DESC;
+  END IF;
+END $$;
 
--- View for failed login monitoring
+-- View for failed login monitoring (safe - table created earlier)
 CREATE OR REPLACE VIEW failed_login_summary AS
 SELECT 
   email,
