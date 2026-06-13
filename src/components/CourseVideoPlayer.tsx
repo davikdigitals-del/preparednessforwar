@@ -13,6 +13,7 @@ export function CourseVideoPlayer({ url, title, thumbnail, courseId }: CourseVid
   const [isPiP, setIsPiP] = useState(false);
   const [isFullWidth, setIsFullWidth] = useState(false);
   const videoContainerRef = useRef<HTMLDivElement>(null);
+  const pipVideoRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
@@ -22,17 +23,18 @@ export function CourseVideoPlayer({ url, title, thumbnail, courseId }: CourseVid
     observerRef.current = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        // If video is less than 20% visible, enable PiP
-        if (entry.intersectionRatio < 0.2 && !isPiP) {
+        // If video is less than 30% visible and user has scrolled down, enable PiP
+        if (entry.intersectionRatio < 0.3) {
           setIsPiP(true);
         }
-        // If video is more than 50% visible, disable PiP
-        if (entry.intersectionRatio > 0.5 && isPiP) {
+        // If video is more than 60% visible, disable PiP
+        else if (entry.intersectionRatio > 0.6) {
           setIsPiP(false);
         }
       },
       {
-        threshold: [0, 0.2, 0.5, 1],
+        threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
+        rootMargin: "-50px 0px -50px 0px", // Add some buffer
       }
     );
 
@@ -43,11 +45,11 @@ export function CourseVideoPlayer({ url, title, thumbnail, courseId }: CourseVid
         observerRef.current.disconnect();
       }
     };
-  }, [isPiP]);
+  }, []);
 
   const closePiP = () => {
     setIsPiP(false);
-    // Scroll back to video
+    // Scroll back to video smoothly
     videoContainerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
@@ -60,63 +62,88 @@ export function CourseVideoPlayer({ url, title, thumbnail, courseId }: CourseVid
       {/* Main Video Container */}
       <div
         ref={videoContainerRef}
-        className={`relative bg-black rounded-lg overflow-hidden transition-all duration-300 ${
-          isFullWidth ? "w-screen -mx-3 sm:-mx-6 md:-mx-8 lg:-mx-12" : "w-full"
+        className={`relative bg-black transition-all duration-300 ${
+          isFullWidth 
+            ? "fixed inset-0 z-40 m-0 rounded-none" 
+            : "rounded-lg overflow-hidden w-full"
         }`}
       >
-        {/* Full Width Toggle Button */}
+        {/* Full Width Toggle Button - Always visible */}
         <button
           onClick={toggleFullWidth}
-          className="absolute top-3 right-3 z-20 bg-black/60 hover:bg-black/80 text-white p-2 rounded-lg backdrop-blur transition-colors"
-          title={isFullWidth ? "Exit full width" : "Full width"}
+          className="absolute top-3 right-3 z-30 bg-black/70 hover:bg-black/90 text-white p-2.5 rounded-lg backdrop-blur-sm transition-all shadow-lg"
+          title={isFullWidth ? "Exit full width" : "Enter full width"}
         >
           {isFullWidth ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
         </button>
 
-        <MediaPlayer
-          url={url}
-          title={title}
-          isPremium={true}
-          type="video"
-          thumbnail={thumbnail}
-          mediaId={courseId}
-        />
-      </div>
-
-      {/* Picture-in-Picture Floating Video */}
-      {isPiP && (
-        <div className="fixed bottom-4 right-4 z-50 w-80 sm:w-96 shadow-2xl rounded-lg overflow-hidden border-2 border-primary animate-in slide-in-from-bottom-4 duration-300">
-          {/* PiP Header */}
-          <div className="absolute top-0 left-0 right-0 z-30 bg-gradient-to-b from-black/90 to-transparent px-3 py-2 flex items-center justify-between">
-            <p className="text-white text-xs font-semibold truncate flex-1">{title}</p>
-            <button
-              onClick={closePiP}
-              className="ml-2 bg-red-600 hover:bg-red-700 text-white p-1 rounded transition-colors flex-shrink-0"
-              title="Close floating video"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* PiP Video */}
-          <div className="aspect-video">
-            <MediaPlayer
-              url={url}
-              title={title}
-              isPremium={true}
-              type="video"
-              thumbnail={thumbnail}
-              mediaId={courseId}
-            />
-          </div>
-
-          {/* Click to return to main video */}
-          <button
-            onClick={closePiP}
-            className="absolute inset-0 cursor-pointer hover:bg-black/10 transition-colors"
-            title="Return to main video"
+        <div className={isFullWidth ? "h-screen flex items-center justify-center" : ""}>
+          <MediaPlayer
+            url={url}
+            title={title}
+            isPremium={true}
+            type="video"
+            thumbnail={thumbnail}
+            mediaId={courseId}
           />
         </div>
+      </div>
+
+      {/* Picture-in-Picture Floating Video - Only show when NOT in full width */}
+      {isPiP && !isFullWidth && (
+        <>
+          {/* Backdrop overlay for mobile */}
+          <div 
+            className="fixed inset-0 bg-black/20 z-40 lg:hidden"
+            onClick={closePiP}
+          />
+          
+          {/* Floating PiP Container */}
+          <div 
+            ref={pipVideoRef}
+            className="fixed bottom-4 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm sm:max-w-md lg:max-w-lg shadow-2xl rounded-lg overflow-hidden border-2 border-primary bg-black animate-in slide-in-from-bottom-4 duration-300"
+            style={{ maxHeight: 'calc(100vh - 8rem)' }}
+          >
+            {/* PiP Header with close button */}
+            <div className="absolute top-0 left-0 right-0 z-30 bg-gradient-to-b from-black/95 via-black/70 to-transparent px-3 py-2 flex items-center justify-between pointer-events-none">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <p className="text-white text-xs sm:text-sm font-semibold truncate">
+                  {title}
+                </p>
+              </div>
+              <button
+                onClick={closePiP}
+                className="ml-2 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-md transition-colors flex-shrink-0 pointer-events-auto shadow-lg"
+                title="Close floating video"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* PiP Video */}
+            <div className="aspect-video bg-black">
+              <MediaPlayer
+                url={url}
+                title={title}
+                isPremium={true}
+                type="video"
+                thumbnail={thumbnail}
+                mediaId={courseId}
+              />
+            </div>
+
+            {/* Click area to return to main video */}
+            <div
+              onClick={closePiP}
+              className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 cursor-pointer hover:from-black/90 transition-all"
+            >
+              <p className="text-white text-xs text-center">
+                Click to return to main video
+              </p>
+            </div>
+          </div>
+        </>
       )}
     </>
   );

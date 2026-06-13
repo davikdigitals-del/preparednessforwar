@@ -153,9 +153,40 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
   const toggleFullscreen = () => {
     const el = containerRef.current;
     if (!el) return;
-    if (!document.fullscreenElement) { el.requestFullscreen(); setFullscreen(true); }
-    else { document.exitFullscreen(); setFullscreen(false); }
+    
+    try {
+      if (!document.fullscreenElement) {
+        el.requestFullscreen().then(() => {
+          setFullscreen(true);
+        }).catch((err) => {
+          console.error("Fullscreen request failed:", err);
+        });
+      } else {
+        document.exitFullscreen().then(() => {
+          setFullscreen(false);
+        }).catch((err) => {
+          console.error("Exit fullscreen failed:", err);
+        });
+      }
+    } catch (err) {
+      console.error("Fullscreen toggle error:", err);
+    }
   };
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setFullscreen(!!document.fullscreenElement);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   const changeSpeed = (s: number) => {
     const m = mediaRef.current;
