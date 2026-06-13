@@ -91,8 +91,8 @@ export default function CookieConsent() {
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
             {/* Icon */}
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 rounded-full bg-alert/10 flex items-center justify-center">
-                <Cookie className="w-6 h-6 text-alert" />
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Cookie className="w-6 h-6 text-primary" />
               </div>
             </div>
 
@@ -105,7 +105,7 @@ export default function CookieConsent() {
                 We use cookies to enhance your browsing experience, provide personalised content, 
                 and analyse our traffic. By clicking "Accept All", you consent to our use of cookies. 
                 You can manage your preferences or learn more in our{" "}
-                <Link to="/legal/cookies" className="text-alert hover:underline font-medium">
+                <Link to="/legal/cookies" className="text-primary hover:underline font-medium">
                   Cookie Policy
                 </Link>
                 .
@@ -133,7 +133,7 @@ export default function CookieConsent() {
               <Button
                 size="sm"
                 onClick={acceptAll}
-                className="bg-alert hover:bg-alert/90"
+                className="bg-primary hover:bg-primary/90"
               >
                 Accept All
               </Button>
@@ -156,7 +156,7 @@ export default function CookieConsent() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-2xl">
-              <Cookie className="w-6 h-6 text-alert" />
+              <Cookie className="w-6 h-6 text-primary" />
               Cookie Preferences
             </DialogTitle>
             <DialogDescription className="text-base">
@@ -170,7 +170,7 @@ export default function CookieConsent() {
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <Label className="font-semibold text-base">Necessary Cookies</Label>
-                  <span className="text-xs bg-alert/10 text-alert px-2 py-0.5 rounded">
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
                     Always Active
                   </span>
                 </div>
@@ -252,7 +252,7 @@ export default function CookieConsent() {
             </Button>
             <Button
               onClick={saveCustomPreferences}
-              className="flex-1 bg-alert hover:bg-alert/90"
+              className="flex-1 bg-primary hover:bg-primary/90"
             >
               Save Preferences
             </Button>
@@ -262,11 +262,11 @@ export default function CookieConsent() {
           <div className="pt-4 border-t border-border">
             <p className="text-xs text-muted-foreground text-center">
               For more information, please read our{" "}
-              <Link to="/legal/cookies" className="text-alert hover:underline">
+              <Link to="/legal/cookies" className="text-primary hover:underline">
                 Cookie Policy
               </Link>{" "}
               and{" "}
-              <Link to="/legal/privacy" className="text-alert hover:underline">
+              <Link to="/legal/privacy" className="text-primary hover:underline">
                 Privacy Policy
               </Link>
               .

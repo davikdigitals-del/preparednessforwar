@@ -7,8 +7,8 @@ export default function AboutPage() {
       <div className="border-b border-border bg-card">
         <div className="container py-12 md:py-20 max-w-5xl">
           <div className="text-center space-y-6">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-alert/10 mb-4">
-              <Shield className="w-10 h-10 text-alert" />
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4">
+              <Shield className="w-10 h-10 text-primary" />
             </div>
             <h1 className="font-display font-bold text-4xl md:text-5xl lg:text-6xl">
               About Preparedness For War
@@ -25,7 +25,7 @@ export default function AboutPage() {
       <div className="container py-16 max-w-5xl">
         <div className="bg-card border border-border rounded-lg p-8 md:p-12 shadow-sm">
           <div className="flex items-start gap-4 mb-6">
-            <Target className="w-8 h-8 text-alert flex-shrink-0 mt-1" />
+            <Target className="w-8 h-8 text-primary flex-shrink-0 mt-1" />
             <div>
               <h2 className="font-display font-bold text-2xl md:text-3xl mb-4">Our Mission</h2>
               <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-4">
@@ -62,7 +62,7 @@ export default function AboutPage() {
                 key={idx} 
                 className="bg-card border border-border rounded-lg p-6 hover:shadow-md transition-shadow"
               >
-                <item.icon className="w-10 h-10 text-alert mb-4" />
+                <item.icon className="w-10 h-10 text-primary mb-4" />
                 <h3 className="font-display font-bold text-lg mb-2">{item.title}</h3>
                 <p className="text-sm text-muted-foreground">{item.description}</p>
               </div>
@@ -111,12 +111,12 @@ export default function AboutPage() {
       </div>
 
       {/* Important Notice */}
-      <div className="bg-alert/5 border-y border-alert/20 py-12">
+      <div className="bg-primary/5 border-y border-primary/20 py-12">
         <div className="container max-w-5xl">
           <div className="flex flex-col md:flex-row items-start gap-6">
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 rounded-full bg-alert/10 flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-alert" />
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-primary" />
               </div>
             </div>
             <div>

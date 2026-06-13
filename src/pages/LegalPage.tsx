@@ -356,8 +356,8 @@ export default function LegalPage() {
       <div className="border-b border-border bg-card">
         <div className="container py-8 md:py-12 max-w-6xl">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-14 h-14 rounded-lg bg-alert/10 flex items-center justify-center flex-shrink-0">
-              <Icon className="w-7 h-7 text-alert" />
+            <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Icon className="w-7 h-7 text-primary" />
             </div>
             <div>
               <h1 className="font-display font-bold text-3xl md:text-4xl">{content.title}</h1>
@@ -396,7 +396,7 @@ export default function LegalPage() {
               <div key={idx} className={idx > 0 ? "mt-8 pt-8 border-t border-border" : ""}>
                 {section.heading && (
                   <h2 className="font-display font-bold text-xl md:text-2xl mb-4 flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-alert flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
                     {section.heading}
                   </h2>
                 )}
@@ -415,7 +415,7 @@ export default function LegalPage() {
         {/* Footer Note */}
         <div className="mt-8 p-6 bg-muted/50 border border-border rounded-lg">
           <div className="flex items-start gap-3">
-            <FileText className="w-5 h-5 text-alert flex-shrink-0 mt-0.5" />
+            <FileText className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-semibold mb-1">Questions or Concerns?</p>
               <p className="text-sm text-muted-foreground">
