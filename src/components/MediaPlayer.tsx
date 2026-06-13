@@ -156,14 +156,31 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
     
     try {
       if (!document.fullscreenElement) {
-        el.requestFullscreen().then(() => {
+        // Try to lock orientation to landscape on mobile
+        el.requestFullscreen().then(async () => {
           setFullscreen(true);
+          // Lock to landscape on mobile devices
+          if (window.screen?.orientation?.lock) {
+            try {
+              await window.screen.orientation.lock('landscape');
+            } catch (err) {
+              console.log('Orientation lock not supported');
+            }
+          }
         }).catch((err) => {
           console.error("Fullscreen request failed:", err);
         });
       } else {
         document.exitFullscreen().then(() => {
           setFullscreen(false);
+          // Unlock orientation
+          if (window.screen?.orientation?.unlock) {
+            try {
+              window.screen.orientation.unlock();
+            } catch (err) {
+              console.log('Orientation unlock failed');
+            }
+          }
         }).catch((err) => {
           console.error("Exit fullscreen failed:", err);
         });
@@ -176,7 +193,17 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
   // Listen for fullscreen changes
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setFullscreen(!!document.fullscreenElement);
+      const isFullscreen = !!document.fullscreenElement;
+      setFullscreen(isFullscreen);
+      
+      // Unlock orientation when exiting fullscreen
+      if (!isFullscreen && window.screen?.orientation?.unlock) {
+        try {
+          window.screen.orientation.unlock();
+        } catch (err) {
+          // Ignore
+        }
+      }
     };
     
     document.addEventListener('fullscreenchange', handleFullscreenChange);

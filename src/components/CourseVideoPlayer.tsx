@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Maximize2, Minimize2 } from "lucide-react";
+import { X } from "lucide-react";
 import { MediaPlayer } from "./MediaPlayer";
 
 interface CourseVideoPlayerProps {
@@ -11,42 +11,8 @@ interface CourseVideoPlayerProps {
 
 export function CourseVideoPlayer({ url, title, thumbnail, courseId }: CourseVideoPlayerProps) {
   const [isPiP, setIsPiP] = useState(false);
-  const [isFullWidth, setIsFullWidth] = useState(false);
   const videoContainerRef = useRef<HTMLDivElement>(null);
-  const pipVideoRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
-
-  // Lock screen orientation to landscape when in full-width on mobile
-  useEffect(() => {
-    const lockOrientation = async () => {
-      if (isFullWidth && window.screen?.orientation?.lock) {
-        try {
-          await window.screen.orientation.lock('landscape');
-        } catch (error) {
-          console.log('Screen orientation lock not supported or failed:', error);
-        }
-      } else if (!isFullWidth && window.screen?.orientation?.unlock) {
-        try {
-          window.screen.orientation.unlock();
-        } catch (error) {
-          console.log('Screen orientation unlock failed:', error);
-        }
-      }
-    };
-
-    lockOrientation();
-
-    return () => {
-      // Unlock orientation when component unmounts or full-width is exited
-      if (window.screen?.orientation?.unlock) {
-        try {
-          window.screen.orientation.unlock();
-        } catch (error) {
-          // Ignore errors on cleanup
-        }
-      }
-    };
-  }, [isFullWidth]);
 
   useEffect(() => {
     // Setup Intersection Observer to detect when video scrolls out of view
@@ -66,7 +32,7 @@ export function CourseVideoPlayer({ url, title, thumbnail, courseId }: CourseVid
       },
       {
         threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
-        rootMargin: "-50px 0px -50px 0px", // Add some buffer
+        rootMargin: "-50px 0px -50px 0px",
       }
     );
 
@@ -85,45 +51,25 @@ export function CourseVideoPlayer({ url, title, thumbnail, courseId }: CourseVid
     videoContainerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
-  const toggleFullWidth = () => {
-    setIsFullWidth(!isFullWidth);
-  };
-
   return (
     <>
       {/* Main Video Container */}
       <div
         ref={videoContainerRef}
-        className={`relative transition-all duration-300 ${
-          isFullWidth 
-            ? "fixed inset-0 z-50 bg-black m-0" 
-            : "bg-black rounded-lg overflow-hidden w-full"
-        }`}
+        className="relative bg-black rounded-lg overflow-hidden w-full"
       >
-        {/* Full Width Toggle Button - Always visible */}
-        <button
-          onClick={toggleFullWidth}
-          className="absolute top-4 right-4 z-50 bg-black/80 hover:bg-black/95 text-white p-3 rounded-lg backdrop-blur-sm transition-all shadow-xl border border-white/20"
-          title={isFullWidth ? "Exit full width" : "Enter full width"}
-        >
-          {isFullWidth ? <Minimize2 className="w-6 h-6" /> : <Maximize2 className="w-6 h-6" />}
-        </button>
-
-        {/* Video Player - Full height when in full-width mode */}
-        <div className={isFullWidth ? "h-screen w-screen" : "w-full"}>
-          <MediaPlayer
-            url={url}
-            title={title}
-            isPremium={true}
-            type="video"
-            thumbnail={thumbnail}
-            mediaId={courseId}
-          />
-        </div>
+        <MediaPlayer
+          url={url}
+          title={title}
+          isPremium={true}
+          type="video"
+          thumbnail={thumbnail}
+          mediaId={courseId}
+        />
       </div>
 
-      {/* Picture-in-Picture Floating Video - Only show when NOT in full width */}
-      {isPiP && !isFullWidth && (
+      {/* Picture-in-Picture Floating Video - Only for course videos */}
+      {isPiP && (
         <>
           {/* Backdrop overlay for mobile */}
           <div 
@@ -133,7 +79,6 @@ export function CourseVideoPlayer({ url, title, thumbnail, courseId }: CourseVid
           
           {/* Floating PiP Container */}
           <div 
-            ref={pipVideoRef}
             className="fixed bottom-4 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm sm:max-w-md lg:max-w-lg shadow-2xl rounded-lg overflow-hidden border-2 border-primary bg-black animate-in slide-in-from-bottom-4 duration-300"
             style={{ maxHeight: 'calc(100vh - 8rem)' }}
           >
