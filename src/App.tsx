@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { DataProvider } from "@/contexts/DataContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import CookieConsent from "@/components/CookieConsent";
+import { useSecurity } from "@/hooks/useSecurity";
 
 // Core public pages — loaded immediately
 import Index from "./pages/Index";
@@ -95,13 +96,17 @@ const PageLoader = () => (
   </div>
 );
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <DataProvider>
-        <LanguageProvider>
-        <TooltipProvider>
-          <Toaster />
+const App = () => {
+  // Initialize security protection
+  useSecurity();
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <DataProvider>
+          <LanguageProvider>
+          <TooltipProvider>
+            <Toaster />
           <Sonner />
           <BrowserRouter>
             <CookieConsent />
@@ -195,6 +200,7 @@ const App = () => (
       </DataProvider>
     </AuthProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
