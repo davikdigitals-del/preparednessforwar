@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize, PictureInPicture2,
   Download, SkipBack, SkipForward, Settings, Check, X
@@ -270,7 +270,7 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
     <div
       ref={containerRef}
       className={`relative bg-black select-none transition-all duration-300 ${
-        isAudio ? "rounded-xl overflow-hidden" : expanded ? "fixed left-0 right-0 z-[100] mx-auto" : "w-full"
+        isAudio ? "rounded-xl overflow-hidden" : expanded ? "fixed left-0 right-0 z-[100] mx-auto rounded-lg shadow-2xl" : "w-full"
       }`}
       style={expanded && !isAudio ? { 
         width: '95vw',
