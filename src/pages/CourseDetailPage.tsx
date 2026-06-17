@@ -177,7 +177,7 @@ export default function CourseDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-red-900 to-red-800 text-white py-12">
+      <div className="bg-gradient-to-r from-red-900 to-red-800 text-white py-12 relative z-0">
         <div className="container max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left: Course Info */}
@@ -236,7 +236,7 @@ export default function CourseDetailPage() {
 
             {/* Right: Enrollment Card */}
             <div className="lg:col-span-1">
-              <div className="bg-white text-gray-900 rounded-lg p-6 shadow-xl sticky top-4 border border-gray-200">
+              <div className="bg-white text-gray-900 rounded-lg p-6 shadow-xl sticky top-20 z-10 border border-gray-200">
                 {course.thumbnail_url && (
                   <img
                     src={course.thumbnail_url}
@@ -313,7 +313,7 @@ export default function CourseDetailPage() {
         </div>
       </div>
 
-      <div className="container max-w-6xl mx-auto px-4 py-12">
+      <div className="container max-w-6xl mx-auto px-4 py-12 relative z-0">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
