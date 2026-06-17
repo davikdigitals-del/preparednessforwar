@@ -30,27 +30,33 @@ AND status = 'published';
 */
 
 -- Step 3: Fix RLS policies to allow public to see is_pinned field
--- Drop old policies
+-- Drop ALL existing policies first
 DROP POLICY IF EXISTS "Public can view published posts" ON posts;
 DROP POLICY IF EXISTS "Anyone can view published posts" ON posts;
 DROP POLICY IF EXISTS "Authenticated users can view all posts" ON posts;
 DROP POLICY IF EXISTS "Admins have full access to posts" ON posts;
 DROP POLICY IF EXISTS "Admin full access to posts" ON posts;
+DROP POLICY IF EXISTS "public_can_view_published_posts" ON posts;
+DROP POLICY IF EXISTS "authenticated_can_view_all_posts" ON posts;
+DROP POLICY IF EXISTS "admins_full_access" ON posts;
 
 -- Create new correct policies
 -- 1. Public can view ALL published post fields (including is_pinned)
+DROP POLICY IF EXISTS "public_can_view_published_posts" ON posts;
 CREATE POLICY "public_can_view_published_posts"
 ON posts FOR SELECT
 TO public
 USING (status = 'published');
 
 -- 2. Authenticated users can view all posts
+DROP POLICY IF EXISTS "authenticated_can_view_all_posts" ON posts;
 CREATE POLICY "authenticated_can_view_all_posts"
 ON posts FOR SELECT
 TO authenticated
 USING (true);
 
 -- 3. Admins can do everything
+DROP POLICY IF EXISTS "admins_full_access" ON posts;
 CREATE POLICY "admins_full_access"
 ON posts FOR ALL
 TO authenticated

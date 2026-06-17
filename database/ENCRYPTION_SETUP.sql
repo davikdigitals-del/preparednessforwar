@@ -259,7 +259,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE VIEW encryption_stats AS
 SELECT 
-  user_id,
+  id as user_id,
   COUNT(CASE WHEN encrypted_data IS NOT NULL THEN 1 END) as encrypted_profiles,
   COUNT(*) as total_profiles,
   ROUND(
@@ -267,7 +267,7 @@ SELECT
     2
   ) as encryption_percentage
 FROM profiles
-GROUP BY user_id;
+GROUP BY id;
 
 -- ========================================
 -- VERIFICATION

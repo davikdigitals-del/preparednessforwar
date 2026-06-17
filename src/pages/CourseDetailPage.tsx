@@ -175,10 +175,10 @@ export default function CourseDetailPage() {
   };
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-red-900 to-red-800 text-white py-12">
-        <div className="container">
+        <div className="container max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left: Course Info */}
             <div className="lg:col-span-2">
@@ -236,7 +236,7 @@ export default function CourseDetailPage() {
 
             {/* Right: Enrollment Card */}
             <div className="lg:col-span-1">
-              <div className="bg-white text-gray-900 rounded-lg p-6 shadow-xl sticky top-4">
+              <div className="bg-white text-gray-900 rounded-lg p-6 shadow-xl sticky top-4 border border-gray-200">
                 {course.thumbnail_url && (
                   <img
                     src={course.thumbnail_url}
@@ -313,13 +313,13 @@ export default function CourseDetailPage() {
         </div>
       </div>
 
-      <div className="container py-12">
+      <div className="container max-w-6xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* What You'll Learn */}
             {course.what_you_learn && course.what_you_learn.length > 0 && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                 <h2 className="font-display text-2xl font-bold mb-4">What You'll Master</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {course.what_you_learn.map((item, index) => (
@@ -333,7 +333,7 @@ export default function CourseDetailPage() {
             )}
 
             {/* Description */}
-            <div>
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <h2 className="font-display text-2xl font-bold mb-4">About This Training Program</h2>
               <div className="prose max-w-none text-gray-700">
                 {course.description}
@@ -342,7 +342,7 @@ export default function CourseDetailPage() {
 
             {/* Requirements */}
             {course.requirements && course.requirements.length > 0 && (
-              <div>
+              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                 <h2 className="font-display text-2xl font-bold mb-4">Requirements</h2>
                 <ul className="space-y-2">
                   {course.requirements.map((req, index) => (
@@ -356,7 +356,7 @@ export default function CourseDetailPage() {
             )}
 
             {/* Curriculum */}
-            <div>
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <h2 className="font-display text-2xl font-bold mb-4">Course Curriculum</h2>
               <div className="space-y-3">
                 {modules.map((module, moduleIndex) => (
@@ -406,7 +406,7 @@ export default function CourseDetailPage() {
 
             {/* Reviews */}
             {reviews.length > 0 && (
-              <div>
+              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                 <h2 className="font-display text-2xl font-bold mb-4">Student Reviews</h2>
                 <div className="space-y-4">
                   {reviews.map((review) => (
