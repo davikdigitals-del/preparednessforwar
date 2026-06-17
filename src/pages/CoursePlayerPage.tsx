@@ -271,11 +271,8 @@ export default function CoursePlayerPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hide the site header on this page */}
-      <style>{`header.sticky { display: none !important; } body { padding-top: 0 !important; }`}</style>
-
       {/* Top Bar */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <div className="bg-white border-b border-gray-200 sticky top-16 z-50">
         <div className="px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <Button
@@ -306,7 +303,7 @@ export default function CoursePlayerPage() {
         {sidebarOpen && (
           <div
             className="fixed inset-0 bg-black/50 z-30 lg:hidden"
-            style={{ top: '57px' }}
+            style={{ top: 'calc(64px + 57px)' }}
             onClick={() => setSidebarOpen(false)}
             aria-label="Close sidebar"
           />
@@ -315,7 +312,7 @@ export default function CoursePlayerPage() {
         {/* Sidebar */}
         <aside
           className={`
-            fixed lg:relative
+            fixed lg:static
             left-0
             h-screen lg:h-auto
             w-80 lg:w-96
@@ -323,11 +320,12 @@ export default function CoursePlayerPage() {
             overflow-y-auto
             transform transition-transform duration-300 ease-in-out
             z-40 lg:z-10
-            ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0 lg:w-0 lg:border-0"}
+            ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+            ${sidebarOpen ? "lg:block" : "lg:hidden"}
           `}
           style={{ 
-            top: "57px",
-            height: "calc(100vh - 57px)",
+            top: "calc(64px + 57px)",
+            height: "calc(100vh - 64px - 57px)",
           }}
         >          <div className="p-4">
             <h2 className="font-semibold text-lg mb-4">Course Content</h2>
