@@ -270,7 +270,7 @@ export default function CoursePlayerPage() {
   const previousLesson = getPreviousLesson();
 
   return (
-    <div className="bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Hide the site header on this page */}
       <style>{`header.sticky { display: none !important; } body { padding-top: 0 !important; }`}</style>
 
@@ -317,6 +317,7 @@ export default function CoursePlayerPage() {
           className={`
             fixed lg:relative
             left-0
+            h-screen lg:h-auto
             w-80 lg:w-96
             bg-white border-r border-gray-200
             overflow-y-auto
@@ -327,7 +328,6 @@ export default function CoursePlayerPage() {
           style={{ 
             top: "57px",
             height: "calc(100vh - 57px)",
-            maxHeight: "calc(100vh - 57px)"
           }}
         >          <div className="p-4">
             <h2 className="font-semibold text-lg mb-4">Course Content</h2>
