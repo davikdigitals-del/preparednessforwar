@@ -1,0 +1,347 @@
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Plus, Edit, Trash2, ChevronDown, Check } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+// ── Section dropdown component ────────────────────────────────────────────────
+function SectionDropdown({ sections, value, onChange }: {
+  sections: any[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = sections.find(s => s.id === value);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md bg-white text-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+      >
+        <span className={selected ? "text-gray-900" : "text-gray-400"}>
+          {selected ? selected.title : "Select a section..."}
+        </span>
+        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-52 overflow-y-auto">
+          {sections.map((section) => (
+            <button
+              key={section.id}
+              type="button"
+              onClick={() => { onChange(section.id); setOpen(false); }}
+              className="w-full flex items-center justify-between px-3 py-2.5 text-sm text-left hover:bg-blue-50 transition-colors border-b border-gray-50 last:border-0"
+            >
+              <span className={value === section.id ? "font-semibold text-blue-600" : "text-gray-900"}>
+                {section.title}
+              </span>
+              {value === section.id && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function AdminCategories() {
+  const [categories, setCategories] = useState<any[]>([]);
+  const [sections, setSections] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const { toast } = useToast();
+
+  const [formData, setFormData] = useState({
+    name: "",
+    slug: "",
+    description: "",
+    section_id: "",
+  });
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    console.log("AdminCategories: Loading data...");
+    setLoading(true);
+    
+    try {
+      const dataPromise = Promise.all([fetchCategories(), fetchSections()]);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Data load timeout")), 8000)
+      );
+      
+      await Promise.race([dataPromise, timeoutPromise]);
+      console.log("AdminCategories: Data loaded successfully");
+    } catch (error) {
+      console.error("AdminCategories: Error loading data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSections = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("nav_sections")
+        .select("id, title, slug")
+        .eq("is_active", true)
+        .order("title");
+
+      if (error) throw error;
+      setSections(data || []);
+    } catch (error: any) {
+      console.error("Error fetching sections:", error);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*, sections(title), posts(count)")
+        .order("name");
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingCategory) {
+        const { error } = await supabase
+          .from("categories")
+          .update(formData)
+          .eq("id", editingCategory.id);
+
+        if (error) throw error;
+        toast({ title: "Success", description: "Category updated successfully" });
+      } else {
+        const { error } = await supabase.from("categories").insert([formData]);
+
+        if (error) throw error;
+        toast({ title: "Success", description: "Category created successfully" });
+      }
+
+      setDialogOpen(false);
+      resetForm();
+      fetchCategories();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleEdit = (category: any) => {
+    setEditingCategory(category);
+    setFormData({
+      name: category.name,
+      slug: category.slug,
+      description: category.description || "",
+      section_id: category.section_id || "",
+    });
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this category?")) return;
+
+    try {
+      const { error } = await supabase.from("categories").delete().eq("id", id);
+
+      if (error) throw error;
+      toast({ title: "Success", description: "Category deleted successfully" });
+      fetchCategories();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const resetForm = () => {
+    setEditingCategory(null);
+    setFormData({
+      name: "",
+      slug: "",
+      description: "",
+      section_id: "",
+    });
+  };
+
+  return (
+    <div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold">Categories Management</h1>
+        <Button
+          onClick={() => {
+            resetForm();
+            setDialogOpen(true);
+          }}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          New Category
+        </Button>
+      </div>
+
+      <div className="bg-white rounded-lg border border-gray-200">
+        <div className="overflow-x-auto overflow-y-auto max-h-[60vh]">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Section
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Slug
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Description
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Posts
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                    Loading...
+                  </td>
+                </tr>
+              ) : categories.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                    No categories found
+                  </td>
+                </tr>
+              ) : (
+                categories.map((category) => (
+                  <tr key={category.id}>
+                    <td className="px-6 py-4 font-medium">{category.name}</td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {category.sections?.title || "No Section"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{category.slug}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {category.description}
+                    </td>
+                    <td className="px-6 py-4 text-sm">{category.posts?.[0]?.count || 0}</td>
+                    <td className="px-6 py-4 text-right space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(category)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(category.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>
+              {editingCategory ? "Edit Category" : "Create New Category"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label>Section *</Label>
+              <SectionDropdown
+                sections={sections}
+                value={formData.section_id}
+                onChange={(id) => setFormData({ ...formData, section_id: id })}
+              />
+              <p className="text-xs text-gray-500 mt-1">Categories must belong to a section</p>
+            </div>
+
+            <div>
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="slug">Slug</Label>
+              <Input
+                id="slug"
+                value={formData.slug}
+                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">
+                {editingCategory ? "Update" : "Create"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
