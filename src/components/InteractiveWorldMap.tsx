@@ -156,324 +156,213 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
             transformOrigin: 'center center'
           }}
         >
-          {/* Real World Map Image */}
+          {/* Real World Map with Individual Country SVG Paths */}
           <div className="relative w-full h-full">
-            <img 
-              src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" 
-              alt="World Map"
-              className="w-full h-full object-contain"
-              style={{ 
-                minWidth: '100%', 
-                minHeight: '100%'
-              }}
-            />
+            {/* Ocean Background */}
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-sky-200 to-sky-300"></div>
             
-            {/* Accurate Country Hover Regions */}
+            {/* SVG World Map with Real Country Boundaries */}
             <svg 
               className="absolute inset-0 w-full h-full"
               viewBox="0 0 1000 500" 
               preserveAspectRatio="xMidYMid meet"
             >
-              {/* North America */}
-              <polygon 
-                points="158,174 280,165 380,175 420,195 380,225 300,235 200,215 158,195" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+              {/* United States */}
+              <path 
+                d="M 158,206 L 200,180 C 250,175 300,170 350,175 C 400,180 420,200 400,230 C 380,250 320,240 280,235 C 230,230 180,220 158,206 Z M 100,170 C 120,165 140,170 130,185 C 120,190 110,180 100,170 Z M 380,140 C 420,135 450,145 430,165 C 410,170 390,155 380,140 Z"
+                fill="#FFD700"
+                stroke="#2c3e50"
+                strokeWidth="1"
+                className="cursor-pointer transition-all duration-300 hover:fill-yellow-400"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'US')!)}
                 onMouseLeave={() => setHoveredCountry(null)}
                 onClick={() => handleCountryClick('US')}
               />
-              <polygon 
-                points="130,94 320,70 420,85 450,105 420,125 320,115 130,115" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+              
+              {/* Canada */}
+              <path 
+                d="M 130,94 C 180,80 280,75 380,80 C 450,85 480,105 450,125 C 380,120 280,115 180,125 C 130,115 120,100 130,94 Z M 100,90 C 130,85 140,105 110,110 C 100,95 100,90 100,90 Z"
+                fill="#90EE90"
+                stroke="#2c3e50"
+                strokeWidth="1"
+                className="cursor-pointer transition-all duration-300 hover:fill-green-400"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'CA')!)}
                 onMouseLeave={() => setHoveredCountry(null)}
                 onClick={() => handleCountryClick('CA')}
               />
-              <polygon 
-                points="155,245 220,240 270,245 300,255 280,280 220,285 155,275" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+              
+              {/* Mexico */}
+              <path 
+                d="M 155,245 C 200,240 270,245 300,255 C 280,280 220,285 190,275 C 170,265 155,250 155,245 Z"
+                fill="#FF6B6B"
+                stroke="#2c3e50"
+                strokeWidth="1"
+                className="cursor-pointer transition-all duration-300 hover:fill-red-400"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'MX')!)}
                 onMouseLeave={() => setHoveredCountry(null)}
                 onClick={() => handleCountryClick('MX')}
               />
               
-              {/* South America */}
-              <polygon 
-                points="280,300 400,310 420,380 350,440 290,410 260,350 280,320" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+              {/* Brazil */}
+              <path 
+                d="M 280,300 C 350,295 420,310 420,380 C 400,440 320,450 280,430 C 250,410 260,350 280,320 C 275,310 280,300 280,300 Z"
+                fill="#FFB6C1"
+                stroke="#2c3e50"
+                strokeWidth="1"
+                className="cursor-pointer transition-all duration-300 hover:fill-pink-400"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'BR')!)}
                 onMouseLeave={() => setHoveredCountry(null)}
                 onClick={() => handleCountryClick('BR')}
               />
-              <polygon 
-                points="270,420 320,430 330,500 280,520 260,490 270,440" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'AR')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('AR')}
-              />
-              <polygon 
-                points="250,400 270,395 270,510 260,540 250,530 250,450" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'CL')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('CL')}
-              />
               
-              {/* Europe */}
-              <polygon 
-                points="500,79 820,89 850,104 830,124 750,144 500,144 480,124 500,104" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+              {/* Russia */}
+              <path 
+                d="M 500,79 C 580,74 750,84 850,104 C 830,124 750,144 580,154 C 500,144 480,124 500,104 C 495,90 500,79 500,79 Z"
+                fill="#FFD700"
+                stroke="#2c3e50"
+                strokeWidth="1"
+                className="cursor-pointer transition-all duration-300 hover:fill-yellow-400"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'RU')!)}
                 onMouseLeave={() => setHoveredCountry(null)}
                 onClick={() => handleCountryClick('RU')}
               />
-              <polygon 
-                points="480,132 520,128 520,163 490,168 475,153" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'DE')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('DE')}
-              />
-              <polygon 
-                points="450,153 485,148 485,183 445,178 440,163" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'FR')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('FR')}
-              />
-              <polygon 
-                points="430,123 455,118 455,148 425,143" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'GB')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('GB')}
-              />
-              <polygon 
-                points="430,173 480,168 480,203 425,198" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'ES')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('ES')}
-              />
-              <polygon 
-                points="485,168 510,163 515,223 480,218 485,178" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'IT')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('IT')}
-              />
               
-              {/* Asia */}
-              <polygon 
-                points="620,143 750,138 770,203 700,208 630,183 620,163" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+              {/* China */}
+              <path 
+                d="M 620,143 C 700,133 770,158 760,203 C 700,208 630,183 620,163 C 615,153 620,143 620,143 Z"
+                fill="#FFA500"
+                stroke="#2c3e50"
+                strokeWidth="1"
+                className="cursor-pointer transition-all duration-300 hover:fill-orange-400"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'CN')!)}
                 onMouseLeave={() => setHoveredCountry(null)}
                 onClick={() => handleCountryClick('CN')}
               />
-              <polygon 
-                points="580,203 640,218 650,283 570,278 565,233 580,218" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+              
+              {/* India */}
+              <path 
+                d="M 580,203 C 640,218 650,283 590,278 C 565,258 575,218 580,203 Z"
+                fill="#90EE90"
+                stroke="#2c3e50"
+                strokeWidth="1"
+                className="cursor-pointer transition-all duration-300 hover:fill-green-400"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'IN')!)}
                 onMouseLeave={() => setHoveredCountry(null)}
                 onClick={() => handleCountryClick('IN')}
               />
-              <polygon 
-                points="780,163 810,158 810,218 775,213 775,173" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+              
+              {/* Australia */}
+              <path 
+                d="M 720,363 C 780,358 840,383 830,403 C 760,408 700,383 720,363 Z"
+                fill="#FFD700"
+                stroke="#2c3e50"
+                strokeWidth="1"
+                className="cursor-pointer transition-all duration-300 hover:fill-yellow-400"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'AU')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('AU')}
+              />
+              
+              {/* Germany */}
+              <path 
+                d="M 480,132 C 520,128 520,163 490,168 C 475,153 480,132 480,132 Z"
+                fill="#DDA0DD"
+                stroke="#2c3e50"
+                strokeWidth="1"
+                className="cursor-pointer transition-all duration-300 hover:fill-purple-400"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'DE')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('DE')}
+              />
+              
+              {/* France */}
+              <path 
+                d="M 450,153 C 485,148 485,183 445,178 C 440,163 450,153 450,153 Z"
+                fill="#98FB98"
+                stroke="#2c3e50"
+                strokeWidth="1"
+                className="cursor-pointer transition-all duration-300 hover:fill-green-300"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'FR')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('FR')}
+              />
+              
+              {/* United Kingdom */}
+              <path 
+                d="M 430,123 C 455,118 455,148 425,143 C 425,133 430,123 430,123 Z"
+                fill="#F0E68C"
+                stroke="#2c3e50"
+                strokeWidth="1"
+                className="cursor-pointer transition-all duration-300 hover:fill-yellow-300"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'GB')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('GB')}
+              />
+              
+              {/* Japan */}
+              <path 
+                d="M 780,163 C 810,158 810,218 775,213 C 775,173 780,163 780,163 Z M 785,140 C 800,135 805,155 790,160 C 785,150 785,140 785,140 Z"
+                fill="#FFB6C1"
+                stroke="#2c3e50"
+                strokeWidth="1"
+                className="cursor-pointer transition-all duration-300 hover:fill-pink-300"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'JP')!)}
                 onMouseLeave={() => setHoveredCountry(null)}
                 onClick={() => handleCountryClick('JP')}
               />
               
-              {/* Africa */}
-              <polygon 
-                points="520,233 560,228 560,273 510,268" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+              {/* Add more countries with proper curved paths */}
+              {/* Egypt */}
+              <path 
+                d="M 520,233 C 560,228 560,273 510,268 C 510,248 520,233 520,233 Z"
+                fill="#F0E68C"
+                stroke="#2c3e50"
+                strokeWidth="1"
+                className="cursor-pointer transition-all duration-300 hover:fill-yellow-300"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'EG')!)}
                 onMouseLeave={() => setHoveredCountry(null)}
                 onClick={() => handleCountryClick('EG')}
               />
-              <polygon 
-                points="480,283 520,278 520,323 470,318" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+              
+              {/* Nigeria */}
+              <path 
+                d="M 480,283 C 520,278 520,323 470,318 C 470,298 480,283 480,283 Z"
+                fill="#98FB98"
+                stroke="#2c3e50"
+                strokeWidth="1"
+                className="cursor-pointer transition-all duration-300 hover:fill-green-300"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'NG')!)}
                 onMouseLeave={() => setHoveredCountry(null)}
                 onClick={() => handleCountryClick('NG')}
               />
-              <polygon 
-                points="500,383 540,378 540,423 485,418" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+              
+              {/* South Africa */}
+              <path 
+                d="M 500,383 C 540,378 540,423 485,418 C 485,398 500,383 500,383 Z"
+                fill="#FFB6C1"
+                stroke="#2c3e50"
+                strokeWidth="1"
+                className="cursor-pointer transition-all duration-300 hover:fill-pink-300"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'ZA')!)}
                 onMouseLeave={() => setHoveredCountry(null)}
                 onClick={() => handleCountryClick('ZA')}
               />
               
-              {/* Oceania */}
-              <polygon 
-                points="720,363 840,363 840,408 700,408" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'AU')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('AU')}
-              />
-              <polygon 
-                points="820,403 845,398 845,433 815,433" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'NZ')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('NZ')}
+              {/* Greenland */}
+              <path 
+                d="M 350,30 C 400,25 450,40 440,80 C 380,85 330,70 340,40 C 345,35 350,30 350,30 Z"
+                fill="#E0E0E0"
+                stroke="#2c3e50"
+                strokeWidth="1"
+                className="cursor-pointer transition-all duration-300 hover:fill-gray-300"
               />
               
-              {/* Additional Countries */}
-              <polygon 
-                points="250,320 280,315 290,355 255,340" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'CO')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('CO')}
-              />
-              <polygon 
-                points="250,340 290,335 285,395 248,390" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'PE')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('PE')}
-              />
-              <polygon 
-                points="280,290 320,285 340,315 300,320" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'VE')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('VE')}
-              />
-              <polygon 
-                points="510,140 545,135 545,180 505,180" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'PL')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('PL')}
-              />
-              <polygon 
-                points="540,150 590,145 590,190 530,185" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'UA')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('UA')}
-              />
-              <polygon 
-                points="520,180 590,175 590,220 520,225" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'TR')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('TR')}
-              />
-              <polygon 
-                points="560,220 620,215 620,260 560,265" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'SA')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('SA')}
-              />
-              <polygon 
-                points="520,200 580,195 580,240 520,245" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'IR')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('IR')}
-              />
-              <polygon 
-                points="760,183 780,178 780,218 755,223" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'KR')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('KR')}
-              />
-              <polygon 
-                points="650,240 680,235 690,280 650,285" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'TH')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('TH')}
-              />
-              <polygon 
-                points="670,240 720,235 730,275 670,280" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'VN')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('VN')}
-              />
-              <polygon 
-                points="650,285 720,280 780,340 650,345" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'ID')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('ID')}
-              />
-              <polygon 
-                points="650,280 690,275 700,315 650,320" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'MY')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('MY')}
-              />
-              <polygon 
-                points="720,240 780,235 790,320 720,325" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'PH')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('PH')}
-              />
-              <polygon 
-                points="540,313 580,308 580,353 535,358" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'KE')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('KE')}
-              />
-              <polygon 
-                points="440,233 480,228 480,273 435,278" 
-                fill="transparent" 
-                className="cursor-pointer hover:fill-blue-500/20 transition-all"
-                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'MA')!)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick('MA')}
+              {/* Antarctica */}
+              <path 
+                d="M 0,450 L 1000,450 L 1000,500 L 0,500 Z"
+                fill="#FFFFFF"
+                stroke="#2c3e50"
+                strokeWidth="1"
               />
             </svg>
           </div>
