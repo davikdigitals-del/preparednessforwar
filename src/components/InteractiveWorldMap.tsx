@@ -280,33 +280,28 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
             }}
           />
           
-          {/* Country Hotspots - Using actual country coordinates */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+          {/* Country Hotspots - Positioned as absolute divs with proper scaling */}
+          <div className="absolute inset-0 w-full h-full pointer-events-none">
             {countries.map((country) => {
-              // Convert percentage coordinates to SVG coordinates
-              const svgX = (country.x / 100) * 1000; // Scale to SVG viewport
-              const svgY = (country.y / 100) * 600;  // Scale to SVG viewport
-              const svgWidth = (country.width / 100) * 1000;
-              const svgHeight = (country.height / 100) * 600;
-              
-              // Create a simple rectangular path for each country at its exact position
-              const pathData = `M${svgX},${svgY} L${svgX + svgWidth},${svgY} L${svgX + svgWidth},${svgY + svgHeight} L${svgX},${svgY + svgHeight} Z`;
-              
               return (
-                <path
+                <div
                   key={country.code}
-                  d={pathData}
-                  fill="transparent"
-                  stroke="transparent"
-                  strokeWidth="2"
-                  className="cursor-pointer pointer-events-auto"
+                  className="absolute cursor-pointer pointer-events-auto border border-red-500 border-opacity-30"
+                  style={{
+                    left: `${country.x}%`,
+                    top: `${country.y}%`,
+                    width: `${country.width}%`,
+                    height: `${country.height}%`,
+                    backgroundColor: 'rgba(255, 0, 0, 0.1)', // Debug visibility
+                  }}
                   onMouseEnter={() => setHoveredCountry(country)}
                   onMouseLeave={() => setHoveredCountry(null)}
                   onClick={() => handleCountryClick(country)}
+                  title={country.name} // Add title for debugging
                 />
               );
             })}
-          </svg>
+          </div>
         </div>
       </div>
       
