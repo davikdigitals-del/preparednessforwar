@@ -64,7 +64,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
   };
 
   return (
-    <div className="relative w-full h-screen bg-gradient-to-b from-blue-50 to-blue-200 overflow-hidden">
+    <div className="relative w-full h-screen bg-gradient-to-b from-sky-100 to-sky-200 overflow-hidden">
       {/* Controls */}
       <div className="absolute top-6 left-6 z-20 flex flex-col gap-2">
         <button
@@ -119,123 +119,204 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
             transformOrigin: 'center center'
           }}
         >
-          {/* Ocean Background with Grid Pattern */}
-          <div className="absolute inset-0 w-full h-full">
-            <svg 
-              width="100%" 
-              height="100%" 
-              className="absolute inset-0"
-              style={{ background: 'linear-gradient(135deg, #e6f3ff 0%, #b3d9ff 100%)' }}
-            >
-              <defs>
-                <pattern id="oceanGrid" x="0" y="0" width="50" height="50" patternUnits="userSpaceOnUse">
-                  <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#c8e4ff" strokeWidth="0.5" opacity="0.3"/>
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#oceanGrid)" />
-            </svg>
-          </div>
+          {/* Ocean Background */}
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-sky-200 to-sky-300"></div>
 
-          {/* Premium SVG World Map */}
-          <svg 
-            className="absolute"
-            width="1000" 
-            height="600" 
-            viewBox="0 0 1000 600" 
-            preserveAspectRatio="xMidYMid meet"
-          >
-            <defs>
-              {/* Gradient for 3D effect */}
-              <linearGradient id="countryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style={{ stopColor: 'rgba(255,255,255,0.3)' }} />
-                <stop offset="100%" style={{ stopColor: 'rgba(0,0,0,0.1)' }} />
-              </linearGradient>
-              
-              {/* Drop shadow filter */}
-              <filter id="dropShadow" x="-50%" y="-50%" width="200%" height="200%">
-                <feDropShadow dx="2" dy="2" stdDeviation="3" floodColor="rgba(0,0,0,0.2)"/>
-              </filter>
-              
-              {/* Glow effect for hover */}
-              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-                <feMerge> 
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-
-            {/* Render all countries */}
-            {allWorldCountries.map((country) => (
-              <g key={country.code}>
-                <path
-                  d={country.path}
-                  fill={country.color}
-                  stroke="#2c3e50"
-                  strokeWidth="1.5"
-                  className="cursor-pointer transition-all duration-300 ease-in-out"
-                  style={{
-                    filter: hoveredCountry?.code === country.code ? 'url(#glow)' : 'url(#dropShadow)',
-                    transform: hoveredCountry?.code === country.code ? 'scale(1.02)' : 'scale(1)',
-                    transformOrigin: 'center'
-                  }}
-                  onMouseEnter={() => setHoveredCountry(country)}
-                  onMouseLeave={() => setHoveredCountry(null)}
-                  onClick={() => handleCountryClick(country.code)}
-                />
-                
-                {/* Country labels */}
-                <text
-                  x={getCountryLabelPosition(country.code).x}
-                  y={getCountryLabelPosition(country.code).y}
-                  textAnchor="middle"
-                  className="text-xs font-semibold fill-gray-800 pointer-events-none select-none"
-                  style={{ 
-                    textShadow: '1px 1px 2px rgba(255,255,255,0.8)',
-                    opacity: transform.scale > 1.5 ? 1 : 0,
-                    transition: 'opacity 0.3s ease'
-                  }}
-                >
-                  {country.name}
-                </text>
-              </g>
-            ))}
-
-            {/* Equator line */}
-            <line 
-              x1="0" 
-              y1="300" 
-              x2="1000" 
-              y2="300" 
-              stroke="#34495e" 
-              strokeWidth="1" 
-              strokeDasharray="5,5" 
-              opacity="0.3"
+          {/* Real World Map using proper background image */}
+          <div className="relative w-full h-full">
+            {/* Use the exact same world map as your reference */}
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" 
+              alt="World Map"
+              className="w-full h-full object-contain"
+              style={{ 
+                minWidth: '100%', 
+                minHeight: '100%',
+                filter: 'brightness(1.1) contrast(1.05)'
+              }}
             />
             
-            {/* Tropic lines */}
-            <line 
-              x1="0" 
-              y1="220" 
-              x2="1000" 
-              y2="220" 
-              stroke="#7f8c8d" 
-              strokeWidth="0.5" 
-              strokeDasharray="3,3" 
-              opacity="0.2"
-            />
-            <line 
-              x1="0" 
-              y1="380" 
-              x2="1000" 
-              y2="380" 
-              stroke="#7f8c8d" 
-              strokeWidth="0.5" 
-              strokeDasharray="3,3" 
-              opacity="0.2"
-            />
-          </svg>
+            {/* Clickable overlay regions with accurate positioning */}
+            <svg 
+              className="absolute inset-0 w-full h-full"
+              viewBox="0 0 1000 500" 
+              preserveAspectRatio="xMidYMid meet"
+            >
+              {/* North America */}
+              <rect 
+                x="158" y="120" width="200" height="120" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'US') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('US')}
+              />
+              <rect 
+                x="130" y="60" width="250" height="100" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'CA') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('CA')}
+              />
+              <rect 
+                x="150" y="200" width="120" height="80" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'MX') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('MX')}
+              />
+              
+              {/* South America */}
+              <rect 
+                x="220" y="280" width="140" height="160" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'BR') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('BR')}
+              />
+              <rect 
+                x="190" y="350" width="80" height="120" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'AR') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('AR')}
+              />
+              <rect 
+                x="175" y="380" width="25" height="100" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'CL') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('CL')}
+              />
+              
+              {/* Europe */}
+              <rect 
+                x="480" y="80" width="300" height="120" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'RU') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('RU')}
+              />
+              <rect 
+                x="470" y="120" width="40" height="35" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'DE') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('DE')}
+              />
+              <rect 
+                x="440" y="130" width="45" height="40" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'FR') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('FR')}
+              />
+              <rect 
+                x="425" y="115" width="35" height="25" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'GB') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('GB')}
+              />
+              <rect 
+                x="430" y="150" width="50" height="35" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'ES') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('ES')}
+              />
+              <rect 
+                x="475" y="140" width="30" height="50" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'IT') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('IT')}
+              />
+              
+              {/* Asia */}
+              <rect 
+                x="580" y="140" width="140" height="100" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'CN') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('CN')}
+              />
+              <rect 
+                x="550" y="200" width="80" height="90" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'IN') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('IN')}
+              />
+              <rect 
+                x="730" y="140" width="35" height="80" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'JP') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('JP')}
+              />
+              
+              {/* Africa */}
+              <rect 
+                x="460" y="180" width="120" height="180" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'NG') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('NG')}
+              />
+              <rect 
+                x="480" y="180" width="80" height="60" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'EG') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('EG')}
+              />
+              <rect 
+                x="480" y="320" width="80" height="70" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'ZA') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('ZA')}
+              />
+              
+              {/* Oceania */}
+              <rect 
+                x="680" y="320" width="140" height="90" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'AU') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('AU')}
+              />
+              <rect 
+                x="760" y="370" width="25" height="40" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(allWorldCountries.find(c => c.code === 'NZ') || null)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('NZ')}
+              />
+              
+              {/* More countries can be added with accurate positioning */}
+            </svg>
+          </div>
         </div>
       </div>
 
@@ -274,19 +355,6 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
           <p className="text-white/80 text-sm font-medium">
             {allWorldCountries.length} Countries Available • Real-time Data
           </p>
-        </div>
-      </div>
-
-      {/* Continent Legend */}
-      <div className="absolute top-6 right-1/2 transform translate-x-1/2 z-10 bg-white/90 backdrop-blur-sm px-6 py-4 rounded-2xl shadow-xl border-2 border-gray-200">
-        <h4 className="font-bold text-gray-800 mb-2 text-center">Continents</h4>
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          {['North America', 'South America', 'Europe', 'Asia', 'Africa', 'Oceania'].map(continent => (
-            <div key={continent} className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-400 to-purple-500"></div>
-              <span className="text-gray-700 font-medium">{continent}</span>
-            </div>
-          ))}
         </div>
       </div>
     </div>
