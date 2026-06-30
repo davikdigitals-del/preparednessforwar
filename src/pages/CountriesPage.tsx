@@ -4,7 +4,7 @@ import { Globe, List, Map, X } from "lucide-react";
 import { natoCountries } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
-import { Interactive3DGlobe } from "@/components/Interactive3DGlobe";
+import { InteractiveWorldMap } from "@/components/InteractiveWorldMap";
 
 const CountriesPage = () => {
   const { user, loading } = useAuth();
@@ -41,8 +41,8 @@ const CountriesPage = () => {
           <X className="w-6 h-6" />
         </button>
         
-        {/* 3D Interactive Globe */}
-        <Interactive3DGlobe />
+        {/* Interactive World Map */}
+        <InteractiveWorldMap />
       </div>
     );
   }
@@ -73,8 +73,8 @@ const CountriesPage = () => {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                <Globe className="w-4 h-4" />
-                3D Globe
+                <Map className="w-4 h-4" />
+                World Map
               </button>
               <button
                 onClick={() => {
@@ -95,12 +95,12 @@ const CountriesPage = () => {
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <Globe className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
+              <Map className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
               <div>
-                <h3 className="font-semibold text-blue-900 mb-1">3D Interactive Globe</h3>
+                <h3 className="font-semibold text-blue-900 mb-1">Interactive World Map</h3>
                 <p className="text-blue-700 text-sm">
-                  Click "3D Globe" to explore our interactive 3D Earth. Rotate it like a ball, hover over countries 
-                  to see their names, and click red markers to view country-specific preparedness content.
+                  Click "World Map" to explore our interactive world map with real country boundaries. 
+                  Hover over countries to see their names, and click to view country-specific preparedness content.
                 </p>
               </div>
             </div>

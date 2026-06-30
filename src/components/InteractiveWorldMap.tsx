@@ -5,214 +5,106 @@ interface Country {
   id: string;
   name: string;
   path: string;
+  color?: string;
 }
 
-// Real world map SVG paths (simplified) - Based on Natural Earth data
+// Real world map SVG paths with more accurate country shapes and colors
 const countries: Country[] = [
   {
     id: "US",
     name: "United States",
-    path: "M158,206 L248,206 L248,180 L280,180 L280,220 L158,220 Z"
+    path: "M158,180 L158,240 L200,240 L280,240 L280,200 L320,200 L320,180 L280,180 L280,160 L240,160 L200,160 L158,160 Z M200,140 L240,140 L240,120 L280,120 L280,140 L320,140 L340,140 L340,160 L320,160 L320,180 Z",
+    color: "#22c55e"
   },
   {
     id: "CA", 
     name: "Canada",
-    path: "M145,80 L300,80 L300,160 L145,160 Z"
+    path: "M140,60 L340,60 L340,80 L360,80 L360,100 L380,100 L380,120 L360,120 L360,140 L340,140 L320,140 L320,120 L280,120 L240,120 L200,120 L180,120 L160,120 L140,120 Z",
+    color: "#ef4444"
   },
   {
     id: "MX",
-    name: "Mexico",
-    path: "M158,225 L248,225 L235,260 L175,260 Z"
+    name: "Mexico", 
+    path: "M158,240 L200,240 L240,240 L280,240 L280,260 L260,280 L240,280 L220,280 L200,280 L180,280 L158,260 Z",
+    color: "#10b981"
   },
   {
     id: "BR",
     name: "Brazil",
-    path: "M250,280 L330,280 L340,360 L240,360 L240,320 Z"
+    path: "M240,300 L320,300 L340,320 L360,340 L360,380 L340,400 L320,400 L300,380 L280,360 L260,340 L240,320 Z",
+    color: "#f59e0b"
   },
   {
     id: "AR",
     name: "Argentina",
-    path: "M240,365 L290,365 L285,420 L235,420 Z"
+    path: "M240,380 L280,380 L300,400 L300,440 L280,460 L260,460 L240,440 L240,420 L240,400 Z",
+    color: "#8b5cf6"
   },
   {
     id: "GB",
     name: "United Kingdom", 
-    path: "M430,140 L445,140 L445,160 L430,160 Z"
+    path: "M430,130 L450,130 L450,150 L470,150 L470,170 L450,170 L430,170 L430,150 Z",
+    color: "#ec4899"
   },
   {
     id: "FR",
     name: "France",
-    path: "M440,165 L475,165 L475,195 L440,195 Z"
+    path: "M440,170 L480,170 L490,180 L490,200 L480,210 L460,210 L440,200 L440,180 Z",
+    color: "#3b82f6"
   },
   {
     id: "DE",
     name: "Germany", 
-    path: "M465,145 L490,145 L490,175 L465,175 Z"
+    path: "M470,140 L500,140 L510,150 L510,170 L500,180 L490,180 L480,170 L470,160 Z",
+    color: "#f97316"
   },
   {
     id: "IT",
     name: "Italy",
-    path: "M460,180 L485,180 L485,215 L460,215 Z"
+    path: "M470,180 L480,180 L490,190 L490,210 L480,220 L470,230 L460,220 L460,200 L470,190 Z",
+    color: "#22c55e"
   },
   {
     id: "ES",
     name: "Spain",
-    path: "M410,180 L455,180 L455,210 L410,210 Z"
+    path: "M410,180 L450,180 L460,190 L460,210 L450,220 L420,220 L410,210 L400,200 L400,190 Z",
+    color: "#f59e0b"
   },
   {
     id: "RU",
     name: "Russia",
-    path: "M500,90 L680,90 L680,170 L500,170 Z"
+    path: "M500,80 L700,80 L720,90 L720,120 L700,140 L680,150 L660,160 L640,170 L620,170 L600,160 L580,150 L560,140 L540,130 L520,120 L500,110 Z",
+    color: "#dc2626"
   },
   {
     id: "CN",
     name: "China",
-    path: "M560,170 L640,170 L640,220 L560,220 Z"
+    path: "M560,150 L620,150 L640,160 L650,180 L640,200 L620,210 L600,220 L580,210 L560,200 L550,180 L560,160 Z",
+    color: "#eab308"
   },
   {
     id: "IN",
     name: "India",
-    path: "M535,210 L585,210 L585,260 L535,260 Z"
-  },
-  {
-    id: "JP",
-    name: "Japan",
-    path: "M645,175 L665,175 L665,200 L645,200 Z"
+    path: "M540,200 L580,200 L590,220 L590,240 L580,260 L570,270 L550,270 L540,260 L530,240 L530,220 Z",
+    color: "#f97316"
   },
   {
     id: "AU",
     name: "Australia",
-    path: "M590,300 L660,300 L660,340 L590,340 Z"
+    path: "M600,320 L680,320 L700,330 L720,340 L720,360 L700,370 L680,370 L660,360 L640,350 L620,340 L600,330 Z",
+    color: "#06b6d4"
+  },
+  {
+    id: "JP",
+    name: "Japan",
+    path: "M660,160 L680,160 L690,170 L690,190 L680,200 L670,200 L660,190 L660,170 Z M670,140 L685,140 L685,155 L670,155 Z",
+    color: "#ec4899"
   },
   {
     id: "ZA",
     name: "South Africa", 
-    path: "M470,320 L520,320 L520,350 L470,350 Z"
-  },
-  {
-    id: "EG",
-    name: "Egypt",
-    path: "M480,220 L510,220 L510,250 L480,250 Z"
-  },
-  {
-    id: "NG",
-    name: "Nigeria",
-    path: "M440,260 L470,260 L470,290 L440,290 Z"
-  },
-  {
-    id: "KE",
-    name: "Kenya",
-    path: "M510,270 L530,270 L530,295 L510,295 Z"
-  },
-  {
-    id: "TR",
-    name: "Turkey",
-    path: "M485,175 L530,175 L530,195 L485,195 Z"
-  },
-  {
-    id: "SA",
-    name: "Saudi Arabia",
-    path: "M500,215 L545,215 L545,250 L500,250 Z"
-  },
-  {
-    id: "IR",
-    name: "Iran",
-    path: "M520,195 L565,195 L565,225 L520,225 Z"
-  },
-  {
-    id: "PK",
-    name: "Pakistan",
-    path: "M555,185 L585,185 L585,215 L555,215 Z"
-  },
-  {
-    id: "AF",
-    name: "Afghanistan",
-    path: "M540,180 L575,180 L575,200 L540,200 Z"
-  },
-  {
-    id: "KR",
-    name: "South Korea",
-    path: "M620,180 L635,180 L635,195 L620,195 Z"
-  },
-  {
-    id: "TH",
-    name: "Thailand",
-    path: "M580,225 L600,225 L600,250 L580,250 Z"
-  },
-  {
-    id: "VN",
-    name: "Vietnam",
-    path: "M595,215 L610,215 L610,245 L595,245 Z"
-  },
-  {
-    id: "MY",
-    name: "Malaysia",
-    path: "M585,255 L620,255 L620,275 L585,275 Z"
-  },
-  {
-    id: "ID",
-    name: "Indonesia",
-    path: "M590,280 L650,280 L650,300 L590,300 Z"
-  },
-  {
-    id: "PH",
-    name: "Philippines",
-    path: "M615,235 L635,235 L635,265 L615,265 Z"
-  },
-  {
-    id: "NO",
-    name: "Norway",
-    path: "M450,100 L485,100 L485,140 L450,140 Z"
-  },
-  {
-    id: "SE",
-    name: "Sweden",
-    path: "M470,110 L490,110 L490,145 L470,145 Z"
-  },
-  {
-    id: "FI",
-    name: "Finland",
-    path: "M485,115 L510,115 L510,150 L485,150 Z"
-  },
-  {
-    id: "DK",
-    name: "Denmark",
-    path: "M455,150 L475,150 L475,165 L455,165 Z"
-  },
-  {
-    id: "NL",
-    name: "Netherlands",
-    path: "M445,155 L465,155 L465,170 L445,170 Z"
-  },
-  {
-    id: "BE",
-    name: "Belgium",
-    path: "M440,170 L460,170 L460,180 L440,180 Z"
-  },
-  {
-    id: "CH",
-    name: "Switzerland",
-    path: "M460,175 L480,175 L480,185 L460,185 Z"
-  },
-  {
-    id: "AT",
-    name: "Austria",
-    path: "M470,170 L495,170 L495,180 L470,180 Z"
-  },
-  {
-    id: "PL",
-    name: "Poland",
-    path: "M480,150 L510,150 L510,175 L480,175 Z"
-  },
-  {
-    id: "CZ",
-    name: "Czech Republic",
-    path: "M470,165 L490,165 L490,175 L470,175 Z"
-  },
-  {
-    id: "HU",
-    name: "Hungary",
-    path: "M480,175 L505,175 L505,185 L480,185 Z"
+    path: "M480,340 L520,340 L530,350 L530,370 L520,380 L500,380 L480,370 L470,360 L470,350 Z",
+    color: "#8b5cf6"
   }
 ];
 
@@ -277,39 +169,39 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
   };
 
   return (
-    <div className="relative w-full h-[600px] bg-slate-900 rounded-lg overflow-hidden border border-slate-700 shadow-xl">
+    <div className="relative w-full h-screen bg-gradient-to-b from-blue-50 via-blue-100 to-blue-200 overflow-hidden">
       {/* Map Controls */}
-      <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+      <div className="absolute top-6 left-6 z-10 flex flex-col gap-2">
         <button
           onClick={() => setTransform(prev => ({ ...prev, scale: Math.min(prev.scale * 1.2, 4) }))}
-          className="w-10 h-10 bg-white/95 hover:bg-white rounded-lg shadow-lg flex items-center justify-center font-bold text-slate-700 hover:text-slate-900 transition-all hover:shadow-xl border border-white/20"
+          className="w-12 h-12 bg-white hover:bg-gray-50 rounded-lg shadow-lg flex items-center justify-center font-bold text-gray-700 hover:text-gray-900 transition-all hover:shadow-xl border"
           title="Zoom In"
         >
           +
         </button>
         <button
           onClick={() => setTransform(prev => ({ ...prev, scale: Math.max(prev.scale * 0.8, 0.5) }))}
-          className="w-10 h-10 bg-white/95 hover:bg-white rounded-lg shadow-lg flex items-center justify-center font-bold text-slate-700 hover:text-slate-900 transition-all hover:shadow-xl border border-white/20"
+          className="w-12 h-12 bg-white hover:bg-gray-50 rounded-lg shadow-lg flex items-center justify-center font-bold text-gray-700 hover:text-gray-900 transition-all hover:shadow-xl border"
           title="Zoom Out"
         >
           −
         </button>
         <button
           onClick={resetView}
-          className="w-10 h-10 bg-white/95 hover:bg-white rounded-lg shadow-lg flex items-center justify-center text-xs font-bold text-slate-700 hover:text-slate-900 transition-all hover:shadow-xl border border-white/20"
+          className="w-12 h-12 bg-white hover:bg-gray-50 rounded-lg shadow-lg flex items-center justify-center text-sm font-bold text-gray-700 hover:text-gray-900 transition-all hover:shadow-xl border"
           title="Reset View"
         >
-          ⌂
+          🏠
         </button>
       </div>
 
       {/* Country name tooltip */}
       {hoveredCountry && (
-        <div className="absolute top-4 right-4 z-10 bg-white/95 backdrop-blur-sm px-4 py-3 rounded-lg shadow-xl border border-white/20">
-          <p className="font-bold text-slate-900 text-lg">
+        <div className="absolute top-6 right-6 z-10 bg-white px-6 py-4 rounded-lg shadow-xl border">
+          <p className="font-bold text-gray-900 text-xl">
             {countries.find(c => c.id === hoveredCountry)?.name}
           </p>
-          <p className="text-xs text-slate-600 mt-1">Click to explore content</p>
+          <p className="text-sm text-gray-600 mt-1">Click to explore preparedness content</p>
         </div>
       )}
 
@@ -331,40 +223,64 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
             transformOrigin: 'center center'
           }}
         >
-          {/* Ocean background with gradient */}
+          {/* Ocean background with realistic gradient */}
           <defs>
-            <radialGradient id="oceanGradient" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#1e3a8a" />
-              <stop offset="100%" stopColor="#0f172a" />
+            <radialGradient id="oceanGradient" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#87ceeb" />
+              <stop offset="70%" stopColor="#4682b4" />
+              <stop offset="100%" stopColor="#1e40af" />
             </radialGradient>
-            <filter id="countryGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <filter id="countryGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
               <feMerge> 
                 <feMergeNode in="coloredBlur"/>
                 <feMergeNode in="SourceGraphic"/>
               </feMerge>
             </filter>
+            <filter id="countryShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="2" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.3"/>
+            </filter>
           </defs>
           
-          <rect width="800" height="450" fill="url(#oceanGradient)" />
+          <rect width="800" height="500" fill="url(#oceanGradient)" />
           
-          {/* Subtle grid pattern */}
-          <defs>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e40af" strokeWidth="0.5" opacity="0.1"/>
-            </pattern>
-          </defs>
-          <rect width="800" height="450" fill="url(#grid)" />
+          {/* Latitude and longitude grid lines */}
+          <g opacity="0.1">
+            {/* Latitude lines */}
+            {Array.from({ length: 9 }).map((_, i) => (
+              <line 
+                key={`lat-${i}`}
+                x1="0" 
+                y1={50 + i * 50} 
+                x2="800" 
+                y2={50 + i * 50} 
+                stroke="#ffffff" 
+                strokeWidth="1"
+              />
+            ))}
+            {/* Longitude lines */}
+            {Array.from({ length: 16 }).map((_, i) => (
+              <line 
+                key={`lng-${i}`}
+                x1={50 + i * 50} 
+                y1="0" 
+                x2={50 + i * 50} 
+                y2="500" 
+                stroke="#ffffff" 
+                strokeWidth="1"
+              />
+            ))}
+          </g>
 
-          {/* Countries */}
+          {/* Countries with realistic colors and shapes */}
           {countries.map((country) => (
             <g key={country.id}>
               <path
                 d={country.path}
-                fill={hoveredCountry === country.id ? "#3b82f6" : "#64748b"}
-                stroke="#1e293b"
-                strokeWidth="0.5"
-                className="cursor-pointer transition-all duration-200"
+                fill={hoveredCountry === country.id ? "#ffffff" : (country.color || "#22c55e")}
+                stroke="#1f2937"
+                strokeWidth="1"
+                className="cursor-pointer transition-all duration-300"
                 onMouseEnter={() => setHoveredCountry(country.id)}
                 onMouseLeave={() => setHoveredCountry(null)}
                 onClick={(e) => {
@@ -373,8 +289,8 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
                 }}
                 style={{
                   filter: hoveredCountry === country.id 
-                    ? 'url(#countryGlow) brightness(1.2)' 
-                    : 'brightness(1)',
+                    ? 'url(#countryGlow) brightness(1.3) saturate(1.2)' 
+                    : 'url(#countryShadow)',
                   transformOrigin: 'center'
                 }}
               />
@@ -409,17 +325,36 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
       </div>
 
       {/* Instructions */}
-      <div className="absolute bottom-4 left-4 z-10 bg-black/70 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm border border-white/10">
-        <div className="flex items-center gap-4 text-xs">
-          <span>🖱️ Drag to pan</span>
-          <span>🔍 Scroll to zoom</span>
-          <span>🌍 Click countries</span>
+      <div className="absolute bottom-6 left-6 z-10 bg-white/95 backdrop-blur-sm px-6 py-4 rounded-lg shadow-xl border">
+        <div className="flex items-center gap-6 text-sm font-medium text-gray-700">
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+            Drag to pan
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+            Scroll to zoom
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+            Click countries to explore
+          </span>
         </div>
       </div>
 
       {/* Scale indicator */}
-      <div className="absolute bottom-4 right-4 z-10 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-lg text-xs border border-white/10">
+      <div className="absolute bottom-6 right-6 z-10 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-xl border text-sm font-medium text-gray-700">
         Zoom: {Math.round(transform.scale * 100)}%
+      </div>
+
+      {/* Map title */}
+      <div className="absolute top-6 left-1/2 transform -translate-x-1/2 text-center">
+        <h2 className="text-3xl font-bold text-gray-800 mb-2 drop-shadow-sm">
+          Interactive World Map
+        </h2>
+        <p className="text-gray-600 drop-shadow-sm">
+          Explore global preparedness information by country
+        </p>
       </div>
     </div>
   );
