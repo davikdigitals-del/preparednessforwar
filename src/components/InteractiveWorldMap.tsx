@@ -176,7 +176,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
             >
               {/* North America */}
               <polygon 
-                points="158,174 200,160 280,165 320,150 380,155 400,175 420,195 380,225 350,245 300,235 250,225 200,215 158,195" 
+                points="158,174 280,165 380,175 420,195 380,225 300,235 200,215 158,195" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'US')!)}
@@ -184,7 +184,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
                 onClick={() => handleCountryClick('US')}
               />
               <polygon 
-                points="130,94 180,80 250,75 320,70 380,75 420,85 450,105 420,125 380,120 320,115 250,120 180,125 130,115" 
+                points="130,94 320,70 420,85 450,105 420,125 320,115 130,115" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'CA')!)}
@@ -192,7 +192,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
                 onClick={() => handleCountryClick('CA')}
               />
               <polygon 
-                points="175,245 220,240 270,245 300,255 280,280 250,290 220,285 190,275" 
+                points="155,245 220,240 270,245 300,255 280,280 220,285 155,275" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'MX')!)}
@@ -202,7 +202,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
               
               {/* South America */}
               <polygon 
-                points="280,300 350,295 400,310 420,340 400,380 380,420 350,440 320,430 290,410 270,380 260,350 270,320" 
+                points="280,300 400,310 420,380 350,440 290,410 260,350 280,320" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'BR')!)}
@@ -210,7 +210,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
                 onClick={() => handleCountryClick('BR')}
               />
               <polygon 
-                points="270,420 300,415 320,430 330,460 320,500 300,530 280,520 260,490 255,460" 
+                points="270,420 320,430 330,500 280,520 260,490 270,440" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'AR')!)}
@@ -218,7 +218,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
                 onClick={() => handleCountryClick('AR')}
               />
               <polygon 
-                points="250,400 270,395 275,430 270,470 265,510 260,540 250,530 245,490 248,450" 
+                points="250,400 270,395 270,510 260,540 250,530 250,450" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'CL')!)}
@@ -228,7 +228,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
               
               {/* Europe */}
               <polygon 
-                points="500,79 580,74 680,79 750,84 820,89 850,104 830,124 800,139 750,144 680,149 580,154 500,144 480,124 490,104" 
+                points="500,79 820,89 850,104 830,124 750,144 500,144 480,124 500,104" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'RU')!)}
@@ -236,7 +236,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
                 onClick={() => handleCountryClick('RU')}
               />
               <polygon 
-                points="480,132 510,128 520,148 515,163 490,168 475,153" 
+                points="480,132 520,128 520,163 490,168 475,153" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'DE')!)}
@@ -244,7 +244,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
                 onClick={() => handleCountryClick('DE')}
               />
               <polygon 
-                points="450,153 480,148 485,168 475,183 445,178 440,163" 
+                points="450,153 485,148 485,183 445,178 440,163" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'FR')!)}
@@ -252,7 +252,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
                 onClick={() => handleCountryClick('FR')}
               />
               <polygon 
-                points="430,123 450,118 455,138 445,148 425,143" 
+                points="430,123 455,118 455,148 425,143" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'GB')!)}
@@ -260,7 +260,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
                 onClick={() => handleCountryClick('GB')}
               />
               <polygon 
-                points="430,173 470,168 480,188 470,203 435,198 425,183" 
+                points="430,173 480,168 480,203 425,198" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'ES')!)}
@@ -268,7 +268,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
                 onClick={() => handleCountryClick('ES')}
               />
               <polygon 
-                points="485,168 505,163 510,183 515,203 505,223 490,218 480,198 485,178" 
+                points="485,168 510,163 515,223 480,218 485,178" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'IT')!)}
@@ -278,7 +278,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
               
               {/* Asia */}
               <polygon 
-                points="620,143 700,133 750,138 770,158 760,183 740,203 700,208 660,203 630,183 615,163" 
+                points="620,143 750,138 770,203 700,208 630,183 620,163" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'CN')!)}
@@ -286,7 +286,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
                 onClick={() => handleCountryClick('CN')}
               />
               <polygon 
-                points="580,203 620,198 640,218 650,243 640,268 620,283 590,278 570,258 565,233 575,218" 
+                points="580,203 640,218 650,283 570,278 565,233 580,218" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'IN')!)}
@@ -294,7 +294,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
                 onClick={() => handleCountryClick('IN')}
               />
               <polygon 
-                points="780,163 800,158 805,178 810,198 800,218 785,213 775,193 780,173" 
+                points="780,163 810,158 810,218 775,213 775,173" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'JP')!)}
@@ -304,7 +304,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
               
               {/* Africa */}
               <polygon 
-                points="520,233 550,228 560,248 555,268 540,273 515,268 510,248" 
+                points="520,233 560,228 560,273 510,268" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'EG')!)}
@@ -312,7 +312,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
                 onClick={() => handleCountryClick('EG')}
               />
               <polygon 
-                points="480,283 510,278 520,298 515,318 495,323 475,318 470,298" 
+                points="480,283 520,278 520,323 470,318" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'NG')!)}
@@ -320,7 +320,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
                 onClick={() => handleCountryClick('NG')}
               />
               <polygon 
-                points="500,383 530,378 540,398 535,418 515,423 495,418 485,398 495,383" 
+                points="500,383 540,378 540,423 485,418" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'ZA')!)}
@@ -330,7 +330,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
               
               {/* Oceania */}
               <polygon 
-                points="720,363 780,358 820,363 840,383 830,403 800,408 760,403 720,398 700,383 710,368" 
+                points="720,363 840,363 840,408 700,408" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'AU')!)}
@@ -338,12 +338,142 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
                 onClick={() => handleCountryClick('AU')}
               />
               <polygon 
-                points="820,403 840,398 845,413 840,428 825,433 815,418" 
+                points="820,403 845,398 845,433 815,433" 
                 fill="transparent" 
                 className="cursor-pointer hover:fill-blue-500/20 transition-all"
                 onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'NZ')!)}
                 onMouseLeave={() => setHoveredCountry(null)}
                 onClick={() => handleCountryClick('NZ')}
+              />
+              
+              {/* Additional Countries */}
+              <polygon 
+                points="250,320 280,315 290,355 255,340" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'CO')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('CO')}
+              />
+              <polygon 
+                points="250,340 290,335 285,395 248,390" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'PE')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('PE')}
+              />
+              <polygon 
+                points="280,290 320,285 340,315 300,320" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'VE')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('VE')}
+              />
+              <polygon 
+                points="510,140 545,135 545,180 505,180" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'PL')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('PL')}
+              />
+              <polygon 
+                points="540,150 590,145 590,190 530,185" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'UA')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('UA')}
+              />
+              <polygon 
+                points="520,180 590,175 590,220 520,225" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'TR')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('TR')}
+              />
+              <polygon 
+                points="560,220 620,215 620,260 560,265" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'SA')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('SA')}
+              />
+              <polygon 
+                points="520,200 580,195 580,240 520,245" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'IR')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('IR')}
+              />
+              <polygon 
+                points="760,183 780,178 780,218 755,223" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'KR')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('KR')}
+              />
+              <polygon 
+                points="650,240 680,235 690,280 650,285" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'TH')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('TH')}
+              />
+              <polygon 
+                points="670,240 720,235 730,275 670,280" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'VN')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('VN')}
+              />
+              <polygon 
+                points="650,285 720,280 780,340 650,345" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'ID')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('ID')}
+              />
+              <polygon 
+                points="650,280 690,275 700,315 650,320" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'MY')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('MY')}
+              />
+              <polygon 
+                points="720,240 780,235 790,320 720,325" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'PH')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('PH')}
+              />
+              <polygon 
+                points="540,313 580,308 580,353 535,358" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'KE')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('KE')}
+              />
+              <polygon 
+                points="440,233 480,228 480,273 435,278" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'MA')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('MA')}
               />
             </svg>
           </div>
