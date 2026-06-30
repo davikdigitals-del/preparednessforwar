@@ -19,17 +19,17 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const navigate = useNavigate();
 
-  // Country hotspots with accurate positioning based on the map image (percentages from top-left)
+  // Country hotspots with exact positioning based on the reference world map image
   const countries: Country[] = [
-    // North America - Better positioned
-    { name: "United States", code: "US", x: 15, y: 40, width: 18, height: 12 },
-    { name: "Canada", code: "CA", x: 12, y: 25, width: 22, height: 18 },
-    { name: "Mexico", code: "MX", x: 15, y: 52, width: 10, height: 8 },
-    { name: "Greenland", code: "GL", x: 25, y: 15, width: 8, height: 12 },
-    { name: "Cuba", code: "CU", x: 24, y: 50, width: 4, height: 2 },
-    { name: "Jamaica", code: "JM", x: 25, y: 52, width: 1, height: 1 },
-    { name: "Haiti", code: "HT", x: 26, y: 51, width: 1, height: 1 },
-    { name: "Dominican Republic", code: "DO", x: 27, y: 51, width: 2, height: 1 },
+    // North America - Exact positions from reference image
+    { name: "Canada", code: "CA", x: 8, y: 15, width: 28, height: 25 },
+    { name: "United States", code: "US", x: 8, y: 35, width: 22, height: 15 },
+    { name: "Mexico", code: "MX", x: 12, y: 50, width: 12, height: 10 },
+    { name: "Greenland", code: "GL", x: 32, y: 8, width: 12, height: 18 },
+    { name: "Cuba", code: "CU", x: 24, y: 48, width: 5, height: 2 },
+    { name: "Jamaica", code: "JM", x: 25, y: 51, width: 2, height: 1 },
+    { name: "Haiti", code: "HT", x: 27, y: 50, width: 2, height: 1 },
+    { name: "Dominican Republic", code: "DO", x: 28, y: 50, width: 2, height: 1 },
     
     // South America - Better positioned
     { name: "Brazil", code: "BR", x: 32, y: 62, width: 12, height: 15 },
@@ -43,31 +43,32 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
     { name: "Paraguay", code: "PY", x: 32, y: 74, width: 3, height: 3 },
     { name: "Uruguay", code: "UY", x: 34, y: 78, width: 2, height: 2 },
     
-    // Europe - Better positioned
-    { name: "United Kingdom", code: "GB", x: 48, y: 30, width: 3, height: 4 },
-    { name: "Ireland", code: "IE", x: 45, y: 31, width: 2, height: 2 },
-    { name: "Iceland", code: "IS", x: 42, y: 23, width: 3, height: 2 },
-    { name: "Norway", code: "NO", x: 50, y: 18, width: 4, height: 12 },
-    { name: "Sweden", code: "SE", x: 53, y: 20, width: 3, height: 8 },
-    { name: "Finland", code: "FI", x: 56, y: 20, width: 4, height: 8 },
-    { name: "Denmark", code: "DK", x: 52, y: 29, width: 2, height: 2 },
-    { name: "Netherlands", code: "NL", x: 51, y: 31, width: 2, height: 2 },
-    { name: "Belgium", code: "BE", x: 50, y: 32, width: 2, height: 1 },
-    { name: "France", code: "FR", x: 49, y: 33, width: 4, height: 4 },
-    { name: "Spain", code: "ES", x: 46, y: 37, width: 5, height: 4 },
-    { name: "Portugal", code: "PT", x: 44, y: 37, width: 2, height: 4 },
-    { name: "Italy", code: "IT", x: 51, y: 37, width: 3, height: 6 },
-    { name: "Switzerland", code: "CH", x: 51, y: 34, width: 2, height: 2 },
-    { name: "Austria", code: "AT", x: 53, y: 34, width: 2, height: 2 },
-    { name: "Germany", code: "DE", x: 52, y: 31, width: 3, height: 4 },
-    { name: "Poland", code: "PL", x: 54, y: 31, width: 3, height: 3 },
-    { name: "Czech Republic", code: "CZ", x: 53, y: 33, width: 2, height: 1 },
-    { name: "Hungary", code: "HU", x: 54, y: 35, width: 2, height: 2 },
-    { name: "Romania", code: "RO", x: 56, y: 35, width: 3, height: 3 },
-    { name: "Bulgaria", code: "BG", x: 56, y: 38, width: 2, height: 2 },
-    { name: "Greece", code: "GR", x: 55, y: 40, width: 3, height: 3 },
-    { name: "Ukraine", code: "UA", x: 56, y: 30, width: 8, height: 4 },
-    { name: "Russia", code: "RU", x: 58, y: 22, width: 32, height: 18 },
+    // Europe - Exact positions from reference image
+    { name: "Iceland", code: "IS", x: 40, y: 20, width: 4, height: 3 },
+    { name: "Norway", code: "NO", x: 48, y: 12, width: 6, height: 18 },
+    { name: "Sweden", code: "SE", x: 52, y: 15, width: 4, height: 12 },
+    { name: "Finland", code: "FI", x: 55, y: 15, width: 5, height: 12 },
+    { name: "Russia", code: "RU", x: 58, y: 12, width: 38, height: 25 },
+    { name: "Denmark", code: "DK", x: 50, y: 28, width: 3, height: 2 },
+    { name: "United Kingdom", code: "GB", x: 46, y: 27, width: 4, height: 6 },
+    { name: "Ireland", code: "IE", x: 43, y: 28, width: 3, height: 4 },
+    { name: "Netherlands", code: "NL", x: 49, y: 30, width: 2, height: 2 },
+    { name: "Belgium", code: "BE", x: 49, y: 32, width: 2, height: 2 },
+    { name: "France", code: "FR", x: 47, y: 33, width: 5, height: 6 },
+    { name: "Spain", code: "ES", x: 44, y: 37, width: 6, height: 5 },
+    { name: "Portugal", code: "PT", x: 42, y: 37, width: 3, height: 5 },
+    { name: "Italy", code: "IT", x: 50, y: 37, width: 4, height: 8 },
+    { name: "Switzerland", code: "CH", x: 50, y: 34, width: 2, height: 2 },
+    { name: "Austria", code: "AT", x: 52, y: 34, width: 3, height: 2 },
+    { name: "Germany", code: "DE", x: 50, y: 30, width: 4, height: 5 },
+    { name: "Poland", code: "PL", x: 53, y: 30, width: 4, height: 4 },
+    { name: "Czech Republic", code: "CZ", x: 52, y: 33, width: 2, height: 2 },
+    { name: "Hungary", code: "HU", x: 53, y: 35, width: 3, height: 2 },
+    { name: "Romania", code: "RO", x: 55, y: 35, width: 4, height: 4 },
+    { name: "Bulgaria", code: "BG", x: 55, y: 38, width: 3, height: 3 },
+    { name: "Greece", code: "GR", x: 54, y: 40, width: 4, height: 4 },
+    { name: "Ukraine", code: "UA", x: 55, y: 30, width: 10, height: 6 },
+    { name: "Turkey", code: "TR", x: 56, y: 38, width: 8, height: 4 },
     
     // Asia - Better positioned
     { name: "China", code: "CN", x: 70, y: 35, width: 12, height: 10 },
