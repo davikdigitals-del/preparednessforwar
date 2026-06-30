@@ -19,8 +19,7 @@ interface DragStart {
 interface Country {
   name: string;
   code: string;
-  path: string;
-  color: string;
+  continent: string;
 }
 
 export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps) => {
@@ -30,199 +29,44 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
   const [dragStart, setDragStart] = useState<DragStart>({ x: 0, y: 0 });
   const navigate = useNavigate();
 
-  // Real world countries with accurate SVG paths (simplified but geographically correct)
-  const countries: Country[] = [
-    // North America
-    {
-      name: "United States",
-      code: "US",
-      color: "#FFD700",
-      path: "M 158,206 L 200,180 L 280,190 L 320,170 L 380,180 L 400,200 L 420,220 L 380,250 L 350,270 L 300,260 L 250,250 L 200,240 L 158,220 Z M 100,170 L 140,160 L 150,180 L 120,190 Z M 380,140 L 420,130 L 450,150 L 430,170 L 400,160 Z"
-    },
-    {
-      name: "Canada",
-      code: "CA", 
-      color: "#90EE90",
-      path: "M 140,80 L 180,60 L 250,50 L 320,45 L 380,50 L 420,60 L 450,80 L 480,100 L 450,120 L 420,140 L 380,130 L 320,125 L 250,130 L 180,140 L 140,120 Z M 100,90 L 130,85 L 140,105 L 110,110 Z M 460,70 L 480,65 L 490,85 L 470,90 Z"
-    },
-    {
-      name: "Mexico", 
-      code: "MX",
-      color: "#FF6B6B",
-      path: "M 180,280 L 220,270 L 270,275 L 300,285 L 280,310 L 250,320 L 220,315 L 190,305 Z"
-    },
-    
-    // South America
-    {
-      name: "Brazil",
-      code: "BR",
-      color: "#FFB6C1", 
-      path: "M 280,320 L 350,315 L 400,330 L 420,360 L 400,400 L 380,440 L 350,460 L 320,450 L 290,430 L 270,400 L 260,370 L 270,340 Z"
-    },
-    {
-      name: "Argentina",
-      code: "AR",
-      color: "#87CEEB",
-      path: "M 270,440 L 300,435 L 320,450 L 330,480 L 320,520 L 300,550 L 280,540 L 260,510 L 255,480 Z"
-    },
-    {
-      name: "Chile",
-      code: "CL", 
-      color: "#DDA0DD",
-      path: "M 250,420 L 270,415 L 275,450 L 270,490 L 265,530 L 260,560 L 250,550 L 245,510 L 248,470 Z"
-    },
-    {
-      name: "Peru",
-      code: "PE",
-      color: "#F0E68C", 
-      path: "M 250,360 L 280,355 L 290,380 L 285,410 L 270,420 L 255,415 L 248,390 Z"
-    },
-    {
-      name: "Colombia",
-      code: "CO",
-      color: "#98FB98",
-      path: "M 250,320 L 280,315 L 290,335 L 285,355 L 270,350 L 255,340 Z"
-    },
-
-    // Europe  
-    {
-      name: "Russia",
-      code: "RU",
-      color: "#FFD700",
-      path: "M 500,80 L 580,70 L 680,75 L 750,80 L 820,85 L 850,100 L 830,120 L 800,135 L 750,140 L 680,145 L 580,150 L 500,140 L 480,120 L 490,100 Z M 520,60 L 580,55 L 620,65 L 600,75 L 560,70 Z"
-    },
-    {
-      name: "Germany",
-      code: "DE",
-      color: "#DDA0DD",
-      path: "M 480,150 L 510,145 L 520,165 L 515,180 L 490,185 L 475,170 Z"
-    },
-    {
-      name: "France", 
-      code: "FR",
-      color: "#98FB98",
-      path: "M 450,170 L 480,165 L 485,185 L 475,200 L 445,195 L 440,180 Z"
-    },
-    {
-      name: "United Kingdom",
-      code: "GB",
-      color: "#F0E68C",
-      path: "M 430,140 L 450,135 L 455,155 L 445,165 L 425,160 Z"
-    },
-    {
-      name: "Spain", 
-      code: "ES",
-      color: "#FFB6C1",
-      path: "M 430,190 L 470,185 L 480,205 L 470,220 L 435,215 L 425,200 Z"
-    },
-    {
-      name: "Italy",
-      code: "IT",
-      color: "#DEB887", 
-      path: "M 485,185 L 505,180 L 510,200 L 515,220 L 505,240 L 490,235 L 480,215 L 485,195 Z"
-    },
-    {
-      name: "Poland",
-      code: "PL", 
-      color: "#FF6B6B",
-      path: "M 510,140 L 540,135 L 545,155 L 540,175 L 515,180 L 505,160 Z"
-    },
-    {
-      name: "Ukraine",
-      code: "UA",
-      color: "#90EE90", 
-      path: "M 540,150 L 580,145 L 590,165 L 585,185 L 560,190 L 535,185 L 530,165 Z"
-    },
-
-    // Asia
-    {
-      name: "China", 
-      code: "CN",
-      color: "#FFA500",
-      path: "M 620,160 L 700,150 L 750,155 L 770,175 L 760,200 L 740,220 L 700,225 L 660,220 L 630,200 L 615,180 Z"
-    },
-    {
-      name: "India",
-      code: "IN",
-      color: "#90EE90",
-      path: "M 580,220 L 620,215 L 640,235 L 650,260 L 640,285 L 620,300 L 590,295 L 570,275 L 565,250 L 575,235 Z"
-    },
-    {
-      name: "Japan", 
-      code: "JP",
-      color: "#FFB6C1",
-      path: "M 780,180 L 800,175 L 805,195 L 810,215 L 800,235 L 785,230 L 775,210 L 780,190 Z M 785,160 L 795,155 L 800,170 L 790,175 Z"
-    },
-    {
-      name: "South Korea",
-      code: "KR",
-      color: "#DDA0DD", 
-      path: "M 760,200 L 775,195 L 780,210 L 775,225 L 765,220 L 755,205 Z"
-    },
-    {
-      name: "Thailand",
-      code: "TH",
-      color: "#F0E68C",
-      path: "M 660,260 L 680,255 L 685,275 L 680,295 L 670,300 L 655,295 L 650,275 Z"
-    },
-    {
-      name: "Indonesia", 
-      code: "ID",
-      color: "#98FB98",
-      path: "M 680,320 L 720,315 L 760,320 L 780,340 L 770,360 L 740,365 L 710,360 L 685,355 L 670,340 Z M 650,330 L 675,325 L 680,340 L 665,345 Z"
-    },
-    {
-      name: "Malaysia",
-      code: "MY", 
-      color: "#DEB887",
-      path: "M 660,300 L 680,295 L 690,310 L 685,325 L 670,330 L 655,325 L 650,310 Z M 685,315 L 700,310 L 705,320 L 695,325 Z"
-    },
-
-    // Africa
-    {
-      name: "Egypt",
-      code: "EG",
-      color: "#FFD700", 
-      path: "M 520,250 L 550,245 L 560,265 L 555,285 L 540,290 L 515,285 L 510,265 Z"
-    },
-    {
-      name: "Nigeria", 
-      code: "NG",
-      color: "#90EE90",
-      path: "M 480,300 L 510,295 L 520,315 L 515,335 L 495,340 L 475,335 L 470,315 Z"
-    },
-    {
-      name: "South Africa",
-      code: "ZA",
-      color: "#FFB6C1", 
-      path: "M 500,400 L 530,395 L 540,415 L 535,435 L 515,440 L 495,435 L 485,415 L 495,400 Z"
-    },
-    {
-      name: "Kenya",
-      code: "KE", 
-      color: "#DDA0DD",
-      path: "M 540,330 L 560,325 L 565,340 L 560,355 L 545,360 L 535,345 Z"
-    },
-    {
-      name: "Morocco",
-      code: "MA",
-      color: "#F0E68C", 
-      path: "M 440,250 L 470,245 L 475,265 L 470,280 L 445,285 L 435,270 Z"
-    },
-
-    // Oceania
-    {
-      name: "Australia", 
-      code: "AU",
-      color: "#FFD700",
-      path: "M 720,380 L 780,375 L 820,380 L 840,400 L 830,420 L 800,425 L 760,420 L 720,415 L 700,400 L 710,385 Z"
-    },
-    {
-      name: "New Zealand",
-      code: "NZ", 
-      color: "#87CEEB",
-      path: "M 820,420 L 840,415 L 845,430 L 840,445 L 825,450 L 815,435 Z M 825,450 L 835,445 L 840,455 L 830,460 Z"
-    }
+  // Country definitions with correct positioning
+  const countries = [
+    { name: "United States", code: "US", continent: "North America" },
+    { name: "Canada", code: "CA", continent: "North America" },
+    { name: "Mexico", code: "MX", continent: "North America" },
+    { name: "Brazil", code: "BR", continent: "South America" },
+    { name: "Argentina", code: "AR", continent: "South America" },
+    { name: "Chile", code: "CL", continent: "South America" },
+    { name: "Peru", code: "PE", continent: "South America" },
+    { name: "Colombia", code: "CO", continent: "South America" },
+    { name: "Venezuela", code: "VE", continent: "South America" },
+    { name: "Russia", code: "RU", continent: "Europe/Asia" },
+    { name: "China", code: "CN", continent: "Asia" },
+    { name: "India", code: "IN", continent: "Asia" },
+    { name: "Japan", code: "JP", continent: "Asia" },
+    { name: "South Korea", code: "KR", continent: "Asia" },
+    { name: "Indonesia", code: "ID", continent: "Asia" },
+    { name: "Thailand", code: "TH", continent: "Asia" },
+    { name: "Vietnam", code: "VN", continent: "Asia" },
+    { name: "Malaysia", code: "MY", continent: "Asia" },
+    { name: "Philippines", code: "PH", continent: "Asia" },
+    { name: "Germany", code: "DE", continent: "Europe" },
+    { name: "France", code: "FR", continent: "Europe" },
+    { name: "United Kingdom", code: "GB", continent: "Europe" },
+    { name: "Italy", code: "IT", continent: "Europe" },
+    { name: "Spain", code: "ES", continent: "Europe" },
+    { name: "Poland", code: "PL", continent: "Europe" },
+    { name: "Ukraine", code: "UA", continent: "Europe" },
+    { name: "Turkey", code: "TR", continent: "Europe/Asia" },
+    { name: "Saudi Arabia", code: "SA", continent: "Asia" },
+    { name: "Iran", code: "IR", continent: "Asia" },
+    { name: "Egypt", code: "EG", continent: "Africa" },
+    { name: "Nigeria", code: "NG", continent: "Africa" },
+    { name: "South Africa", code: "ZA", continent: "Africa" },
+    { name: "Kenya", code: "KE", continent: "Africa" },
+    { name: "Morocco", code: "MA", continent: "Africa" },
+    { name: "Australia", code: "AU", continent: "Oceania" },
+    { name: "New Zealand", code: "NZ", continent: "Oceania" }
   ];
 
   // Handle mouse events
@@ -287,13 +131,11 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
       {hoveredCountry && (
         <div className="absolute top-6 right-6 z-20 bg-white/95 backdrop-blur-sm px-8 py-6 rounded-2xl shadow-2xl border-2 border-gray-200">
           <div className="flex items-center gap-3 mb-2">
-            <div 
-              className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
-              style={{ backgroundColor: hoveredCountry.color }}
-            />
+            <div className="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-sm" />
             <h3 className="font-bold text-gray-900 text-xl">{hoveredCountry.name}</h3>
           </div>
           <p className="text-sm text-gray-600 mb-1">Code: {hoveredCountry.code}</p>
+          <p className="text-sm text-gray-600 mb-1">Continent: {hoveredCountry.continent}</p>
           <p className="text-sm text-blue-600 font-medium">Click to view posts & content</p>
         </div>
       )}
@@ -314,81 +156,197 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
             transformOrigin: 'center center'
           }}
         >
-          {/* Ocean Background */}
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-sky-200 to-sky-300"></div>
-
-          {/* SVG World Map with Accurate Country Shapes */}
-          <svg 
-            className="absolute"
-            width="1000" 
-            height="600" 
-            viewBox="0 0 1000 600" 
-            preserveAspectRatio="xMidYMid meet"
-          >
-            <defs>
-              {/* Drop shadow filter */}
-              <filter id="dropShadow" x="-50%" y="-50%" width="200%" height="200%">
-                <feDropShadow dx="2" dy="2" stdDeviation="3" floodColor="rgba(0,0,0,0.2)"/>
-              </filter>
-              
-              {/* Glow effect for hover */}
-              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#3b82f6"/>
-              </filter>
-            </defs>
-
-            {/* Render all countries with accurate SVG paths */}
-            {countries.map((country) => (
-              <path
-                key={country.code}
-                d={country.path}
-                fill={country.color}
-                stroke="#2c3e50"
-                strokeWidth="1.5"
-                className="cursor-pointer transition-all duration-300 ease-in-out"
-                style={{
-                  filter: hoveredCountry?.code === country.code ? 'url(#glow)' : 'url(#dropShadow)',
-                  opacity: hoveredCountry?.code === country.code ? 0.9 : 0.8
-                }}
-                onMouseEnter={() => setHoveredCountry(country)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => handleCountryClick(country.code)}
-              />
-            ))}
-
-            {/* Country Labels (shown when zoomed in) */}
-            {countries.map((country) => {
-              const bounds = getCountryCenter(country.path);
-              return (
-                <text
-                  key={`label-${country.code}`}
-                  x={bounds.x}
-                  y={bounds.y}
-                  textAnchor="middle"
-                  className="text-xs font-semibold fill-gray-800 pointer-events-none select-none"
-                  style={{ 
-                    textShadow: '1px 1px 2px rgba(255,255,255,0.8)',
-                    opacity: transform.scale > 2 ? 1 : 0,
-                    transition: 'opacity 0.3s ease'
-                  }}
-                >
-                  {country.name}
-                </text>
-              );
-            })}
-
-            {/* Equator line */}
-            <line 
-              x1="0" 
-              y1="300" 
-              x2="1000" 
-              y2="300" 
-              stroke="#34495e" 
-              strokeWidth="1" 
-              strokeDasharray="5,5" 
-              opacity="0.2"
+          {/* Real World Map Image */}
+          <div className="relative w-full h-full">
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" 
+              alt="World Map"
+              className="w-full h-full object-contain"
+              style={{ 
+                minWidth: '100%', 
+                minHeight: '100%'
+              }}
             />
-          </svg>
+            
+            {/* Accurate Country Hover Regions */}
+            <svg 
+              className="absolute inset-0 w-full h-full"
+              viewBox="0 0 1000 500" 
+              preserveAspectRatio="xMidYMid meet"
+            >
+              {/* North America */}
+              <polygon 
+                points="158,174 200,160 280,165 320,150 380,155 400,175 420,195 380,225 350,245 300,235 250,225 200,215 158,195" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'US')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('US')}
+              />
+              <polygon 
+                points="130,94 180,80 250,75 320,70 380,75 420,85 450,105 420,125 380,120 320,115 250,120 180,125 130,115" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'CA')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('CA')}
+              />
+              <polygon 
+                points="175,245 220,240 270,245 300,255 280,280 250,290 220,285 190,275" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'MX')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('MX')}
+              />
+              
+              {/* South America */}
+              <polygon 
+                points="280,300 350,295 400,310 420,340 400,380 380,420 350,440 320,430 290,410 270,380 260,350 270,320" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'BR')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('BR')}
+              />
+              <polygon 
+                points="270,420 300,415 320,430 330,460 320,500 300,530 280,520 260,490 255,460" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'AR')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('AR')}
+              />
+              <polygon 
+                points="250,400 270,395 275,430 270,470 265,510 260,540 250,530 245,490 248,450" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'CL')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('CL')}
+              />
+              
+              {/* Europe */}
+              <polygon 
+                points="500,79 580,74 680,79 750,84 820,89 850,104 830,124 800,139 750,144 680,149 580,154 500,144 480,124 490,104" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'RU')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('RU')}
+              />
+              <polygon 
+                points="480,132 510,128 520,148 515,163 490,168 475,153" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'DE')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('DE')}
+              />
+              <polygon 
+                points="450,153 480,148 485,168 475,183 445,178 440,163" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'FR')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('FR')}
+              />
+              <polygon 
+                points="430,123 450,118 455,138 445,148 425,143" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'GB')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('GB')}
+              />
+              <polygon 
+                points="430,173 470,168 480,188 470,203 435,198 425,183" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'ES')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('ES')}
+              />
+              <polygon 
+                points="485,168 505,163 510,183 515,203 505,223 490,218 480,198 485,178" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'IT')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('IT')}
+              />
+              
+              {/* Asia */}
+              <polygon 
+                points="620,143 700,133 750,138 770,158 760,183 740,203 700,208 660,203 630,183 615,163" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'CN')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('CN')}
+              />
+              <polygon 
+                points="580,203 620,198 640,218 650,243 640,268 620,283 590,278 570,258 565,233 575,218" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'IN')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('IN')}
+              />
+              <polygon 
+                points="780,163 800,158 805,178 810,198 800,218 785,213 775,193 780,173" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'JP')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('JP')}
+              />
+              
+              {/* Africa */}
+              <polygon 
+                points="520,233 550,228 560,248 555,268 540,273 515,268 510,248" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'EG')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('EG')}
+              />
+              <polygon 
+                points="480,283 510,278 520,298 515,318 495,323 475,318 470,298" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'NG')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('NG')}
+              />
+              <polygon 
+                points="500,383 530,378 540,398 535,418 515,423 495,418 485,398 495,383" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'ZA')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('ZA')}
+              />
+              
+              {/* Oceania */}
+              <polygon 
+                points="720,363 780,358 820,363 840,383 830,403 800,408 760,403 720,398 700,383 710,368" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'AU')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('AU')}
+              />
+              <polygon 
+                points="820,403 840,398 845,413 840,428 825,433 815,418" 
+                fill="transparent" 
+                className="cursor-pointer hover:fill-blue-500/20 transition-all"
+                onMouseEnter={() => setHoveredCountry(countries.find(c => c.code === 'NZ')!)}
+                onMouseLeave={() => setHoveredCountry(null)}
+                onClick={() => handleCountryClick('NZ')}
+              />
+            </svg>
+          </div>
         </div>
       </div>
 
@@ -425,52 +383,10 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
         <p className="text-white/90 drop-shadow-lg text-lg">Explore Global Preparedness Intelligence by Country</p>
         <div className="mt-3 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
           <p className="text-white/80 text-sm font-medium">
-            {countries.length} Countries Available • Accurate Boundaries
+            {countries.length} Countries Available • Accurate Positioning
           </p>
         </div>
       </div>
     </div>
   );
-
-  // Helper function to get country center for labels
-  function getCountryCenter(path: string): { x: number; y: number } {
-    // Simple approximation - in a real implementation, you'd calculate the actual centroid
-    // For now, we'll use predefined centers for major countries
-    const centers: { [key: string]: { x: number; y: number } } = {
-      'US': { x: 250, y: 220 },
-      'CA': { x: 280, y: 120 },
-      'MX': { x: 220, y: 290 },
-      'BR': { x: 340, y: 380 },
-      'AR': { x: 290, y: 490 },
-      'CL': { x: 260, y: 480 },
-      'PE': { x: 270, y: 380 },
-      'CO': { x: 270, y: 330 },
-      'RU': { x: 650, y: 120 },
-      'DE': { x: 490, y: 170 },
-      'FR': { x: 460, y: 185 },
-      'GB': { x: 440, y: 150 },
-      'ES': { x: 450, y: 205 },
-      'IT': { x: 495, y: 210 },
-      'PL': { x: 525, y: 160 },
-      'UA': { x: 560, y: 170 },
-      'CN': { x: 680, y: 190 },
-      'IN': { x: 610, y: 260 },
-      'JP': { x: 790, y: 205 },
-      'KR': { x: 770, y: 215 },
-      'TH': { x: 670, y: 280 },
-      'ID': { x: 720, y: 340 },
-      'MY': { x: 670, y: 315 },
-      'EG': { x: 535, y: 270 },
-      'NG': { x: 490, y: 320 },
-      'ZA': { x: 515, y: 420 },
-      'KE': { x: 550, y: 345 },
-      'MA': { x: 455, y: 265 },
-      'AU': { x: 780, y: 400 },
-      'NZ': { x: 830, y: 440 }
-    };
-    
-    // Find the country by matching path (simplified approach)
-    const defaultCenter = { x: 500, y: 300 };
-    return defaultCenter; // You'd implement proper centroid calculation here
-  }
 };
