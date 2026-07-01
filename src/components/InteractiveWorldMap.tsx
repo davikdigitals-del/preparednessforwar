@@ -109,7 +109,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
       <div className="relative w-full h-full">
         {/* World Map Image - Clean map without grid lines */}
         <img 
-          src="https://upload.wikimedia.org/wikipedia/commons/a/a0/World_map_blank_without_borders.svg" 
+          src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" 
           alt="World Map"
           className="w-full h-full object-cover"
         />
