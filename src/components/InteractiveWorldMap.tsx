@@ -45,7 +45,7 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
     { name: "France", code: "FR", x: 49, y: 35 },
     { name: "Germany", code: "DE", x: 52, y: 32 },
     { name: "Norway", code: "NO", x: 52, y: 18 },
-    { name: "Russia", code: "RU", x: 75, y: 15 },
+    { name: "Russia", code: "RU", x: 75, y: 12 },
     
     // Key Asian countries
     { name: "China", code: "CN", x: 75, y: 38 },
@@ -89,13 +89,13 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
               style={{
                 left: `${country.x}%`,
                 top: `${country.y}%`,
-                width: '80px',
-                height: '25px',
+                width: '50px',
+                height: '18px',
               }}
               onClick={() => handleCountryClick(country)}
               title={country.name}
             >
-              <span className="text-xs font-bold text-red-900 text-center leading-tight text-[10px]">
+              <span className="font-bold text-red-900 text-center leading-tight" style={{fontSize: '7px'}}>
                 {country.code}
               </span>
             </div>
