@@ -17,80 +17,80 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
 
   // Countries positioned over the text labels in the world map image
   const countries: Country[] = [
-    // NORTH AMERICA
-    { name: "Canada", code: "CA", x: 18, y: 25 },
-    { name: "United States of America", code: "US", x: 15, y: 35 },
-    { name: "Mexico", code: "MX", x: 17, y: 45 },
-    { name: "Greenland", code: "GL", x: 32, y: 15 },
-    { name: "Alaska", code: "AK", x: 6, y: 22 },
+    // NORTH AMERICA - Adjusted for your map image
+    { name: "Canada", code: "CA", x: 15, y: 27 },
+    { name: "United States of America", code: "US", x: 12, y: 38 },
+    { name: "Mexico", code: "MX", x: 14, y: 48 },
+    { name: "Greenland", code: "GL", x: 30, y: 12 },
+    { name: "Alaska", code: "AK", x: 4, y: 20 },
     
-    // SOUTH AMERICA
-    { name: "Brazil", code: "BR", x: 42, y: 55 },
-    { name: "Argentina", code: "AR", x: 36, y: 72 },
-    { name: "Chile", code: "CL", x: 32, y: 68 },
-    { name: "Peru", code: "PE", x: 33, y: 62 },
-    { name: "Colombia", code: "CO", x: 33, y: 53 },
-    { name: "Venezuela", code: "VE", x: 36, y: 51 },
-    { name: "Ecuador", code: "EC", x: 31, y: 58 },
-    { name: "Bolivia", code: "BO", x: 37, y: 65 },
+    // SOUTH AMERICA - Adjusted positions
+    { name: "Brazil", code: "BR", x: 38, y: 58 },
+    { name: "Argentina", code: "AR", x: 32, y: 75 },
+    { name: "Chile", code: "CL", x: 29, y: 71 },
+    { name: "Peru", code: "PE", x: 30, y: 65 },
+    { name: "Colombia", code: "CO", x: 30, y: 56 },
+    { name: "Venezuela", code: "VE", x: 33, y: 54 },
+    { name: "Ecuador", code: "EC", x: 28, y: 61 },
+    { name: "Bolivia", code: "BO", x: 34, y: 68 },
     
-    // EUROPE
-    { name: "Russia", code: "RU", x: 68, y: 22 },
-    { name: "Norway", code: "NO", x: 50, y: 18 },
-    { name: "Finland", code: "FI", x: 56, y: 20 },
-    { name: "Sweden", code: "SE", x: 52, y: 22 },
-    { name: "Iceland", code: "IS", x: 43, y: 22 },
-    { name: "United Kingdom", code: "GB", x: 46, y: 30 },
-    { name: "Ireland", code: "IE", x: 43, y: 30 },
-    { name: "France", code: "FR", x: 49, y: 35 },
-    { name: "Spain", code: "ES", x: 46, y: 40 },
-    { name: "Portugal", code: "PT", x: 43, y: 40 },
-    { name: "Italy", code: "IT", x: 52, y: 40 },
-    { name: "Germany", code: "DE", x: 52, y: 32 },
-    { name: "Poland", code: "PL", x: 55, y: 32 },
-    { name: "Ukraine", code: "UA", x: 58, y: 34 },
-    { name: "Turkey", code: "TR", x: 59, y: 39 },
-    { name: "Greece", code: "GR", x: 54, y: 42 },
+    // EUROPE - Better positioned
+    { name: "Russia", code: "RU", x: 65, y: 25 },
+    { name: "Norway", code: "NO", x: 47, y: 21 },
+    { name: "Finland", code: "FI", x: 53, y: 23 },
+    { name: "Sweden", code: "SE", x: 49, y: 25 },
+    { name: "Iceland", code: "IS", x: 40, y: 25 },
+    { name: "United Kingdom", code: "GB", x: 43, y: 33 },
+    { name: "Ireland", code: "IE", x: 40, y: 33 },
+    { name: "France", code: "FR", x: 46, y: 38 },
+    { name: "Spain", code: "ES", x: 43, y: 43 },
+    { name: "Portugal", code: "PT", x: 40, y: 43 },
+    { name: "Italy", code: "IT", x: 49, y: 43 },
+    { name: "Germany", code: "DE", x: 49, y: 35 },
+    { name: "Poland", code: "PL", x: 52, y: 35 },
+    { name: "Ukraine", code: "UA", x: 55, y: 37 },
+    { name: "Turkey", code: "TR", x: 56, y: 42 },
+    { name: "Greece", code: "GR", x: 51, y: 45 },
     
-    // ASIA
-    { name: "China", code: "CN", x: 72, y: 38 },
-    { name: "India", code: "IN", x: 69, y: 48 },
-    { name: "Japan", code: "JP", x: 83, y: 38 },
-    { name: "Mongolia", code: "MN", x: 73, y: 32 },
-    { name: "Kazakhstan", code: "KZ", x: 65, y: 32 },
-    { name: "Saudi Arabia", code: "SA", x: 61, y: 46 },
-    { name: "Iran", code: "IR", x: 63, y: 42 },
-    { name: "Pakistan", code: "PK", x: 67, y: 44 },
-    { name: "Afghanistan", code: "AF", x: 65, y: 40 },
-    { name: "Thailand", code: "TH", x: 74, y: 50 },
-    { name: "Vietnam", code: "VN", x: 76, y: 48 },
-    { name: "Malaysia", code: "MY", x: 75, y: 53 },
-    { name: "Indonesia", code: "ID", x: 77, y: 57 },
-    { name: "Philippines", code: "PH", x: 80, y: 50 },
-    { name: "South Korea", code: "KR", x: 81, y: 38 },
-    { name: "North Korea", code: "KP", x: 80, y: 36 },
+    // ASIA - Adjusted positions
+    { name: "China", code: "CN", x: 69, y: 41 },
+    { name: "India", code: "IN", x: 66, y: 51 },
+    { name: "Japan", code: "JP", x: 80, y: 41 },
+    { name: "Mongolia", code: "MN", x: 70, y: 35 },
+    { name: "Kazakhstan", code: "KZ", x: 62, y: 35 },
+    { name: "Saudi Arabia", code: "SA", x: 58, y: 49 },
+    { name: "Iran", code: "IR", x: 60, y: 45 },
+    { name: "Pakistan", code: "PK", x: 64, y: 47 },
+    { name: "Afghanistan", code: "AF", x: 62, y: 43 },
+    { name: "Thailand", code: "TH", x: 71, y: 53 },
+    { name: "Vietnam", code: "VN", x: 73, y: 51 },
+    { name: "Malaysia", code: "MY", x: 72, y: 56 },
+    { name: "Indonesia", code: "ID", x: 74, y: 60 },
+    { name: "Philippines", code: "PH", x: 77, y: 53 },
+    { name: "South Korea", code: "KR", x: 78, y: 41 },
+    { name: "North Korea", code: "KP", x: 77, y: 39 },
     
-    // AFRICA
-    { name: "Algeria", code: "DZ", x: 48, y: 42 },
-    { name: "Libya", code: "LY", x: 53, y: 42 },
-    { name: "Egypt", code: "EG", x: 57, y: 42 },
-    { name: "Sudan", code: "SD", x: 57, y: 48 },
-    { name: "Ethiopia", code: "ET", x: 61, y: 52 },
-    { name: "Kenya", code: "KE", x: 61, y: 56 },
-    { name: "Somalia", code: "SO", x: 63, y: 56 },
-    { name: "Nigeria", code: "NG", x: 49, y: 52 },
-    { name: "South Africa", code: "ZA", x: 54, y: 68 },
-    { name: "Madagascar", code: "MG", x: 64, y: 65 },
-    { name: "Morocco", code: "MA", x: 44, y: 40 },
-    { name: "Mali", code: "ML", x: 46, y: 48 },
-    { name: "Niger", code: "NE", x: 49, y: 48 },
-    { name: "Chad", code: "TD", x: 53, y: 50 },
-    { name: "Angola", code: "AO", x: 52, y: 62 },
+    // AFRICA - Better aligned
+    { name: "Algeria", code: "DZ", x: 45, y: 45 },
+    { name: "Libya", code: "LY", x: 50, y: 45 },
+    { name: "Egypt", code: "EG", x: 54, y: 45 },
+    { name: "Sudan", code: "SD", x: 54, y: 51 },
+    { name: "Ethiopia", code: "ET", x: 58, y: 55 },
+    { name: "Kenya", code: "KE", x: 58, y: 59 },
+    { name: "Somalia", code: "SO", x: 60, y: 59 },
+    { name: "Nigeria", code: "NG", x: 46, y: 55 },
+    { name: "South Africa", code: "ZA", x: 51, y: 71 },
+    { name: "Madagascar", code: "MG", x: 61, y: 68 },
+    { name: "Morocco", code: "MA", x: 41, y: 43 },
+    { name: "Mali", code: "ML", x: 43, y: 51 },
+    { name: "Niger", code: "NE", x: 46, y: 51 },
+    { name: "Chad", code: "TD", x: 50, y: 53 },
+    { name: "Angola", code: "AO", x: 49, y: 65 },
     
-    // OCEANIA
-    { name: "Australia", code: "AU", x: 78, y: 65 },
-    { name: "New Zealand", code: "NZ", x: 87, y: 75 },
-    { name: "Papua New Guinea", code: "PG", x: 82, y: 57 }
+    // OCEANIA - Final adjustments
+    { name: "Australia", code: "AU", x: 75, y: 68 },
+    { name: "New Zealand", code: "NZ", x: 84, y: 78 },
+    { name: "Papua New Guinea", code: "PG", x: 79, y: 60 }
   ];
 
   const handleCountryClick = (country: Country) => {
@@ -116,14 +116,15 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
           {countries.map((country) => (
             <div
               key={country.code}
-              className="absolute cursor-pointer"
+              className="absolute cursor-pointer border-2 border-red-500 bg-red-200 bg-opacity-30"
               style={{
                 left: `${country.x}%`,
                 top: `${country.y}%`,
-                width: '60px',
-                height: '20px',
+                width: '80px',
+                height: '25px',
               }}
               onClick={() => handleCountryClick(country)}
+              title={country.name}
             />
           ))}
         </div>
