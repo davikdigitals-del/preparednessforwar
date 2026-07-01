@@ -78,12 +78,12 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
           className="w-full h-full object-cover"
         />
         
-        {/* Invisible clickable areas positioned over country names in the image */}
+        {/* Clickable areas positioned over country names with visible labels */}
         <div className="absolute inset-0 w-full h-full">
           {countries.map((country) => (
             <div
               key={country.code}
-              className="absolute cursor-pointer border-2 border-red-500 bg-red-200 bg-opacity-30"
+              className="absolute cursor-pointer border-2 border-red-500 bg-red-200 bg-opacity-50 flex items-center justify-center"
               style={{
                 left: `${country.x}%`,
                 top: `${country.y}%`,
@@ -92,7 +92,11 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
               }}
               onClick={() => handleCountryClick(country)}
               title={country.name}
-            />
+            >
+              <span className="text-xs font-bold text-red-900 text-center leading-tight">
+                {country.code}
+              </span>
+            </div>
           ))}
         </div>
       </div>
