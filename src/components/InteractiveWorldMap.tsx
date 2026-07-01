@@ -1,68 +1,74 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import countryCoordinatesData from "@/data/countryCoordinates.json";
+import { convertPixelToPercentage } from "@/utils/measureMapImage";
+import { countryCodeMapping, getCountryCode } from "@/data/countryCodeMapping";
 
 interface InteractiveWorldMapProps {
   onCountryClick?: (countryId: string) => void;
+  debugMode?: boolean;
 }
 
-interface Country {
-  name: string;
-  code: string;
+interface CountryCoordinate {
+  id: number;
+  country: string;
   x: number;
   y: number;
 }
 
-export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps) => {
+interface ProcessedCountry {
+  id: number;
+  name: string;
+  code: string;
+  x: number; // percentage
+  y: number; // percentage
+  pixelX: number; // original pixel coordinate
+  pixelY: number; // original pixel coordinate
+}
+
+export const InteractiveWorldMap = ({ 
+  onCountryClick, 
+  debugMode = false 
+}: InteractiveWorldMapProps) => {
   const navigate = useNavigate();
+  const [processedCountries, setProcessedCountries] = useState<ProcessedCountry[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Manual positioning based on visual analysis of the map
-  const countries: Country[] = [
-    // Manually adjusted coordinates to match the actual country name positions
-    { name: "Canada", code: "CA", x: 18, y: 25 },
-    { name: "United States of America", code: "US", x: 20, y: 38 },
-    { name: "Mexico", code: "MX", x: 17, y: 45 },
-    { name: "Greenland", code: "GL", x: 32, y: 13 },
-    { name: "Brazil", code: "BR", x: 42, y: 62 },
-    { name: "Argentina", code: "AR", x: 34, y: 80 },
-    { name: "Chile", code: "CL", x: 30, y: 75 },
-    { name: "Peru", code: "PE", x: 31, y: 60 },
-    { name: "Colombia", code: "CO", x: 30, y: 55 },
-    { name: "Venezuela", code: "VE", x: 35, y: 50 },
-    { name: "Ecuador", code: "EC", x: 28, y: 58 },
-    { name: "Bolivia", code: "BO", x: 35, y: 68 },
-    { name: "Paraguay", code: "PY", x: 36, y: 72 },
-    { name: "Uruguay", code: "UY", x: 38, y: 78 },
-    { name: "Guyana", code: "GY", x: 38, y: 52 },
-    { name: "Suriname", code: "SR", x: 40, y: 52 },
-    { name: "French Guiana", code: "GF", x: 42, y: 52 },
-    
-    // Europe - manually positioned
-    { name: "Iceland", code: "IS", x: 42, y: 18 },
-    { name: "Ireland", code: "IE", x: 44, y: 28 },
-    { name: "United Kingdom", code: "GB", x: 46, y: 28 },
-    { name: "Portugal", code: "PT", x: 45, y: 38 },
-    { name: "Spain", code: "ES", x: 47, y: 38 },
-    { name: "France", code: "FR", x: 49, y: 35 },
-    { name: "Germany", code: "DE", x: 52, y: 32 },
-    { name: "Norway", code: "NO", x: 52, y: 18 },
-    { name: "Russia", code: "RU", x: 75, y: 12 },
-    
-    // Key Asian countries
-    { name: "China", code: "CN", x: 75, y: 38 },
-    { name: "India", code: "IN", x: 70, y: 50 },
-    { name: "Japan", code: "JP", x: 85, y: 35 },
-    
-    // Key African countries
-    { name: "Egypt", code: "EG", x: 58, y: 45 },
-    { name: "Nigeria", code: "NG", x: 48, y: 58 },
-    { name: "South Africa", code: "ZA", x: 55, y: 85 },
-    
-    // Oceania
-    { name: "Australia", code: "AU", x: 80, y: 75 },
-    { name: "New Zealand", code: "NZ", x: 88, y: 85 }
-  ];
+  useEffect(() => {
+    const processCoordinates = () => {
+      try {
+        // Convert all countries from pixel coordinates to percentages
+        const processed = countryCoordinatesData.map((coord: CountryCoordinate) => {
+          const percentageCoords = convertPixelToPercentage(coord.x, coord.y);
+          const countryCode = getCountryCode(coord.country);
+          
+          return {
+            id: coord.id,
+            name: coord.country,
+            code: countryCode,
+            x: percentageCoords.x,
+            y: percentageCoords.y,
+            pixelX: coord.x,
+            pixelY: coord.y
+          };
+        });
+        
+        setProcessedCountries(processed);
+        
+        if (debugMode) {
+          console.log(`Processed ${processed.length} countries:`, processed.slice(0, 5));
+        }
+      } catch (error) {
+        console.error('Error processing country coordinates:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleCountryClick = (country: Country) => {
+    processCoordinates();
+  }, [debugMode]);
+
+  const handleCountryClick = (country: ProcessedCountry) => {
     if (onCountryClick) {
       onCountryClick(country.code);
     } else {
@@ -70,37 +76,91 @@ export const InteractiveWorldMap = ({ onCountryClick }: InteractiveWorldMapProps
     }
   };
 
+  if (loading) {
+    return (
+      <div className="relative w-full h-screen overflow-hidden bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading Interactive World Map...</p>
+          <p className="text-sm text-gray-500">Processing {countryCoordinatesData.length} countries</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-screen overflow-hidden">
-      {/* World Map Image with clickable country names */}
+      {/* World Map Image */}
       <div className="relative w-full h-full">
         <img 
           src="/images/world-map.png"
-          alt="World Map"
+          alt="Interactive World Map"
           className="w-full h-full object-cover"
+          draggable={false}
         />
         
-        {/* Clickable areas positioned over country names with visible labels */}
+        {/* Clickable Country Areas */}
         <div className="absolute inset-0 w-full h-full">
-          {countries.map((country) => (
+          {processedCountries.map((country) => (
             <div
-              key={country.code}
-              className="absolute cursor-pointer border-2 border-red-500 bg-red-200 bg-opacity-50 flex items-center justify-center"
+              key={`country-${country.id}-${country.code}`}
+              className={`absolute cursor-pointer transition-all duration-200 ${
+                debugMode 
+                  ? 'border-2 border-red-500 bg-red-200 bg-opacity-30 hover:bg-opacity-50' 
+                  : 'hover:bg-black hover:bg-opacity-10'
+              }`}
               style={{
                 left: `${country.x}%`,
                 top: `${country.y}%`,
-                width: '50px',
-                height: '18px',
+                width: debugMode ? '80px' : '60px',
+                height: debugMode ? '24px' : '20px',
+                transform: 'translate(-50%, -50%)', // Center on coordinate
+                zIndex: 10
               }}
               onClick={() => handleCountryClick(country)}
-              title={country.name}
+              title={`${country.name} (${country.code.toUpperCase()})`}
             >
-              <span className="font-bold text-red-900 text-center leading-tight" style={{fontSize: '7px'}}>
-                {country.code}
-              </span>
+              {debugMode && (
+                <div className="w-full h-full flex items-center justify-center">
+                  <span 
+                    className="font-bold text-red-900 text-center leading-tight select-none"
+                    style={{ fontSize: '9px' }}
+                  >
+                    {country.code.toUpperCase()}
+                  </span>
+                </div>
+              )}
             </div>
           ))}
         </div>
+
+        {/* Debug Information Panel */}
+        {debugMode && (
+          <div className="absolute top-4 left-4 bg-white bg-opacity-95 p-4 rounded-lg shadow-lg max-w-sm z-20">
+            <h3 className="font-bold text-gray-900 mb-2">🗺️ Debug Info</h3>
+            <div className="text-sm space-y-1">
+              <p><strong>Countries:</strong> {processedCountries.length}</p>
+              <p><strong>Map Dimensions:</strong> 1536×1024px</p>
+              <p><strong>Mode:</strong> Debug (red rectangles visible)</p>
+              <p className="text-xs text-gray-600 mt-2">
+                Click any country to navigate to its page. 
+                Red rectangles show clickable areas with country codes.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Loading overlay for countries */}
+        {processedCountries.length === 0 && !loading && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30">
+            <div className="bg-white p-6 rounded-lg text-center">
+              <h3 className="font-bold text-gray-900 mb-2">No Countries Loaded</h3>
+              <p className="text-gray-600 text-sm">
+                Unable to load country coordinate data.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
