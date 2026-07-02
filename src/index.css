@@ -4,6 +4,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom styles for SVG World Map */
+.svg-world-map {
+  width: 100%;
+  height: 100%;
+}
+
+.svg-world-map svg {
+  width: 100%;
+  height: 100%;
+}
+
+.svg-world-map path {
+  cursor: pointer !important;
+  transition: all 0.2s ease-in-out;
+}
+
+.svg-world-map path:hover {
+  filter: brightness(1.1);
+}
+
+/* Hide default labels since we want clean country shapes */
+.svg-world-map text {
+  display: none;
+}
+
 @layer base {
   :root {
     color-scheme: light;

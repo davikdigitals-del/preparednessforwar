@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
-import { Globe, List, Map, X, Settings } from "lucide-react";
+import { Globe, List, Map, X } from "lucide-react";
 import { natoCountries } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
@@ -13,7 +13,6 @@ const CountriesPage = () => {
   const initialView = searchParams.get('view') || 'globe';
   const [viewMode, setViewMode] = useState<'globe' | 'list'>(initialView as 'globe' | 'list');
   const [showFullscreenGlobe, setShowFullscreenGlobe] = useState(initialView === 'globe');
-  const [debugMode, setDebugMode] = useState(false);
 
   if (loading) return <div className="container py-8 text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
@@ -42,21 +41,8 @@ const CountriesPage = () => {
           <X className="w-6 h-6" />
         </button>
         
-        {/* Debug mode toggle */}
-        <button
-          onClick={() => setDebugMode(!debugMode)}
-          className={`absolute top-6 right-20 z-30 w-12 h-12 rounded-xl shadow-2xl flex items-center justify-center transition-all border backdrop-blur-sm ${
-            debugMode 
-              ? 'bg-red-500 hover:bg-red-600 text-white border-red-400' 
-              : 'bg-white/95 hover:bg-white text-slate-700 hover:text-slate-900 border-white/20'
-          }`}
-          title={debugMode ? "Disable Debug Mode" : "Enable Debug Mode"}
-        >
-          <Settings className="w-6 h-6" />
-        </button>
-        
         {/* Interactive World Map */}
-        <InteractiveWorldMap debugMode={debugMode} />
+        <InteractiveWorldMap />
       </div>
     );
   }

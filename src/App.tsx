@@ -45,7 +45,6 @@ const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const ShopPage = lazy(() => import("./pages/ShopPage"));
 const CommunityReports = lazy(() => import("./pages/CommunityReports"));
 const DebugFeaturedPosts = lazy(() => import("./pages/DebugFeaturedPosts"));
-const MapMeasurementPage = lazy(() => import("./pages/MapMeasurementPage"));
 
 // Dashboard pages
 const SubmitReport = lazy(() => import("./pages/dashboard/SubmitReport"));
@@ -170,7 +169,6 @@ const App = () => {
                 <Route path="/shop" element={<ShopPage />} />
                 <Route path="/community-reports" element={<CommunityReports />} />
                 <Route path="/debug/featured-posts" element={<DebugFeaturedPosts />} />
-                <Route path="/debug/map-measurement" element={<MapMeasurementPage />} />
                 <Route path="/countries" element={<CountriesPage />} />
                 <Route path="/countries/:countryCode" element={<CountryPostsPage />} />
                 <Route path="/notifications" element={<NotificationsPage />} />
