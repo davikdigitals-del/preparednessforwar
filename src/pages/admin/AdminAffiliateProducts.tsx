@@ -260,7 +260,7 @@ export default function AdminAffiliateProducts() {
           
           // Handle price and currency conversion
           let convertedPrice = data.price || 0;
-          const originalCurrency = data.currency || "GBP";
+          const originalCurrency = (data.currency || "GBP").toUpperCase();
           
           console.log(`💰 Found price: ${convertedPrice} ${originalCurrency}`);
           
@@ -275,13 +275,24 @@ export default function AdminAffiliateProducts() {
               convertedPrice = gbpAmount;
               
             } catch (conversionError) {
-              console.warn(`❌ Currency conversion failed:`, conversionError);
+              console.warn(`❌ Live conversion failed, using fallback rate:`, conversionError);
+              // Use fallback rate from our static table
+              try {
+                const { convertToGBP } = await import("@/utils/currency");
+                convertedPrice = convertToGBP(convertedPrice, originalCurrency);
+                console.log(`✅ Fallback conversion: ${data.price} ${originalCurrency} = £${convertedPrice}`);
+              } catch (fallbackError) {
+                console.warn(`❌ Fallback conversion also failed:`, fallbackError);
+                // Last resort: leave price as 0 so admin fills it manually
+                convertedPrice = 0;
+              }
             }
           } else if (convertedPrice > 0) {
             console.log(`✅ Price already in GBP: £${convertedPrice}`);
           }
           
           price = convertedPrice;
+          // Always store as GBP — conversion happened above
           
           if (data.images?.length > 0) {
             fetchedImages = data.images.slice(0, 8);
@@ -313,6 +324,7 @@ export default function AdminAffiliateProducts() {
         images: fetchedImages.length > 0 ? fetchedImages : prev.images,
         video_url: fetchedVideo || prev.video_url,
         price: price || prev.price,
+        currency: "GBP", // Always store in GBP — conversion done above
         affiliate_network: scraped_affiliate_network,
       }));
 
@@ -322,10 +334,16 @@ export default function AdminAffiliateProducts() {
         description && "description",
         price && "price",
       ].filter(Boolean);
+
+      // Build a helpful price note for the toast
+      const priceNote = price > 0
+        ? `£${price.toFixed(2)} GBP`
+        : null;
+
       toast({
         title: got.length > 0 ? "Details fetched!" : "URL saved",
         description: got.length > 0
-          ? `Auto-filled: ${got.join(", ")}. Review and save.`
+          ? `Auto-filled: ${got.join(", ")}${priceNote ? ` (${priceNote})` : ""}. Review and save.`
           : isAmazon
             ? "Amazon blocks auto-fetch. Name extracted from URL — add price & image manually."
             : "URL saved — please fill in the details manually.",
