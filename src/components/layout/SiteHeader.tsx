@@ -127,7 +127,9 @@ export function SiteHeader() {
   }, []);
 
   // Use DB sections for nav, fall back to static navSections
-  const activeSections = dbSections.length > 0 ? dbSections : navSections;
+  // "Essential Supplies" (slug: supplies) is intentionally excluded from the public nav
+  const activeSections = (dbSections.length > 0 ? dbSections : navSections)
+    .filter(s => s.slug !== "supplies");
 
   const mainNavItems = activeSections.map(s => ({
     label: s.title,

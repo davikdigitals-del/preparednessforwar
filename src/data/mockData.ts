@@ -69,24 +69,6 @@ export const navSections: NavSection[] = [
     ],
   },
   {
-    title: "Essential Supplies",
-    slug: "supplies",
-    color: "category-supplies",
-    categories: [
-      { title: "Water", slug: "water" },
-      { title: "Food & Rations", slug: "food-rations" },
-      { title: "Medical & Medicines", slug: "medical" },
-      { title: "Power & Light", slug: "power-light" },
-      { title: "Communication & Safety", slug: "communication" },
-      { title: "Clothing & Shelter", slug: "clothing-shelter" },
-      { title: "Hygiene & Sanitation", slug: "hygiene" },
-    ],
-    tools: [
-      { title: "Supply Calculator", slug: "calculator" },
-      { title: "Shopping List Generator", slug: "shopping-list" },
-    ],
-  },
-  {
     title: "Resources",
     slug: "resources",
     color: "category-resources",
