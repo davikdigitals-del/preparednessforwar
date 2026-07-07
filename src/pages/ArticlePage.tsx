@@ -7,7 +7,6 @@ import {
 import { FaXTwitter, FaFacebook, FaWhatsapp, FaTelegram } from "react-icons/fa6";
 import { navSections, formatDate, formatTimeAgo } from "@/data/mockData";
 import { PostCard } from "@/components/PostCard";
-import { SidebarModules } from "@/components/SidebarModules";
 import { PremiumGate } from "@/components/PremiumGate";
 import { ArticleVideoPlayer } from "@/components/ArticleVideoPlayer";
 import { useData } from "@/contexts/DataContext";
@@ -627,36 +626,79 @@ const ArticlePage = () => {
           </article>
 
           <div className="hidden lg:block">
-            {/* Related Posts Sidebar */}
+            {/* Related Posts Sidebar — sticky, fills the column */}
             {relatedPosts.length > 0 && (
-              <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-0.5 w-8 bg-blue-900"></div>
-                  <h3 className="font-display font-bold text-xl text-gray-900">Related Articles</h3>
+              <div className="sticky top-6">
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-4 pb-3 border-b-2 border-blue-900">
+                  <div className="w-1 h-6 bg-blue-900 rounded-full"></div>
+                  <h3 className="font-display font-black text-lg text-gray-900 uppercase tracking-wide">
+                    Related Articles
+                  </h3>
                 </div>
-                <div className="space-y-4">
+
+                {/* Cards */}
+                <div className="space-y-0 divide-y divide-gray-100">
                   {relatedPosts.map((p: any) => (
-                    <Link key={p.id} to={`/${p.section}/${p.category}/${p.id}`} className="block group">
-                      <div className="flex gap-3">
-                        <div className="w-20 h-14 bg-gray-100 shrink-0 overflow-hidden rounded">
-                          {p.image && <img src={p.image} alt={p.title} className="w-full h-full object-cover" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-bold leading-tight group-hover:text-blue-600 transition-colors line-clamp-2 mb-1">
-                            {p.title}
-                          </h4>
-                          <p className="text-xs text-gray-500">
-                            {p.readTime} • {formatTimeAgo(p.publishedAt)}
-                          </p>
-                        </div>
+                    <Link
+                      key={p.id}
+                      to={`/${p.section}/${p.category}/${p.id}`}
+                      className="block group py-4 first:pt-0"
+                    >
+                      {/* Thumbnail — full width */}
+                      <div className="w-full aspect-[16/9] bg-gray-100 overflow-hidden mb-3">
+                        {p.image ? (
+                          <img
+                            src={p.image}
+                            alt={p.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-blue-50 flex items-center justify-center">
+                            <span className="text-blue-300 text-xs font-bold uppercase tracking-widest">No Image</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Section badge */}
+                      <span className="inline-block px-2 py-0.5 bg-blue-900 text-white text-[10px] font-bold uppercase tracking-wider mb-2">
+                        {p.section}
+                      </span>
+
+                      {/* Title */}
+                      <h4 className="text-sm font-bold leading-snug text-gray-900 group-hover:text-blue-700 transition-colors mb-2 line-clamp-3">
+                        {p.title}
+                      </h4>
+
+                      {/* Excerpt */}
+                      {p.standfirst && (
+                        <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-2">
+                          {p.standfirst}
+                        </p>
+                      )}
+
+                      {/* Meta */}
+                      <div className="flex items-center gap-2 text-[11px] text-gray-400">
+                        {p.readTime && <span>{p.readTime}</span>}
+                        {p.readTime && <span>·</span>}
+                        <span>{formatTimeAgo(p.publishedAt)}</span>
                       </div>
                     </Link>
                   ))}
                 </div>
+
+                {/* View more in section link */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <Link
+                    to={`/${post.section}`}
+                    className="flex items-center justify-between w-full px-4 py-3 bg-blue-900 text-white text-sm font-bold hover:bg-blue-800 transition-colors group"
+                  >
+                    <span>More in {sectionData?.title || post.section}</span>
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
               </div>
             )}
-            
-            <SidebarModules />
           </div>
         </div>
       </div>
