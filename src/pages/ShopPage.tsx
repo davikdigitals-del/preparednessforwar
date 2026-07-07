@@ -107,7 +107,7 @@ export default function ShopPage() {
         <div className="container px-4">
           <div className="max-w-3xl">
             <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-bold mb-3">
-              Essential Survival Gear & Supplies
+              Essential Supplies
             </h1>
             <p className="text-sm sm:text-xl text-green-100 mb-4">
               Curated selection of high-quality survival gear, emergency supplies, and preparedness equipment

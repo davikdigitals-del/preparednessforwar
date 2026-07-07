@@ -79,7 +79,7 @@ const moreMenuConfig: MegaMenuConfig = {
     groups: [
       { id: "courses", label: "Courses", href: "/courses" },
       { id: "my-courses", label: "My Learning", href: "/my-courses" },
-      { id: "shop", label: "Shop", href: "/shop" },
+      { id: "shop", label: "Essential Supplies", href: "/shop" },
     ],
   },
   featured: {
@@ -416,7 +416,7 @@ export function SiteHeader() {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <ShoppingBag className="w-4 h-4" />
-                  Shop
+                  Essential Supplies
                 </Link>
               </div>
             </div>
