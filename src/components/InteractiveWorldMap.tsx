@@ -191,7 +191,11 @@ export const InteractiveWorldMap = ({
       {tooltip && status === "ready" && createPortal(
         <div
           className="pointer-events-none fixed z-[9999] px-2 py-1 bg-blue-900 text-white text-xs font-bold rounded shadow-lg whitespace-nowrap"
-          style={{ left: `${tooltip.x + 10}px`, top: `${tooltip.y + 10}px` }}
+          style={{
+            left: `${tooltip.x}px`,
+            top: `${tooltip.y - 12}px`,
+            transform: "translate(-50%, -100%)",
+          }}
         >
           {tooltip.name}
         </div>,
