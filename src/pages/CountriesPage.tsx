@@ -5,24 +5,11 @@ import {
   Shield, Activity, HelpCircle, Phone, Flag, FileText,
   ArrowRight, Circle,
 } from "lucide-react";
-import { natoCountries, formatTimeAgo } from "@/data/mockData";
+import { natoCountries, formatTimeAgo, RISK_MAP } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
 import { InteractiveWorldMap } from "@/components/InteractiveWorldMap";
 import { publicSupabase } from "@/integrations/supabase/publicClient";
-
-/* ── Risk level assignment (static demo data) ── */
-const RISK_MAP: Record<string, "low" | "moderate" | "high" | "extreme"> = {
-  US: "low", CA: "low", GB: "low", FR: "low", DE: "low",
-  IT: "low", ES: "low", PT: "low", NL: "low", BE: "low",
-  DK: "low", NO: "low", SE: "low", FI: "low", IS: "low",
-  LU: "low", SI: "low",
-  PL: "moderate", CZ: "moderate", SK: "moderate", HR: "moderate",
-  RO: "moderate", BG: "moderate", GR: "moderate", AL: "moderate",
-  ME: "moderate", MK: "moderate",
-  LT: "high", LV: "high", EE: "high",
-  TR: "high",
-};
 
 const RISK_CONFIG = {
   low:      { label: "Low Risk",      color: "bg-green-500",  text: "text-green-600",  border: "border-green-200",  badge: "bg-green-100 text-green-700" },
@@ -44,8 +31,6 @@ const CONTINENT_ICONS: Record<string, string> = {
 };
 
 const getRisk = (code: string) => RISK_MAP[code] || "low";
-
-const CountriesPage = () => {
   const { user, loading } = useAuth();
   const { publishedPosts } = useData();
   const [search, setSearch] = useState("");
@@ -53,9 +38,11 @@ const CountriesPage = () => {
   const [mapFullscreen, setMapFullscreen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dbSpotlight, setDbSpotlight] = useState<any>(null);
+  const [dbRiskMap, setDbRiskMap] = useState<Record<string, string>>({});
 
-  // Fetch spotlight country from Supabase
+  // Fetch spotlight country and risk levels from Supabase
   useEffect(() => {
+    // Fetch spotlight
     publicSupabase
       .from("countries")
       .select("code, name, flag, risk_level, description")
@@ -63,6 +50,18 @@ const CountriesPage = () => {
       .maybeSingle()
       .then(({ data }) => {
         if (data) setDbSpotlight(data);
+      });
+
+    // Fetch all risk levels from DB to override the static RISK_MAP
+    publicSupabase
+      .from("countries")
+      .select("code, risk_level")
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const map: Record<string, string> = {};
+          data.forEach((c: any) => { if (c.risk_level) map[c.code] = c.risk_level; });
+          setDbRiskMap(map);
+        }
       });
   }, []);
 
@@ -78,11 +77,12 @@ const CountriesPage = () => {
     }).length;
 
   const riskCounts = {
-    low:      natoCountries.filter(c => getRisk(c.code) === "low").length,
-    moderate: natoCountries.filter(c => getRisk(c.code) === "moderate").length,
-    high:     natoCountries.filter(c => getRisk(c.code) === "high").length,
-    extreme:  natoCountries.filter(c => getRisk(c.code) === "extreme").length,
+    low:      natoCountries.filter(c => (dbRiskMap[c.code] || getRisk(c.code)) === "low").length,
+    moderate: natoCountries.filter(c => (dbRiskMap[c.code] || getRisk(c.code)) === "moderate").length,
+    high:     natoCountries.filter(c => (dbRiskMap[c.code] || getRisk(c.code)) === "high").length,
+    extreme:  natoCountries.filter(c => (dbRiskMap[c.code] || getRisk(c.code)) === "extreme").length,
   };
+  const totalForChart = Object.values(riskCounts).reduce((a, b) => a + b, 0) || 1;
 
   // Country spotlight — use DB value if set, otherwise fall back to first high/extreme risk country
   const spotlightCode = dbSpotlight?.code || natoCountries.find(c => getRisk(c.code) === "high")?.code || natoCountries[0].code;
@@ -387,22 +387,22 @@ const CountriesPage = () => {
                     <svg viewBox="0 0 36 36" className="w-16 h-16 -rotate-90">
                       {/* Background */}
                       <circle cx="18" cy="18" r="14" fill="none" stroke="#f3f4f6" strokeWidth="5" />
-                      {/* Segments — rough proportional arcs */}
+                      {/* Segments — proportional arcs from DB counts */}
                       <circle cx="18" cy="18" r="14" fill="none" stroke="#22c55e" strokeWidth="5"
-                        strokeDasharray={`${(riskCounts.low / natoCountries.length) * 88} 88`}
+                        strokeDasharray={`${(riskCounts.low / totalForChart) * 88} 88`}
                         strokeDashoffset="0" />
                       <circle cx="18" cy="18" r="14" fill="none" stroke="#eab308" strokeWidth="5"
-                        strokeDasharray={`${(riskCounts.moderate / natoCountries.length) * 88} 88`}
-                        strokeDashoffset={`-${(riskCounts.low / natoCountries.length) * 88}`} />
+                        strokeDasharray={`${(riskCounts.moderate / totalForChart) * 88} 88`}
+                        strokeDashoffset={`-${(riskCounts.low / totalForChart) * 88}`} />
                       <circle cx="18" cy="18" r="14" fill="none" stroke="#f97316" strokeWidth="5"
-                        strokeDasharray={`${(riskCounts.high / natoCountries.length) * 88} 88`}
-                        strokeDashoffset={`-${((riskCounts.low + riskCounts.moderate) / natoCountries.length) * 88}`} />
+                        strokeDasharray={`${(riskCounts.high / totalForChart) * 88} 88`}
+                        strokeDashoffset={`-${((riskCounts.low + riskCounts.moderate) / totalForChart) * 88}`} />
                       <circle cx="18" cy="18" r="14" fill="none" stroke="#dc2626" strokeWidth="5"
-                        strokeDasharray={`${(riskCounts.extreme / natoCountries.length) * 88} 88`}
-                        strokeDashoffset={`-${((riskCounts.low + riskCounts.moderate + riskCounts.high) / natoCountries.length) * 88}`} />
+                        strokeDasharray={`${(riskCounts.extreme / totalForChart) * 88} 88`}
+                        strokeDashoffset={`-${((riskCounts.low + riskCounts.moderate + riskCounts.high) / totalForChart) * 88}`} />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-sm font-black text-gray-900 leading-none">{natoCountries.length}</span>
+                      <span className="text-sm font-black text-gray-900 leading-none">{totalForChart}</span>
                       <span className="text-[8px] text-gray-400 leading-none">Total</span>
                     </div>
                   </div>
@@ -498,7 +498,7 @@ const CountriesPage = () => {
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-5 gap-2 sm:gap-3">
                 {filtered.map(country => {
-                  const risk = getRisk(country.code);
+                  const risk = (dbRiskMap[country.code] as keyof typeof RISK_CONFIG) || getRisk(country.code);
                   const cfg = RISK_CONFIG[risk];
                   const posts = getPostCount(country.code);
                   return (

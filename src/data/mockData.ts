@@ -143,6 +143,24 @@ export interface Country {
   continent: string;
 }
 
+// Risk levels for countries — single source of truth used by CountriesPage and AdminCountries sync
+export const RISK_MAP: Record<string, "low" | "moderate" | "high" | "extreme"> = {
+  US: "low", CA: "low", GB: "low", FR: "low", DE: "low",
+  IT: "low", ES: "low", PT: "low", NL: "low", BE: "low",
+  DK: "low", NO: "low", SE: "low", FI: "low", IS: "low",
+  LU: "low", SI: "low", AT: "low", CH: "low", IE: "low",
+  PL: "moderate", CZ: "moderate", SK: "moderate", HR: "moderate",
+  RO: "moderate", BG: "moderate", GR: "moderate", AL: "moderate",
+  ME: "moderate", MK: "moderate", RS: "moderate", BA: "moderate",
+  LT: "high", LV: "high", EE: "high", TR: "high",
+  UA: "high", MD: "moderate", GE: "moderate", AM: "moderate",
+  IL: "high", IQ: "extreme", SY: "extreme", AF: "extreme",
+  YE: "extreme", LY: "extreme", SS: "extreme", SO: "extreme",
+  CF: "extreme", ML: "high", BF: "high", NE: "high",
+  SD: "high", ET: "moderate", NG: "high", KP: "extreme",
+  IR: "high", PK: "high", MM: "high",
+};
+
 export const natoCountries: Country[] = [
   // Africa
   { code: "DZ", name: "Algeria", flag: "🇩🇿", continent: "Africa" },
