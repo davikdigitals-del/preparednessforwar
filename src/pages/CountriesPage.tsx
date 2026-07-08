@@ -30,14 +30,18 @@ const RISK_CONFIG = {
   extreme:  { label: "Extreme Risk",  color: "bg-red-600",    text: "text-red-600",    border: "border-red-200",    badge: "bg-red-100 text-red-700" },
 };
 
-const REGIONS: { label: string; icon: string; codes: string[] }[] = [
-  { label: "North America", icon: "🌎", codes: ["US", "CA"] },
-  { label: "Western Europe", icon: "🌍", codes: ["GB","FR","DE","IT","ES","PT","NL","BE","LU","IS"] },
-  { label: "Northern Europe", icon: "🌍", codes: ["NO","SE","FI","DK"] },
-  { label: "Eastern Europe", icon: "🌍", codes: ["PL","CZ","SK","RO","BG","HR","SI","AL","ME","MK"] },
-  { label: "Baltic States", icon: "🌍", codes: ["LT","LV","EE"] },
-  { label: "Southern Europe", icon: "🌍", codes: ["GR","TR"] },
-];
+// Get unique continents from country data
+const CONTINENTS = Array.from(new Set(natoCountries.map(c => c.continent))).sort();
+
+const CONTINENT_ICONS: Record<string, string> = {
+  "Africa": "🌍",
+  "Asia": "🌏",
+  "Europe": "🌍",
+  "North America": "🌎",
+  "South America": "🌎",
+  "Oceania": "🌏",
+  "Antarctica": "🇦🇶",
+};
 
 const getRisk = (code: string) => RISK_MAP[code] || "low";
 
@@ -45,8 +49,9 @@ const CountriesPage = () => {
   const { user, loading } = useAuth();
   const { publishedPosts } = useData();
   const [search, setSearch] = useState("");
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
   const [mapFullscreen, setMapFullscreen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (loading) return <div className="container py-8 text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
@@ -76,14 +81,14 @@ const CountriesPage = () => {
     .slice(0, 3);
 
   // Filtered countries
-  const regionCodes = selectedRegion
-    ? REGIONS.find(r => r.label === selectedRegion)?.codes || []
+  const continentCountries = selectedContinent
+    ? natoCountries.filter(c => c.continent === selectedContinent)
     : null;
 
   const filtered = natoCountries.filter(c => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase());
-    const matchRegion = regionCodes ? regionCodes.includes(c.code) : true;
-    return matchSearch && matchRegion;
+    const matchContinent = continentCountries ? continentCountries.includes(c) : true;
+    return matchSearch && matchContinent;
   });
 
   /* ── Fullscreen map ── */
@@ -105,20 +110,56 @@ const CountriesPage = () => {
     <div className="bg-gray-50 min-h-screen">
       {/* ── Top breadcrumb ── */}
       <div className="bg-white border-b border-gray-200 px-4 py-2">
-        <div className="container mx-auto flex items-center gap-2 text-sm text-gray-500">
-          <Link to="/" className="hover:text-blue-900 transition-colors">Home</Link>
-          <ChevronRight className="w-3.5 h-3.5" />
-          <span className="text-blue-900 font-semibold">Countries</span>
+        <div className="container mx-auto flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Link to="/" className="hover:text-blue-900 transition-colors">Home</Link>
+            <ChevronRight className="w-3.5 h-3.5" />
+            <span className="text-blue-900 font-semibold">Countries</span>
+          </div>
+          {/* Mobile sidebar toggle */}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="lg:hidden p-2 hover:bg-gray-100 rounded transition-colors"
+            aria-label="Toggle menu"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
         </div>
       </div>
 
       <div className="container mx-auto">
-        <div className="flex gap-0 min-h-[calc(100vh-120px)]">
+        <div className="flex gap-0 min-h-[calc(100vh-120px)] relative">
+
+          {/* Mobile sidebar backdrop */}
+          {sidebarOpen && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+              aria-hidden="true"
+            />
+          )}
 
           {/* ══════════════════════════════════════════
-              LEFT SIDEBAR
+              LEFT SIDEBAR - Mobile Responsive
           ══════════════════════════════════════════ */}
-          <aside className="hidden lg:flex flex-col w-64 shrink-0 bg-white border-r border-gray-200 py-6 px-4 gap-6">
+          <aside className={`
+            fixed lg:static inset-0 z-50 lg:z-auto
+            w-64 shrink-0 bg-white border-r border-gray-200 py-6 px-4 gap-6
+            transform transition-transform duration-300 lg:transform-none
+            ${sidebarOpen ? 'translate-x-0 flex flex-col' : '-translate-x-full lg:translate-x-0 hidden lg:flex lg:flex-col'}
+          `}>
+            {/* Mobile close button */}
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden absolute top-4 right-4 p-2 hover:bg-gray-100 rounded transition-colors"
+              aria-label="Close menu"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
 
             {/* Title */}
             <div>
@@ -157,29 +198,35 @@ const CountriesPage = () => {
               />
             </div>
 
-            {/* Browse by Region */}
+            {/* Browse by Continent */}
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
-                BROWSE BY REGION
+                BROWSE BY CONTINENT
               </p>
               <div className="space-y-0.5">
-                {REGIONS.map(region => (
-                  <button
-                    key={region.label}
-                    onClick={() => setSelectedRegion(selectedRegion === region.label ? null : region.label)}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors rounded ${
-                      selectedRegion === region.label
-                        ? "bg-blue-900 text-white"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span>{region.icon}</span>
-                      <span className="font-medium">{region.label}</span>
-                    </span>
-                    <ChevronRight className="w-3.5 h-3.5 opacity-50" />
-                  </button>
-                ))}
+                {CONTINENTS.map(continent => {
+                  const count = natoCountries.filter(c => c.continent === continent).length;
+                  return (
+                    <button
+                      key={continent}
+                      onClick={() => {
+                        setSelectedContinent(selectedContinent === continent ? null : continent);
+                        setSidebarOpen(false); // Close sidebar on mobile after selection
+                      }}
+                      className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors rounded ${
+                        selectedContinent === continent
+                          ? "bg-blue-900 text-white"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span>{CONTINENT_ICONS[continent] || "🌍"}</span>
+                        <span className="font-medium">{continent}</span>
+                      </span>
+                      <span className="text-xs opacity-70">({count})</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -201,10 +248,10 @@ const CountriesPage = () => {
           {/* ══════════════════════════════════════════
               MAIN CONTENT
           ══════════════════════════════════════════ */}
-          <div className="flex-1 flex flex-col min-w-0">
+          <div className="flex-1 flex flex-col min-w-0 w-full lg:w-auto">
 
             {/* ── Interactive Map ── */}
-            <div className="relative bg-blue-50 border-b border-gray-200" style={{ height: "420px" }}>
+            <div className="relative bg-blue-50 border-b border-gray-200 h-[300px] sm:h-[350px] md:h-[420px]">
               {/* Map toggle tabs */}
               <div className="absolute top-3 left-3 z-20 flex gap-1">
                 <button className="px-3 py-1 text-xs font-bold bg-white border border-gray-300 shadow-sm text-gray-900">
@@ -231,7 +278,7 @@ const CountriesPage = () => {
 
               {/* Map */}
               <div className="absolute inset-0">
-                <InteractiveWorldMap height="420px" />
+                <InteractiveWorldMap height="100%" />
               </div>
             </div>
 
@@ -239,7 +286,7 @@ const CountriesPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 border-t border-gray-200 bg-white divide-y md:divide-y-0 md:divide-x divide-gray-200">
 
               {/* Country Spotlight */}
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
                   COUNTRY SPOTLIGHT
                 </p>
@@ -263,7 +310,7 @@ const CountriesPage = () => {
               </div>
 
               {/* Recent Updates */}
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
                     RECENT UPDATES
@@ -312,7 +359,7 @@ const CountriesPage = () => {
               </div>
 
               {/* Risk Summary */}
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
                   RISK SUMMARY
                 </p>
@@ -354,7 +401,7 @@ const CountriesPage = () => {
               </div>
 
               {/* Need Help */}
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
                   NEED HELP?
                 </p>
@@ -384,7 +431,7 @@ const CountriesPage = () => {
             </div>
 
             {/* ── Country Grid ── */}
-            <div className="flex-1 bg-gray-50 p-6">
+            <div className="flex-1 bg-gray-50 p-4 sm:p-6">
               {/* Mobile search */}
               <div className="lg:hidden mb-4 relative">
                 <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
@@ -397,14 +444,33 @@ const CountriesPage = () => {
                 />
               </div>
 
+              {/* Mobile continent filter button */}
+              <div className="lg:hidden mb-4">
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="w-full flex items-center justify-between px-4 py-2 text-sm font-medium border border-gray-200 bg-white hover:bg-gray-50 transition-colors rounded"
+                >
+                  <span>
+                    {selectedContinent ? (
+                      <>
+                        {CONTINENT_ICONS[selectedContinent]} {selectedContinent}
+                      </>
+                    ) : (
+                      'All Continents'
+                    )}
+                  </span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-semibold text-gray-700">
-                  {selectedRegion ? selectedRegion : "All Countries"}
+                  {selectedContinent ? selectedContinent : "All Countries"}
                   <span className="text-gray-400 font-normal ml-2">({filtered.length})</span>
                 </p>
-                {selectedRegion && (
+                {selectedContinent && (
                   <button
-                    onClick={() => setSelectedRegion(null)}
+                    onClick={() => setSelectedContinent(null)}
                     className="text-xs text-blue-900 hover:underline"
                   >
                     Clear filter
@@ -412,7 +478,7 @@ const CountriesPage = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-5 gap-2 sm:gap-3">
                 {filtered.map(country => {
                   const risk = getRisk(country.code);
                   const cfg = RISK_CONFIG[risk];
@@ -421,21 +487,21 @@ const CountriesPage = () => {
                     <Link
                       key={country.code}
                       to={`/countries/${country.code.toLowerCase()}`}
-                      className={`group bg-white border ${cfg.border} hover:shadow-md transition-all p-3 flex flex-col gap-2`}
+                      className={`group bg-white border ${cfg.border} hover:shadow-md transition-all p-2 sm:p-3 flex flex-col gap-1.5 sm:gap-2`}
                     >
                       <div className="flex items-start justify-between">
-                        <span className="text-2xl leading-none">{country.flag}</span>
-                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 mt-1 ${cfg.color}`} title={cfg.label} />
+                        <span className="text-xl sm:text-2xl leading-none">{country.flag}</span>
+                        <div className={`w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full shrink-0 mt-1 ${cfg.color}`} title={cfg.label} />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-gray-900 group-hover:text-blue-900 transition-colors leading-tight line-clamp-2">
+                        <p className="text-xs sm:text-sm font-bold text-gray-900 group-hover:text-blue-900 transition-colors leading-tight line-clamp-2">
                           {country.name}
                         </p>
-                        <p className="text-[10px] text-gray-400 mt-0.5 font-mono">{country.code}</p>
+                        <p className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5 font-mono">{country.code}</p>
                       </div>
                       <div className="flex items-center justify-between mt-auto pt-1 border-t border-gray-100">
-                        <span className={`text-[10px] font-bold ${cfg.text}`}>{cfg.label}</span>
-                        <span className="text-[10px] text-gray-400">{posts} post{posts !== 1 ? "s" : ""}</span>
+                        <span className={`text-[9px] sm:text-[10px] font-bold ${cfg.text}`}>{cfg.label}</span>
+                        <span className="text-[9px] sm:text-[10px] text-gray-400">{posts} post{posts !== 1 ? "s" : ""}</span>
                       </div>
                     </Link>
                   );
