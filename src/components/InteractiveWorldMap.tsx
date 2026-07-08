@@ -28,6 +28,7 @@ export const InteractiveWorldMap = ({
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
   const [tooltip, setTooltip] = useState<{ name: string; x: number; y: number } | null>(null);
+  const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
     let cancelled = false;
@@ -77,7 +78,7 @@ export const InteractiveWorldMap = ({
           if (!name || name === "Ocean" || name === "World" || /^path\d+/i.test(name)) return;
           if (code && (code.toLowerCase() === "ocean" || code.toLowerCase() === "world")) return;
 
-          setTooltip(prev => ({ name, x: prev?.x || 0, y: prev?.y || 0 }));
+          setTooltip({ name, x: 0, y: 0 });
         };
 
         (window as any)[outCb] = () => setTooltip(null);
@@ -130,8 +131,7 @@ export const InteractiveWorldMap = ({
           }
           // Track mouse for tooltip positioning
           libContainer.addEventListener("mousemove", (e: MouseEvent) => {
-            const rect = (wrapperRef.current as HTMLDivElement).getBoundingClientRect();
-            setTooltip(prev => prev ? { ...prev, x: e.clientX - rect.left, y: e.clientY - rect.top } : null);
+            setMousePos({ x: e.clientX, y: e.clientY });
           });
         }
 
@@ -179,8 +179,8 @@ export const InteractiveWorldMap = ({
       {/* Country name tooltip */}
       {tooltip && status === "ready" && (
         <div
-          className="pointer-events-none absolute z-20 px-2 py-1 bg-blue-900 text-white text-xs font-bold rounded shadow-lg whitespace-nowrap"
-          style={{ left: tooltip.x + 10, top: tooltip.y + 10 }}
+          className="pointer-events-none fixed z-50 px-2 py-1 bg-blue-900 text-white text-xs font-bold rounded shadow-lg whitespace-nowrap"
+          style={{ left: mousePos.x + 10, top: mousePos.y + 10 }}
         >
           {tooltip.name}
         </div>
