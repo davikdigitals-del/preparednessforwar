@@ -26,13 +26,13 @@ export const InteractiveWorldMap = ({
 }: InteractiveWorldMapProps) => {
   const navigate = useNavigate();
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
   const [tooltip, setTooltip] = useState<{ name: string; x: number; y: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    let mouseMoveHandler: ((e: MouseEvent) => void) | null = null;
 
     const init = async () => {
       try {
@@ -46,49 +46,38 @@ export const InteractiveWorldMap = ({
 
         (window as any)[clickCb] = (data: any) => {
           if (!data) return;
-          // Get the 2-letter ISO code — prefer parent country id over sub-path id
           const code = (data.country?.id || (data.id?.length === 2 ? data.id : null) || "").toLowerCase();
           if (!code || code === "ocean" || code === "world") return;
           if (onCountryClick) onCountryClick(code);
           else navigate(`/countries/${code}`);
         };
 
-        (window as any)[overCb] = (data: any, event: any) => {
+        (window as any)[overCb] = (data: any) => {
           if (!data) return;
-          // The library passes a path/province object.
-          // The country is on data.country (parent group), and the 2-letter ISO id is data.country.id or data.id (if top-level)
-          // Country name is on data.country.name or data.name
           let name = "";
           let code = "";
 
           if (data.country) {
-            // Sub-path (province/state) — use parent country
             name = data.country.name || "";
             code = data.country.id || "";
           } else if (data.id && data.id.length === 2 && data.name) {
-            // Top-level country element
             name = data.name;
             code = data.id;
           } else if (data.id && data.id.length === 2) {
-            // Has 2-letter code but no name — look up from countryData
             name = data.id.toUpperCase();
             code = data.id;
           }
 
-          // Skip ocean, world, and raw path IDs like "path2812"
           if (!name || name === "Ocean" || name === "World" || /^path\d+/i.test(name)) return;
           if (code && (code.toLowerCase() === "ocean" || code.toLowerCase() === "world")) return;
 
-          // Get mouse position from the event if available
-          const x = event?.clientX || 0;
-          const y = event?.clientY || 0;
-          setTooltip({ name, x, y });
+          // Set name only — position is tracked by the overlay mousemove
+          setTooltip(prev => ({ name, x: prev?.x ?? 0, y: prev?.y ?? 0 }));
         };
 
         (window as any)[outCb] = () => setTooltip(null);
 
-        // Inject a style to keep the library container invisible while it lives on body
-        // This prevents the full-screen flash on page load/refresh
+        // Hide the library container while on body to prevent flash
         if (!document.getElementById("_map_hide_style")) {
           const style = document.createElement("style");
           style.id = "_map_hide_style";
@@ -96,11 +85,9 @@ export const InteractiveWorldMap = ({
           document.head.appendChild(style);
         }
 
-        // Remove stale library container so the library re-creates it fresh
         const staleContainer = document.getElementById("svg-world-map-container");
         if (staleContainer) staleContainer.remove();
 
-        // svgWorldMap is the IIFE-returned function, already on window after script loads
         const mapFn = (window as any).svgWorldMap;
         if (typeof mapFn !== "function") throw new Error("svgWorldMap library not available");
 
@@ -123,22 +110,14 @@ export const InteractiveWorldMap = ({
 
         if (cancelled) return;
 
-        // Move the library-created container into our wrapper
         const libContainer = document.getElementById("svg-world-map-container");
         if (libContainer && wrapperRef.current) {
           wrapperRef.current.appendChild(libContainer);
-          // Now visible inside wrapper — override the hide style
           libContainer.style.cssText = "position:absolute;inset:0;width:100%;height:100%;overflow:hidden;margin:0;padding:0;visibility:visible;";
           const svgObj = document.getElementById("svg-world-map") as HTMLObjectElement | null;
           if (svgObj) {
             svgObj.style.cssText = "width:100%;height:100%;display:block;border:none;";
           }
-          
-          // Track mouse globally for tooltip positioning
-          mouseMoveHandler = (e: MouseEvent) => {
-            setTooltip(prev => prev ? { ...prev, x: e.clientX, y: e.clientY } : null);
-          };
-          window.addEventListener("mousemove", mouseMoveHandler);
         }
 
         setStatus("ready");
@@ -151,9 +130,6 @@ export const InteractiveWorldMap = ({
 
     return () => {
       cancelled = true;
-      if (mouseMoveHandler) {
-        window.removeEventListener("mousemove", mouseMoveHandler);
-      }
       const libContainer = document.getElementById("svg-world-map-container");
       if (libContainer) {
         libContainer.style.display = "none";
@@ -161,6 +137,29 @@ export const InteractiveWorldMap = ({
       }
     };
   }, []);
+
+  // Transparent overlay sits on top of the <object> tag and captures
+  // native mousemove events from the parent document
+  const handleOverlayMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    setTooltip(prev => prev ? { ...prev, x: e.clientX, y: e.clientY } : null);
+  };
+
+  const handleOverlayMouseLeave = () => {
+    setTooltip(null);
+  };
+
+  // Forward clicks from the overlay through to the SVG object beneath it
+  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+    // Temporarily hide the overlay so the click hits whatever is below
+    overlay.style.display = "none";
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    overlay.style.display = "";
+    if (el && el !== overlay) {
+      (el as HTMLElement).click();
+    }
+  };
 
   return (
     <>
@@ -185,10 +184,24 @@ export const InteractiveWorldMap = ({
             </button>
           </div>
         )}
+
+        {/* Transparent overlay — captures mousemove from the parent document.
+            The SVG object below handles its own click/hover callbacks via the library.
+            We set cursor: default so it doesn't block visual feedback. */}
+        {status === "ready" && (
+          <div
+            ref={overlayRef}
+            onMouseMove={handleOverlayMouseMove}
+            onMouseLeave={handleOverlayMouseLeave}
+            onClick={handleOverlayClick}
+            className="absolute inset-0 z-10"
+            style={{ background: "transparent", cursor: "default" }}
+          />
+        )}
       </div>
 
-      {/* Country name tooltip - rendered at body level via portal */}
-      {tooltip && status === "ready" && createPortal(
+      {/* Tooltip rendered at body level so nothing clips it */}
+      {tooltip && tooltip.name && status === "ready" && createPortal(
         <div
           className="pointer-events-none fixed z-[9999] px-2 py-1 bg-blue-900 text-white text-xs font-bold rounded shadow-lg whitespace-nowrap"
           style={{
