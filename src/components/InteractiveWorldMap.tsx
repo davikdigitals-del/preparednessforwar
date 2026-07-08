@@ -118,9 +118,34 @@ export const InteractiveWorldMap = ({
           const svgObj = document.getElementById("svg-world-map") as HTMLObjectElement | null;
           if (svgObj) {
             svgObj.style.cssText = "width:100%;height:100%;display:block;border:none;";
+
+            // Attach mousemove inside the object's own document so it fires
+            // even though the SVG is in a separate browsing context
+            const attachInnerMouseMove = () => {
+              try {
+                const innerDoc = svgObj.contentDocument;
+                if (!innerDoc) return;
+                innerDoc.addEventListener("mousemove", (e: MouseEvent) => {
+                  // Convert inner-document coords to screen coords
+                  const rect = svgObj.getBoundingClientRect();
+                  const screenX = rect.left + e.clientX;
+                  const screenY = rect.top  + e.clientY;
+                  setTooltip(prev => prev ? { ...prev, x: screenX, y: screenY } : null);
+                });
+                innerDoc.addEventListener("mouseleave", () => setTooltip(null));
+              } catch (_) {
+                // Cross-origin fallback — do nothing, window listener covers it
+              }
+            };
+
+            if (svgObj.contentDocument) {
+              attachInnerMouseMove();
+            } else {
+              svgObj.addEventListener("load", attachInnerMouseMove);
+            }
           }
 
-          // Track mouse globally for tooltip positioning
+          // Also keep window listener as fallback
           mouseMoveHandler = (e: MouseEvent) => {
             setTooltip(prev => prev ? { ...prev, x: e.clientX, y: e.clientY } : null);
           };
@@ -178,9 +203,9 @@ export const InteractiveWorldMap = ({
         <div
           className="pointer-events-none fixed z-[9999] px-2 py-1 bg-blue-900 text-white text-xs font-bold rounded shadow-lg whitespace-nowrap"
           style={{
-            left: `${tooltip.x + 12}px`,
-            top: `${tooltip.y - 10}px`,
-            transform: "translateY(-100%)",
+            left: `${tooltip.x}px`,
+            top: `${tooltip.y - 14}px`,
+            transform: "translate(-50%, -100%)",
           }}
         >
           {tooltip.name}
