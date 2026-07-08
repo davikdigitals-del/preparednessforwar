@@ -40,7 +40,6 @@ const CONTINENT_ICONS: Record<string, string> = {
   "North America": "🌎",
   "South America": "🌎",
   "Oceania": "🌏",
-  "Antarctica": "🇦🇶",
 };
 
 const getRisk = (code: string) => RISK_MAP[code] || "low";

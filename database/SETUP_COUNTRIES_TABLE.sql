@@ -12,7 +12,7 @@ CREATE TABLE countries (
   code TEXT UNIQUE NOT NULL,
   name TEXT NOT NULL,
   flag TEXT NOT NULL,
-  continent TEXT NOT NULL CHECK (continent IN ('Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania', 'Antarctica')),
+  continent TEXT NOT NULL CHECK (continent IN ('Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania')),
   risk_level TEXT DEFAULT 'low' CHECK (risk_level IN ('low', 'moderate', 'high', 'extreme')),
   description TEXT,
   capital TEXT,

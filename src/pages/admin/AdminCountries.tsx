@@ -33,7 +33,7 @@ export default function AdminCountries() {
     security_notes: "",
   });
 
-  const continents = ["Africa", "Asia", "Europe", "North America", "South America", "Oceania", "Antarctica"];
+  const continents = ["Africa", "Asia", "Europe", "North America", "South America", "Oceania"];
   const riskLevels = ["low", "moderate", "high", "extreme"];
 
   useEffect(() => {
