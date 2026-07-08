@@ -41,12 +41,8 @@ export function useSecurity() {
     // ============================================
     // 3. PREVENT RIGHT-CLICK CONTEXT MENU
     // ============================================
-    const preventContextMenu = (e: MouseEvent) => {
-      if (import.meta.env.PROD) {
-        e.preventDefault();
-        return false;
-      }
-    };
+    // Removed — users should be able to right-click and copy content
+    const preventContextMenu = (_e: MouseEvent) => {}; // no-op
 
     document.addEventListener('contextmenu', preventContextMenu);
 
@@ -85,29 +81,17 @@ export function useSecurity() {
           return false;
         }
 
-        // Prevent Ctrl+S (Save Page)
-        if (e.ctrlKey && e.key === 's') {
-          e.preventDefault();
-          return false;
-        }
+        // Ctrl+S, Ctrl+C (copy) — allowed, do NOT block
       }
     };
 
     document.addEventListener('keydown', preventShortcuts);
 
     // ============================================
-    // 5. DETECT COPY-PASTE ATTEMPTS
+    // 5. COPY — ALLOWED FOR ALL CONTENT
     // ============================================
-    const preventCopy = (e: ClipboardEvent) => {
-      // Allow copy in development
-      if (import.meta.env.PROD) {
-        // Allow copy for specific elements (like code blocks, user content)
-        const target = e.target as HTMLElement;
-        if (!target.classList.contains('allow-copy')) {
-          e.preventDefault();
-        }
-      }
-    };
+    // Removed copy prevention — users should be able to copy text freely
+    const preventCopy = (_e: ClipboardEvent) => {}; // no-op
 
     document.addEventListener('copy', preventCopy);
 
