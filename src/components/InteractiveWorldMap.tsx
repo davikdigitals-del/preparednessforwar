@@ -168,7 +168,13 @@ export const InteractiveWorldMap = ({
   };
 
   return (
-    <div ref={wrapperRef} className="relative w-full overflow-hidden bg-blue-50" style={{ height }}>
+    <div
+      ref={wrapperRef}
+      onMouseMove={(e) => { if (activeNameRef.current) showTooltip(activeNameRef.current, e.clientX, e.clientY); }}
+      onMouseLeave={hideTooltip}
+      className="relative w-full overflow-hidden bg-blue-50"
+      style={{ height }}
+    >
 
       {/* Loading */}
       {status === "loading" && (
@@ -190,14 +196,15 @@ export const InteractiveWorldMap = ({
         </div>
       )}
 
-      {/* Transparent overlay above the SVG object — captures mouse events reliably */}
+      {/* Transparent overlay above the SVG object — captures mouse position
+          pointer-events: none so the SVG library still receives hover events,
+          but we track mouse via the wrapper onMouseMove below */}
       {status === "ready" && (
         <div
           onMouseMove={onOverlayMouseMove}
           onMouseLeave={onOverlayMouseLeave}
-          onClick={onOverlayClick}
           className="absolute inset-0"
-          style={{ zIndex: 20, background: "transparent", cursor: "crosshair" }}
+          style={{ zIndex: 20, background: "transparent", pointerEvents: "none" }}
         />
       )}
 
