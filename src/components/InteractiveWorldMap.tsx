@@ -44,7 +44,8 @@ export const InteractiveWorldMap = ({
 
         (window as any)[clickCb] = (data: any) => {
           if (!data) return;
-          const code = (data.id || data).toLowerCase();
+          // Get the 2-letter ISO code — prefer parent country id over sub-path id
+          const code = (data.country?.id || (data.id?.length === 2 ? data.id : null) || "").toLowerCase();
           if (!code || code === "ocean" || code === "world") return;
           if (onCountryClick) onCountryClick(code);
           else navigate(`/countries/${code}`);
@@ -52,10 +53,31 @@ export const InteractiveWorldMap = ({
 
         (window as any)[overCb] = (data: any) => {
           if (!data) return;
-          const name = data.name || (data.country && data.country.name) || data.id || "";
-          if (name && name !== "Ocean" && name !== "World") {
-            setTooltip({ name, x: 0, y: 0 });
+          // The library passes a path/province object.
+          // The country is on data.country (parent group), and the 2-letter ISO id is data.country.id or data.id (if top-level)
+          // Country name is on data.country.name or data.name
+          let name = "";
+          let code = "";
+
+          if (data.country) {
+            // Sub-path (province/state) — use parent country
+            name = data.country.name || "";
+            code = data.country.id || "";
+          } else if (data.id && data.id.length === 2 && data.name) {
+            // Top-level country element
+            name = data.name;
+            code = data.id;
+          } else if (data.id && data.id.length === 2) {
+            // Has 2-letter code but no name — look up from countryData
+            name = data.id.toUpperCase();
+            code = data.id;
           }
+
+          // Skip ocean, world, and raw path IDs like "path2812"
+          if (!name || name === "Ocean" || name === "World" || /^path\d+/i.test(name)) return;
+          if (code && (code.toLowerCase() === "ocean" || code.toLowerCase() === "world")) return;
+
+          setTooltip(prev => ({ name, x: prev?.x || 0, y: prev?.y || 0 }));
         };
 
         (window as any)[outCb] = () => setTooltip(null);
