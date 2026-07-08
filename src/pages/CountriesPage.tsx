@@ -96,7 +96,7 @@ const CountriesPage = () => {
         >
           ✕ Exit Map
         </button>
-        <InteractiveWorldMap />
+        <InteractiveWorldMap height="100vh" />
       </div>
     );
   }
@@ -231,7 +231,7 @@ const CountriesPage = () => {
 
               {/* Map */}
               <div className="absolute inset-0">
-                <InteractiveWorldMap />
+                <InteractiveWorldMap height="420px" />
               </div>
             </div>
 
