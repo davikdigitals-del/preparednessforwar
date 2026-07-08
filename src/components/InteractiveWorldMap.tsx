@@ -82,6 +82,15 @@ export const InteractiveWorldMap = ({
 
         (window as any)[outCb] = () => setTooltip(null);
 
+        // Inject a style to keep the library container invisible while it lives on body
+        // This prevents the full-screen flash on page load/refresh
+        if (!document.getElementById("_map_hide_style")) {
+          const style = document.createElement("style");
+          style.id = "_map_hide_style";
+          style.textContent = `body > #svg-world-map-container { visibility: hidden !important; position: fixed !important; top: -9999px !important; }`;
+          document.head.appendChild(style);
+        }
+
         // Remove stale library container so the library re-creates it fresh
         const staleContainer = document.getElementById("svg-world-map-container");
         if (staleContainer) staleContainer.remove();
@@ -113,7 +122,8 @@ export const InteractiveWorldMap = ({
         const libContainer = document.getElementById("svg-world-map-container");
         if (libContainer && wrapperRef.current) {
           wrapperRef.current.appendChild(libContainer);
-          libContainer.style.cssText = "position:absolute;inset:0;width:100%;height:100%;overflow:hidden;margin:0;padding:0;";
+          // Now visible inside wrapper — override the hide style
+          libContainer.style.cssText = "position:absolute;inset:0;width:100%;height:100%;overflow:hidden;margin:0;padding:0;visibility:visible;";
           const svgObj = document.getElementById("svg-world-map") as HTMLObjectElement | null;
           if (svgObj) {
             svgObj.style.cssText = "width:100%;height:100%;display:block;border:none;";
