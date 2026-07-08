@@ -31,6 +31,7 @@ export const InteractiveWorldMap = ({
 
   useEffect(() => {
     let cancelled = false;
+    let mouseMoveHandler: ((e: MouseEvent) => void) | null = null;
 
     const init = async () => {
       try {
@@ -131,10 +132,12 @@ export const InteractiveWorldMap = ({
           if (svgObj) {
             svgObj.style.cssText = "width:100%;height:100%;display:block;border:none;";
           }
-          // Track mouse for tooltip positioning
-          libContainer.addEventListener("mousemove", (e: MouseEvent) => {
+          
+          // Track mouse globally for tooltip positioning
+          mouseMoveHandler = (e: MouseEvent) => {
             setTooltip(prev => prev ? { ...prev, x: e.clientX, y: e.clientY } : null);
-          });
+          };
+          window.addEventListener("mousemove", mouseMoveHandler);
         }
 
         setStatus("ready");
@@ -147,6 +150,9 @@ export const InteractiveWorldMap = ({
 
     return () => {
       cancelled = true;
+      if (mouseMoveHandler) {
+        window.removeEventListener("mousemove", mouseMoveHandler);
+      }
       const libContainer = document.getElementById("svg-world-map-container");
       if (libContainer) {
         libContainer.style.display = "none";
