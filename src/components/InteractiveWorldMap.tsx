@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 
 interface InteractiveWorldMapProps {
   onCountryClick?: (countryId: string) => void;
@@ -162,37 +163,40 @@ export const InteractiveWorldMap = ({
   }, []);
 
   return (
-    <div ref={wrapperRef} className="relative w-full overflow-hidden bg-blue-50" style={{ height }}>
+    <>
+      <div ref={wrapperRef} className="relative w-full overflow-hidden bg-blue-50" style={{ height }}>
 
-      {/* Loading */}
-      {status === "loading" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-blue-50 z-10">
-          <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-900 rounded-full animate-spin mb-3" />
-          <p className="text-sm text-gray-500 font-medium">Loading world map…</p>
-        </div>
-      )}
+        {/* Loading */}
+        {status === "loading" && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-blue-50 z-10">
+            <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-900 rounded-full animate-spin mb-3" />
+            <p className="text-sm text-gray-500 font-medium">Loading world map…</p>
+          </div>
+        )}
 
-      {/* Error */}
-      {status === "error" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 z-10">
-          <p className="text-sm text-red-500 font-semibold mb-2">Map failed to load</p>
-          <p className="text-xs text-gray-400 mb-4">{errorMsg}</p>
-          <button onClick={() => window.location.reload()}
-            className="px-4 py-1.5 text-xs font-bold bg-blue-900 text-white hover:bg-blue-800 transition-colors">
-            Retry
-          </button>
-        </div>
-      )}
+        {/* Error */}
+        {status === "error" && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 z-10">
+            <p className="text-sm text-red-500 font-semibold mb-2">Map failed to load</p>
+            <p className="text-xs text-gray-400 mb-4">{errorMsg}</p>
+            <button onClick={() => window.location.reload()}
+              className="px-4 py-1.5 text-xs font-bold bg-blue-900 text-white hover:bg-blue-800 transition-colors">
+              Retry
+            </button>
+          </div>
+        )}
+      </div>
 
-      {/* Country name tooltip */}
-      {tooltip && status === "ready" && (
+      {/* Country name tooltip - rendered at body level via portal */}
+      {tooltip && status === "ready" && createPortal(
         <div
-          className="pointer-events-none fixed z-50 px-2 py-1 bg-blue-900 text-white text-xs font-bold rounded shadow-lg whitespace-nowrap"
-          style={{ left: tooltip.x + 10, top: tooltip.y + 10 }}
+          className="pointer-events-none fixed z-[9999] px-2 py-1 bg-blue-900 text-white text-xs font-bold rounded shadow-lg whitespace-nowrap"
+          style={{ left: `${tooltip.x + 10}px`, top: `${tooltip.y + 10}px` }}
         >
           {tooltip.name}
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 };
