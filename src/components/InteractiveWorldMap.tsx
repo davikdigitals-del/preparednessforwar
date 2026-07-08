@@ -96,23 +96,11 @@ export const InteractiveWorldMap = ({
           if (!name || name === "Ocean" || name === "World" || /^path\d+/i.test(name)) return;
           if (code && (code.toLowerCase() === "ocean" || code.toLowerCase() === "world")) return;
 
+          // Just store the name — position is set by the inner doc mousemove listener
           activeNameRef.current = name;
-
-          // Try to get position from inner SVG doc
-          const svgObj = document.getElementById("svg-world-map") as HTMLObjectElement | null;
-          if (svgObj) {
-            try {
-              const innerDoc = svgObj.contentDocument;
-              if (innerDoc) {
-                // Get the last known mouse position from the inner document
-                const rect = svgObj.getBoundingClientRect();
-                const wRect = wrapperRef.current?.getBoundingClientRect();
-                if (wRect) {
-                  // Use center of the SVG object as fallback position
-                  showTooltip(name, rect.left + rect.width / 2, rect.top + rect.height / 2);
-                }
-              }
-            } catch (_) {}
+          // Update tooltip text immediately; position stays at last known mouse location
+          if (tooltipRef.current && tooltipRef.current.style.display === "block") {
+            tooltipRef.current.textContent = name;
           }
         };
 
@@ -171,7 +159,6 @@ export const InteractiveWorldMap = ({
                   // Convert inner coords to screen coords
                   showTooltip(activeNameRef.current, rect.left + e.clientX, rect.top + e.clientY);
                 });
-
                 innerDoc.addEventListener("mouseleave", hideTooltip);
               } catch (_) {}
             };
