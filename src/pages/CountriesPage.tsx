@@ -30,7 +30,9 @@ const CONTINENT_ICONS: Record<string, string> = {
   "Oceania": "🌏",
 };
 
-const getRisk = (code: string) => RISK_MAP[code] || "low";
+const getRisk = (code: string) => (RISK_MAP as Record<string, string>)[code] || "low";
+
+const CountriesPage = () => {
   const { user, loading } = useAuth();
   const { publishedPosts } = useData();
   const [search, setSearch] = useState("");
