@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import {
   Globe, Search, Download, ChevronRight, AlertTriangle,
@@ -9,6 +9,7 @@ import { natoCountries, formatTimeAgo } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
 import { InteractiveWorldMap } from "@/components/InteractiveWorldMap";
+import { publicSupabase } from "@/integrations/supabase/publicClient";
 
 /* ── Risk level assignment (static demo data) ── */
 const RISK_MAP: Record<string, "low" | "moderate" | "high" | "extreme"> = {
@@ -51,6 +52,19 @@ const CountriesPage = () => {
   const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
   const [mapFullscreen, setMapFullscreen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dbSpotlight, setDbSpotlight] = useState<any>(null);
+
+  // Fetch spotlight country from Supabase
+  useEffect(() => {
+    publicSupabase
+      .from("countries")
+      .select("code, name, flag, risk_level, description")
+      .eq("is_spotlight", true)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setDbSpotlight(data);
+      });
+  }, []);
 
   if (loading) return <div className="container py-8 text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
@@ -70,9 +84,13 @@ const CountriesPage = () => {
     extreme:  natoCountries.filter(c => getRisk(c.code) === "extreme").length,
   };
 
-  // Country spotlight — pick first high/extreme risk country
-  const spotlight = natoCountries.find(c => getRisk(c.code) === "high") || natoCountries[0];
-  const spotlightRisk = getRisk(spotlight.code);
+  // Country spotlight — use DB value if set, otherwise fall back to first high/extreme risk country
+  const spotlightCode = dbSpotlight?.code || natoCountries.find(c => getRisk(c.code) === "high")?.code || natoCountries[0].code;
+  const spotlightCountry = natoCountries.find(c => c.code === spotlightCode) || natoCountries[0];
+  const spotlight = dbSpotlight
+    ? { ...spotlightCountry, ...dbSpotlight }
+    : spotlightCountry;
+  const spotlightRisk = (dbSpotlight?.risk_level as keyof typeof RISK_CONFIG) || getRisk(spotlight.code);
 
   // Recent posts as "updates"
   const recentUpdates = publishedPosts
@@ -299,7 +317,7 @@ const CountriesPage = () => {
                   {RISK_CONFIG[spotlightRisk].label}
                 </span>
                 <p className="text-xs text-gray-500 leading-relaxed mb-3">
-                  Active security concerns and preparedness guidance available for this region.
+                  {dbSpotlight?.description || "Active security concerns and preparedness guidance available for this region."}
                 </p>
                 <Link
                   to={`/countries/${spotlight.code.toLowerCase()}`}

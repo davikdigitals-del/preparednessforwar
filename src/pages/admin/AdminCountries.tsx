@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Search, Globe, MapPin } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Globe, MapPin, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { natoCountries, type Country } from "@/data/mockData";
 
@@ -170,6 +170,39 @@ export default function AdminCountries() {
     }
   };
 
+  const handleSetSpotlight = async (id: string, currentValue: boolean) => {
+    try {
+      // If already spotlight, just turn it off
+      if (currentValue) {
+        const { error } = await supabase
+          .from("countries")
+          .update({ is_spotlight: false })
+          .eq("id", id);
+        if (error) throw error;
+        toast({ title: "Spotlight cleared", description: "No country is highlighted in the spotlight." });
+      } else {
+        // Clear any existing spotlight first, then set the new one
+        const { error: clearError } = await supabase
+          .from("countries")
+          .update({ is_spotlight: false })
+          .eq("is_spotlight", true);
+        if (clearError) throw clearError;
+
+        const { error } = await supabase
+          .from("countries")
+          .update({ is_spotlight: true })
+          .eq("id", id);
+        if (error) throw error;
+
+        const country = countries.find(c => c.id === id);
+        toast({ title: "Spotlight set", description: `${country?.flag} ${country?.name} is now the Country Spotlight.` });
+      }
+      fetchCountries();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
   const resetForm = () => {
     setEditingCountry(null);
     setFormData({
@@ -304,6 +337,9 @@ export default function AdminCountries() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Capital
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Spotlight
+                </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                   Actions
                 </th>
@@ -312,13 +348,13 @@ export default function AdminCountries() {
             <tbody className="divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
                     Loading...
                   </td>
                 </tr>
               ) : filteredCountries.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
                     {searchTerm || filterContinent !== "all" || filterRisk !== "all"
                       ? "No countries match your filters"
                       : "No countries yet. Click 'Sync All Countries' or 'Add Country' to get started."}
@@ -326,7 +362,7 @@ export default function AdminCountries() {
                 </tr>
               ) : (
                 filteredCountries.map((country) => (
-                  <tr key={country.id} className="hover:bg-gray-50">
+                  <tr key={country.id} className={`hover:bg-gray-50 ${country.is_spotlight ? "bg-yellow-50" : ""}`}>
                     <td className="px-6 py-4 text-2xl">{country.flag}</td>
                     <td className="px-6 py-4">
                       <code className="text-sm bg-gray-100 px-2 py-1 rounded font-mono">
@@ -347,6 +383,20 @@ export default function AdminCountries() {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {country.capital || "-"}
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => handleSetSpotlight(country.id, country.is_spotlight)}
+                        title={country.is_spotlight ? "Remove spotlight" : "Set as spotlight"}
+                        className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold rounded transition-colors ${
+                          country.is_spotlight
+                            ? "bg-yellow-400 text-yellow-900 hover:bg-yellow-300"
+                            : "bg-gray-100 text-gray-500 hover:bg-yellow-100 hover:text-yellow-700"
+                        }`}
+                      >
+                        <Star className={`w-3 h-3 ${country.is_spotlight ? "fill-current" : ""}`} />
+                        {country.is_spotlight ? "Active" : "Set"}
+                      </button>
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
                       <Button

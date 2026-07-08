@@ -23,6 +23,7 @@ CREATE TABLE countries (
   emergency_numbers JSONB,
   travel_advisory TEXT,
   security_notes TEXT,
+  is_spotlight BOOLEAN DEFAULT FALSE,
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -113,3 +114,14 @@ DO $$
 BEGIN 
   RAISE NOTICE 'Countries table created successfully! Now you can use the "Sync All Countries" button in Admin Countries page.';
 END $$;
+
+-- ============================================
+-- MIGRATION: Add is_spotlight column
+-- Run this if the countries table already exists
+-- ============================================
+ALTER TABLE countries ADD COLUMN IF NOT EXISTS is_spotlight BOOLEAN DEFAULT FALSE;
+
+-- Ensure only one spotlight at a time (optional constraint via partial unique index)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_countries_single_spotlight
+  ON countries (is_spotlight)
+  WHERE is_spotlight = TRUE;
