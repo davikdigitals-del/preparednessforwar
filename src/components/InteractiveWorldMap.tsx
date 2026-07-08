@@ -1,20 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { CountryClickEvent } from "@/types/svg-world-map";
 
 interface InteractiveWorldMapProps {
   onCountryClick?: (countryId: string) => void;
-  height?: string; // e.g. "420px" or "100vh"
+  height?: string;
 }
 
 const SCRIPT_SRC = "/svg-world-map/svg-world-map.js";
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) {
-      resolve();
-      return;
-    }
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
     const s = document.createElement("script");
     s.src = src;
     s.onload = () => resolve();
@@ -31,38 +27,50 @@ export const InteractiveWorldMap = ({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
+  const [tooltip, setTooltip] = useState<{ name: string; x: number; y: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     const init = async () => {
       try {
-        // 1. Load the library script
         await loadScript(SCRIPT_SRC);
         if (cancelled) return;
 
-        // 2. Set up named global callbacks
         const ts = Date.now();
-        const clickCb = `svgMapClick_${ts}`;
-        const overCb  = `svgMapOver_${ts}`;
-        const outCb   = `svgMapOut_${ts}`;
+        const clickCb = `_mapClick_${ts}`;
+        const overCb  = `_mapOver_${ts}`;
+        const outCb   = `_mapOut_${ts}`;
 
-        (window as any)[clickCb] = (country: CountryClickEvent) => {
-          const code = country.id?.toLowerCase();
+        (window as any)[clickCb] = (data: any) => {
+          if (!data) return;
+          const code = (data.id || data).toLowerCase();
           if (!code || code === "ocean" || code === "world") return;
-          if (onCountryClick) {
-            onCountryClick(code);
-          } else {
-            navigate(`/countries/${code}`);
+          if (onCountryClick) onCountryClick(code);
+          else navigate(`/countries/${code}`);
+        };
+
+        (window as any)[overCb] = (data: any) => {
+          if (!data) return;
+          const name = data.name || (data.country && data.country.name) || data.id || "";
+          if (name && name !== "Ocean" && name !== "World") {
+            setTooltip({ name, x: 0, y: 0 });
           }
         };
-        (window as any)[overCb] = () => {};
-        (window as any)[outCb]  = () => {};
 
-        // 3. Initialise the map
-        const instance = await (window as any).svgWorldMap({
+        (window as any)[outCb] = () => setTooltip(null);
+
+        // Remove stale library container so the library re-creates it fresh
+        const staleContainer = document.getElementById("svg-world-map-container");
+        if (staleContainer) staleContainer.remove();
+
+        // svgWorldMap is the IIFE-returned function, already on window after script loads
+        const mapFn = (window as any).svgWorldMap;
+        if (typeof mapFn !== "function") throw new Error("svgWorldMap library not available");
+
+        await mapFn({
           libPath: "/svg-world-map/",
-          bigMap: false, // use world-states.svg (smaller, no provinces — loads faster)
+          bigMap: false,
           showOcean: true,
           showAntarctica: false,
           showLabels: false,
@@ -70,8 +78,8 @@ export const InteractiveWorldMap = ({
           showMicroStates: true,
           showInfoBox: false,
           oceanColor: "#dbeafe",
-          worldColor: "#f8fafc",
-          countryStroke: { out: "#cbd5e1", over: "#1e40af", click: "#1e3a8a" },
+          worldColor: "#e2e8f0",
+          countryStroke: { out: "#94a3b8", over: "#1e40af", click: "#1e3a8a" },
           mapClick: clickCb,
           mapOver:  overCb,
           mapOut:   outCb,
@@ -79,27 +87,25 @@ export const InteractiveWorldMap = ({
 
         if (cancelled) return;
 
-        // 4. The library prepends #svg-world-map-container to document.body.
-        //    Move it into our wrapper div instead.
+        // Move the library-created container into our wrapper
         const libContainer = document.getElementById("svg-world-map-container");
         if (libContainer && wrapperRef.current) {
-          // Re-parent it
           wrapperRef.current.appendChild(libContainer);
-          // Make it fill the wrapper
-          libContainer.style.cssText =
-            "position:absolute;inset:0;width:100%;height:100%;overflow:hidden;";
+          libContainer.style.cssText = "position:absolute;inset:0;width:100%;height:100%;overflow:hidden;margin:0;padding:0;";
           const svgObj = document.getElementById("svg-world-map") as HTMLObjectElement | null;
           if (svgObj) {
-            svgObj.style.cssText = "width:100%;height:100%;display:block;";
+            svgObj.style.cssText = "width:100%;height:100%;display:block;border:none;";
           }
+          // Track mouse for tooltip positioning
+          libContainer.addEventListener("mousemove", (e: MouseEvent) => {
+            const rect = (wrapperRef.current as HTMLDivElement).getBoundingClientRect();
+            setTooltip(prev => prev ? { ...prev, x: e.clientX - rect.left, y: e.clientY - rect.top } : null);
+          });
         }
 
         setStatus("ready");
       } catch (err: any) {
-        if (!cancelled) {
-          setErrorMsg(err?.message || "Failed to load map");
-          setStatus("error");
-        }
+        if (!cancelled) { setErrorMsg(err?.message || "Failed to load map"); setStatus("error"); }
       }
     };
 
@@ -107,23 +113,18 @@ export const InteractiveWorldMap = ({
 
     return () => {
       cancelled = true;
-      // Move the library container back to body on unmount so it doesn't break
-      // if the component is remounted (the library won't re-create it)
       const libContainer = document.getElementById("svg-world-map-container");
-      if (libContainer && libContainer.parentElement !== document.body) {
-        libContainer.style.cssText = "display:none;";
+      if (libContainer) {
+        libContainer.style.display = "none";
         document.body.appendChild(libContainer);
       }
     };
-  }, []); // run once
+  }, []);
 
   return (
-    <div
-      ref={wrapperRef}
-      className="relative w-full overflow-hidden bg-blue-50"
-      style={{ height }}
-    >
-      {/* Loading state */}
+    <div ref={wrapperRef} className="relative w-full overflow-hidden bg-blue-50" style={{ height }}>
+
+      {/* Loading */}
       {status === "loading" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-blue-50 z-10">
           <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-900 rounded-full animate-spin mb-3" />
@@ -131,17 +132,25 @@ export const InteractiveWorldMap = ({
         </div>
       )}
 
-      {/* Error state */}
+      {/* Error */}
       {status === "error" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 z-10">
           <p className="text-sm text-red-500 font-semibold mb-2">Map failed to load</p>
           <p className="text-xs text-gray-400 mb-4">{errorMsg}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-1.5 text-xs font-bold bg-blue-900 text-white hover:bg-blue-800 transition-colors"
-          >
+          <button onClick={() => window.location.reload()}
+            className="px-4 py-1.5 text-xs font-bold bg-blue-900 text-white hover:bg-blue-800 transition-colors">
             Retry
           </button>
+        </div>
+      )}
+
+      {/* Country name tooltip */}
+      {tooltip && status === "ready" && (
+        <div
+          className="pointer-events-none absolute z-20 px-2 py-1 bg-blue-900 text-white text-xs font-bold rounded shadow-lg whitespace-nowrap"
+          style={{ left: tooltip.x + 12, top: tooltip.y - 28, transform: "translateX(-50%)" }}
+        >
+          {tooltip.name}
         </div>
       )}
     </div>
