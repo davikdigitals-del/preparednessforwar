@@ -1,10 +1,13 @@
 -- ============================================
--- COUNTRIES TABLE
--- Stores country information with risk levels and descriptions
+-- COUNTRIES TABLE SETUP
+-- Run this in Supabase SQL Editor
 -- ============================================
 
+-- Drop existing table if it exists (for clean setup)
+DROP TABLE IF EXISTS countries CASCADE;
+
 -- Create countries table
-CREATE TABLE IF NOT EXISTS countries (
+CREATE TABLE countries (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   code TEXT UNIQUE NOT NULL,
   name TEXT NOT NULL,
@@ -25,17 +28,19 @@ CREATE TABLE IF NOT EXISTS countries (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Create index on continent for faster filtering
-CREATE INDEX IF NOT EXISTS idx_countries_continent ON countries(continent);
-
--- Create index on risk_level for faster filtering
-CREATE INDEX IF NOT EXISTS idx_countries_risk_level ON countries(risk_level);
-
--- Create index on code for faster lookups
-CREATE INDEX IF NOT EXISTS idx_countries_code ON countries(code);
+-- Create indexes
+CREATE INDEX idx_countries_continent ON countries(continent);
+CREATE INDEX idx_countries_risk_level ON countries(risk_level);
+CREATE INDEX idx_countries_code ON countries(code);
 
 -- Enable Row Level Security
 ALTER TABLE countries ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Countries are viewable by everyone" ON countries;
+DROP POLICY IF EXISTS "Admins can insert countries" ON countries;
+DROP POLICY IF EXISTS "Admins can update countries" ON countries;
+DROP POLICY IF EXISTS "Admins can delete countries" ON countries;
 
 -- Public read access (everyone can view countries)
 CREATE POLICY "Countries are viewable by everyone"
@@ -96,10 +101,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS countries_updated_at ON countries;
+
 CREATE TRIGGER countries_updated_at
   BEFORE UPDATE ON countries
   FOR EACH ROW
   EXECUTE FUNCTION update_countries_updated_at();
 
--- Seed initial countries data from mockData
--- This will be populated via API call from frontend
+-- Success message
+DO $$ 
+BEGIN 
+  RAISE NOTICE 'Countries table created successfully! Now you can use the "Sync All Countries" button in Admin Countries page.';
+END $$;

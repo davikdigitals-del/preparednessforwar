@@ -60,7 +60,8 @@ const CountriesPage = () => {
   const getPostCount = (code: string) =>
     publishedPosts.filter((p: any) => {
       const pc = p.countryCodes || [];
-      return pc.length === 0 || pc.includes(code);
+      // Only count posts specifically tagged with this country
+      return pc.includes(code);
     }).length;
 
   const riskCounts = {
@@ -409,7 +410,7 @@ const CountriesPage = () => {
                   {[
                     { icon: Shield, label: "Travel Safety Tips", desc: "Stay safe while travelling", href: "/survival-guides/evacuation-shelter" },
                     { icon: Phone, label: "Emergency Contacts", desc: "Important contacts by country", href: "/directives" },
-                    { icon: Flag, label: "Report an Incident", desc: "Help keep information updated", href: "/community-reports" },
+                    { icon: Flag, label: "Report an Incident", desc: "Submit a field report to help the community", href: "/dashboard/submit-report" },
                   ].map(item => (
                     <Link
                       key={item.label}

@@ -55,10 +55,11 @@ const CountryPostsPage = () => {
     );
   }
 
-  // Filter posts for this country
+  // Filter posts for this country - ONLY show posts specifically tagged with this country
   const countryPosts = publishedPosts.filter((post) => {
     const postCountries = post.countryCodes || [];
-    return postCountries.length === 0 || postCountries.includes(country.code);
+    // Only include posts that have this country in their country codes
+    return postCountries.includes(country.code);
   });
 
   return (

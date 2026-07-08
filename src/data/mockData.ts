@@ -352,6 +352,9 @@ export const natoCountries: Country[] = [
   { code: "TO", name: "Tonga", flag: "🇹🇴", continent: "Oceania" },
   { code: "TV", name: "Tuvalu", flag: "🇹🇻", continent: "Oceania" },
   { code: "VU", name: "Vanuatu", flag: "🇻🇺", continent: "Oceania" },
+
+  // Antarctica
+  { code: "AQ", name: "Antarctica", flag: "🇦🇶", continent: "Antarctica" },
 ];
 
 export function formatDate(dateStr: string): string {
