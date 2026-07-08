@@ -180,7 +180,7 @@ export const InteractiveWorldMap = ({
       {tooltip && status === "ready" && (
         <div
           className="pointer-events-none absolute z-20 px-2 py-1 bg-blue-900 text-white text-xs font-bold rounded shadow-lg whitespace-nowrap"
-          style={{ left: tooltip.x + 12, top: tooltip.y - 28, transform: "translateX(-50%)" }}
+          style={{ left: tooltip.x + 10, top: tooltip.y + 10 }}
         >
           {tooltip.name}
         </div>
