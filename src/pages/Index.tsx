@@ -279,13 +279,200 @@ const Index = () => {
       </div>
 
       {/* ══════════════════════════════════════════
-          EXISTING CONTENT BELOW
-      {/* ══════════════════════════════════════════
-          EXISTING CONTENT BELOW
+          LATEST NEWS
       ══════════════════════════════════════════ */}
-      <div className="container mx-auto px-4 py-6">
-        {/* MOBILE LAYOUT - Single column with sections interspersed */}
-        <div className="lg:hidden">
+      <div className="container mx-auto px-4 py-10">
+        <div className="flex gap-6">
+
+          {/* LEFT — Main news content */}
+          <div className="flex-1 min-w-0">
+
+            {/* Latest News heading */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <span className="text-xs font-black uppercase tracking-widest text-blue-600 mb-1 block">Live</span>
+                <h2 className="text-2xl font-black text-gray-900 uppercase">Latest News</h2>
+              </div>
+              <Link to="/latest" className="text-sm font-bold text-blue-900 border border-blue-900 px-4 py-1.5 hover:bg-blue-900 hover:text-white transition-colors">
+                View All
+              </Link>
+            </div>
+
+            {/* Hero Post */}
+            {heroPost && (
+              <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group block mb-6">
+                <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-6 items-start">
+                  <div className="flex flex-col pt-2">
+                    <span className="text-xs font-bold text-blue-600 uppercase mb-2">
+                      {navSections.find(s => s.slug === heroPost.section)?.title}
+                    </span>
+                    <h2 className="text-3xl xl:text-4xl font-black leading-tight mb-3 group-hover:text-blue-900 transition-colors">
+                      {heroPost.title}
+                    </h2>
+                    {(heroPost.standfirst || heroPost.body) && (
+                      <p className="text-gray-500 text-sm leading-relaxed line-clamp-4">
+                        {heroPost.body
+                          ? heroPost.body.replace(/<[^>]*>/g, '').substring(0, 300)
+                          : heroPost.standfirst}
+                      </p>
+                    )}
+                  </div>
+                  <div className="aspect-[4/3] overflow-hidden bg-gray-100">
+                    {heroPost.image ? (
+                      <img src={heroPost.image} alt={heroPost.title} className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700" />
+                    ) : (
+                      <div className="w-full h-full bg-blue-50" />
+                    )}
+                  </div>
+                </div>
+              </Link>
+            )}
+
+            <hr className="border-gray-200 mb-6" />
+
+            {/* 3-column top stories */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              {topStories.map(post => {
+                const section = navSections.find(s => s.slug === post.section);
+                return (
+                  <Link key={post.id} to={`/${post.section}/${post.category}/${post.id}`} className="group">
+                    <div className="aspect-video bg-gray-200 overflow-hidden mb-2 relative">
+                      {post.image ? <img src={post.image} alt={post.title} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-blue-50" />}
+                      {post.videoUrl && <div className="absolute bottom-1.5 right-1.5 bg-blue-900 rounded-full w-8 h-8 flex items-center justify-center"><Play className="w-3.5 h-3.5 text-white fill-white ml-0.5" /></div>}
+                    </div>
+                    <span className="text-[10px] font-bold text-blue-600 uppercase block mb-1">{section?.title}</span>
+                    <h3 className="text-sm font-bold leading-tight group-hover:text-blue-900 transition-colors line-clamp-2">{post.title}</h3>
+                  </Link>
+                );
+              })}
+            </div>
+
+            <hr className="border-gray-200 mb-6" />
+
+            {/* 2-column grid stories */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+              {gridStories.map(post => {
+                const section = navSections.find(s => s.slug === post.section);
+                return (
+                  <Link key={post.id} to={`/${post.section}/${post.category}/${post.id}`} className="group flex gap-3">
+                    <div className="w-28 h-20 bg-gray-200 shrink-0 overflow-hidden">
+                      {post.image ? <img src={post.image} alt={post.title} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-blue-50" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase block mb-0.5">{section?.title}</span>
+                      <h3 className="text-xs font-bold leading-tight group-hover:text-blue-900 transition-colors line-clamp-3">{post.title}</h3>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Section blocks */}
+            {sections.map(section => {
+              const sectionPosts = sortedPosts.filter(p => p.section === section.slug);
+              if (sectionPosts.length === 0) return null;
+              const pinnedPosts = sectionPosts.filter(p => p.isPinned).slice(0, 4);
+              const regularPosts = sectionPosts.filter(p => !p.isPinned);
+              const heroes = [...pinnedPosts];
+              if (heroes.length < 4) heroes.push(...regularPosts.slice(0, 4 - heroes.length));
+              const gridPosts = pinnedPosts.length >= 4 ? regularPosts : regularPosts.slice(4 - pinnedPosts.length);
+              return (
+                <div key={section.slug} className="mb-10">
+                  <h2 className="text-xl font-black mb-4 pb-2 border-b-2 border-blue-900 flex items-center justify-between">
+                    <span>{section.title}</span>
+                    <Link to={`/${section.slug}`} className="text-xs font-bold text-blue-900 hover:underline normal-case">View all →</Link>
+                  </h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                    {heroes.map(post => (
+                      <Link key={post.id} to={`/${post.section}/${post.category}/${post.id}`} className="group">
+                        <div className="aspect-video bg-gray-200 overflow-hidden mb-1.5 relative">
+                          {post.image ? <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full bg-blue-50" />}
+                          {post.isPinned && <div className="absolute top-1.5 left-1.5 bg-blue-900 text-white text-[10px] font-bold px-1.5 py-0.5">FEATURED</div>}
+                        </div>
+                        <h3 className="text-xs font-bold leading-tight group-hover:text-blue-900 transition-colors line-clamp-2">{post.title}</h3>
+                      </Link>
+                    ))}
+                  </div>
+                  {gridPosts.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {gridPosts.slice(0, 8).map(post => (
+                        <Link key={post.id} to={`/${post.section}/${post.category}/${post.id}`} className="group">
+                          <div className="aspect-video bg-gray-200 overflow-hidden mb-1.5">
+                            {post.image ? <img src={post.image} alt={post.title} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-blue-50" />}
+                          </div>
+                          <h3 className="text-xs font-bold leading-tight group-hover:text-blue-900 transition-colors line-clamp-2">{post.title}</h3>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Videos & Podcasts */}
+            <div className="mb-8">
+              <h2 className="text-xl font-black mb-4 pb-2 border-b-2 border-blue-900 flex items-center justify-between">
+                <span>Videos & Podcasts</span>
+                <Link to="/media" className="text-xs font-bold text-blue-900 hover:underline normal-case">View all →</Link>
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {mediaItems.slice(0, 8).map(media => (
+                  <div key={media.id} className="bg-white border border-gray-200 hover:shadow-md transition-shadow overflow-hidden">
+                    <button onClick={() => setActiveMedia(media)} className="group block w-full text-left">
+                      <div className="aspect-video bg-gray-900 overflow-hidden relative">
+                        {media.thumbnail ? <img src={media.thumbnail} alt={media.title} className="w-full h-full object-cover" /> : <div className={`w-full h-full ${media.type === 'video' ? 'bg-blue-900' : 'bg-purple-900'} flex items-center justify-center`}><Video className="w-10 h-10 text-white/30" /></div>}
+                        {media.isPremium && <div className="absolute top-2 left-2"><span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-900 text-white text-[10px] font-bold"><Crown className="w-2.5 h-2.5" />PREMIUM</span></div>}
+                        <div className="absolute bottom-2 right-2"><div className={`rounded-full w-9 h-9 flex items-center justify-center ${media.isPremium ? 'bg-blue-900' : 'bg-blue-600'}`}>{media.isPremium ? <Lock className="w-4 h-4 text-white" /> : <Play className="w-4 h-4 text-white fill-white ml-0.5" />}</div></div>
+                      </div>
+                      <div className="p-3">
+                        <h3 className="font-bold text-xs leading-tight text-gray-900 line-clamp-2">{media.title}</h3>
+                      </div>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
+          {/* RIGHT — Just In sidebar (desktop only) */}
+          <aside className="hidden lg:block w-72 shrink-0">
+            <div className="sticky top-4">
+              <div className="border border-gray-200">
+                <div className="bg-blue-900 px-4 py-3">
+                  <h2 className="font-black text-sm text-white uppercase tracking-wide">Just In</h2>
+                </div>
+                <div className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto">
+                  {justInPosts.map(post => {
+                    const section = navSections.find(s => s.slug === post.section);
+                    return (
+                      <Link key={post.id} to={`/${post.section}/${post.category}/${post.id}`} className="block p-3 hover:bg-blue-50 transition-colors group">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] text-gray-400 shrink-0">{new Date(post.publishedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className="text-[10px] font-bold text-blue-600 uppercase">{section?.title}</span>
+                        </div>
+                        <h3 className="text-xs font-semibold leading-snug group-hover:text-blue-900 transition-colors">{post.title}</h3>
+                      </Link>
+                    );
+                  })}
+                </div>
+                <div className="p-3 border-t border-gray-200 text-center">
+                  <Link to="/latest" className="text-xs text-blue-900 font-bold hover:underline">See more →</Link>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+        </div>
+      </div>
+
+      {/* Video Player Modal */}
+      {activeMedia && <MediaModal item={activeMedia} onClose={() => setActiveMedia(null)} />}
+    </div>
+  );
+};
+
+export default Index;
           {/* Hero Section */}
           {heroPost && (
             <div className="mb-6">
