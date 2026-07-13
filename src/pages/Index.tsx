@@ -104,38 +104,59 @@ const Index = () => {
     <div className="bg-white min-h-screen">
 
       {/* ══════════════════════════════════════════
+          BREAKING NEWS TICKER
+      ══════════════════════════════════════════ */}
+      {sortedPosts.length > 0 && (
+        <div className="bg-blue-900 text-white py-2 overflow-hidden">
+          <div className="container mx-auto px-4 flex items-center gap-4">
+            <span className="text-xs font-black uppercase tracking-widest bg-white text-blue-900 px-2 py-0.5 shrink-0">
+              Breaking
+            </span>
+            <div className="overflow-hidden flex-1">
+              <div className="flex gap-8 animate-[marquee_30s_linear_infinite] whitespace-nowrap">
+                {sortedPosts.slice(0, 6).map(p => (
+                  <Link key={p.id} to={`/${p.section}/${p.category}/${p.id}`} className="text-xs font-semibold hover:text-blue-200 transition-colors shrink-0">
+                    {p.title}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════
           HERO BANNER
       ══════════════════════════════════════════ */}
-      <div className="relative w-full overflow-hidden" style={{ minHeight: "480px" }}>
-        {/* Background image with overlay */}
+      <div className="relative w-full overflow-hidden" style={{ minHeight: "520px" }}>
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1580130775562-0ef92da028de?auto=format&fit=crop&w=1600&q=80')" }}
+          style={{ backgroundImage: "url('/images/hero-banner.jpg')" }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-900/90 via-gray-900/70 to-gray-900/40" />
+        {/* Blue brand overlay instead of gray */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-950/95 via-blue-900/80 to-blue-800/40" />
 
-        {/* Content */}
-        <div className="relative container mx-auto px-4 py-24 flex flex-col justify-center" style={{ minHeight: "480px" }}>
+        <div className="relative container mx-auto px-4 py-24 flex flex-col justify-center" style={{ minHeight: "520px" }}>
           <div className="max-w-2xl">
-            <span className="inline-block text-xs font-black uppercase tracking-widest text-amber-400 mb-4 border border-amber-400/50 px-3 py-1">
+            <span className="inline-block text-xs font-black uppercase tracking-widest text-white mb-4 border border-white/40 px-3 py-1">
               Preparedness For War
             </span>
             <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-4 uppercase">
               Prepare.<br />Inform.<br />Survive.
             </h1>
-            <p className="text-gray-300 text-lg mb-8 max-w-lg leading-relaxed">
+            <p className="text-blue-100 text-lg mb-8 max-w-lg leading-relaxed">
               Your trusted resource for war preparedness, safety information, and survival guidance worldwide.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
                 to="/survival-guides"
-                className="px-6 py-3 bg-white text-gray-900 font-bold text-sm hover:bg-gray-100 transition-colors"
+                className="px-6 py-3 bg-white text-blue-900 font-bold text-sm hover:bg-blue-50 transition-colors"
               >
                 Explore Guides
               </Link>
               <Link
                 to="/emergency-news"
-                className="px-6 py-3 bg-amber-500 text-white font-bold text-sm hover:bg-amber-600 transition-colors"
+                className="px-6 py-3 bg-blue-500 text-white font-bold text-sm hover:bg-blue-400 transition-colors border border-blue-400"
               >
                 Emergency News
               </Link>
@@ -145,40 +166,74 @@ const Index = () => {
       </div>
 
       {/* ══════════════════════════════════════════
+          STATS BAR
+      ══════════════════════════════════════════ */}
+      <div className="bg-blue-900 text-white">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-blue-700">
+            {[
+              { number: "195", label: "Countries Tracked" },
+              { number: "24/7", label: "Live Updates" },
+              { number: "6", label: "Continents Covered" },
+              { number: "100%", label: "Free to Access" },
+            ].map(stat => (
+              <div key={stat.label} className="py-5 px-6 text-center">
+                <div className="text-2xl font-black text-white">{stat.number}</div>
+                <div className="text-xs text-blue-300 font-semibold uppercase tracking-wide mt-0.5">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════
           MISSION SECTION
       ══════════════════════════════════════════ */}
-      <div className="bg-gray-50 border-y border-gray-200">
+      <div className="bg-blue-50 border-y border-blue-100">
         <div className="container mx-auto px-4 py-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Text */}
             <div>
-              <span className="text-xs font-black uppercase tracking-widest text-amber-500 mb-3 block">
+              <span className="text-xs font-black uppercase tracking-widest text-blue-600 mb-3 block">
                 Our Mission
               </span>
               <h2 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight mb-4">
                 Knowledge Today.<br />Safety Tomorrow.
               </h2>
-              <p className="text-gray-600 leading-relaxed mb-6">
-                We provide accurate, timely, and life-saving information to help individuals and communities prepare for conflicts and emergencies worldwide. From country risk levels to survival guides, we cover everything you need to stay safe.
+              <p className="text-gray-600 leading-relaxed mb-4">
+                We provide accurate, timely, and life-saving information to help individuals and communities prepare for conflicts and emergencies worldwide.
               </p>
-              <Link
-                to="/survival-guides"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white font-bold text-sm hover:bg-gray-700 transition-colors"
-              >
-                Learn More
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
+              <p className="text-gray-600 leading-relaxed mb-6">
+                From country risk levels and survival guides to official NATO directives and health advisories — everything you need to stay informed and stay safe.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  to="/survival-guides"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-900 text-white font-bold text-sm hover:bg-blue-800 transition-colors"
+                >
+                  Learn More
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+                <Link
+                  to="/countries"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-blue-900 text-blue-900 font-bold text-sm hover:bg-blue-900 hover:text-white transition-colors"
+                >
+                  View World Map
+                </Link>
+              </div>
             </div>
-            {/* Right: Image */}
-            <div className="relative overflow-hidden rounded-sm shadow-lg" style={{ height: "320px" }}>
+            <div className="relative overflow-hidden shadow-lg" style={{ height: "340px" }}>
               <img
                 src="https://images.unsplash.com/photo-1521295121783-8a321d551ad2?auto=format&fit=crop&w=900&q=80"
                 alt="World preparedness"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gray-900/20" />
+              <div className="absolute inset-0 bg-blue-900/20" />
+              {/* Overlay badge */}
+              <div className="absolute bottom-4 left-4 bg-blue-900 text-white px-4 py-2">
+                <p className="text-xs font-black uppercase tracking-wide">195 Countries Monitored</p>
+              </div>
             </div>
           </div>
         </div>
@@ -189,39 +244,42 @@ const Index = () => {
       ══════════════════════════════════════════ */}
       <div className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-14">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <span className="text-xs font-black uppercase tracking-widest text-amber-500 mb-1 block">Browse</span>
-              <h2 className="text-2xl font-black text-gray-900 uppercase">Featured Categories</h2>
-            </div>
+          <div className="mb-8">
+            <span className="text-xs font-black uppercase tracking-widest text-blue-600 mb-1 block">Browse</span>
+            <h2 className="text-2xl font-black text-gray-900 uppercase">Featured Categories</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             {[
-              { title: "Emergency News", desc: "Live updates and critical alerts", href: "/emergency-news", img: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=400&q=80", color: "from-red-900/80" },
-              { title: "Survival Guides", desc: "Step-by-step preparedness guides", href: "/survival-guides", img: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=400&q=80", color: "from-green-900/80" },
-              { title: "Health & Wellness", desc: "Medical and vaccination info", href: "/health", img: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=400&q=80", color: "from-blue-900/80" },
-              { title: "Official Directives", desc: "Government and NATO guidance", href: "/directives", img: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=400&q=80", color: "from-gray-900/80" },
-              { title: "Resources", desc: "Checklists, templates & downloads", href: "/resources", img: "https://images.unsplash.com/photo-1568667256549-094345857637?auto=format&fit=crop&w=400&q=80", color: "from-amber-900/80" },
-              { title: "Media Hub", desc: "Videos, podcasts & documentaries", href: "/media", img: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?auto=format&fit=crop&w=400&q=80", color: "from-purple-900/80" },
+              { title: "Emergency News", desc: "Live updates and critical alerts", href: "/emergency-news", img: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=400&q=80" },
+              { title: "Survival Guides", desc: "Step-by-step preparedness guides", href: "/survival-guides", img: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=400&q=80" },
+              { title: "Health & Wellness", desc: "Medical and vaccination info", href: "/health", img: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=400&q=80" },
+              { title: "Official Directives", desc: "Government and NATO guidance", href: "/directives", img: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=400&q=80" },
+              { title: "Resources", desc: "Checklists, templates & downloads", href: "/resources", img: "https://images.unsplash.com/photo-1568667256549-094345857637?auto=format&fit=crop&w=400&q=80" },
+              { title: "Media Hub", desc: "Videos, podcasts & documentaries", href: "/media", img: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?auto=format&fit=crop&w=400&q=80" },
             ].map(cat => (
               <Link
                 key={cat.title}
                 to={cat.href}
-                className="group relative overflow-hidden rounded-sm shadow hover:shadow-md transition-shadow"
+                className="group relative overflow-hidden shadow hover:shadow-lg transition-shadow"
                 style={{ height: "180px" }}
               >
                 <img src={cat.img} alt={cat.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className={`absolute inset-0 bg-gradient-to-t ${cat.color} to-transparent`} />
+                {/* Blue brand overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-blue-900/90 via-blue-900/30 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-3">
                   <p className="text-white font-black text-xs leading-tight mb-0.5">{cat.title}</p>
-                  <p className="text-white/70 text-[10px] leading-tight hidden sm:block">{cat.desc}</p>
+                  <p className="text-blue-200 text-[10px] leading-tight hidden sm:block">{cat.desc}</p>
                 </div>
+                {/* Blue top accent line */}
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
               </Link>
             ))}
           </div>
         </div>
       </div>
 
+      {/* ══════════════════════════════════════════
+          EXISTING CONTENT BELOW
       {/* ══════════════════════════════════════════
           EXISTING CONTENT BELOW
       ══════════════════════════════════════════ */}
