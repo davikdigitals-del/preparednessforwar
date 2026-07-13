@@ -473,7 +473,6 @@ const Index = () => {
 };
 
 export default Index;
-          {/* Hero Section */}
           {heroPost && (
             <div className="mb-6">
               <Link to={`/${heroPost.section}/${heroPost.category}/${heroPost.id}`} className="group block">
