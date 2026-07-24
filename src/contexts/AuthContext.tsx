@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     overrides?: { name?: string; country?: string; isAdmin?: boolean }
   ) => {
     const displayName = overrides?.name || supaUser.user_metadata?.name || supaUser.email?.split("@")[0] || "Member";
-    const country = overrides?.country || supaUser.user_metadata?.country || "GB";
+    const country = overrides?.country || supaUser.user_metadata?.country || null;
     const isAdmin = overrides?.isAdmin ?? false;
 
     await supabase.from("profiles").upsert(
@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: supaUser.email || "",
       name: profile?.name || supaUser.email?.split("@")[0] || "",
       role: isAdmin ? "admin" : "member",
-      country: profile?.country || "GB",
+      country: profile?.country || null,
       avatar: profile?.avatar_url || undefined,
       joinedAt: profile?.created_at || supaUser.created_at,
     };
@@ -201,7 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email.split("@")[0],
                   is_admin: false,
                   role: "member",
-                  country: "GB",
+                  country: session.user.user_metadata?.country || null,
                 },
                 { onConflict: "id" }
               );

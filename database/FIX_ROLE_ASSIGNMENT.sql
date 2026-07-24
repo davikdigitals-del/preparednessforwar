@@ -37,7 +37,7 @@ BEGIN
     ),
     v_is_admin,
     v_role,
-    COALESCE(NEW.raw_user_meta_data->>'country', 'GB')
+    COALESCE(NEW.raw_user_meta_data->>'country', NULL)
   )
   ON CONFLICT (id) DO UPDATE
     SET is_admin = EXCLUDED.is_admin,
