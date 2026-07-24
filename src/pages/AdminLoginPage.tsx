@@ -104,8 +104,28 @@ export default function AdminLoginPage() {
         return;
       }
 
-      console.log("Account created successfully!");
-      console.log("Database trigger will automatically set admin role");
+      // Explicitly set admin role — do not rely on any DB trigger
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .upsert({
+          id: signUpData.user.id,
+          email: regEmail,
+          name: regName,
+          is_admin: true,
+          role: "admin",
+          country: "US",
+        }, { onConflict: "id" });
+
+      if (profileError) {
+        console.warn("Profile upsert error (non-fatal):", profileError.message);
+      }
+
+      // Insert admin role into user_roles
+      await supabase
+        .from("user_roles")
+        .upsert({ user_id: signUpData.user.id, role: "admin" } as any, { onConflict: "user_id,role" });
+
+      console.log("Admin profile set successfully");
       
       // Wait for the database trigger to complete
       await new Promise(resolve => setTimeout(resolve, 2000));

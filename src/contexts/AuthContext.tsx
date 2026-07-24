@@ -193,13 +193,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        // When a user signs in via OAuth, cache their provider so we can detect mismatches later
+        // When a user signs in via OAuth, cache their provider and ensure member role
         if (event === "SIGNED_IN" && session.user.email) {
           const identities: any[] = session.user.identities || [];
           if (identities.length > 0 && identities[0].provider !== "email") {
             const oauthProvider = identities[0].provider as "google" | "apple" | "discord";
             localStorage.setItem(providerKey(session.user.email), oauthProvider);
             localStorage.setItem("lastSignInMethod", oauthProvider);
+
+            // For brand-new OAuth signups, ensure they are created as member (not admin)
+            // Check if this is a new user (created_at within last 30 seconds)
+            const createdAt = new Date(session.user.created_at).getTime();
+            const isNewUser = Date.now() - createdAt < 30000;
+            if (isNewUser) {
+              await supabase.from("profiles").upsert(
+                {
+                  id: session.user.id,
+                  email: session.user.email,
+                  name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email.split("@")[0],
+                  is_admin: false,
+                  role: "member",
+                  country: "GB",
+                },
+                { onConflict: "id" }
+              );
+              await supabase
+                .from("user_roles")
+                .upsert({ user_id: session.user.id, role: "member" } as any, { onConflict: "user_id,role" });
+            }
           }
         }
 
