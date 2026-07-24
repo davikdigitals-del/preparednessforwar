@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import type { LoginResult } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,8 @@ export default function SignInPage() {
   const [recaptchaToken, setRecaptchaToken] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [lastSignInMethod, setLastSignInMethod] = useState<string | null>(null);
+  // Tracks which OAuth provider should be highlighted after a mismatch
+  const [suggestedProvider, setSuggestedProvider] = useState<string | null>(null);
 
   // Forgot password state
   const [view, setView] = useState<"signin" | "forgot" | "sent">("signin");
@@ -47,13 +50,30 @@ export default function SignInPage() {
     }
 
     setLoading(true);
-    const ok = await login(email, password);
+    const result: LoginResult = await login(email, password);
 
-    if (ok) {
+    if (result.success) {
       await new Promise(resolve => setTimeout(resolve, 100));
       navigate("/dashboard");
     } else {
-      setError("Invalid credentials. Please check your email and password.");
+      // Handle different error types
+      if (result.error === "no_account") {
+        setError("No account found with this email. Please sign up first.");
+        setSuggestedProvider(null);
+      } else if (result.error === "wrong_provider") {
+        // User signed up with OAuth but is trying to use email/password
+        const providerName = 
+          result.provider === "google" ? "Google" :
+          result.provider === "apple" ? "Apple" :
+          result.provider === "discord" ? "Discord" :
+          "a social login provider";
+        
+        setError(`This account was created with ${providerName}. Please use the ${providerName} button below to sign in.`);
+        setSuggestedProvider(result.provider || null);
+      } else {
+        setError(result.error || "Invalid credentials. Please check your email and password.");
+        setSuggestedProvider(null);
+      }
     }
 
     setLoading(false);
@@ -238,9 +258,11 @@ export default function SignInPage() {
                 variant="outline"
                 onClick={signInWithGoogle}
                 className={`w-full flex items-center justify-center transition-all ${
-                  lastSignInMethod === 'google' 
-                    ? 'ring-2 ring-primary ring-offset-2 bg-blue-50 hover:bg-blue-100' 
-                    : 'hover:bg-gray-50'
+                  suggestedProvider === 'google'
+                    ? 'ring-2 ring-blue-500 ring-offset-2 bg-blue-50 hover:bg-blue-100 animate-pulse'
+                    : lastSignInMethod === 'google' 
+                      ? 'ring-2 ring-primary ring-offset-2 bg-blue-50 hover:bg-blue-100' 
+                      : 'hover:bg-gray-50'
                 }`}
                 title="Sign in with Google"
               >
@@ -257,9 +279,11 @@ export default function SignInPage() {
                 variant="outline"
                 onClick={signInWithApple}
                 className={`w-full flex items-center justify-center transition-all ${
-                  lastSignInMethod === 'apple' 
-                    ? 'ring-2 ring-primary ring-offset-2 bg-gray-50 hover:bg-gray-100' 
-                    : 'hover:bg-gray-50'
+                  suggestedProvider === 'apple'
+                    ? 'ring-2 ring-gray-800 ring-offset-2 bg-gray-100 hover:bg-gray-200 animate-pulse'
+                    : lastSignInMethod === 'apple' 
+                      ? 'ring-2 ring-primary ring-offset-2 bg-gray-50 hover:bg-gray-100' 
+                      : 'hover:bg-gray-50'
                 }`}
                 title="Sign in with Apple"
               >
@@ -273,9 +297,11 @@ export default function SignInPage() {
                 variant="outline"
                 onClick={signInWithDiscord}
                 className={`w-full flex items-center justify-center transition-all ${
-                  lastSignInMethod === 'discord' 
-                    ? 'ring-2 ring-primary ring-offset-2 bg-indigo-50 hover:bg-indigo-100' 
-                    : 'hover:bg-indigo-50'
+                  suggestedProvider === 'discord'
+                    ? 'ring-2 ring-indigo-500 ring-offset-2 bg-indigo-100 hover:bg-indigo-200 animate-pulse'
+                    : lastSignInMethod === 'discord' 
+                      ? 'ring-2 ring-primary ring-offset-2 bg-indigo-50 hover:bg-indigo-100' 
+                      : 'hover:bg-indigo-50'
                 }`}
                 title="Sign in with Discord"
               >

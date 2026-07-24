@@ -23,55 +23,71 @@ export default function ResetPasswordPage() {
   const [refreshToken, setRefreshToken] = useState("");
 
   useEffect(() => {
+    // Read hash/query params IMMEDIATELY before Supabase's detectSessionInUrl clears them.
+    // We capture them synchronously at component mount time.
     const searchParams = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const rawHash = window.location.hash;
+    const hashParams = new URLSearchParams(rawHash.replace(/^#/, ""));
 
-    // Check for errors
+    // Check for error in URL (e.g. expired link from Supabase)
     const errorCode = searchParams.get("error_code") || hashParams.get("error_code");
+    const errorDesc = searchParams.get("error_description") || hashParams.get("error_description");
     if (errorCode) {
-      setLinkError("This reset link has expired or already been used. Please request a new one.");
+      setLinkError(
+        errorDesc?.replace(/\+/g, " ") ||
+        "This reset link has expired or already been used. Please request a new one."
+      );
       return;
     }
 
-    // Implicit flow — #access_token=xxx&type=recovery
+    // ── Implicit flow: #access_token=xxx&type=recovery ──────────────────────
     const at = hashParams.get("access_token");
     const rt = hashParams.get("refresh_token") || "";
     const type = hashParams.get("type");
 
     if (at && type === "recovery") {
-      // Store tokens in state only — do NOT call setSession (would log user in visibly)
       setAccessToken(at);
       setRefreshToken(rt);
       setSessionReady(true);
-      // Clean the URL so token isn't visible
+      // Clean the URL — remove the hash so tokens aren't visible
       window.history.replaceState(null, "", window.location.pathname);
       return;
     }
 
-    // PKCE flow — ?code=xxx (fallback, less common with implicit flowType)
+    // ── PKCE flow: ?code=xxx ─────────────────────────────────────────────────
     const code = searchParams.get("code");
     if (code) {
+      // Clean the URL first so the code can't be replayed
+      window.history.replaceState(null, "", window.location.pathname);
       supabase.auth.exchangeCodeForSession(code).then(({ data, error }) => {
         if (error || !data.session) {
           setLinkError("This reset link has expired or already been used. Please request a new one.");
         } else {
-          // Sign out immediately to keep header in logged-out state
-          // but store tokens for the password update call
           setAccessToken(data.session.access_token);
           setRefreshToken(data.session.refresh_token);
+          // Sign out immediately — user must re-login after resetting
           supabase.auth.signOut();
           setSessionReady(true);
-          window.history.replaceState(null, "", window.location.pathname);
         }
       });
       return;
     }
 
-    // No token found — show expired after short wait
-    const timer = setTimeout(() => {
-      setLinkError("This reset link has expired or already been used. Please request a new one.");
-    }, 3000);
-    return () => clearTimeout(timer);
+    // ── Supabase may have already consumed the hash via detectSessionInUrl ───
+    // In that case getSession() will have the recovery session available.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        // Supabase already parsed the recovery token — grab it from the live session
+        setAccessToken(session.access_token);
+        setRefreshToken(session.refresh_token ?? "");
+        setSessionReady(true);
+        // Sign out so the app doesn't think they're logged in
+        supabase.auth.signOut();
+      } else {
+        // Nothing found — link is invalid or expired
+        setLinkError("This reset link has expired or already been used. Please request a new one.");
+      }
+    });
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -201,7 +201,7 @@ app.use(express.static(distDir, {
 }));
 
 // ÔöÇÔöÇ SPA fallback ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-app.get('*', (req, res) => {
+app.get('*', async (req, res) => {
   const path = req.path;
 
   // 404 for missing assets
@@ -212,11 +212,29 @@ app.get('*', (req, res) => {
   }
 
   const indexPath = join(distDir, 'index.html');
+
+  // If dist/index.html is missing, poll briefly (handles Render cold-start race condition)
   if (!existsSync(indexPath)) {
-    return res.status(503).send('App is starting up, please refresh in a moment.');
+    const maxWaitMs = 15000;
+    const intervalMs = 500;
+    let waited = 0;
+    await new Promise(resolve => {
+      const timer = setInterval(() => {
+        waited += intervalMs;
+        if (existsSync(indexPath) || waited >= maxWaitMs) {
+          clearInterval(timer);
+          resolve(undefined);
+        }
+      }, intervalMs);
+    });
   }
 
-  // Serve index.html ÔÇö no cache, correct content type
+  if (!existsSync(indexPath)) {
+    // Still missing after wait — build likely failed
+    return res.status(503).send('App failed to start. Please check build logs and redeploy.');
+  }
+
+  // Serve index.html — no cache, correct content type
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.setHeader('Pragma', 'no-cache');

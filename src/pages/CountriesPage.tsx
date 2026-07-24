@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import {
-  Globe, Search, Download, ChevronRight, AlertTriangle,
-  Shield, Activity, HelpCircle, Phone, Flag, FileText,
+  Globe, Search, Download, ChevronRight,
+  Shield, Phone, Flag,
   ArrowRight, Circle,
 } from "lucide-react";
-import { natoCountries, formatTimeAgo, RISK_MAP } from "@/data/mockData";
+import { natoCountries, RISK_MAP } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
 import { InteractiveWorldMap } from "@/components/InteractiveWorldMap";
@@ -40,33 +39,36 @@ const CountriesPage = () => {
   const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
   const [mapFullscreen, setMapFullscreen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [dbSpotlight, setDbSpotlight] = useState<any>(null);
+  const [allDbCountries, setAllDbCountries] = useState<any[]>([]);
   const [dbRiskMap, setDbRiskMap] = useState<Record<string, string>>({});
+  const [currentSpotlightIndex, setCurrentSpotlightIndex] = useState(0);
 
-  // Fetch spotlight country and risk levels from Supabase
+  // Fetch all countries from DB (for auto-rotation spotlight + risk map)
   useEffect(() => {
-    // Fetch spotlight
     publicSupabase
       .from("countries")
       .select("code, name, flag, risk_level, description")
-      .eq("is_spotlight", true)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setDbSpotlight(data);
-      });
-
-    // Fetch all risk levels from DB to override the static RISK_MAP
-    publicSupabase
-      .from("countries")
-      .select("code, risk_level")
-      .then(({ data }) => {
-        if (data && data.length > 0) {
+      .order("name")
+      .then(({ data: countries }) => {
+        if (countries && countries.length > 0) {
+          setAllDbCountries(countries);
           const map: Record<string, string> = {};
-          data.forEach((c: any) => { if (c.risk_level) map[c.code] = c.risk_level; });
+          countries.forEach((c: any) => { if (c.risk_level) map[c.code] = c.risk_level; });
           setDbRiskMap(map);
         }
       });
   }, []);
+
+  // Auto-rotate spotlight every 20 minutes (separate effect so it always reads latest length)
+  useEffect(() => {
+    if (allDbCountries.length < 2) return;
+    const interval = setInterval(() => {
+      setCurrentSpotlightIndex(prev =>
+        prev + 1 >= allDbCountries.length ? 0 : prev + 1
+      );
+    }, 20 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [allDbCountries.length]);
 
   if (loading) return <div className="container py-8 text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
@@ -87,19 +89,14 @@ const CountriesPage = () => {
   };
   const totalForChart = Object.values(riskCounts).reduce((a, b) => a + b, 0) || 1;
 
-  // Country spotlight — use DB value if set, otherwise fall back to first high/extreme risk country
+  // Country spotlight — auto-rotate from DB countries every 20 minutes
+  const dbSpotlight = allDbCountries.length > 0 ? allDbCountries[currentSpotlightIndex] : null;
   const spotlightCode = dbSpotlight?.code || natoCountries.find(c => getRisk(c.code) === "high")?.code || natoCountries[0].code;
   const spotlightCountry = natoCountries.find(c => c.code === spotlightCode) || natoCountries[0];
   const spotlight = dbSpotlight
     ? { ...spotlightCountry, ...dbSpotlight }
     : spotlightCountry;
   const spotlightRisk = (dbSpotlight?.risk_level as keyof typeof RISK_CONFIG) || getRisk(spotlight.code);
-
-  // Recent posts as "updates"
-  const recentUpdates = publishedPosts
-    .slice()
-    .sort((a: any, b: any) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-    .slice(0, 3);
 
   // Filtered countries
   const continentCountries = selectedContinent
@@ -304,13 +301,20 @@ const CountriesPage = () => {
             </div>
 
             {/* ── Bottom panels ── */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 border-t border-gray-200 bg-white divide-y md:divide-y-0 md:divide-x divide-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-3 border-t border-gray-200 bg-white divide-y md:divide-y-0 md:divide-x divide-gray-200">
 
               {/* Country Spotlight */}
               <div className="p-4 sm:p-5">
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
-                  COUNTRY SPOTLIGHT
-                </p>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    COUNTRY SPOTLIGHT
+                  </p>
+                  {allDbCountries.length > 0 && (
+                    <span className="text-[9px] text-gray-400 font-medium">
+                      rotates every 20 min
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-2xl">{spotlight.flag}</span>
                   <span className="font-bold text-gray-900 text-base">{spotlight.name}</span>
@@ -322,61 +326,27 @@ const CountriesPage = () => {
                 <p className="text-xs text-gray-500 leading-relaxed mb-3">
                   {dbSpotlight?.description || "Active security concerns and preparedness guidance available for this region."}
                 </p>
-                <Link
-                  to={`/countries/${spotlight.code.toLowerCase()}`}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-blue-900 hover:bg-blue-800 px-3 py-1.5 transition-colors"
-                >
-                  View Full Report <ArrowRight className="w-3 h-3" />
-                </Link>
-              </div>
-
-              {/* Recent Updates */}
-              <div className="p-4 sm:p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                    RECENT UPDATES
-                  </p>
-                  <Link to="/latest" className="text-[10px] font-bold text-blue-900 hover:underline uppercase tracking-wide">
-                    View All
+                <div className="flex items-center justify-between">
+                  <Link
+                    to={`/countries/${spotlight.code.toLowerCase()}`}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-blue-900 hover:bg-blue-800 px-3 py-1.5 transition-colors"
+                  >
+                    View Full Report <ArrowRight className="w-3 h-3" />
                   </Link>
+                  {allDbCountries.length > 1 && (
+                    <div className="flex gap-1">
+                      {allDbCountries.slice(0, 5).map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setCurrentSpotlightIndex(i)}
+                          className={`w-1.5 h-1.5 rounded-full transition-colors ${i === currentSpotlightIndex ? "bg-blue-900" : "bg-gray-300 hover:bg-gray-400"}`}
+                          aria-label={`Show country ${i + 1}`}
+                        />
+                      ))}
+                      {allDbCountries.length > 5 && <span className="text-[9px] text-gray-400">+{allDbCountries.length - 5}</span>}
+                    </div>
+                  )}
                 </div>
-                {recentUpdates.length > 0 ? (
-                  <div className="space-y-3">
-                    {recentUpdates.map((post: any) => (
-                      <Link
-                        key={post.id}
-                        to={`/${post.section}/${post.category}/${post.id}`}
-                        className="flex gap-2.5 group"
-                      >
-                        {post.image && (
-                          <div className="w-10 h-10 shrink-0 overflow-hidden bg-gray-100">
-                            <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold text-gray-900 group-hover:text-blue-900 transition-colors line-clamp-2 leading-snug">
-                            {post.title}
-                          </p>
-                          <p className="text-[10px] text-gray-400 mt-0.5">
-                            {formatTimeAgo(post.publishedAt)}
-                          </p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-2.5">
-                    {["Regional update available", "Security briefing published", "Travel advisory updated"].map((t, i) => (
-                      <div key={i} className="flex gap-2 items-start">
-                        <div className="w-10 h-8 bg-gray-100 shrink-0" />
-                        <div>
-                          <p className="text-xs font-semibold text-gray-700 line-clamp-2">{t}</p>
-                          <p className="text-[10px] text-gray-400">Coming soon</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
 
               {/* Risk Summary */}

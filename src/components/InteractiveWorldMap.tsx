@@ -30,13 +30,13 @@ export const InteractiveWorldMap = ({
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Show/hide tooltip by direct DOM manipulation (no state = no lag)
-  const showTooltip = (name: string, clientX: number, clientY: number) => {
+  // Position tooltip directly at the mouse cursor
+  const showTooltipAt = (name: string, clientX: number, clientY: number) => {
     if (!tooltipRef.current || !wrapperRef.current) return;
     const rect = wrapperRef.current.getBoundingClientRect();
     tooltipRef.current.textContent = name;
-    tooltipRef.current.style.left = `${clientX - rect.left}px`;
-    tooltipRef.current.style.top = `${clientY - rect.top - 12}px`;
+    tooltipRef.current.style.left = `${clientX - rect.left + 14}px`;
+    tooltipRef.current.style.top  = `${clientY - rect.top  - 10}px`;
     tooltipRef.current.style.display = "block";
   };
 
@@ -47,6 +47,15 @@ export const InteractiveWorldMap = ({
 
   useEffect(() => {
     let cancelled = false;
+
+    // Global mousemove — fires even when pointer is over the <object>/SVG iframe.
+    // We use this to keep the tooltip glued to the real cursor position.
+    const onWindowMouseMove = (e: MouseEvent) => {
+      if (activeNameRef.current) {
+        showTooltipAt(activeNameRef.current, e.clientX, e.clientY);
+      }
+    };
+    window.addEventListener("mousemove", onWindowMouseMove);
 
     const init = async () => {
       try {
@@ -82,7 +91,7 @@ export const InteractiveWorldMap = ({
           }
           if (!name || name === "Ocean" || name === "World" || /^path\d+/i.test(name)) return;
           if (code && (code.toLowerCase() === "ocean" || code.toLowerCase() === "world")) return;
-          // Store name — overlay mousemove will position it
+          // Set active name — the window mousemove handler will position and show it
           activeNameRef.current = name;
         };
 
@@ -140,6 +149,7 @@ export const InteractiveWorldMap = ({
 
     return () => {
       cancelled = true;
+      window.removeEventListener("mousemove", onWindowMouseMove);
       const libContainer = document.getElementById("svg-world-map-container");
       if (libContainer) {
         libContainer.style.display = "none";
@@ -148,34 +158,12 @@ export const InteractiveWorldMap = ({
     };
   }, []);
 
-  // Overlay handlers — this div sits above the SVG object and captures
-  // real mousemove events from the parent document
-  const onOverlayMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (activeNameRef.current) {
-      showTooltip(activeNameRef.current, e.clientX, e.clientY);
-    }
-  };
-
-  const onOverlayMouseLeave = () => hideTooltip();
-
-  // Forward clicks through the overlay to the SVG object beneath
-  const onOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const overlay = e.currentTarget as HTMLDivElement;
-    overlay.style.display = "none";
-    const el = document.elementFromPoint(e.clientX, e.clientY);
-    overlay.style.display = "";
-    if (el && "click" in el) (el as HTMLElement).click();
-  };
-
   return (
     <div
       ref={wrapperRef}
-      onMouseMove={(e) => { if (activeNameRef.current) showTooltip(activeNameRef.current, e.clientX, e.clientY); }}
-      onMouseLeave={hideTooltip}
       className="relative w-full overflow-hidden bg-blue-50"
       style={{ height }}
     >
-
       {/* Loading */}
       {status === "loading" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-blue-50 z-10">
@@ -196,34 +184,21 @@ export const InteractiveWorldMap = ({
         </div>
       )}
 
-      {/* Transparent overlay above the SVG object — captures mouse position
-          pointer-events: none so the SVG library still receives hover events,
-          but we track mouse via the wrapper onMouseMove below */}
-      {status === "ready" && (
-        <div
-          onMouseMove={onOverlayMouseMove}
-          onMouseLeave={onOverlayMouseLeave}
-          className="absolute inset-0"
-          style={{ zIndex: 20, background: "transparent", pointerEvents: "none" }}
-        />
-      )}
-
-      {/* Tooltip — direct DOM manipulation, no re-renders */}
+      {/* Tooltip — positioned directly at cursor via window mousemove */}
       <div
         ref={tooltipRef}
         style={{
           display: "none",
           position: "absolute",
-          transform: "translate(-50%, -100%)",
           pointerEvents: "none",
           zIndex: 30,
           background: "#1e3a8a",
           color: "white",
           fontSize: "12px",
           fontWeight: "700",
-          padding: "3px 8px",
+          padding: "4px 10px",
           borderRadius: "4px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
           whiteSpace: "nowrap",
         }}
       />

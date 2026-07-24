@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Eye, EyeOff } from "lucide-react";
 import { FaGoogle, FaApple, FaDiscord } from "react-icons/fa";
 
-console.log('Icons imported:', { FaGoogle, FaApple, FaDiscord });
+const providerKey = (email: string) => `signup_provider_${email.toLowerCase()}`;
 
 export default function SignUpPage() {
   const { signup, signInWithGoogle, signInWithApple, signInWithDiscord } = useAuth();
@@ -24,6 +24,7 @@ export default function SignUpPage() {
   const [recaptchaToken, setRecaptchaToken] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [lastSignInMethod, setLastSignInMethod] = useState<string | null>(null);
+  const [signupDone, setSignupDone] = useState(false);
 
   const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
   const recaptchaEnabled = !!recaptchaSiteKey;
@@ -46,8 +47,24 @@ export default function SignUpPage() {
     setLoading(true);
     const ok = await signup({ email, password, name, country });
     setLoading(false);
-    if (ok) navigate("/dashboard");
-    else setError("Failed to create account.");
+    
+    if (ok) {
+      // Email signup requires confirmation - show success message instead of redirecting
+      setSignupDone(true);
+    } else {
+      // Check if this email was already registered with a social provider
+      const cachedProvider = localStorage.getItem(providerKey(email));
+      if (cachedProvider && cachedProvider !== "email") {
+        const providerName =
+          cachedProvider === "google" ? "Google" :
+          cachedProvider === "apple" ? "Apple" :
+          cachedProvider === "discord" ? "Discord" :
+          "a social login";
+        setError(`This email is already registered with ${providerName}. Please use the ${providerName} button below to sign in.`);
+      } else {
+        setError("Failed to create account. This email may already be registered. Try signing in instead.");
+      }
+    }
   };
 
   return (
@@ -61,7 +78,24 @@ export default function SignUpPage() {
           <p className="text-sm text-muted-foreground mt-1">Join the Preparedness Hub community</p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {signupDone ? (
+            <div className="text-center py-4 space-y-4">
+              <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+                <svg className="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="font-semibold text-lg">Check your email</h3>
+              <p className="text-sm text-muted-foreground">
+                We sent a confirmation link to <strong>{email}</strong>. Click the link in the email to activate your account.
+              </p>
+              <p className="text-xs text-muted-foreground">Didn't receive it? Check your spam folder.</p>
+              <Link to="/login" className="block text-sm text-primary hover:underline font-semibold mt-2">
+                Back to Sign In
+              </Link>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
             {error && <p className="text-sm text-destructive bg-destructive/10 p-2 rounded">{error}</p>}
             <div>
               <Label>Full Name</Label>
@@ -199,6 +233,7 @@ export default function SignUpPage() {
               <Link to="/login" className="text-alert hover:underline font-semibold">Sign in</Link>
             </p>
           </form>
+          )}
         </CardContent>
       </Card>
     </div>

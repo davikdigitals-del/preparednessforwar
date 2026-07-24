@@ -21,11 +21,22 @@ export interface AppNotification {
   type: "post" | "alert" | "system";
 }
 
+// Structured result from login() so callers can show specific error messages
+export interface LoginResult {
+  success: boolean;
+  // "wrong_provider" = account exists but was created with a different sign-in method
+  // "no_account"     = no account found with this email at all
+  // any other string = a human-readable error message
+  error?: "wrong_provider" | "no_account" | string;
+  // Which OAuth provider they signed up with (only set when error === "wrong_provider")
+  provider?: "google" | "apple" | "discord" | "unknown";
+}
+
 interface AuthContextType {
   user: User | null;
   isAdmin: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<LoginResult>;
   adminLogin: (email: string, password: string) => Promise<boolean>;
   signup: (data: { email: string; password: string; name: string; country: string }) => Promise<boolean>;
   signInWithGoogle: () => Promise<void>;
@@ -39,6 +50,9 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
+
+// localStorage key for caching which provider an email signed up with
+const providerKey = (email: string) => `signup_provider_${email.toLowerCase()}`;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -72,41 +86,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const buildUser = async (supaUser: SupabaseUser): Promise<User> => {
-    // Simple read-only approach - just get data from database
     let profile: any = null;
     let isAdmin = false;
 
     try {
-      // Single attempt to get profile
       const { data } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", supaUser.id)
         .maybeSingle();
-      
+
       profile = data;
 
-      // Check admin status from profile
       if (profile?.is_admin === true || profile?.role === "admin") {
         isAdmin = true;
         console.log("✅ Admin status confirmed:", profile.is_admin, profile.role);
-        
-        // Cache admin status in localStorage to survive refresh issues
-        localStorage.setItem(`admin_status_${supaUser.id}`, 'true');
+        localStorage.setItem(`admin_status_${supaUser.id}`, "true");
       } else {
-        // Check localStorage cache as fallback
         const cachedAdmin = localStorage.getItem(`admin_status_${supaUser.id}`);
-        if (cachedAdmin === 'true') {
+        if (cachedAdmin === "true") {
           console.log("⚠️ Using cached admin status (database read failed)");
           isAdmin = true;
         }
       }
     } catch (err) {
       console.warn("Could not fetch profile:", err);
-      
-      // Fallback to cached admin status
       const cachedAdmin = localStorage.getItem(`admin_status_${supaUser.id}`);
-      if (cachedAdmin === 'true') {
+      if (cachedAdmin === "true") {
         console.log("⚠️ Using cached admin status (exception occurred)");
         isAdmin = true;
       }
@@ -158,14 +164,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const handleAuthChange = async (event: string, session: any) => {
       if (debounceTimer) clearTimeout(debounceTimer);
 
-      // Ignore all auth events on the reset-password page —
-      // that page manages its own session temporarily and signs out immediately after.
       if (window.location.pathname.includes("/reset-password")) {
         return;
       }
 
-      // Immediately clear user on sign out
-      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESH_FAILED' || event === 'USER_DELETED') {
+      if (event === "SIGNED_OUT" || event === "TOKEN_REFRESH_FAILED" || event === "USER_DELETED") {
         lastProcessedUserId = null;
         if (mounted) {
           setUser(null);
@@ -175,8 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Skip duplicate SIGNED_IN events for the same user
-      if (event === 'SIGNED_IN' && session?.user?.id && session.user.id === lastProcessedUserId) {
+      if (event === "SIGNED_IN" && session?.user?.id && session.user.id === lastProcessedUserId) {
         return;
       }
 
@@ -191,6 +193,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
+        // When a user signs in via OAuth, cache their provider so we can detect mismatches later
+        if (event === "SIGNED_IN" && session.user.email) {
+          const identities: any[] = session.user.identities || [];
+          if (identities.length > 0 && identities[0].provider !== "email") {
+            const oauthProvider = identities[0].provider as "google" | "apple" | "discord";
+            localStorage.setItem(providerKey(session.user.email), oauthProvider);
+            localStorage.setItem("lastSignInMethod", oauthProvider);
+          }
+        }
+
         lastProcessedUserId = session.user.id;
         const built = await buildUser(session.user);
         if (mounted) {
@@ -198,17 +210,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await fetchNotifications(session.user.id);
           setLoading(false);
         }
-      }, 300); // increased debounce
+      }, 300);
     };
 
     const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthChange);
 
-    // Initial session check
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!mounted) return;
 
       console.log("Initial session check:", session?.user?.email);
-      
+
+      // Skip on reset-password — let ResetPasswordPage extract tokens from the URL hash itself
+      if (window.location.pathname.includes("/reset-password")) {
+        setLoading(false);
+        return;
+      }
+
       if (!session?.user) {
         setLoading(false);
         return;
@@ -224,9 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       mounted = false;
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
+      if (debounceTimer) clearTimeout(debounceTimer);
       authListener.subscription.unsubscribe();
     };
   }, []);
@@ -261,7 +276,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setNotifications((prev) => {
           const existingIndex = prev.findIndex((n) => n.id === normalized.id);
           if (existingIndex === -1) return [normalized, ...prev];
-
           const next = [...prev];
           next[existingIndex] = normalized;
           return next;
@@ -274,45 +288,88 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [user]);
 
-  const login = async (email: string, password: string) => {
+  // ── Auth methods ──────────────────────────────────────────────────────────
+
+  const login = async (email: string, password: string): Promise<LoginResult> => {
     try {
-      // Save last sign-in method
-      localStorage.setItem('lastSignInMethod', 'email');
-      
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      
-      if (error || !data.user) {
+
+      if (error) {
         console.error("Login failed:", error);
-        return false;
+
+        // "Invalid login credentials" fires both for wrong password AND for accounts
+        // that were created via OAuth (they have no password set).
+        if (error.message.includes("Invalid login credentials")) {
+          // Check if an account with this email exists in profiles
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("email", email.toLowerCase())
+            .maybeSingle();
+
+          if (!profile) {
+            // No account at all — tell them to sign up
+            return { success: false, error: "no_account" };
+          }
+
+          // Account exists — check if we know which OAuth provider they used
+          const cachedProvider = localStorage.getItem(providerKey(email)) as
+            | "google"
+            | "apple"
+            | "discord"
+            | null;
+
+          return {
+            success: false,
+            error: "wrong_provider",
+            provider: cachedProvider ?? "unknown",
+          };
+        }
+
+        if (error.message.includes("Email not confirmed")) {
+          return {
+            success: false,
+            error: "Please confirm your email before signing in. Check your inbox.",
+          };
+        }
+
+        return { success: false, error: error.message || "Invalid credentials. Please try again." };
       }
 
-      // Explicitly build user to ensure state is set before navigation
+      if (!data.user) {
+        return { success: false, error: "Invalid credentials. Please try again." };
+      }
+
+      // Login succeeded — cache the email provider as "email" for future mismatch checks
+      localStorage.setItem("lastSignInMethod", "email");
+      if (data.user.email) {
+        localStorage.setItem(providerKey(data.user.email), "email");
+      }
+
       const built = await buildUser(data.user);
       setUser(built);
-      
+
       console.log("Member login successful:", built.email, "role:", built.role);
-      return true;
-    } catch (error) {
-      console.error("Login exception:", error);
-      return false;
+      return { success: true };
+    } catch (err) {
+      console.error("Login exception:", err);
+      return { success: false, error: "An error occurred. Please try again." };
     }
   };
 
   const adminLogin = async (email: string, password: string) => {
     try {
       console.log("Admin login attempt for:", email);
-      
-      // Simple login - no retries, no profile updates
+
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      
+
       if (error || !data.user) {
         console.error("Admin login failed:", error);
         return false;
       }
 
       console.log("Admin login - User authenticated:", data.user.id);
-      
-      // Just build the user from database - don't try to update anything
+
       const built = await buildUser(data.user);
       setUser(built);
 
@@ -337,7 +394,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) return false;
 
     if (signupData.user) {
-      // Member signup — is_admin = false
+      // Cache that this email signed up via email/password
+      localStorage.setItem(providerKey(data.email), "email");
+      localStorage.setItem("lastSignInMethod", "email");
+
       await ensureUserBootstrap(signupData.user, {
         name: data.name,
         country: data.country,
@@ -349,26 +409,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    // Save last sign-in method
-    localStorage.setItem('lastSignInMethod', 'google');
-    
+    localStorage.setItem("lastSignInMethod", "google");
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/dashboard`,
         queryParams: {
-          // Auto-create account if doesn't exist
-          access_type: 'offline',
-          prompt: 'consent',
+          access_type: "offline",
+          prompt: "consent",
         },
       },
     });
   };
 
   const signInWithApple = async () => {
-    // Save last sign-in method
-    localStorage.setItem('lastSignInMethod', 'apple');
-    
+    localStorage.setItem("lastSignInMethod", "apple");
     await supabase.auth.signInWithOAuth({
       provider: "apple",
       options: {
@@ -378,9 +433,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithDiscord = async () => {
-    // Save last sign-in method
-    localStorage.setItem('lastSignInMethod', 'discord');
-    
+    localStorage.setItem("lastSignInMethod", "discord");
     await supabase.auth.signInWithOAuth({
       provider: "discord",
       options: {
@@ -391,22 +444,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      // Clear admin status cache
       if (user?.id) {
         localStorage.removeItem(`admin_status_${user.id}`);
       }
-      
-      // Sign out from Supabase
       await supabase.auth.signOut();
-      
-      // Clear local state immediately
       setUser(null);
       setNotifications([]);
-      
       console.log("Logout successful");
     } catch (error) {
       console.error("Logout error:", error);
-      // Clear state anyway
       setUser(null);
       setNotifications([]);
     }
@@ -419,9 +465,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const markAllNotificationsRead = async () => {
     if (!user) return;
-
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-
     await supabase
       .from("notifications")
       .update({ read: true })
