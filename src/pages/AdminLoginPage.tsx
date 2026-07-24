@@ -81,12 +81,12 @@ export default function AdminLoginPage() {
     console.log("Creating admin account for:", regEmail);
 
     try {
-      // Step 1: Sign up the user
+      // Step 1: Sign up the user — pass is_admin flag in metadata so the DB trigger sets admin role
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: regEmail,
         password: regPassword,
         options: {
-          data: { name: regName },
+          data: { name: regName, is_admin: true },
           emailRedirectTo: window.location.origin,
         },
       });
