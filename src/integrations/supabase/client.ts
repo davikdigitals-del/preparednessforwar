@@ -7,7 +7,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-// Singleton pattern with proper auth configuration to prevent multiple instances
+// Singleton pattern — one instance for the entire app lifetime
 let supabaseInstance: ReturnType<typeof createClient> | null = null;
 
 export const supabase = (() => {
@@ -18,8 +18,8 @@ export const supabase = (() => {
         autoRefreshToken: true,
         detectSessionInUrl: true,
         flowType: 'implicit',
-        // Use a consistent storage key to prevent multiple instances
         storageKey: 'prw-auth-token',
+        storage: window.localStorage,
       },
     });
   }
