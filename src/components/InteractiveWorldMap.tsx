@@ -136,6 +136,32 @@ export const InteractiveWorldMap = ({
           const svgObj = document.getElementById("svg-world-map") as HTMLObjectElement | null;
           if (svgObj) {
             svgObj.style.cssText = "width:100%;height:100%;display:block;border:none;";
+
+            // The SVG lives inside an <object> which has its own document context.
+            // Mouse events inside it don't bubble to window, so we attach a listener
+            // directly to the SVG's contentDocument to track cursor position.
+            const attachInnerListener = () => {
+              try {
+                const innerDoc = svgObj.contentDocument;
+                if (!innerDoc) return;
+                innerDoc.addEventListener("mousemove", (e: MouseEvent) => {
+                  if (!activeNameRef.current) return;
+                  // e.clientX/Y is relative to the SVG iframe viewport.
+                  // Convert to page coords by adding the <object> element's offset.
+                  const objRect = svgObj.getBoundingClientRect();
+                  const pageX = objRect.left + e.clientX;
+                  const pageY = objRect.top  + e.clientY;
+                  showTooltipAt(activeNameRef.current, pageX, pageY);
+                });
+                innerDoc.addEventListener("mouseleave", () => hideTooltip());
+              } catch (_) {
+                // cross-origin or not ready — silently ignore
+              }
+            };
+
+            // Try immediately, then on load in case it's not ready yet
+            attachInnerListener();
+            svgObj.addEventListener("load", attachInnerListener);
           }
         }
 
