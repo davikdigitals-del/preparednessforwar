@@ -98,27 +98,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       profile = data;
 
+      // Admin status comes ONLY from the database — no localStorage fallback
       if (profile?.is_admin === true || profile?.role === "admin") {
         isAdmin = true;
-        console.log("✅ Admin status confirmed:", profile.is_admin, profile.role);
-        localStorage.setItem(`admin_status_${supaUser.id}`, "true");
-      } else {
-        const cachedAdmin = localStorage.getItem(`admin_status_${supaUser.id}`);
-        if (cachedAdmin === "true") {
-          console.log("⚠️ Using cached admin status (database read failed)");
-          isAdmin = true;
-        }
       }
     } catch (err) {
       console.warn("Could not fetch profile:", err);
-      const cachedAdmin = localStorage.getItem(`admin_status_${supaUser.id}`);
-      if (cachedAdmin === "true") {
-        console.log("⚠️ Using cached admin status (exception occurred)");
-        isAdmin = true;
-      }
     }
 
-    console.log(`User ${supaUser.email} - isAdmin: ${isAdmin}, profile.is_admin: ${profile?.is_admin}, profile.role: ${profile?.role}`);
+    console.log(`User ${supaUser.email} - isAdmin: ${isAdmin}, profile.role: ${profile?.role}`);
 
     return {
       id: supaUser.id,
@@ -465,13 +453,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      if (user?.id) {
-        localStorage.removeItem(`admin_status_${user.id}`);
-      }
+      // Clear any stale admin cache keys
+      Object.keys(localStorage)
+        .filter(k => k.startsWith("admin_status_"))
+        .forEach(k => localStorage.removeItem(k));
       await supabase.auth.signOut();
       setUser(null);
       setNotifications([]);
-      console.log("Logout successful");
     } catch (error) {
       console.error("Logout error:", error);
       setUser(null);
