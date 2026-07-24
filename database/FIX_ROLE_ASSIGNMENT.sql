@@ -4,7 +4,9 @@
 -- HOW IT WORKS:
 --   /admin-login  → signup passes { is_admin: true } in metadata → ADMIN
 --   /signup       → no metadata flag                             → MEMBER
---   Google/Apple/Discord                                         → MEMBER
+--   Google / Apple / Discord                                     → MEMBER
+--
+-- RUN THIS in Supabase SQL Editor to fix the broken trigger causing 500 errors.
 -- ============================================================================
 
 -- Step 1: Remove ALL old triggers and functions
@@ -20,7 +22,7 @@ DECLARE
   v_is_admin boolean;
   v_role     text;
 BEGIN
-  -- Only admin-login page passes is_admin=true in metadata
+  -- Only /admin-login passes is_admin=true in metadata — everyone else is member
   v_is_admin := COALESCE((NEW.raw_user_meta_data->>'is_admin')::boolean, false);
   v_role     := CASE WHEN v_is_admin THEN 'admin' ELSE 'member' END;
 
@@ -55,33 +57,7 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
 
--- ============================================================================
--- Step 4: Fix existing accounts that were wrongly made admin by the old trigger.
--- This demotes everyone to member EXCEPT those who signed up via /admin-login.
--- We detect admin-login signups by the is_admin flag in their raw_user_meta_data.
--- ============================================================================
-
-UPDATE public.profiles p
-SET is_admin = false,
-    role     = 'member'
-WHERE p.id IN (
-  SELECT au.id
-  FROM auth.users au
-  WHERE COALESCE((au.raw_user_meta_data->>'is_admin')::boolean, false) = false
-);
-
-DELETE FROM public.user_roles
-WHERE role = 'admin'
-  AND user_id IN (
-    SELECT au.id
-    FROM auth.users au
-    WHERE COALESCE((au.raw_user_meta_data->>'is_admin')::boolean, false) = false
-  );
-
--- ============================================================================
--- Step 5: Verify — admins should only be those who used /admin-login
--- ============================================================================
-SELECT p.email, p.is_admin, p.role, au.raw_user_meta_data->>'is_admin' AS signed_up_as_admin
-FROM public.profiles p
-JOIN auth.users au ON au.id = p.id
-ORDER BY p.role DESC, p.email;
+-- Step 4: Verify — check the trigger is in place
+SELECT trigger_name, event_manipulation, event_object_table
+FROM information_schema.triggers
+WHERE trigger_name = 'on_auth_user_created';
