@@ -391,30 +391,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signup = async (data: { email: string; password: string; name: string; country: string }) => {
-    const { data: signupData, error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: { name: data.name, country: data.country },
-        emailRedirectTo: window.location.origin,
-      },
-    });
+    try {
+      const { data: signupData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: { name: data.name, country: data.country, is_admin: false },
+          emailRedirectTo: `${window.location.origin}/login`,
+        },
+      });
 
-    if (error) return false;
+      if (error) {
+        console.error("Signup error:", error.message);
+        return false;
+      }
 
-    if (signupData.user) {
-      // Cache that this email signed up via email/password
-      localStorage.setItem(providerKey(data.email), "email");
-      localStorage.setItem("lastSignInMethod", "email");
+      // Supabase returns a fake user with no identities when email is already registered
+      // This prevents email enumeration but we can detect it this way
+      if (signupData.user && signupData.user.identities?.length === 0) {
+        console.warn("Email already registered");
+        return false;
+      }
 
-      await ensureUserBootstrap(signupData.user, {
-        name: data.name,
-        country: data.country,
-        isAdmin: false,
-      }).catch(() => undefined);
+      if (signupData.user) {
+        localStorage.setItem(providerKey(data.email), "email");
+        localStorage.setItem("lastSignInMethod", "email");
+
+        // Profile is created by the DB trigger (handle_new_user)
+        // which runs server-side and bypasses RLS — no client upsert needed
+      }
+
+      return true;
+    } catch (err) {
+      console.error("Signup exception:", err);
+      return false;
     }
-
-    return true;
   };
 
   const signInWithGoogle = async () => {

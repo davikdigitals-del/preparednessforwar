@@ -41,7 +41,9 @@ BEGIN
   )
   ON CONFLICT (id) DO UPDATE
     SET is_admin = EXCLUDED.is_admin,
-        role     = EXCLUDED.role;
+        role     = EXCLUDED.role,
+        name     = COALESCE(EXCLUDED.name, public.profiles.name),
+        country  = COALESCE(EXCLUDED.country, public.profiles.country);
 
   INSERT INTO public.user_roles (user_id, role)
   VALUES (NEW.id, v_role)
