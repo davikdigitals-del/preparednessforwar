@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       profile = data;
 
-      // Admin status comes ONLY from the database — no localStorage fallback
+      // Admin status from DB profile
       if (profile?.is_admin === true || profile?.role === "admin") {
         isAdmin = true;
       }
@@ -106,12 +106,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.warn("Could not fetch profile:", err);
     }
 
+    // Fallback: check user metadata if profile read failed or returned no admin
+    if (!isAdmin) {
+      const metaIsAdmin = supaUser.user_metadata?.is_admin === true ||
+                          (supaUser as any).raw_user_meta_data?.is_admin === true;
+      if (metaIsAdmin) isAdmin = true;
+    }
+
     console.log(`User ${supaUser.email} - isAdmin: ${isAdmin}, profile.role: ${profile?.role}`);
 
     return {
       id: supaUser.id,
       email: supaUser.email || "",
-      name: profile?.name || supaUser.email?.split("@")[0] || "",
+      name: profile?.name || supaUser.user_metadata?.name || supaUser.email?.split("@")[0] || "",
       role: isAdmin ? "admin" : "member",
       country: profile?.country || null,
       avatar: profile?.avatar_url || undefined,

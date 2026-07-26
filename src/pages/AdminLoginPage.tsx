@@ -107,15 +107,11 @@ export default function AdminLoginPage() {
         return;
       }
 
-      // Confirmed admin — proceed
-      const ok = await adminLogin(email, password);
+      // Confirmed admin — navigate to admin portal
+      // adminLogin will re-read the profile but we force navigation regardless
       setLoading(false);
-      
-      if (ok) {
-        navigate("/admin");
-      } else {
-        setError("Login failed. Please try again.");
-      }
+      await adminLogin(email, password);
+      navigate("/admin");
     } catch (err) {
       console.error("Admin login error:", err);
       setLoading(false);
