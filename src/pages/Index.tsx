@@ -77,12 +77,7 @@ const Index = () => {
                 Knowledge Today.<br />Safety Tomorrow.
               </h2>
               <p className="text-gray-600 leading-relaxed mb-4">
-                We provide accurate, timely, and life-saving information to help individuals and communities
-                prepare for conflicts and emergencies worldwide.
-              </p>
-              <p className="text-gray-600 leading-relaxed mb-6">
-                From country risk levels and survival guides to official NATO directives and health advisories
-                — everything you need to stay informed and stay safe.
+                Our mission is to make essential preparedness guidance accessible to the public through trusted information, practical resources, and structured support that encourages safety, readiness, and awareness.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
@@ -165,7 +160,7 @@ const Index = () => {
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link
-              to="/signup"
+              to="/subscribe?from=signup"
               className="px-6 py-3 bg-white text-blue-900 font-bold text-sm hover:bg-blue-50 transition-colors"
             >
               Create Free Account

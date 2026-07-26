@@ -43,21 +43,43 @@ export default function AdminLoginPage() {
     }
     
     setLoading(true);
-    console.log("Attempting admin login for:", email);
     
     try {
+      // Sign in with Supabase directly first
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (signInError || !data.user) {
+        setLoading(false);
+        setError("Invalid credentials. Please check your email and password.");
+        return;
+      }
+
+      // Check if this user is actually an admin — block members from accessing admin portal
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_admin, role")
+        .eq("id", data.user.id)
+        .maybeSingle();
+
+      if (!profile || profile.is_admin !== true || profile.role !== "admin") {
+        // Not an admin — sign them out immediately and reject
+        await supabase.auth.signOut();
+        setLoading(false);
+        setError("Access denied. This portal is for administrators only.");
+        return;
+      }
+
+      // Confirmed admin — proceed
       const ok = await adminLogin(email, password);
       setLoading(false);
       
       if (ok) {
-        console.log("Admin login successful, navigating to /admin");
         navigate("/admin");
       } else {
-        console.error("Admin login returned false");
-        setError("Invalid admin credentials. Please check your email and password.");
+        setError("Login failed. Please try again.");
       }
-    } catch (error) {
-      console.error("Admin login error:", error);
+    } catch (err) {
+      console.error("Admin login error:", err);
       setLoading(false);
       setError("An error occurred during login. Please try again.");
     }
