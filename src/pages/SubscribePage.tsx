@@ -26,6 +26,10 @@ export default function SubscribePage() {
   const [searchParams] = useSearchParams();
   const planIdFromUrl = searchParams.get('plan');
 
+  // 'from=signup' means user came via the Sign Up button (new user flow)
+  // anything else is an existing member upgrading
+  const fromSignup = searchParams.get('from') === 'signup';
+
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [clientSecret, setClientSecret] = useState<string>('');
@@ -35,31 +39,15 @@ export default function SubscribePage() {
   useEffect(() => {
     fetchPlans();
 
-    // Set up real-time subscription for plans
     const channel = supabase
       .channel('subscription_plans_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'subscription_plans'
-        },
-        () => {
-          fetchPlans();
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'subscription_plans' }, () => {
+        fetchPlans();
+      })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, []);
-
-  useEffect(() => {
-    // Do NOT auto-trigger checkout from URL params â€” just let user click
-    // The ?plan= param is handled by highlighting the plan visually only
-  }, [planIdFromUrl, plans, user, loading]);
 
   const fetchPlans = async () => {
     try {
@@ -73,11 +61,7 @@ export default function SubscribePage() {
       if (error) throw error;
       setPlans(data || []);
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -85,7 +69,9 @@ export default function SubscribePage() {
 
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
     if (!user) {
-      navigate('/login?redirect=/subscribe?plan=' + plan.id);
+      // Not logged in — send to login then back here, preserving the from=signup flag
+      const redirect = `/subscribe?plan=${plan.id}${fromSignup ? '&from=signup' : ''}`;
+      navigate('/login?redirect=' + encodeURIComponent(redirect));
       return;
     }
 
@@ -93,7 +79,6 @@ export default function SubscribePage() {
     setSelectedPlan(plan);
 
     try {
-      // Use getUser() which waits for session to be fully initialized
       const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
 
       if (userError || !currentUser) {
@@ -106,16 +91,16 @@ export default function SubscribePage() {
         return;
       }
 
-      // Now get the session token â€” guaranteed to be ready after getUser()
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData?.session?.access_token;
-
-      if (!accessToken) {
-        console.warn('No access token but user exists â€” proceeding anyway');
-      }
-
-      // Call edge function â€” pass user info in body since token auth is unreliable
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
+      // New signup flow → redirect to /signup after payment
+      // Upgrade flow → redirect to /dashboard after payment
+      const successUrl = fromSignup
+        ? `${window.location.origin}/signup?payment=success`
+        : `${window.location.origin}/dashboard?payment=success`;
+
+      const cancelUrl = `${window.location.origin}/subscribe?plan=${plan.id}${fromSignup ? '&from=signup' : ''}`;
+
       const response = await fetch(
         `${supabaseUrl}/functions/v1/create-checkout-session`,
         {
@@ -128,6 +113,8 @@ export default function SubscribePage() {
             planId: plan.id,
             userId: currentUser.id,
             userEmail: currentUser.email,
+            successUrl,
+            cancelUrl,
           }),
         }
       );
@@ -155,11 +142,9 @@ export default function SubscribePage() {
   };
 
   const handlePaymentSuccess = () => {
-    toast({
-      title: 'Success!',
-      description: 'Your subscription is now active',
-    });
-    navigate('/dashboard');
+    toast({ title: 'Success!', description: 'Your subscription is now active' });
+    // Same logic — new signups go to /signup, upgrades go to /dashboard
+    navigate(fromSignup ? '/signup' : '/dashboard');
   };
 
   const handleCancel = () => {
@@ -179,11 +164,7 @@ export default function SubscribePage() {
   if (selectedPlan && clientSecret) {
     return (
       <div className="container py-8 max-w-2xl">
-        <Button
-          variant="ghost"
-          onClick={handleCancel}
-          className="mb-6"
-        >
+        <Button variant="ghost" onClick={handleCancel} className="mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Plans
         </Button>
@@ -207,10 +188,12 @@ export default function SubscribePage() {
           <Crown className="w-8 h-8 text-primary" />
         </div>
         <h1 className="font-display text-4xl font-bold mb-3">
-          Upgrade to Premium
+          {fromSignup ? 'Choose Your Plan' : 'Upgrade to Premium'}
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Get unlimited access to exclusive content, videos, and resources
+          {fromSignup
+            ? 'Select a plan to complete your account setup'
+            : 'Get unlimited access to exclusive content, videos, and resources'}
         </p>
       </div>
 
@@ -218,7 +201,7 @@ export default function SubscribePage() {
         {plans.map((plan) => {
           const isPopular = plan.slug === 'premium-monthly';
           const isHighlighted = plan.id === planIdFromUrl;
-          
+
           return (
             <Card
               key={plan.id}
@@ -235,19 +218,15 @@ export default function SubscribePage() {
                   </span>
                 </div>
               )}
-              
+
               <CardHeader>
                 <CardTitle className="text-center">
                   <div className="text-2xl font-bold mb-2">{plan.name}</div>
-                  <div className="text-4xl font-bold text-primary">
-                    £{plan.price}
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    per {plan.interval}
-                  </p>
+                  <div className="text-4xl font-bold text-primary">£{plan.price}</div>
+                  <p className="text-sm text-muted-foreground mt-1">per {plan.interval}</p>
                 </CardTitle>
               </CardHeader>
-              
+
               <CardContent className="space-y-4">
                 <ul className="space-y-3">
                   {plan.features.map((feature, idx) => (
@@ -257,7 +236,7 @@ export default function SubscribePage() {
                     </li>
                   ))}
                 </ul>
-                
+
                 <Button
                   className="w-full"
                   size="lg"
@@ -273,7 +252,7 @@ export default function SubscribePage() {
                   ) : (
                     <>
                       <Crown className="w-4 h-4 mr-2" />
-                      Subscribe Now
+                      {fromSignup ? 'Get Started' : 'Subscribe Now'}
                     </>
                   )}
                 </Button>
