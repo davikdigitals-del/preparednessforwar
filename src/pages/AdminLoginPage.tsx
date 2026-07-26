@@ -82,15 +82,25 @@ export default function AdminLoginPage() {
         return;
       }
 
-      // Check if this user is actually an admin — block members from accessing admin portal
-      const { data: profile } = await supabase
+      // Wait briefly for session to be fully established
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Check if this user is actually an admin
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("is_admin, role")
         .eq("id", data.user.id)
         .maybeSingle();
 
-      if (!profile || profile.is_admin !== true || profile.role !== "admin") {
-        // Not an admin — sign them out immediately and reject
+      console.log("Profile:", profile, "Error:", profileError);
+
+      // If RLS blocks the read, fall back to checking auth metadata
+      const metaIsAdmin = data.user.user_metadata?.is_admin === true ||
+                          data.user.raw_user_meta_data?.is_admin === true;
+
+      const isAdmin = profile?.is_admin === true || profile?.role === "admin" || metaIsAdmin;
+
+      if (!isAdmin) {
         await supabase.auth.signOut();
         setLoading(false);
         setError("Access denied. This portal is for administrators only.");
