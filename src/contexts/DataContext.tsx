@@ -108,7 +108,7 @@ const mapPost = (p: DbPost & { country_codes?: string[] }): AdminPost => ({
   readTime: p.read_time || "5 min",
   isPinned: p.is_pinned || false,
   isPremium: p.is_premium || false,
-  status: (p.is_published ? "published" : p.status || "draft") as PostStatus,
+  status: (p.status === "published" || p.is_published ? "published" : p.status || "draft") as PostStatus,
   body: p.content || p.body || "",
   countryCodes: p.country_codes || [],
   videoUrl: p.video_url || undefined,
@@ -210,7 +210,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase
         .from("posts")
         .select("*")
-        .eq("is_published", true)
+        .or("is_published.eq.true,status.eq.published")
         .order("published_at", { ascending: false });
       
       if (error) {
@@ -353,18 +353,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const incrementView = useCallback(async (postId: string) => {
-    const post = posts.find((p) => p.id === postId);
-    if (!post) return;
+    // Optimistic update in local state
+    setPosts((prev) => prev.map((p) =>
+      p.id === postId ? { ...p, viewCount: p.viewCount + 1 } : p
+    ));
 
-    const nextViews = post.viewCount + 1;
-    setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, viewCount: nextViews } : p)));
-    
     try {
-      await supabase.from("posts").update({ view_count: nextViews }).eq("id", postId);
+      // Use RPC function — bypasses RLS so anon visitors can increment views
+      await supabase.rpc("increment_post_view", { post_id: postId });
     } catch (error) {
       console.error("Error incrementing view count:", error);
     }
-  }, [posts]);
+  }, []);
 
   const createAlert = async (alert: { text: string; priority: string }) => {
     await supabase.from("alerts").insert({ text: alert.text, priority: alert.priority });
