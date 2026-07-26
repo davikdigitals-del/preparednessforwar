@@ -189,11 +189,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             localStorage.setItem(providerKey(session.user.email), oauthProvider);
             localStorage.setItem("lastSignInMethod", oauthProvider);
 
-            // For brand-new OAuth signups, ensure they are created as member (not admin)
-            // Check if this is a new user (created_at within last 30 seconds)
+            // Check if this is a brand-new user (created within last 30 seconds)
             const createdAt = new Date(session.user.created_at).getTime();
             const isNewUser = Date.now() - createdAt < 30000;
+
             if (isNewUser) {
+              // New OAuth user — ensure member role in DB
               await supabase.from("profiles").upsert(
                 {
                   id: session.user.id,
@@ -208,6 +209,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               await supabase
                 .from("user_roles")
                 .upsert({ user_id: session.user.id, role: "member" } as any, { onConflict: "user_id,role" });
+
+              // Redirect new OAuth users to subscription page instead of dashboard
+              lastProcessedUserId = session.user.id;
+              const built = await buildUser(session.user);
+              if (mounted) {
+                setUser(built);
+                await fetchNotifications(session.user.id);
+                setLoading(false);
+                window.location.href = `${window.location.origin}/subscribe?from=signup`;
+              }
+              return;
             }
           }
         }
@@ -434,10 +446,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/dashboard`,
-        queryParams: {
-          access_type: "offline",
-          prompt: "consent",
-        },
+        queryParams: { access_type: "offline", prompt: "consent" },
       },
     });
   };
@@ -446,9 +455,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("lastSignInMethod", "apple");
     await supabase.auth.signInWithOAuth({
       provider: "apple",
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      },
+      options: { redirectTo: `${window.location.origin}/dashboard` },
     });
   };
 
@@ -456,9 +463,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("lastSignInMethod", "discord");
     await supabase.auth.signInWithOAuth({
       provider: "discord",
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      },
+      options: { redirectTo: `${window.location.origin}/dashboard` },
     });
   };
 
