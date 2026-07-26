@@ -100,10 +100,9 @@ export default function AdminLoginPage() {
     }
     
     setRegLoading(true);
-    console.log("Creating admin account for:", regEmail);
 
     try {
-      // Step 1: Sign up the user — pass is_admin flag in metadata so the DB trigger sets admin role
+      // Sign up with is_admin=true in metadata — the DB trigger will set admin role
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: regEmail,
         password: regPassword,
@@ -114,7 +113,6 @@ export default function AdminLoginPage() {
       });
 
       if (signUpError) {
-        console.error("Sign up error:", signUpError);
         setRegError(signUpError.message);
         setRegLoading(false);
         return;
@@ -126,44 +124,21 @@ export default function AdminLoginPage() {
         return;
       }
 
-      // Explicitly set admin role — do not rely on any DB trigger
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .upsert({
-          id: signUpData.user.id,
-          email: regEmail,
-          name: regName,
-          is_admin: true,
-          role: "admin",
-          country: "US",
-        }, { onConflict: "id" });
-
-      if (profileError) {
-        console.warn("Profile upsert error (non-fatal):", profileError.message);
+      // Supabase returns identities=[] when email already exists
+      if (signUpData.user.identities?.length === 0) {
+        setRegError("This email is already registered. Please use a different email or sign in.");
+        setRegLoading(false);
+        return;
       }
 
-      // Insert admin role into user_roles
-      await supabase
-        .from("user_roles")
-        .upsert({ user_id: signUpData.user.id, role: "admin" } as any, { onConflict: "user_id,role" });
-
-      console.log("Admin profile set successfully");
-      
-      // Wait for the database trigger to complete
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Sign out to clear the session
+      // Sign out immediately — admin must confirm email then sign in
       await supabase.auth.signOut();
-      
-      // Wait for signout to complete
-      await new Promise(resolve => setTimeout(resolve, 500));
 
       setRegLoading(false);
       setTab("login");
       setEmail(regEmail);
-      setPassword(regPassword);
-      setError("✅ Admin account created successfully! Please sign in below.");
-      console.log("Registration complete, switched to login tab");
+      setPassword("");
+      setError("✅ Admin account created! Check your email to confirm your account, then sign in.");
     } catch (error: any) {
       console.error("Registration exception:", error);
       setRegError(error?.message || "An error occurred during registration. Please try again.");
