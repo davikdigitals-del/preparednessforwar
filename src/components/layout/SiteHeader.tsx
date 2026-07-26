@@ -318,7 +318,7 @@ export function SiteHeader() {
                   </Link>
                 </Button>
                 <Button variant="default" size="sm" asChild className="text-xs sm:text-sm">
-                  <Link to="/signup">
+                  <Link to="/subscribe">
                     <span className="hidden sm:inline">Sign Up</span>
                     <span className="sm:hidden">Join</span>
                   </Link>
@@ -517,7 +517,7 @@ export function SiteHeader() {
                     Log In
                   </Link>
                   <Link
-                    to="/signup"
+                    to="/subscribe"
                     className="block w-full px-4 py-2 text-sm font-semibold text-center text-white bg-primary hover:bg-primary/90 rounded-md transition-colors"
                     onClick={() => setMobileMenuOpen(false)}
                   >
