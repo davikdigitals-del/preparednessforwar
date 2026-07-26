@@ -89,6 +89,11 @@ export default function SignInPage() {
     }
 
     setResetLoading(true);
+
+    // Sign out the current session before sending reset email
+    // so the user isn't auto-logged in during the reset flow
+    await supabase.auth.signOut();
+
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
       redirectTo: `${window.location.origin}/reset-password`,
     });
