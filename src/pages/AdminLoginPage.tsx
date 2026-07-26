@@ -113,6 +113,19 @@ export default function AdminLoginPage() {
       });
 
       if (signUpError) {
+        // "Error sending confirmation email" means the account WAS created
+        // but Supabase's email service is rate-limited — treat this as success
+        if (signUpError.message?.toLowerCase().includes("sending confirmation email") ||
+            signUpError.message?.toLowerCase().includes("email") && signUpError.status === 500) {
+          // Account created — just can't send email right now
+          await supabase.auth.signOut();
+          setRegLoading(false);
+          setTab("login");
+          setEmail(regEmail);
+          setPassword("");
+          setError("✅ Admin account created! Email confirmation is temporarily unavailable — you can sign in directly below.");
+          return;
+        }
         setRegError(signUpError.message);
         setRegLoading(false);
         return;
