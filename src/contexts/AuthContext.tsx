@@ -387,21 +387,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const adminLogin = async (email: string, password: string) => {
     try {
-      console.log("Admin login attempt for:", email);
-
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-      if (error || !data.user) {
-        console.error("Admin login failed:", error);
-        return false;
+      // Get the current session — don't sign in again if already authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const supaUser = session?.user;
+      if (!supaUser) {
+        // No existing session — sign in
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error || !data.user) return false;
+        const built = await buildUser(data.user);
+        setUser(built);
+        return true;
       }
 
-      console.log("Admin login - User authenticated:", data.user.id);
-
-      const built = await buildUser(data.user);
+      // Already signed in — just build the user
+      const built = await buildUser(supaUser);
       setUser(built);
-
-      console.log("Admin login complete - Role:", built.role, "isAdmin:", built.role === "admin");
       return true;
     } catch (error) {
       console.error("Admin login exception:", error);
