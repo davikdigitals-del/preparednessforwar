@@ -6,9 +6,37 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, UserPlus, Eye, EyeOff } from "lucide-react";
+import { Shield, UserPlus, Eye, EyeOff, CheckCircle, XCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReCaptcha } from "@/components/ReCaptcha";
+
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+
+const PASSWORD_RULES = [
+  { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
+  { label: "One uppercase letter", test: (p: string) => /[A-Z]/.test(p) },
+  { label: "One lowercase letter", test: (p: string) => /[a-z]/.test(p) },
+  { label: "One number", test: (p: string) => /[0-9]/.test(p) },
+  { label: "One special character (!@#$%^&*)", test: (p: string) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p) },
+];
+
+function PasswordStrength({ password }: { password: string }) {
+  if (!password) return null;
+  return (
+    <div className="mt-2 space-y-1">
+      {PASSWORD_RULES.map(rule => (
+        <div key={rule.label} className="flex items-center gap-1.5">
+          {rule.test(password)
+            ? <CheckCircle className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+            : <XCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />}
+          <span className={`text-xs ${rule.test(password) ? "text-green-600" : "text-muted-foreground"}`}>
+            {rule.label}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function AdminLoginPage() {
   const { adminLogin } = useAuth();
@@ -88,12 +116,18 @@ export default function AdminLoginPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegError("");
-    
-    if (regPassword.length < 6) { 
-      setRegError("Password must be at least 6 characters."); 
-      return; 
+
+    if (!EMAIL_REGEX.test(regEmail)) {
+      setRegError("Please enter a valid email address.");
+      return;
     }
-    
+
+    const isStrong = PASSWORD_RULES.every(r => r.test(regPassword));
+    if (!isStrong) {
+      setRegError("Please choose a stronger password that meets all requirements.");
+      return;
+    }
+
     if (recaptchaEnabled && !regRecaptchaToken) {
       setRegError("Please complete the reCAPTCHA verification.");
       return;
@@ -177,18 +211,31 @@ export default function AdminLoginPage() {
             </TabsList>
 
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4" autoComplete="on">
                 {error && <p className="text-sm text-destructive bg-destructive/10 p-2 rounded">{error}</p>}
-                <div><Label>Admin Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
                 <div>
-                  <Label>Password</Label>
+                  <Label htmlFor="login-email">Admin Email</Label>
+                  <Input
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="login-password">Password</Label>
                   <div className="relative">
-                    <Input 
-                      type={showPassword ? "text" : "password"} 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)} 
-                      required 
-                      minLength={6}
+                    <Input
+                      id="login-password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
                       className="pr-10"
                     />
                     <button
@@ -219,19 +266,47 @@ export default function AdminLoginPage() {
             </TabsContent>
 
             <TabsContent value="register">
-              <form onSubmit={handleRegister} className="space-y-4">
+              <form onSubmit={handleRegister} className="space-y-4" autoComplete="on">
                 {regError && <p className="text-sm text-destructive bg-destructive/10 p-2 rounded">{regError}</p>}
-                <div><Label>Full Name</Label><Input value={regName} onChange={(e) => setRegName(e.target.value)} required /></div>
-                <div><Label>Admin Email</Label><Input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} required /></div>
                 <div>
-                  <Label>Password</Label>
+                  <Label htmlFor="reg-name">Full Name</Label>
+                  <Input
+                    id="reg-name"
+                    name="name"
+                    autoComplete="name"
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    required
+                    placeholder="John Smith"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="reg-email">Admin Email</Label>
+                  <Input
+                    id="reg-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)}
+                    required
+                    placeholder="you@example.com"
+                    pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
+                    title="Please enter a valid email address"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="reg-password">Password</Label>
                   <div className="relative">
-                    <Input 
-                      type={showRegPassword ? "text" : "password"} 
-                      value={regPassword} 
-                      onChange={(e) => setRegPassword(e.target.value)} 
-                      required 
-                      minLength={6}
+                    <Input
+                      id="reg-password"
+                      name="password"
+                      type={showRegPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
+                      required
+                      placeholder="Min 8 chars, uppercase, number, symbol"
                       className="pr-10"
                     />
                     <button
@@ -243,8 +318,9 @@ export default function AdminLoginPage() {
                       {showRegPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  <PasswordStrength password={regPassword} />
                 </div>
-                
+
                 {recaptchaEnabled && (
                   <div className="flex justify-center">
                     <ReCaptcha
@@ -256,8 +332,12 @@ export default function AdminLoginPage() {
                     />
                   </div>
                 )}
-                
-                <Button type="submit" className="w-full" disabled={regLoading}>
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={regLoading || !PASSWORD_RULES.every(r => r.test(regPassword))}
+                >
                   <UserPlus className="w-4 h-4 mr-1" />
                   {regLoading ? "Creating..." : "Create Admin Account"}
                 </Button>
