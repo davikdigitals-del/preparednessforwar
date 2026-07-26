@@ -95,9 +95,8 @@ export default function SignInPage() {
     setResetLoading(false);
 
     if (error) {
-      // 500 usually means Supabase email service is down or rate-limited
       if (error.status === 500 || error.message?.toLowerCase().includes("unexpected")) {
-        setResetError("Email service is temporarily unavailable. Please try again in a few minutes.");
+        setResetError(`Email error: ${error.message || "500 from Supabase"}`);
       } else if (error.message?.toLowerCase().includes("rate")) {
         setResetError("Too many requests. Please wait a few minutes before trying again.");
       } else {
