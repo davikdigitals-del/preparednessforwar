@@ -66,14 +66,14 @@ export default function SubscribePage() {
         : `${window.location.origin}/dashboard?payment=success`;
       const cancelUrl = `${window.location.origin}/subscribe?plan=${plan.id}${fromSignup ? '&from=signup' : ''}`;
 
-      const { data: { user: currentUser }, data: { session } } = await supabase.auth.getSession();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData?.session;
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
       };
 
-      // Send auth token if user is logged in
       if (session?.access_token) {
         headers['Authorization'] = `Bearer ${session.access_token}`;
       }
