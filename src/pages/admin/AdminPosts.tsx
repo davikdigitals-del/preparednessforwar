@@ -143,15 +143,49 @@ export default function AdminPosts() {
       if (editingPost) {
         const { error } = await supabase
           .from("posts")
-          .update(formData)
+          .update({
+            title: formData.title,
+            content: formData.content,
+            excerpt: formData.excerpt,
+            author: formData.author,
+            section: formData.section,
+            category_id: formData.category_id || null,
+            image_url: formData.image_url || null,
+            video_url: formData.video_url || null,
+            is_premium: formData.is_premium,
+            is_published: formData.is_published,
+            is_pinned: formData.is_pinned,
+            country_codes: formData.country_codes,
+            updated_at: new Date().toISOString(),
+          })
           .eq("id", editingPost.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Update error:", error);
+          throw error;
+        }
         toast({ title: "Success", description: "Post updated successfully" });
       } else {
-        const { error } = await supabase.from("posts").insert([formData]);
+        const { error } = await supabase.from("posts").insert([{
+          title: formData.title,
+          content: formData.content,
+          excerpt: formData.excerpt,
+          author: formData.author,
+          section: formData.section,
+          category_id: formData.category_id || null,
+          image_url: formData.image_url || null,
+          video_url: formData.video_url || null,
+          is_premium: formData.is_premium,
+          is_published: formData.is_published,
+          is_pinned: formData.is_pinned,
+          country_codes: formData.country_codes,
+          published_at: formData.is_published ? new Date().toISOString() : null,
+        }]);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Insert error:", error);
+          throw error;
+        }
         toast({ title: "Success", description: "Post created successfully" });
       }
 
@@ -446,218 +480,164 @@ export default function AdminPosts() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent aria-describedby={undefined} className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent aria-describedby={undefined} className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingPost ? "Edit Post" : "Create New Post"}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                required
-              />
-            </div>
+          <form onSubmit={handleSubmit} className="space-y-0">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-            <div>
-              <Label htmlFor="author">Author</Label>
-              <Input
-                id="author"
-                value={formData.author}
-                onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                placeholder="Author name"
-                required
-              />
-            </div>
+              {/* ── Main content column ── */}
+              <div className="lg:col-span-2 space-y-3">
+                <div>
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    required
+                  />
+                </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="section">Section</Label>
-                <Select
-                  value={formData.section}
-                  onValueChange={(value) => {
-                    setFormData({ ...formData, section: value, category_id: "" });
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select section first" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 overflow-y-auto">
-                    {sections.map((sec) => (
-                      <SelectItem key={sec.id} value={sec.slug}>
-                        {sec.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                <div>
+                  <Label htmlFor="excerpt">Excerpt</Label>
+                  <Textarea
+                    id="excerpt"
+                    value={formData.excerpt}
+                    onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+                    rows={2}
+                    placeholder="Short summary..."
+                  />
+                </div>
 
-              <div>
-                <Label htmlFor="category">Category</Label>
-                <Select
-                  value={formData.category_id}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, category_id: value })
-                  }
-                  disabled={!formData.section}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={formData.section ? "Select category" : "Select section first"} />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 overflow-y-auto">
-                    {/* Group categories by section */}
-                    {formData.section && (
-                      <>
-                        {/* Show categories for selected section */}
-                        {categories
-                          .filter((cat) => cat.sections?.slug === formData.section)
-                          .map((cat) => (
-                            <SelectItem key={cat.id} value={cat.id}>
-                              {cat.title || cat.name}
-                            </SelectItem>
-                          ))}
-                        
-                        {/* Show message if no categories found */}
-                        {categories.filter((cat) => cat.sections?.slug === formData.section).length === 0 && (
-                          <div className="px-2 py-6 text-center text-sm text-gray-500">
-                            No categories found for this section.
-                            <br />
-                            <a href="/admin/categories" className="text-primary hover:underline mt-2 inline-block">
-                              Create categories →
-                            </a>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </SelectContent>
-                </Select>
-                {formData.section && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    Showing categories for: <strong>{sections.find(s => s.slug === formData.section)?.title}</strong>
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="excerpt">Excerpt</Label>
-              <Textarea
-                id="excerpt"
-                value={formData.excerpt}
-                onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                rows={2}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="content">Content</Label>
-              <RichTextEditor
-                value={formData.content}
-                onChange={(value) => setFormData({ ...formData, content: value })}
-                placeholder="Write your post content here. You can format text, add images, videos, and more..."
-              />
-              <p className="text-xs text-gray-500 mt-2">
-                💡 <strong>Tip:</strong> Click the image icon (📷) in the toolbar to upload images directly into your content. You can also drag and drop or paste images!
-              </p>
-            </div>
-
-            <div>
-              <FileUpload
-                type="image"
-                currentUrl={formData.image_url}
-                onUrlChange={(url) => setFormData({ ...formData, image_url: url })}
-                label="Cover Image (Main Post Image)"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                This image will be displayed at the top of the post as the cover image.
-              </p>
-            </div>
-
-            <div>
-              <FileUpload
-                type="video"
-                currentUrl={formData.video_url}
-                onUrlChange={(url) => setFormData({ ...formData, video_url: url })}
-                label="Post Video/Podcast (Optional)"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Upload a video file or paste a URL (YouTube, Vimeo, podcast link, etc.)
-              </p>
-            </div>
-
-            <div>
-              <Label className="mb-3 block">Available Countries</Label>
-              <div className="border rounded-lg p-4 max-h-48 overflow-y-auto bg-gray-50">
-                <div className="grid grid-cols-2 gap-2">
-                  {natoCountries.map((country) => (
-                    <div key={country.code} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`country-${country.code}`}
-                        checked={formData.country_codes.includes(country.code)}
-                        onCheckedChange={() => toggleCountry(country.code)}
-                      />
-                      <label
-                        htmlFor={`country-${country.code}`}
-                        className="text-sm cursor-pointer flex items-center gap-1"
-                      >
-                        <span>{country.flag}</span>
-                        <span>{country.name}</span>
-                      </label>
-                    </div>
-                  ))}
+                <div>
+                  <Label htmlFor="content">Content</Label>
+                  <RichTextEditor
+                    value={formData.content}
+                    onChange={(value) => setFormData({ ...formData, content: value })}
+                    placeholder="Write your post content here..."
+                  />
                 </div>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Select countries where this post will be visible. Leave empty for all countries.
-              </p>
-            </div>
 
-            <div className="flex gap-4 flex-wrap">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={formData.is_pinned}
-                  onChange={(e) =>
-                    setFormData({ ...formData, is_pinned: e.target.checked })
-                  }
-                />
-                <span className="text-sm">📌 Pin (shows as Featured in section menu)</span>
-              </label>
+              {/* ── Sidebar settings column ── */}
+              <div className="space-y-3">
 
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={formData.is_premium}
-                  onChange={(e) =>
-                    setFormData({ ...formData, is_premium: e.target.checked })
-                  }
-                />
-                <span className="text-sm">⭐ Premium Content</span>
-              </label>
+                <div>
+                  <Label htmlFor="author">Author</Label>
+                  <Input
+                    id="author"
+                    value={formData.author}
+                    onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                    placeholder="Author name"
+                    required
+                  />
+                </div>
 
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={formData.is_published}
-                  onChange={(e) =>
-                    setFormData({ ...formData, is_published: e.target.checked })
-                  }
-                />
-                <span className="text-sm">Published</span>
-              </label>
-            </div>
+                <div>
+                  <Label>Section</Label>
+                  <Select
+                    value={formData.section}
+                    onValueChange={(value) => setFormData({ ...formData, section: value, category_id: "" })}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
+                    <SelectContent className="max-h-48 overflow-y-auto">
+                      {sections.map((sec) => (
+                        <SelectItem key={sec.id} value={sec.slug}>{sec.title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">{editingPost ? "Update" : "Create"}</Button>
+                <div>
+                  <Label>Category</Label>
+                  <Select
+                    value={formData.category_id}
+                    onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                    disabled={!formData.section}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={formData.section ? "Select category" : "Select section first"} />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-48 overflow-y-auto">
+                      {categories
+                        .filter((cat) => cat.sections?.slug === formData.section)
+                        .map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>{cat.title || cat.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <FileUpload
+                    type="image"
+                    currentUrl={formData.image_url}
+                    onUrlChange={(url) => setFormData({ ...formData, image_url: url })}
+                    label="Cover Image"
+                  />
+                </div>
+
+                <div>
+                  <FileUpload
+                    type="video"
+                    currentUrl={formData.video_url}
+                    onUrlChange={(url) => setFormData({ ...formData, video_url: url })}
+                    label="Video / Podcast (Optional)"
+                  />
+                </div>
+
+                {/* Countries */}
+                <div>
+                  <Label className="mb-1 block">Countries</Label>
+                  <div className="border rounded p-2 max-h-36 overflow-y-auto bg-gray-50">
+                    <div className="grid grid-cols-1 gap-1">
+                      {natoCountries.map((country) => (
+                        <div key={country.code} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`country-${country.code}`}
+                            checked={formData.country_codes.includes(country.code)}
+                            onCheckedChange={() => toggleCountry(country.code)}
+                          />
+                          <label htmlFor={`country-${country.code}`} className="text-xs cursor-pointer flex items-center gap-1">
+                            <span>{country.flag}</span><span>{country.name}</span>
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Flags */}
+                <div className="space-y-1.5 border rounded p-3 bg-gray-50">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={formData.is_published}
+                      onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })} />
+                    <span className="text-sm font-medium">Published</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={formData.is_pinned}
+                      onChange={(e) => setFormData({ ...formData, is_pinned: e.target.checked })} />
+                    <span className="text-sm">📌 Pin (Featured)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={formData.is_premium}
+                      onChange={(e) => setFormData({ ...formData, is_premium: e.target.checked })} />
+                    <span className="text-sm">⭐ Premium</span>
+                  </label>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 pt-1">
+                  <Button type="button" variant="outline" className="flex-1" onClick={() => setDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="flex-1">
+                    {editingPost ? "Update" : "Create"}
+                  </Button>
+                </div>
+
+              </div>
             </div>
           </form>
         </DialogContent>
