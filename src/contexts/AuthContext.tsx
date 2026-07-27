@@ -201,7 +201,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const isNewUser = Date.now() - createdAt < 30000;
 
             // Check if they came from sign-in page (not sign-up)
-            const oauthIntent = localStorage.getItem("oauth_intent") || "signin";
+            // Check both localStorage (set before redirect) and URL param (more reliable)
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlIntent = urlParams.get("oauth_intent");
+            const localIntent = localStorage.getItem("oauth_intent") || "signin";
+            const oauthIntent = urlIntent || localIntent;
             localStorage.removeItem("oauth_intent");
 
             if (isNewUser && oauthIntent === "signin") {
@@ -453,12 +457,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async (isSignup = false) => {
     localStorage.setItem("lastSignInMethod", "google");
-    // Track if this is a sign-up or sign-in so we can handle new users correctly
     localStorage.setItem("oauth_intent", isSignup ? "signup" : "signin");
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}/dashboard?oauth_intent=${isSignup ? 'signup' : 'signin'}`,
         queryParams: { access_type: "offline", prompt: "consent" },
       },
     });
@@ -469,7 +472,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("oauth_intent", isSignup ? "signup" : "signin");
     await supabase.auth.signInWithOAuth({
       provider: "apple",
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+      options: {
+        redirectTo: `${window.location.origin}/dashboard?oauth_intent=${isSignup ? 'signup' : 'signin'}`,
+      },
     });
   };
 
@@ -478,7 +483,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("oauth_intent", isSignup ? "signup" : "signin");
     await supabase.auth.signInWithOAuth({
       provider: "discord",
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+      options: {
+        redirectTo: `${window.location.origin}/dashboard?oauth_intent=${isSignup ? 'signup' : 'signin'}`,
+      },
     });
   };
 
