@@ -11,7 +11,7 @@ import {
   Video, Activity, ChevronRight,
   Clock, Newspaper, Map,
   Megaphone, Download,
-  AlertTriangle, CheckCircle,
+  AlertTriangle, CheckCircle, ExternalLink,
   Menu, X
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -19,7 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { OfflineService } from "@/services/OfflineService";
 
 export default function MemberDashboard() {
-  const { user, logout, notifications, markAllNotificationsRead, loading } = useAuth();
+  const { user, logout, notifications, markAllNotificationsRead, loading, isAdmin } = useAuth();
   const { publishedPosts } = useData();
   const { isPremium, plan: currentPlan } = usePremiumStatus();
 
@@ -133,6 +133,11 @@ export default function MemberDashboard() {
                     {unreadNotifications.length}
                   </span>
                 </button>
+              )}
+              {isAdmin && (
+                <Link to="/admin" className="text-xs text-[#ffdd00] hover:text-white transition-colors flex items-center gap-1 font-bold">
+                  <ExternalLink className="w-3 h-3" />Admin
+                </Link>
               )}
               <button onClick={logout} className="text-xs text-[#b1b4b6] hover:text-white transition-colors flex items-center gap-1">
                 <LogOut className="w-3 h-3" />Sign out
