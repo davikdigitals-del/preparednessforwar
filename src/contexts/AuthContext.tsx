@@ -205,27 +205,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             localStorage.removeItem("oauth_intent");
 
             if (isNewUser && oauthIntent === "signin") {
-              // New user tried to sign in via OAuth on the signin page
-              // They need to subscribe first — delete their account and redirect
-
               try {
-                // Call edge function to delete the auth account (client can't do this)
-                const { data: { session: currentSession } } = await supabase.auth.getSession();
-                const token = currentSession?.access_token;
-
-                if (token) {
-                  await fetch(
-                    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-unsubscribed-user`,
-                    {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${token}`,
-                      },
-                    }
-                  );
-                }
+                // Call edge function to delete the auth account using userId
+                await fetch(
+                  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-unsubscribed-user`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+                    },
+                    body: JSON.stringify({ userId: session.user.id }),
+                  }
+                );
               } catch (e) {
                 console.warn('Could not delete unsubscribed user:', e);
               }
