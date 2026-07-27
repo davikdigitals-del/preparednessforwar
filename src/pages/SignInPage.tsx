@@ -324,7 +324,7 @@ export default function SignInPage() {
 
             <p className="text-sm text-center text-muted-foreground">
               Don't have an account?{" "}
-              <Link to="/signup" className="text-alert hover:underline font-semibold">Create one</Link>
+              <Link to="/subscribe?from=signup" className="text-alert hover:underline font-semibold">Create one</Link>
             </p>
           </form>
         </CardContent>

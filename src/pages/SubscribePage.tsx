@@ -68,29 +68,10 @@ export default function SubscribePage() {
   };
 
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
-    if (!user) {
-      // Not logged in — send to login then back here, preserving the from=signup flag
-      const redirect = `/subscribe?plan=${plan.id}${fromSignup ? '&from=signup' : ''}`;
-      navigate('/login?redirect=' + encodeURIComponent(redirect));
-      return;
-    }
-
     setProcessingPayment(true);
     setSelectedPlan(plan);
 
     try {
-      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-
-      if (userError || !currentUser) {
-        toast({
-          title: 'Please log in',
-          description: 'You need to be logged in to subscribe.',
-          variant: 'destructive',
-        });
-        navigate('/login?redirect=/subscribe?plan=' + plan.id);
-        return;
-      }
-
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 
       // New signup flow → redirect to /signup after payment
@@ -100,6 +81,9 @@ export default function SubscribePage() {
         : `${window.location.origin}/dashboard?payment=success`;
 
       const cancelUrl = `${window.location.origin}/subscribe?plan=${plan.id}${fromSignup ? '&from=signup' : ''}`;
+
+      // Get user if logged in — but don't require it (new users pay first, then sign up)
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
 
       const response = await fetch(
         `${supabaseUrl}/functions/v1/create-checkout-session`,
@@ -111,8 +95,8 @@ export default function SubscribePage() {
           },
           body: JSON.stringify({
             planId: plan.id,
-            userId: currentUser.id,
-            userEmail: currentUser.email,
+            userId: currentUser?.id || null,
+            userEmail: currentUser?.email || null,
             successUrl,
             cancelUrl,
           }),
@@ -241,13 +225,13 @@ export default function SubscribePage() {
                   className="w-full"
                   size="lg"
                   onClick={() => handleSelectPlan(plan)}
-                  disabled={processingPayment}
+                  disabled={processingPayment && selectedPlan?.id === plan.id}
                   variant={isPopular ? 'default' : 'outline'}
                 >
                   {processingPayment && selectedPlan?.id === plan.id ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Processing...
+                      Opening checkout...
                     </>
                   ) : (
                     <>
