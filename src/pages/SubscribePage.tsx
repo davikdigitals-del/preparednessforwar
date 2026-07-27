@@ -146,21 +146,13 @@ export default function SubscribePage() {
             </button>
             <button
               onClick={() => setBillingInterval('year')}
-              className={`px-6 py-2 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${
+              className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${
                 billingInterval === 'year'
                   ? 'bg-gray-900 text-white shadow'
                   : 'text-gray-500 hover:text-gray-900'
               }`}
             >
               Yearly
-              {yearlyPlans.length > 0 && monthlyPlans.length > 0 && (() => {
-                const pct = getYearlySaving(yearlyPlans[0]);
-                return pct ? (
-                  <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                    Save {pct}%
-                  </span>
-                ) : null;
-              })()}
             </button>
           </div>
         </div>
@@ -219,9 +211,6 @@ export default function SubscribePage() {
                   {plan.interval === 'year' && (
                     <p className="text-sm text-gray-400 mt-1">
                       £{(plan.price / 12).toFixed(2)}/month billed annually
-                      {savingPct && (
-                        <span className="ml-2 text-green-600 font-semibold">· Save {savingPct}%</span>
-                      )}
                     </p>
                   )}
                 </div>
