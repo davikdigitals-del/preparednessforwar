@@ -457,11 +457,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async (isSignup = false) => {
     localStorage.setItem("lastSignInMethod", "google");
-    localStorage.setItem("oauth_intent", isSignup ? "signup" : "signin");
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/dashboard?oauth_intent=${isSignup ? 'signup' : 'signin'}`,
+        redirectTo: `${window.location.origin}/auth/callback?intent=${isSignup ? 'signup' : 'signin'}`,
         queryParams: { access_type: "offline", prompt: "consent" },
       },
     });
@@ -469,22 +468,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithApple = async (isSignup = false) => {
     localStorage.setItem("lastSignInMethod", "apple");
-    localStorage.setItem("oauth_intent", isSignup ? "signup" : "signin");
     await supabase.auth.signInWithOAuth({
       provider: "apple",
       options: {
-        redirectTo: `${window.location.origin}/dashboard?oauth_intent=${isSignup ? 'signup' : 'signin'}`,
+        redirectTo: `${window.location.origin}/auth/callback?intent=${isSignup ? 'signup' : 'signin'}`,
       },
     });
   };
 
   const signInWithDiscord = async (isSignup = false) => {
     localStorage.setItem("lastSignInMethod", "discord");
-    localStorage.setItem("oauth_intent", isSignup ? "signup" : "signin");
     await supabase.auth.signInWithOAuth({
       provider: "discord",
       options: {
-        redirectTo: `${window.location.origin}/dashboard?oauth_intent=${isSignup ? 'signup' : 'signin'}`,
+        redirectTo: `${window.location.origin}/auth/callback?intent=${isSignup ? 'signup' : 'signin'}`,
       },
     });
   };

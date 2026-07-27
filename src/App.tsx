@@ -25,6 +25,7 @@ const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const SignInPage = lazy(() => import("./pages/SignInPage"));
 const SignUpPage = lazy(() => import("./pages/SignUpPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
 const MemberDashboard = lazy(() => import("./pages/MemberDashboard"));
 const LibraryPage = lazy(() => import("./pages/LibraryPage"));
@@ -150,6 +151,7 @@ const App = () => {
                 <Route path="/signin" element={<SignInPage />} />
                 <Route path="/signup" element={<SignUpPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/subscribe" element={<SubscribePage />} />
                 <Route path="/dashboard" element={<MemberDashboard />} />
                 <Route path="/dashboard/home" element={<DashboardHome />} />
