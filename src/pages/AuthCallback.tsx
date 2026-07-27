@@ -27,7 +27,10 @@ export default function AuthCallback() {
         const isNewUser = Date.now() - createdAt < 60000; // within last 60 seconds
 
         if (isNewUser && intent === "signin") {
-          // New user came from sign-in page — delete account and send to subscribe
+          // Sign out FIRST before anything else to prevent dashboard flash
+          await supabase.auth.signOut();
+
+          // Then delete the account in the background
           try {
             await fetch(
               `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-unsubscribed-user`,
@@ -44,21 +47,20 @@ export default function AuthCallback() {
             console.warn("Could not delete user:", e);
           }
 
-          await supabase.auth.signOut();
-          navigate("/subscribe?from=signup");
+          navigate("/subscribe?from=signup", { replace: true });
           return;
         }
 
         if (isNewUser && intent === "signup") {
-          // New user from sign-up page — go to subscribe
+          // New user from sign-up page — sign out and go to subscribe
           await supabase.auth.signOut();
-          navigate("/subscribe?from=signup");
+          navigate("/subscribe?from=signup", { replace: true });
           return;
         }
       }
 
       // Existing user or email user — go to dashboard
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     };
 
     handleCallback();
