@@ -1,11 +1,9 @@
 ﻿import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Crown, CheckCircle, Loader2, Shield, Zap, BadgePercent } from 'lucide-react';
+import { Crown, CheckCircle, Loader2 } from 'lucide-react';
 
 interface SubscriptionPlan {
   id: string;
@@ -19,7 +17,6 @@ interface SubscriptionPlan {
 }
 
 export default function SubscribePage() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
@@ -28,20 +25,14 @@ export default function SubscribePage() {
 
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
-  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPlans();
-    const channel = supabase
-      .channel('subscription_plans_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'subscription_plans' }, fetchPlans)
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
   }, []);
 
-  // Auto-select tab if plan ID is in URL
+  // Auto-select tab based on URL plan
   useEffect(() => {
     if (planIdFromUrl && plans.length > 0) {
       const plan = plans.find(p => p.id === planIdFromUrl);
@@ -60,7 +51,7 @@ export default function SubscribePage() {
       if (error) throw error;
       setPlans(data || []);
     } catch (error: any) {
-      toast({ title: 'Error loading plans', description: error.message, variant: 'destructive' });
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -68,8 +59,6 @@ export default function SubscribePage() {
 
   const handleSelectPlan = async (plan: SubscriptionPlan) => {
     setProcessingId(plan.id);
-    setSelectedPlan(plan);
-
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const successUrl = fromSignup
@@ -79,23 +68,20 @@ export default function SubscribePage() {
 
       const { data: { user: currentUser } } = await supabase.auth.getUser();
 
-      const response = await fetch(
-        `${supabaseUrl}/functions/v1/create-checkout-session`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({
-            planId: plan.id,
-            userId: currentUser?.id || null,
-            userEmail: currentUser?.email || null,
-            successUrl,
-            cancelUrl,
-          }),
-        }
-      );
+      const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          planId: plan.id,
+          userId: currentUser?.id || null,
+          userEmail: currentUser?.email || null,
+          successUrl,
+          cancelUrl,
+        }),
+      });
 
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Failed to create checkout session');
@@ -105,75 +91,55 @@ export default function SubscribePage() {
         throw new Error('No checkout URL returned');
       }
     } catch (error: any) {
-      toast({
-        title: 'Payment Error',
-        description: error.message || 'Failed to open checkout. Please try again.',
-        variant: 'destructive',
-      });
-      setSelectedPlan(null);
+      toast({ title: 'Payment Error', description: error.message, variant: 'destructive' });
       setProcessingId(null);
     }
   };
 
-  // Filter plans by billing interval
   const monthlyPlans = plans.filter(p => p.interval === 'month');
   const yearlyPlans = plans.filter(p => p.interval === 'year');
   const displayPlans = billingInterval === 'month' ? monthlyPlans : yearlyPlans;
+  const hasYearly = yearlyPlans.length > 0;
 
-  // Calculate yearly savings vs monthly
-  const getYearlySavings = (yearlyPlan: SubscriptionPlan) => {
-    // Find equivalent monthly plan by matching name pattern
-    const monthlyEquivalent = monthlyPlans.find(m =>
-      m.name.toLowerCase().replace(/monthly|yearly|annual/gi, '').trim() ===
-      yearlyPlan.name.toLowerCase().replace(/monthly|yearly|annual/gi, '').trim()
-    ) || monthlyPlans[0];
-    if (!monthlyEquivalent) return null;
-    const monthlyTotal = monthlyEquivalent.price * 12;
-    const saved = monthlyTotal - yearlyPlan.price;
+  // Calculate yearly saving vs monthly equivalent
+  const getYearlySaving = (yearlyPlan: SubscriptionPlan) => {
+    const monthly = monthlyPlans[0];
+    if (!monthly) return null;
+    const annualMonthly = monthly.price * 12;
+    const saved = annualMonthly - yearlyPlan.price;
     if (saved <= 0) return null;
-    const pct = Math.round((saved / monthlyTotal) * 100);
-    return { amount: saved.toFixed(2), pct };
+    return Math.round((saved / annualMonthly) * 100);
   };
 
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary mb-3" />
-          <p className="text-muted-foreground">Loading plans...</p>
-        </div>
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-950 to-blue-900 py-16 px-4">
+    <div className="min-h-screen bg-white py-16 px-4">
 
       {/* Header */}
       <div className="text-center mb-10">
-        <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Crown className="w-8 h-8 text-yellow-400" />
-        </div>
-        <h1 className="text-4xl font-bold text-white mb-3">
+        <h1 className="text-4xl font-bold text-gray-900 mb-3">
           {fromSignup ? 'Choose Your Plan' : 'Upgrade to Premium'}
         </h1>
-        <p className="text-blue-200 text-lg max-w-xl mx-auto">
-          {fromSignup
-            ? 'Join thousands preparing for what matters most'
-            : 'Unlock full access to all content, courses, and resources'}
-        </p>
+        <p className="text-gray-500 text-lg">Simple, flexible pricing, no excuses.</p>
       </div>
 
-      {/* Billing toggle */}
-      {monthlyPlans.length > 0 && yearlyPlans.length > 0 && (
+      {/* Monthly / Yearly pill tabs */}
+      {hasYearly && (
         <div className="flex items-center justify-center mb-10">
-          <div className="bg-white/10 rounded-full p-1 flex items-center gap-1">
+          <div className="inline-flex items-center border border-gray-200 rounded-full p-1 bg-gray-50 gap-1">
             <button
               onClick={() => setBillingInterval('month')}
               className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${
                 billingInterval === 'month'
-                  ? 'bg-white text-blue-900'
-                  : 'text-white hover:bg-white/10'
+                  ? 'bg-gray-900 text-white shadow'
+                  : 'text-gray-500 hover:text-gray-900'
               }`}
             >
               Monthly
@@ -182,158 +148,127 @@ export default function SubscribePage() {
               onClick={() => setBillingInterval('year')}
               className={`px-6 py-2 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${
                 billingInterval === 'year'
-                  ? 'bg-white text-blue-900'
-                  : 'text-white hover:bg-white/10'
+                  ? 'bg-gray-900 text-white shadow'
+                  : 'text-gray-500 hover:text-gray-900'
               }`}
             >
               Yearly
-              <span className="bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                SAVE UP TO 20%
-              </span>
+              {yearlyPlans.length > 0 && monthlyPlans.length > 0 && (() => {
+                const pct = getYearlySaving(yearlyPlans[0]);
+                return pct ? (
+                  <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    Save {pct}%
+                  </span>
+                ) : null;
+              })()}
             </button>
           </div>
         </div>
       )}
 
-      {/* Plans grid */}
+      {/* Plans */}
       {displayPlans.length === 0 ? (
-        <div className="text-center text-blue-200 py-12">
-          <p>No {billingInterval === 'month' ? 'monthly' : 'yearly'} plans available yet.</p>
-          {billingInterval === 'year' && monthlyPlans.length > 0 && (
-            <button onClick={() => setBillingInterval('month')} className="mt-3 text-white underline text-sm">
-              View monthly plans instead
+        <div className="text-center text-gray-400 py-12">
+          <p>No {billingInterval === 'month' ? 'monthly' : 'yearly'} plans available.</p>
+          {billingInterval === 'year' && (
+            <button onClick={() => setBillingInterval('month')} className="mt-2 text-primary underline text-sm">
+              View monthly plans
             </button>
           )}
         </div>
       ) : (
         <div className={`grid gap-6 max-w-5xl mx-auto ${
-          displayPlans.length === 1 ? 'grid-cols-1 max-w-md' :
-          displayPlans.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
+          displayPlans.length === 1 ? 'grid-cols-1 max-w-sm' :
+          displayPlans.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-2xl' :
           'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
         }`}>
           {displayPlans.map((plan, idx) => {
-            const isPopular = idx === 0 || plan.slug.includes('popular') || plan.slug.includes('premium');
-            const isHighlighted = plan.id === planIdFromUrl;
+            const isPopular = idx === Math.floor(displayPlans.length / 2);
             const isProcessing = processingId === plan.id;
-            const savings = billingInterval === 'year' ? getYearlySavings(plan) : null;
+            const savingPct = billingInterval === 'year' ? getYearlySaving(plan) : null;
 
             return (
-              <div
-                key={plan.id}
-                className={`relative rounded-2xl transition-transform ${
-                  isPopular || isHighlighted ? 'scale-105' : ''
-                }`}
-              >
-                {/* Popular badge */}
+              <div key={plan.id} className={`relative rounded-2xl border-2 p-8 flex flex-col gap-6 transition-all hover:shadow-lg ${
+                isPopular
+                  ? 'border-yellow-400 bg-yellow-50 shadow-md'
+                  : 'border-gray-200 bg-white'
+              }`}>
+
+                {/* Most popular badge */}
                 {isPopular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                    <span className="bg-yellow-400 text-yellow-900 text-xs font-bold px-4 py-1 rounded-full shadow">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <span className="bg-yellow-400 text-yellow-900 text-xs font-bold px-4 py-1.5 rounded-full shadow">
                       MOST POPULAR
                     </span>
                   </div>
                 )}
 
-                {/* Savings badge */}
-                {savings && (
-                  <div className="absolute -top-4 right-4 z-10">
-                    <span className="bg-green-400 text-green-900 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow">
-                      <BadgePercent className="w-3 h-3" />
-                      Save {savings.pct}%
+                {/* Plan info */}
+                <div>
+                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                    {plan.name}
+                  </p>
+                  <div className="flex items-end gap-1">
+                    <span className="text-5xl font-black text-gray-900">
+                      £{plan.price}
+                    </span>
+                    <span className="text-gray-400 text-base mb-2">
+                      /{plan.interval === 'year' ? 'yr' : 'mo'}
                     </span>
                   </div>
-                )}
-
-                <Card className={`h-full border-2 overflow-hidden ${
-                  isPopular || isHighlighted
-                    ? 'border-yellow-400 bg-white'
-                    : 'border-white/20 bg-white/5 text-white'
-                }`}>
-                  <CardHeader className={`text-center pb-4 ${isPopular || isHighlighted ? '' : 'text-white'}`}>
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${
-                      isPopular || isHighlighted ? 'bg-primary/10' : 'bg-white/10'
-                    }`}>
-                      {isPopular ? <Zap className="w-6 h-6 text-primary" /> : <Shield className="w-6 h-6 text-blue-200" />}
-                    </div>
-                    <CardTitle className={`text-xl mb-1 ${isPopular || isHighlighted ? 'text-gray-900' : 'text-white'}`}>
-                      {plan.name}
-                    </CardTitle>
-                    <div className={`text-4xl font-black mt-2 ${isPopular || isHighlighted ? 'text-primary' : 'text-white'}`}>
-                      £{plan.price}
-                      <span className={`text-base font-normal ml-1 ${isPopular || isHighlighted ? 'text-muted-foreground' : 'text-blue-200'}`}>
-                        /{plan.interval === 'year' ? 'yr' : 'mo'}
-                      </span>
-                    </div>
-                    {savings && (
-                      <p className="text-green-600 text-sm font-semibold mt-1">
-                        Save £{savings.amount} vs monthly
-                      </p>
-                    )}
-                    {plan.interval === 'year' && (
-                      <p className={`text-xs mt-1 ${isPopular || isHighlighted ? 'text-muted-foreground' : 'text-blue-300'}`}>
-                        £{(plan.price / 12).toFixed(2)}/month billed annually
-                      </p>
-                    )}
-                  </CardHeader>
-
-                  <CardContent className="pt-0 space-y-4">
-                    <ul className="space-y-2.5">
-                      {(plan.features || []).map((feature, i) => (
-                        <li key={i} className="flex items-start gap-2.5">
-                          <CheckCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
-                            isPopular || isHighlighted ? 'text-green-500' : 'text-green-400'
-                          }`} />
-                          <span className={`text-sm ${isPopular || isHighlighted ? 'text-gray-700' : 'text-blue-100'}`}>
-                            {feature}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <Button
-                      className={`w-full font-bold py-6 text-base rounded-xl ${
-                        isPopular || isHighlighted
-                          ? 'bg-primary hover:bg-primary/90 text-white'
-                          : 'bg-white/15 hover:bg-white/25 text-white border border-white/30'
-                      }`}
-                      onClick={() => handleSelectPlan(plan)}
-                      disabled={!!processingId}
-                    >
-                      {isProcessing ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Opening checkout...
-                        </>
-                      ) : (
-                        <>
-                          <Crown className="w-4 h-4 mr-2" />
-                          {fromSignup ? 'Get Started' : 'Subscribe Now'}
-                        </>
+                  {plan.interval === 'year' && (
+                    <p className="text-sm text-gray-400 mt-1">
+                      £{(plan.price / 12).toFixed(2)}/month billed annually
+                      {savingPct && (
+                        <span className="ml-2 text-green-600 font-semibold">· Save {savingPct}%</span>
                       )}
-                    </Button>
-                  </CardContent>
-                </Card>
+                    </p>
+                  )}
+                </div>
+
+                {/* Features */}
+                <ul className="space-y-3 flex-1">
+                  {(plan.features || []).map((feature, i) => (
+                    <li key={i} className="flex items-start gap-2.5">
+                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA */}
+                <Button
+                  className={`w-full py-6 text-base font-bold rounded-xl ${
+                    isPopular
+                      ? 'bg-gray-900 hover:bg-gray-800 text-white'
+                      : 'bg-gray-900 hover:bg-gray-800 text-white'
+                  }`}
+                  onClick={() => handleSelectPlan(plan)}
+                  disabled={!!processingId}
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Opening checkout...
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="w-4 h-4 mr-2" />
+                      {fromSignup ? 'Get Started' : 'Subscribe Now'}
+                    </>
+                  )}
+                </Button>
               </div>
             );
           })}
         </div>
       )}
 
-      {/* Trust badges */}
-      <div className="mt-12 text-center space-y-2">
-        <div className="flex items-center justify-center gap-6 text-blue-200 text-sm">
-          <span className="flex items-center gap-1.5">
-            <CheckCircle className="w-4 h-4 text-green-400" />
-            Secure payment via Stripe
-          </span>
-          <span className="flex items-center gap-1.5">
-            <CheckCircle className="w-4 h-4 text-green-400" />
-            Cancel anytime
-          </span>
-          <span className="flex items-center gap-1.5">
-            <CheckCircle className="w-4 h-4 text-green-400" />
-            No hidden fees
-          </span>
-        </div>
+      {/* Trust line */}
+      <div className="mt-12 flex items-center justify-center gap-8 text-sm text-gray-400 flex-wrap">
+        <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-500" /> Secure payment via Stripe</span>
+        <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-500" /> Cancel anytime</span>
+        <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-500" /> No hidden fees</span>
       </div>
     </div>
   );
