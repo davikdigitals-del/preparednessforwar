@@ -39,9 +39,9 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<LoginResult>;
   adminLogin: (email: string, password: string) => Promise<boolean>;
   signup: (data: { email: string; password: string; name: string; country: string }) => Promise<boolean>;
-  signInWithGoogle: () => Promise<void>;
-  signInWithApple: () => Promise<void>;
-  signInWithDiscord: () => Promise<void>;
+  signInWithGoogle: (isSignup?: boolean) => Promise<void>;
+  signInWithApple: (isSignup?: boolean) => Promise<void>;
+  signInWithDiscord: (isSignup?: boolean) => Promise<void>;
   logout: () => void;
   notifications: AppNotification[];
   markNotificationRead: (id: string) => Promise<void>;
@@ -200,8 +200,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const createdAt = new Date(session.user.created_at).getTime();
             const isNewUser = Date.now() - createdAt < 30000;
 
-            if (isNewUser) {
-              // New OAuth user — must subscribe before getting an account
+            // Check if they came from sign-in page (not sign-up)
+            const oauthIntent = localStorage.getItem("oauth_intent") || "signin";
+            localStorage.removeItem("oauth_intent");
+
+            if (isNewUser && oauthIntent === "signin") {
+              // New user tried to sign in via OAuth — they need to subscribe first
               // Sign them out and redirect to subscription page
               await supabase.auth.signOut();
               if (mounted) {
@@ -432,8 +436,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (isSignup = false) => {
     localStorage.setItem("lastSignInMethod", "google");
+    // Track if this is a sign-up or sign-in so we can handle new users correctly
+    localStorage.setItem("oauth_intent", isSignup ? "signup" : "signin");
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -443,16 +449,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const signInWithApple = async () => {
+  const signInWithApple = async (isSignup = false) => {
     localStorage.setItem("lastSignInMethod", "apple");
+    localStorage.setItem("oauth_intent", isSignup ? "signup" : "signin");
     await supabase.auth.signInWithOAuth({
       provider: "apple",
       options: { redirectTo: `${window.location.origin}/dashboard` },
     });
   };
 
-  const signInWithDiscord = async () => {
+  const signInWithDiscord = async (isSignup = false) => {
     localStorage.setItem("lastSignInMethod", "discord");
+    localStorage.setItem("oauth_intent", isSignup ? "signup" : "signin");
     await supabase.auth.signInWithOAuth({
       provider: "discord",
       options: { redirectTo: `${window.location.origin}/dashboard` },

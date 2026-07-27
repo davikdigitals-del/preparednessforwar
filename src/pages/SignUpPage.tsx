@@ -261,7 +261,7 @@ export default function SignUpPage() {
               )}
 
               <div className="grid grid-cols-3 gap-3">
-                <Button type="button" variant="outline" onClick={signInWithGoogle}
+                <Button type="button" variant="outline" onClick={() => signInWithGoogle(true)}
                   className={`w-full flex items-center justify-center transition-all ${lastSignInMethod === 'google' ? 'ring-2 ring-primary ring-offset-2 bg-blue-50' : 'hover:bg-gray-50'}`}
                   title="Sign up with Google">
                   <svg width="20" height="20" viewBox="0 0 48 48">
@@ -271,14 +271,14 @@ export default function SignUpPage() {
                     <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
                   </svg>
                 </Button>
-                <Button type="button" variant="outline" onClick={signInWithApple}
+                <Button type="button" variant="outline" onClick={() => signInWithApple(true)}
                   className={`w-full flex items-center justify-center transition-all ${lastSignInMethod === 'apple' ? 'ring-2 ring-primary ring-offset-2 bg-gray-50' : 'hover:bg-gray-50'}`}
                   title="Sign up with Apple">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="#000000">
                     <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
                   </svg>
                 </Button>
-                <Button type="button" variant="outline" onClick={signInWithDiscord}
+                <Button type="button" variant="outline" onClick={() => signInWithDiscord(true)}
                   className={`w-full flex items-center justify-center transition-all ${lastSignInMethod === 'discord' ? 'ring-2 ring-primary ring-offset-2 bg-indigo-50' : 'hover:bg-indigo-50'}`}
                   title="Sign up with Discord">
                   <svg width="20" height="20" viewBox="0 0 71 55" fill="#5865F2">
