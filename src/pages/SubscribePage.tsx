@@ -66,18 +66,25 @@ export default function SubscribePage() {
         : `${window.location.origin}/dashboard?payment=success`;
       const cancelUrl = `${window.location.origin}/subscribe?plan=${plan.id}${fromSignup ? '&from=signup' : ''}`;
 
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const { data: { user: currentUser }, data: { session } } = await supabase.auth.getSession();
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+      };
+
+      // Send auth token if user is logged in
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
 
       const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-        },
+        headers,
         body: JSON.stringify({
           planId: plan.id,
-          userId: currentUser?.id || null,
-          userEmail: currentUser?.email || null,
+          userId: session?.user?.id || null,
+          userEmail: session?.user?.email || null,
           successUrl,
           cancelUrl,
         }),

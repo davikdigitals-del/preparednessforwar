@@ -45,45 +45,48 @@ serve(async (req) => {
     console.log('token sub:', tokenPayload?.sub ?? 'MISSING')
 
     // Reject immediately if the token is the anon key (no sub claim)
-    if (!tokenPayload?.sub) {
-      throw new Error('Not authenticated - no user session found. Please log in and try again.')
-    }
-
-    // Verify the token using service role key (preferred) or anon key
-    const verifyKey = serviceRoleKey || anonKey
-    const supabaseAdmin = createClient(supabaseUrl, verifyKey, {
-      auth: { persistSession: false },
-    })
-
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token)
-    console.log('getUser error:', userError?.message ?? 'none')
-    console.log('user id:', user?.id ?? 'none')
-
-    if (userError || !user) {
-      throw new Error(`Not authenticated - ${userError?.message ?? 'user not found'}`)
+    // Allow unauthenticated requests — new users pay before creating account
+    let user: any = null;
+    if (tokenPayload?.sub) {
+      // Verify the token using service role key
+      const verifyKey = serviceRoleKey || anonKey;
+      const supabaseAdmin = createClient(supabaseUrl, verifyKey, {
+        auth: { persistSession: false },
+      });
+      const { data: { user: authUser }, error: userError } = await supabaseAdmin.auth.getUser(token);
+      if (!userError && authUser) {
+        user = authUser;
+      }
     }
 
     // Parse body
-    const { planId } = await req.json()
+    const body = await req.json();
+    const { planId, userId, userEmail, successUrl, cancelUrl } = body;
 
-    // Fetch plan
-    const supabaseClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    })
+    // Use passed userId/email if no authenticated user
+    const effectiveUserId = user?.id || userId || null;
+    const effectiveEmail = user?.email || userEmail || null;
 
-    const { data: plan, error: planError } = await supabaseClient
+    // Fetch plan using service role to bypass RLS
+    const supabaseAdmin2 = createClient(supabaseUrl, serviceRoleKey || anonKey, {
+      auth: { persistSession: false },
+    });
+
+    const { data: plan, error: planError } = await supabaseAdmin2
       .from('subscription_plans')
       .select('*')
       .eq('id', planId)
-      .single()
+      .single();
 
     if (planError || !plan) {
-      throw new Error(`Plan not found - ${planError?.message ?? 'no data'}`)
+      throw new Error(`Plan not found - ${planError?.message ?? 'no data'}`);
     }
 
-    const origin = req.headers.get('origin') || 'https://preparednessforwar.onrender.com'
+    const origin = req.headers.get('origin') || 'https://preparednessforwar.onrender.com';
+    const finalSuccessUrl = successUrl || `${origin}/dashboard?subscription=success`;
+    const finalCancelUrl = cancelUrl || `${origin}/subscribe?plan=${planId}`;
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: any = {
       payment_method_types: ['card'],
       line_items: [{
         price_data: {
@@ -98,16 +101,19 @@ serve(async (req) => {
         quantity: 1,
       }],
       mode: 'subscription',
-      success_url: `${origin}/dashboard?subscription=success`,
-      cancel_url: `${origin}/subscribe?plan=${planId}`,
-      customer_email: user.email,
-      client_reference_id: user.id,
+      success_url: finalSuccessUrl,
+      cancel_url: finalCancelUrl,
       metadata: {
-        userId: user.id,
         planId: plan.id,
         planName: plan.name,
+        ...(effectiveUserId ? { userId: effectiveUserId } : {}),
       },
-    })
+    };
+
+    if (effectiveEmail) sessionParams.customer_email = effectiveEmail;
+    if (effectiveUserId) sessionParams.client_reference_id = effectiveUserId;
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     return new Response(
       JSON.stringify({ sessionId: session.id, url: session.url }),
