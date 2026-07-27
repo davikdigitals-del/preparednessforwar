@@ -201,28 +201,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const isNewUser = Date.now() - createdAt < 30000;
 
             if (isNewUser) {
-              // New OAuth user — ensure member role in DB
-              await supabase.from("profiles").upsert(
-                {
-                  id: session.user.id,
-                  email: session.user.email,
-                  name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email.split("@")[0],
-                  is_admin: false,
-                  role: "member",
-                  country: session.user.user_metadata?.country || null,
-                },
-                { onConflict: "id" }
-              );
-              await supabase
-                .from("user_roles")
-                .upsert({ user_id: session.user.id, role: "member" } as any, { onConflict: "user_id,role" });
-
-              // Redirect new OAuth users to subscription page instead of dashboard
-              lastProcessedUserId = session.user.id;
-              const built = await buildUser(session.user);
+              // New OAuth user — must subscribe before getting an account
+              // Sign them out and redirect to subscription page
+              await supabase.auth.signOut();
               if (mounted) {
-                setUser(built);
-                await fetchNotifications(session.user.id);
+                setUser(null);
+                setNotifications([]);
                 setLoading(false);
                 window.location.href = `${window.location.origin}/subscribe?from=signup`;
               }

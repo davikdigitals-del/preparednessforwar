@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { natoCountries } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,8 @@ function PasswordStrength({ password }: { password: string }) {
 export default function SignUpPage() {
   const { signup, signInWithGoogle, signInWithApple, signInWithDiscord } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const paymentSuccess = searchParams.get('payment') === 'success';
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -118,6 +120,15 @@ export default function SignUpPage() {
           <p className="text-sm text-muted-foreground mt-1">Join the Preparedness Hub community</p>
         </CardHeader>
         <CardContent>
+          {paymentSuccess && !signupDone && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-start gap-2">
+              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-green-800">Payment successful!</p>
+                <p className="text-xs text-green-700 mt-0.5">Now create your account to access your subscription.</p>
+              </div>
+            </div>
+          )}
           {signupDone ? (
             <div className="text-center py-4 space-y-4">
               <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto">
