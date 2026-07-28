@@ -19,6 +19,7 @@ import {
   Menu,
   X,
   ExternalLink,
+  GraduationCap,
 } from "lucide-react";
 
 export default function AdminLayout() {
@@ -135,6 +136,7 @@ export default function AdminLayout() {
         { icon: Users, label: "Members", path: "/admin/members" },
         { icon: BookOpen, label: "Courses", path: "/admin/courses" },
         { icon: Users, label: "Enrollments", path: "/admin/enrollments" },
+        { icon: GraduationCap, label: "Education Programmes", path: "/admin/education" },
         { icon: Globe, label: "Affiliate Products", path: "/admin/affiliate-products" },
         { icon: Image, label: "Ads", path: "/admin/ads" },
         { icon: Megaphone, label: "Sponsorships", path: "/admin/sponsorships" },

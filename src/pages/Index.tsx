@@ -1,16 +1,37 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useData } from "@/contexts/DataContext";
 import { useNavSections } from "@/hooks/useNavSections";
-import { ArrowRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { ArrowRight, CheckCircle, Crown, Loader2 } from "lucide-react";
 
 const Index = () => {
   const { loading } = useData();
   const { sections: dbSections } = useNavSections();
+  const [plans, setPlans] = useState<{ id: string; name: string; price: number; currency: string; interval: string; features: string[] }[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
 
   useEffect(() => {
     document.title = "Preparedness For War - Latest News & Updates";
+    fetchPlans();
   }, []);
+
+  const fetchPlans = async () => {
+    try {
+      const { data } = await supabase
+        .from("subscription_plans")
+        .select("id, name, price, currency, interval, features")
+        .eq("is_active", true)
+        .neq("slug", "free")
+        .eq("interval", "month")
+        .order("price", { ascending: true });
+      setPlans(data || []);
+    } catch {
+      // silently fail — subscription section is non-critical
+    } finally {
+      setPlansLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -107,6 +128,110 @@ const Index = () => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ── SUBSCRIPTION PLANS (below mission) ── */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-center mb-10">
+            <span className="text-xs font-black uppercase tracking-widest text-blue-600 mb-2 block">
+              Membership
+            </span>
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 uppercase mb-3">
+              Join & Stay Prepared
+            </h2>
+            <p className="text-gray-500 max-w-xl mx-auto text-sm leading-relaxed">
+              Unlock premium courses, in-depth resources, and expert guidance. Cancel anytime.
+            </p>
+          </div>
+
+          {plansLoading ? (
+            <div className="flex justify-center py-10">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
+          ) : plans.length === 0 ? (
+            /* Fallback if no plans fetched — show a single CTA card */
+            <div className="max-w-md mx-auto bg-blue-900 text-white rounded-2xl p-8 text-center shadow-xl">
+              <Crown className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+              <h3 className="text-2xl font-black mb-2">Premium Membership</h3>
+              <p className="text-blue-200 text-sm mb-6">
+                Full access to all courses, survival guides, expert resources and more.
+              </p>
+              <Link
+                to="/subscribe"
+                className="inline-flex items-center gap-2 px-8 py-3 bg-white text-blue-900 font-bold text-sm hover:bg-blue-50 transition-colors rounded"
+              >
+                <Crown className="w-4 h-4" /> View Plans
+              </Link>
+            </div>
+          ) : (
+            <div className={`grid gap-6 mx-auto ${
+              plans.length === 1 ? "max-w-sm grid-cols-1" :
+              plans.length === 2 ? "max-w-2xl grid-cols-1 sm:grid-cols-2" :
+              "max-w-4xl grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+            }`}>
+              {plans.map((plan, idx) => {
+                const isPopular = plans.length > 1 && idx === Math.floor(plans.length / 2);
+                return (
+                  <div
+                    key={plan.id}
+                    className={`relative rounded-2xl border-2 p-7 flex flex-col gap-5 transition-all hover:shadow-lg ${
+                      isPopular
+                        ? "border-yellow-400 bg-yellow-50 shadow-md"
+                        : "border-gray-200 bg-white"
+                    }`}
+                  >
+                    {isPopular && (
+                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                        <span className="bg-yellow-400 text-yellow-900 text-xs font-black px-4 py-1.5 rounded-full shadow uppercase tracking-wider">
+                          Most Popular
+                        </span>
+                      </div>
+                    )}
+
+                    <div>
+                      <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{plan.name}</p>
+                      <div className="flex items-end gap-1">
+                        <span className="text-5xl font-black text-gray-900">
+                          {plan.currency === "GBP" ? "£" : plan.currency === "USD" ? "$" : "€"}{plan.price}
+                        </span>
+                        <span className="text-gray-400 text-sm mb-2">/mo</span>
+                      </div>
+                    </div>
+
+                    <ul className="space-y-2.5 flex-1">
+                      {(plan.features || []).slice(0, 5).map((feature, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                          <span className="text-xs text-gray-700">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <Link
+                      to={`/subscribe?plan=${plan.id}`}
+                      className={`w-full py-3 text-sm font-bold text-center rounded-xl transition-colors ${
+                        isPopular
+                          ? "bg-blue-900 text-white hover:bg-blue-800"
+                          : "bg-gray-900 text-white hover:bg-gray-800"
+                      }`}
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        <Crown className="w-4 h-4" /> Get Started
+                      </span>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <p className="text-center text-xs text-gray-400 mt-6 flex items-center justify-center gap-6">
+            <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> Secure payment via Stripe</span>
+            <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> Cancel anytime</span>
+            <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> No hidden fees</span>
+          </p>
         </div>
       </div>
 
