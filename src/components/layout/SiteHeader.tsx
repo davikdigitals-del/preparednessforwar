@@ -77,6 +77,7 @@ const moreMenuConfig: MegaMenuConfig = {
   programmes: {
     heading: "Learn & Shop",
     groups: [
+      { id: "education", label: "Education", href: "/education" },
       { id: "courses", label: "Courses", href: "/courses" },
       { id: "my-courses", label: "My Learning", href: "/my-courses" },
       { id: "shop", label: "Essential Supplies", href: "/shop" },
@@ -401,6 +402,14 @@ export function SiteHeader() {
                 >
                   <FileText className="w-4 h-4" />
                   Community Reports
+                </Link>
+                <Link
+                  to="/education"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <GraduationCap className="w-4 h-4" />
+                  Education
                 </Link>
                 <Link
                   to="/courses"

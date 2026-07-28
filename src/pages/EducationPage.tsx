@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { publicSupabase } from "@/integrations/supabase/publicClient";
-import { useAuth } from "@/contexts/AuthContext";
 import { CourseCard } from "@/components/CourseCard";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   GraduationCap, BookOpen, Shield, Search, ChevronRight,
-  Star, Clock, Users, Award, Loader2
+  Award, Loader2
 } from "lucide-react";
 import type { Course } from "@/types/monetization";
 
@@ -36,7 +34,6 @@ const LEVEL_BADGE = {
 };
 
 export default function EducationPage() {
-  const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("courses");
   const [courses, setCourses] = useState<Course[]>([]);
   const [programmes, setProgrammes] = useState<EducationProgramme[]>([]);
@@ -62,8 +59,7 @@ export default function EducationPage() {
     }
   };
 
-  if (authLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
   const scouts = programmes.filter(p => p.programme_type === "scouts");
   const homeschool = programmes.filter(p => p.programme_type === "homeschool");
