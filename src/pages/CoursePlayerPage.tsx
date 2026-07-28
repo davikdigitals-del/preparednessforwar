@@ -5,10 +5,10 @@ import { publicSupabase } from "@/integrations/supabase/publicClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, ChevronRight, CheckCircle, Play, FileText, HelpCircle, Download, Menu, X, Settings } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle, Play, FileText, HelpCircle, Download, Menu, X, Settings, RotateCcw, Trophy, Award, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CourseVideoPlayer } from "@/components/CourseVideoPlayer";
-import type { Course, CourseModule, CourseLesson, CourseEnrollment } from "@/types/monetization";
+import type { Course, CourseModule, CourseLesson, CourseEnrollment, CourseQuiz, QuizQuestion } from "@/types/monetization";
 
 export default function CoursePlayerPage() {
   const { slug } = useParams();
@@ -21,6 +21,14 @@ export default function CoursePlayerPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+
+  // Quiz state
+  const [quiz, setQuiz] = useState<CourseQuiz | null>(null);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [quizResult, setQuizResult] = useState<{ score: number; passed: boolean } | null>(null);
+  const [previousAttempt, setPreviousAttempt] = useState<{ score: number; passed: boolean } | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -105,9 +113,17 @@ export default function CoursePlayerPage() {
         const lesson = modulesData
           .flatMap(m => m.lessons || [])
           .find(l => l.id === enrollmentResult.data.last_accessed_lesson_id);
-        setCurrentLesson(lesson || modulesData[0]?.lessons?.[0] || null);
+        const initialLesson = lesson || modulesData[0]?.lessons?.[0] || null;
+        setCurrentLesson(initialLesson);
+        if (initialLesson?.content_type === "quiz") {
+          fetchQuiz(initialLesson.id);
+        }
       } else {
-        setCurrentLesson(modulesData[0]?.lessons?.[0] || null);
+        const initialLesson = modulesData[0]?.lessons?.[0] || null;
+        setCurrentLesson(initialLesson);
+        if (initialLesson?.content_type === "quiz") {
+          fetchQuiz(initialLesson.id);
+        }
       }
     } catch (error: any) {
       console.error("Error:", error);
@@ -162,6 +178,8 @@ export default function CoursePlayerPage() {
           title: "🎉 Congratulations!",
           description: "You've completed the course!",
         });
+        // Issue certificate automatically
+        issueCertificate(enrollment.id);
       }
     } catch (error: any) {
       toast({
@@ -174,6 +192,12 @@ export default function CoursePlayerPage() {
 
   const handleLessonChange = async (lesson: CourseLesson) => {
     setCurrentLesson(lesson);
+    // Reset quiz state when switching lessons
+    setQuiz(null);
+    setQuizAnswers({});
+    setQuizSubmitted(false);
+    setQuizResult(null);
+    setPreviousAttempt(null);
 
     if (enrollment) {
       await supabase
@@ -181,6 +205,118 @@ export default function CoursePlayerPage() {
         .update({ last_accessed_lesson_id: lesson.id })
         .eq("id", enrollment.id);
     }
+
+    // If this is a quiz lesson, load the quiz data
+    if (lesson.content_type === "quiz") {
+      fetchQuiz(lesson.id);
+    }
+  };
+
+  const fetchQuiz = async (lessonId: string) => {
+    setQuizLoading(true);
+    try {
+      const { data: quizData, error: quizError } = await publicSupabase
+        .from("course_quizzes")
+        .select("*")
+        .eq("lesson_id", lessonId)
+        .maybeSingle();
+
+      if (quizError) throw quizError;
+      setQuiz(quizData || null);
+
+      // Check for a previous attempt by this user
+      if (quizData && enrollment) {
+        const { data: attemptData } = await supabase
+          .from("quiz_attempts")
+          .select("score, passed")
+          .eq("quiz_id", quizData.id)
+          .eq("user_id", user!.id)
+          .order("attempted_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (attemptData) {
+          setPreviousAttempt({ score: attemptData.score, passed: attemptData.passed });
+        }
+      }
+    } catch (error: any) {
+      console.error("Failed to load quiz:", error);
+    } finally {
+      setQuizLoading(false);
+    }
+  };
+
+  const handleQuizSubmit = async () => {
+    if (!quiz || !enrollment) return;
+    const questions: QuizQuestion[] = quiz.questions;
+
+    // Score the attempt
+    let correct = 0;
+    questions.forEach((q, i) => {
+      if (quizAnswers[i] === q.correct_answer) correct++;
+    });
+    const score = Math.round((correct / questions.length) * 100);
+    const passed = score >= quiz.passing_score;
+
+    setQuizResult({ score, passed });
+    setQuizSubmitted(true);
+
+    try {
+      // Save the attempt
+      await supabase.from("quiz_attempts").insert([
+        {
+          quiz_id: quiz.id,
+          user_id: user!.id,
+          enrollment_id: enrollment.id,
+          answers: quizAnswers,
+          score,
+          passed,
+        },
+      ]);
+
+      // Auto-complete the lesson if passed
+      if (passed) {
+        const completedLessons = enrollment.completed_lessons || [];
+        if (!completedLessons.includes(currentLesson!.id)) {
+          const newCompleted = [...completedLessons, currentLesson!.id];
+          const totalLessons = modules.reduce((sum, m) => sum + (m.lessons?.length || 0), 0);
+          const progress = Math.round((newCompleted.length / totalLessons) * 100);
+
+          await supabase
+            .from("course_enrollments")
+            .update({
+              completed_lessons: newCompleted,
+              progress_percentage: progress,
+              is_completed: progress === 100,
+              completed_at: progress === 100 ? new Date().toISOString() : null,
+            })
+            .eq("id", enrollment.id);
+
+          setEnrollment({
+            ...enrollment,
+            completed_lessons: newCompleted,
+            progress_percentage: progress,
+            is_completed: progress === 100,
+          });
+          if (progress === 100) issueCertificate(enrollment.id);
+        }
+        toast({ title: "Quiz passed!", description: `You scored ${score}% — lesson completed.` });
+      } else {
+        toast({
+          title: "Quiz not passed",
+          description: `You scored ${score}%. You need ${quiz.passing_score}% to pass.`,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Failed to save quiz attempt:", error);
+    }
+  };
+
+  const handleRetakeQuiz = () => {
+    setQuizAnswers({});
+    setQuizSubmitted(false);
+    setQuizResult(null);
   };
 
   const getNextLesson = () => {
@@ -400,10 +536,157 @@ export default function CoursePlayerPage() {
               )}
 
               {currentLesson.content_type === "quiz" && (
-                <div className="p-8 text-center">
-                  <HelpCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">Quiz</h3>
-                  <p className="text-gray-600 mb-4">Quiz functionality coming soon!</p>
+                <div className="p-6 sm:p-8">
+                  {quizLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  ) : !quiz ? (
+                    <div className="text-center py-12">
+                      <HelpCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold mb-2">No Quiz Yet</h3>
+                      <p className="text-gray-500">The quiz for this lesson hasn't been set up yet. Check back soon.</p>
+                    </div>
+                  ) : quizSubmitted && quizResult ? (
+                    /* ── Results screen ── */
+                    <div className="max-w-lg mx-auto text-center">
+                      {quizResult.passed ? (
+                        <>
+                          <Trophy className="w-20 h-20 text-yellow-500 mx-auto mb-4" />
+                          <h3 className="text-2xl font-bold text-green-700 mb-2">Quiz Passed!</h3>
+                        </>
+                      ) : (
+                        <>
+                          <HelpCircle className="w-20 h-20 text-red-400 mx-auto mb-4" />
+                          <h3 className="text-2xl font-bold text-red-700 mb-2">Not Quite</h3>
+                        </>
+                      )}
+                      <p className="text-4xl font-bold mb-2">{quizResult.score}%</p>
+                      <p className="text-gray-600 mb-6">
+                        {quizResult.passed
+                          ? "Great work — this lesson has been marked complete."
+                          : `You need ${quiz.passing_score}% to pass. Give it another try!`}
+                      </p>
+
+                      {/* Answer review */}
+                      <div className="text-left space-y-4 mb-8">
+                        {(quiz.questions as QuizQuestion[]).map((q, i) => {
+                          const selected = quizAnswers[i];
+                          const correct = q.correct_answer;
+                          const isCorrect = selected === correct;
+                          return (
+                            <div
+                              key={i}
+                              className={`border rounded-lg p-4 ${
+                                isCorrect ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"
+                              }`}
+                            >
+                              <p className="font-medium mb-2">
+                                {i + 1}. {q.question}
+                              </p>
+                              {q.options.map((opt, oi) => (
+                                <p
+                                  key={oi}
+                                  className={`text-sm py-1 px-2 rounded mb-1 ${
+                                    oi === correct
+                                      ? "bg-green-200 text-green-900 font-semibold"
+                                      : oi === selected && !isCorrect
+                                      ? "bg-red-200 text-red-900"
+                                      : "text-gray-700"
+                                  }`}
+                                >
+                                  {oi === correct && "✓ "}
+                                  {oi === selected && !isCorrect && "✗ "}
+                                  {opt}
+                                </p>
+                              ))}
+                              {q.explanation && (
+                                <p className="text-xs text-gray-600 mt-2 italic">{q.explanation}</p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {!quizResult.passed && (
+                        <Button onClick={handleRetakeQuiz}>
+                          <RotateCcw className="w-4 h-4 mr-2" />
+                          Retake Quiz
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    /* ── Quiz questions ── */
+                    <div className="max-w-2xl mx-auto">
+                      <div className="flex items-center gap-3 mb-6">
+                        <HelpCircle className="w-8 h-8 text-blue-600 shrink-0" />
+                        <div>
+                          <h3 className="text-xl font-bold">{quiz.title}</h3>
+                          {quiz.description && (
+                            <p className="text-gray-600 text-sm mt-0.5">{quiz.description}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {previousAttempt && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-6 text-sm text-blue-800">
+                          Previous best: <strong>{previousAttempt.score}%</strong>{" "}
+                          {previousAttempt.passed ? "— Passed ✓" : `— Need ${quiz.passing_score}% to pass`}
+                        </div>
+                      )}
+
+                      <p className="text-sm text-gray-500 mb-6">
+                        {(quiz.questions as QuizQuestion[]).length} questions · Passing score: {quiz.passing_score}%
+                      </p>
+
+                      <div className="space-y-6">
+                        {(quiz.questions as QuizQuestion[]).map((q, i) => (
+                          <div key={i} className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+                            <p className="font-semibold mb-3">
+                              {i + 1}. {q.question}
+                            </p>
+                            <div className="space-y-2">
+                              {q.options.map((opt, oi) => (
+                                <label
+                                  key={oi}
+                                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                                    quizAnswers[i] === oi
+                                      ? "bg-blue-50 border-blue-500 text-blue-900"
+                                      : "bg-white border-gray-200 hover:bg-gray-50"
+                                  }`}
+                                >
+                                  <input
+                                    type="radio"
+                                    name={`q${i}`}
+                                    value={oi}
+                                    checked={quizAnswers[i] === oi}
+                                    onChange={() =>
+                                      setQuizAnswers(prev => ({ ...prev, [i]: oi }))
+                                    }
+                                    className="w-4 h-4 accent-blue-600"
+                                  />
+                                  <span className="text-sm">{opt}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mt-8 flex justify-end">
+                        <Button
+                          onClick={handleQuizSubmit}
+                          disabled={
+                            Object.keys(quizAnswers).length <
+                            (quiz.questions as QuizQuestion[]).length
+                          }
+                          size="lg"
+                        >
+                          Submit Quiz
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

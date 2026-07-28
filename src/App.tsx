@@ -26,6 +26,7 @@ const SignInPage = lazy(() => import("./pages/SignInPage"));
 const SignUpPage = lazy(() => import("./pages/SignUpPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const EducationPage = lazy(() => import("./pages/EducationPage"));
 const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
 const MemberDashboard = lazy(() => import("./pages/MemberDashboard"));
 const LibraryPage = lazy(() => import("./pages/LibraryPage"));
@@ -78,6 +79,7 @@ const AdminMembers = lazy(() => import("./pages/admin/AdminMembers"));
 const AdminCountries = lazy(() => import("./pages/admin/AdminCountries"));
 const AdminMemberReports = lazy(() => import("./pages/admin/AdminMemberReports"));
 const AdminCourses = lazy(() => import("./pages/admin/AdminCourses"));
+const AdminEducation = lazy(() => import("./pages/admin/AdminEducation"));
 const AdminCourseBuilder = lazy(() => import("./pages/admin/AdminCourseBuilder"));
 const AdminEnrollments = lazy(() => import("./pages/admin/AdminEnrollments"));
 const AdminAffiliateProducts = lazy(() => import("./pages/admin/AdminAffiliateProducts"));
@@ -135,6 +137,7 @@ const App = () => {
                 <Route path="members" element={<AdminMembers />} />
                 <Route path="courses" element={<AdminCourses />} />
                 <Route path="courses/:id/builder" element={<AdminCourseBuilder />} />
+                <Route path="education" element={<AdminEducation />} />
                 <Route path="enrollments" element={<AdminEnrollments />} />
                 <Route path="affiliate-products" element={<AdminAffiliateProducts />} />
                 <Route path="sponsors" element={<AdminSponsors />} />
@@ -152,7 +155,9 @@ const App = () => {
                 <Route path="/signup" element={<SignUpPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/education" element={<EducationPage />} />
                 <Route path="/subscribe" element={<SubscribePage />} />
+                <Route path="/courses" element={<CoursesPage />} />
                 <Route path="/dashboard" element={<MemberDashboard />} />
                 <Route path="/dashboard/home" element={<DashboardHome />} />
                 <Route path="/dashboard/training" element={<TrainingAcademy />} />
@@ -164,7 +169,6 @@ const App = () => {
                 <Route path="/dashboard/my-ads" element={<AdvertiseWithUs />} />
                 <Route path="/dashboard/sponsorship" element={<SponsorshipInquiry />} />
                 <Route path="/my-subscription" element={<MemberSubscription />} />
-                <Route path="/courses" element={<CoursesPage />} />
                 <Route path="/courses/:slug" element={<CourseDetailPage />} />
                 <Route path="/my-courses" element={<MyCoursesPage />} />
                 <Route path="/checkout/course/:courseId" element={<CheckoutPage />} />

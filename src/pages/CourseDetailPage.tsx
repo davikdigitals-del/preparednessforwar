@@ -5,7 +5,8 @@ import { publicSupabase } from "@/integrations/supabase/publicClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { Button } from "@/components/ui/button";
-import { Clock, Users, Star, BookOpen, Globe, Award, CheckCircle, Play, Lock, Crown, ChevronLeft } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Clock, Users, Star, BookOpen, Globe, CheckCircle, Play, Lock, Crown, ChevronLeft, Send, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Course, CourseModule, CourseReview } from "@/types/monetization";
 
@@ -13,25 +14,36 @@ export default function CourseDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isPremium } = usePremiumStatus();
+  const { isPremium, loading: premiumLoading } = usePremiumStatus();
+
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [reviews, setReviews] = useState<CourseReview[]>([]);
   const [enrollment, setEnrollment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  // Review state
+  const [myReview, setMyReview] = useState<CourseReview | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const [hoverRating, setHoverRating] = useState(0);
+  const [submittingReview, setSubmittingReview] = useState(false);
+
   const { toast } = useToast();
 
+  // Re-fetch when user OR premium status changes so the enrollment card
+  // reflects the correct state as soon as the subscription check resolves.
   useEffect(() => {
-    if (slug) {
+    if (slug && !premiumLoading) {
       fetchCourseData();
     }
-  }, [slug, user]);
+  }, [slug, user, isPremium, premiumLoading]);
 
   const fetchCourseData = async () => {
     try {
       setLoading(true);
 
-      // Try exact slug match first, then prefix match for timestamp-suffixed slugs
+      // Exact slug match first, then prefix match for timestamp-suffixed slugs
       let courseResult = await publicSupabase
         .from("courses")
         .select("*")
@@ -66,58 +78,60 @@ export default function CourseDetailPage() {
           .order("created_at", { ascending: false })
           .limit(10),
       ]);
-      
-      setCourse(courseResult.data ? { ...courseResult.data, course_type: courseResult.data.course_type || 'course' } : null);
-      
+
+      setCourse(courseResult.data ? { ...courseResult.data, course_type: courseResult.data.course_type || "course" } : null);
+
       if (courseResult.data) {
         const modulesData = modulesResult.data?.filter(m => m.course_id === courseResult.data.id) || [];
         setModules(modulesData);
-        
+
         const reviewsData = reviewsResult.data?.filter(r => r.course_id === courseResult.data.id) || [];
         setReviews(reviewsData);
 
-        // Check if user is enrolled
         if (user) {
           const { data: enrollmentData } = await supabase
             .from("course_enrollments")
             .select("*")
             .eq("course_id", courseResult.data.id)
             .eq("user_id", user.id)
-            .single();
-          
-          setEnrollment(enrollmentData);
+            .maybeSingle();
+
+          setEnrollment(enrollmentData || null);
+
+          if (enrollmentData) {
+            const { data: myReviewData } = await supabase
+              .from("course_reviews")
+              .select("*")
+              .eq("course_id", courseResult.data.id)
+              .eq("user_id", user.id)
+              .maybeSingle();
+            setMyReview(myReviewData || null);
+          }
         }
       }
     } catch (error: any) {
       console.error("Error fetching course:", error);
-      toast({
-        title: "Error",
-        description: "Course not found",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Course not found", variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
 
+  // ── Enroll ────────────────────────────────────────────────────────────────
+
   const handleEnroll = () => {
-    if (!user) {
-      navigate("/login");
-      return;
-    }
+    if (!user) { navigate("/login"); return; }
+    if (premiumLoading) return; // wait for subscription check
 
     if (course?.is_free || isPremium) {
-      // Free course OR premium subscriber â€” enroll for free
       createFreeEnrollment();
     } else {
-      // Redirect to subscribe page
-      navigate(`/subscribe`);
+      navigate("/subscribe");
     }
   };
 
   const createFreeEnrollment = async () => {
     if (!course || !user) return;
-
     try {
       const { error } = await supabase.from("course_enrollments").insert([
         {
@@ -130,19 +144,47 @@ export default function CourseDetailPage() {
           completed_lessons: [],
         },
       ]);
-
       if (error) throw error;
-
-      toast({ title: "Success", description: "You're enrolled! Start learning now." });
+      toast({ title: "Enrolled!", description: "Start learning now." });
       navigate(`/courses/${course.slug}/learn`);
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
+
+  // ── Review ────────────────────────────────────────────────────────────────
+
+  const handleSubmitReview = async () => {
+    if (!course || !user || !enrollment) return;
+    setSubmittingReview(true);
+    try {
+      const { data, error } = await supabase
+        .from("course_reviews")
+        .insert([
+          {
+            course_id: course.id,
+            user_id: user.id,
+            enrollment_id: enrollment.id,
+            rating: reviewRating,
+            review_text: reviewText.trim() || null,
+            is_published: true,
+          },
+        ])
+        .select("*, user:profiles(email, full_name)")
+        .single();
+
+      if (error) throw error;
+      setMyReview(data);
+      setReviews(prev => [data, ...prev]);
+      toast({ title: "Review submitted", description: "Thanks for your feedback!" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  // ── Loading / not found ───────────────────────────────────────────────────
 
   if (loading) {
     return (
@@ -166,7 +208,6 @@ export default function CourseDetailPage() {
   }
 
   const totalLessons = modules.reduce((sum, m) => sum + (m.lessons?.length || 0), 0);
-  const previewLessons = modules.flatMap(m => m.lessons?.filter(l => l.is_preview) || []);
 
   const languageNames: Record<string, string> = {
     en: "English", es: "Spanish", fr: "French", de: "German",
@@ -174,9 +215,62 @@ export default function CourseDetailPage() {
     ja: "Japanese", ru: "Russian", hi: "Hindi", sw: "Swahili",
   };
 
+  // ── Enrollment card helpers ───────────────────────────────────────────────
+  // canAccess: user either owns a subscription or the course is free
+  const canAccess = course.is_free || isPremium;
+
+  const renderEnrollmentAction = () => {
+    if (enrollment) {
+      return (
+        <div className="space-y-3">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+            <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
+            <p className="font-semibold text-green-900">You're Enrolled!</p>
+            <p className="text-sm text-green-700">Progress: {enrollment.progress_percentage}%</p>
+          </div>
+          <Button className="w-full" onClick={() => navigate(`/courses/${course.slug}/learn`)}>
+            Continue Learning
+          </Button>
+        </div>
+      );
+    }
+
+    // Premium status still loading — show a disabled spinner button
+    if (premiumLoading) {
+      return (
+        <Button className="w-full" size="lg" disabled>
+          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          Checking access...
+        </Button>
+      );
+    }
+
+    if (canAccess) {
+      return (
+        <Button className="w-full" size="lg" onClick={handleEnroll}>
+          {course.is_free ? "Enroll for Free" : "Start Learning"}
+        </Button>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        <Button className="w-full" size="lg" onClick={handleEnroll}>
+          <Crown className="w-4 h-4 mr-2" />
+          Subscribe to Access
+        </Button>
+        <p className="text-xs text-center text-gray-500">
+          Get unlimited access to all courses
+        </p>
+      </div>
+    );
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────────
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
+      {/* Hero */}
       <div className="bg-gradient-to-r from-red-900 to-red-800 text-white py-12 relative z-0">
         <div className="container max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -188,10 +282,10 @@ export default function CourseDetailPage() {
                   Back to Training Programs
                 </Link>
               </div>
-              
+
               <h1 className="font-display text-4xl font-bold mb-4">{course.title}</h1>
               <p className="text-xl text-blue-100 mb-6">{course.short_description}</p>
-              
+
               <div className="flex flex-wrap gap-4 mb-6">
                 <div className="flex items-center gap-2">
                   <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
@@ -217,11 +311,7 @@ export default function CourseDetailPage() {
               {/* Instructor */}
               <div className="flex items-center gap-3 bg-white/10 backdrop-blur p-4 rounded-lg">
                 {course.instructor_image_url ? (
-                  <img
-                    src={course.instructor_image_url}
-                    alt={course.instructor_name}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
+                  <img src={course.instructor_image_url} alt={course.instructor_name} className="w-12 h-12 rounded-full object-cover" />
                 ) : (
                   <div className="w-12 h-12 rounded-full bg-red-800 flex items-center justify-center text-white font-bold">
                     {course.instructor_name.charAt(0)}
@@ -238,22 +328,21 @@ export default function CourseDetailPage() {
             <div className="lg:col-span-1">
               <div className="bg-white text-gray-900 rounded-lg p-6 shadow-xl sticky top-20 z-10 border border-gray-200">
                 {course.thumbnail_url && (
-                  <img
-                    src={course.thumbnail_url}
-                    alt={course.title}
-                    className="w-full aspect-video object-cover rounded-lg mb-4"
-                  />
+                  <img src={course.thumbnail_url} alt={course.title} className="w-full aspect-video object-cover rounded-lg mb-4" />
                 )}
-                
+
+                {/* Price / access label */}
                 <div className="mb-4">
                   {course.is_free ? (
                     <p className="text-3xl font-bold text-green-600">FREE</p>
+                  ) : premiumLoading ? (
+                    <div className="h-10 bg-gray-100 animate-pulse rounded" />
                   ) : isPremium ? (
                     <div>
-                      <p className="text-3xl font-bold text-primary flex items-center gap-2">
-                        <Crown className="w-7 h-7" /> Premium
+                      <p className="text-2xl font-bold text-primary flex items-center gap-2">
+                        <Crown className="w-6 h-6" /> Included in your plan
                       </p>
-                      <p className="text-sm text-green-600 font-medium mt-1">Included in your subscription</p>
+                      <p className="text-sm text-green-600 font-medium mt-1">Active subscriber — access granted</p>
                     </div>
                   ) : (
                     <div>
@@ -267,35 +356,7 @@ export default function CourseDetailPage() {
                   )}
                 </div>
 
-                {enrollment ? (
-                  <div className="space-y-3">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                      <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                      <p className="font-semibold text-green-900">You're Enrolled!</p>
-                      <p className="text-sm text-green-700">Progress: {enrollment.progress_percentage}%</p>
-                    </div>
-                    <Button
-                      className="w-full"
-                      onClick={() => navigate(`/courses/${course.slug}/learn`)}
-                    >
-                      Continue Learning
-                    </Button>
-                  </div>
-                ) : course.is_free || isPremium ? (
-                  <Button className="w-full" size="lg" onClick={handleEnroll}>
-                    {course.is_free ? "Enroll for Free" : "Start Learning"}
-                  </Button>
-                ) : (
-                  <div className="space-y-3">
-                    <Button className="w-full" size="lg" onClick={handleEnroll}>
-                      <Crown className="w-4 h-4 mr-2" />
-                      Subscribe to Access
-                    </Button>
-                    <p className="text-xs text-center text-gray-500">
-                      Get unlimited access to all courses
-                    </p>
-                  </div>
-                )}
+                {renderEnrollmentAction()}
 
                 <div className="mt-6 space-y-2 text-sm">
                   <div className="flex items-center gap-2">
@@ -313,10 +374,11 @@ export default function CourseDetailPage() {
         </div>
       </div>
 
+      {/* Body */}
       <div className="container max-w-6xl mx-auto px-4 py-12 relative z-0">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
+
             {/* What You'll Learn */}
             {course.what_you_learn && course.what_you_learn.length > 0 && (
               <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
@@ -335,9 +397,7 @@ export default function CourseDetailPage() {
             {/* Description */}
             <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <h2 className="font-display text-2xl font-bold mb-4">About This Training Program</h2>
-              <div className="prose max-w-none text-gray-700">
-                {course.description}
-              </div>
+              <div className="prose max-w-none text-gray-700">{course.description}</div>
             </div>
 
             {/* Requirements */}
@@ -362,15 +422,9 @@ export default function CourseDetailPage() {
                 {modules.map((module, moduleIndex) => (
                   <div key={module.id} className="border border-gray-200 rounded-lg overflow-hidden">
                     <div className="bg-gray-50 p-4">
-                      <h3 className="font-semibold">
-                        Module {moduleIndex + 1}: {module.title}
-                      </h3>
-                      {module.description && (
-                        <p className="text-sm text-gray-600 mt-1">{module.description}</p>
-                      )}
-                      <p className="text-sm text-gray-500 mt-2">
-                        {module.lessons?.length || 0} lessons
-                      </p>
+                      <h3 className="font-semibold">Module {moduleIndex + 1}: {module.title}</h3>
+                      {module.description && <p className="text-sm text-gray-600 mt-1">{module.description}</p>}
+                      <p className="text-sm text-gray-500 mt-2">{module.lessons?.length || 0} lessons</p>
                     </div>
                     <div className="divide-y">
                       {module.lessons?.map((lesson, lessonIndex) => (
@@ -382,9 +436,7 @@ export default function CourseDetailPage() {
                               <Lock className="w-5 h-5 text-gray-400" />
                             )}
                             <div>
-                              <p className="font-medium">
-                                {lessonIndex + 1}. {lesson.title}
-                              </p>
+                              <p className="font-medium">{lessonIndex + 1}. {lesson.title}</p>
                               <p className="text-sm text-gray-600 capitalize">{lesson.content_type}</p>
                             </div>
                           </div>
@@ -405,11 +457,61 @@ export default function CourseDetailPage() {
             </div>
 
             {/* Reviews */}
-            {reviews.length > 0 && (
-              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                <h2 className="font-display text-2xl font-bold mb-4">Student Reviews</h2>
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <h2 className="font-display text-2xl font-bold mb-6">Student Reviews</h2>
+
+              {/* Leave a review — enrolled users only */}
+              {enrollment && !myReview && (
+                <div className="mb-8 border border-blue-200 bg-blue-50 rounded-lg p-5">
+                  <h3 className="font-semibold text-lg mb-4">Leave a Review</h3>
+                  <div className="flex items-center gap-1 mb-4">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewRating(star)}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        className="focus:outline-none"
+                        aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
+                      >
+                        <Star
+                          className={`w-8 h-8 transition-colors ${
+                            star <= (hoverRating || reviewRating)
+                              ? "text-yellow-500 fill-yellow-500"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      </button>
+                    ))}
+                    <span className="ml-2 text-sm text-gray-600">
+                      {["", "Poor", "Fair", "Good", "Very Good", "Excellent"][hoverRating || reviewRating]}
+                    </span>
+                  </div>
+                  <Textarea
+                    placeholder="Share what you learned, what you liked, or any suggestions... (optional)"
+                    value={reviewText}
+                    onChange={e => setReviewText(e.target.value)}
+                    rows={3}
+                    className="mb-4 bg-white"
+                  />
+                  <Button onClick={handleSubmitReview} disabled={submittingReview}>
+                    <Send className="w-4 h-4 mr-2" />
+                    {submittingReview ? "Submitting..." : "Submit Review"}
+                  </Button>
+                </div>
+              )}
+
+              {enrollment && myReview && (
+                <div className="mb-6 bg-green-50 border border-green-200 rounded-lg px-4 py-3 flex items-center gap-2 text-sm text-green-800">
+                  <CheckCircle className="w-4 h-4 shrink-0" />
+                  You've already reviewed this course. Thank you!
+                </div>
+              )}
+
+              {reviews.length > 0 ? (
                 <div className="space-y-4">
-                  {reviews.map((review) => (
+                  {reviews.map(review => (
                     <div key={review.id} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
@@ -422,11 +524,7 @@ export default function CourseDetailPage() {
                               {[...Array(5)].map((_, i) => (
                                 <Star
                                   key={i}
-                                  className={`w-4 h-4 ${
-                                    i < review.rating
-                                      ? "text-yellow-500 fill-yellow-500"
-                                      : "text-gray-300"
-                                  }`}
+                                  className={`w-4 h-4 ${i < review.rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"}`}
                                 />
                               ))}
                             </div>
@@ -436,37 +534,30 @@ export default function CourseDetailPage() {
                           {new Date(review.created_at).toLocaleDateString()}
                         </span>
                       </div>
-                      {review.review_text && (
-                        <p className="text-gray-700">{review.review_text}</p>
-                      )}
+                      {review.review_text && <p className="text-gray-700">{review.review_text}</p>}
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-gray-500 text-sm">No reviews yet. Be the first!</p>
+              )}
+            </div>
           </div>
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            {/* Instructor Bio */}
             {course.instructor_bio && (
               <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                 <h3 className="font-semibold text-lg mb-3">About the Instructor</h3>
                 <div className="flex items-center gap-3 mb-3">
                   {course.instructor_image_url ? (
-                    <img
-                      src={course.instructor_image_url}
-                      alt={course.instructor_name}
-                      className="w-16 h-16 rounded-full object-cover"
-                    />
+                    <img src={course.instructor_image_url} alt={course.instructor_name} className="w-16 h-16 rounded-full object-cover" />
                   ) : (
                     <div className="w-16 h-16 rounded-full bg-blue-900 flex items-center justify-center text-white text-xl font-bold">
                       {course.instructor_name.charAt(0)}
                     </div>
                   )}
-                  <div>
-                    <p className="font-semibold">{course.instructor_name}</p>
-                  </div>
+                  <p className="font-semibold">{course.instructor_name}</p>
                 </div>
                 <p className="text-sm text-gray-700">{course.instructor_bio}</p>
               </div>
