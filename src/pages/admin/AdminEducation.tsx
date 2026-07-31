@@ -21,7 +21,12 @@ interface EducationProgramme {
   level: "beginner" | "intermediate" | "advanced";
   badge_name: string | null;
   badge_icon: string | null;
+  ks_key: string | null;
   content: string | null;
+  topics: string[];
+  activities: string[];
+  subjects: string[];
+  downloads: Array<{ title: string; url: string }>;
   resources: Array<{ title: string; url: string }>;
   is_published: boolean;
   sort_order: number;
@@ -39,7 +44,12 @@ interface ProgrammeFormData {
   level: "beginner" | "intermediate" | "advanced";
   badge_name: string;
   badge_icon: string;
+  ks_key: string;
   content: string;
+  topics: string[];
+  activities: string[];
+  subjects: string[];
+  downloads: Array<{ title: string; url: string }>;
   resources: Array<{ title: string; url: string }>;
   is_published: boolean;
   sort_order: number;
@@ -55,7 +65,12 @@ const defaultForm: ProgrammeFormData = {
   level: "beginner",
   badge_name: "",
   badge_icon: "",
+  ks_key: "",
   content: "",
+  topics: [],
+  activities: [],
+  subjects: [],
+  downloads: [],
   resources: [],
   is_published: false,
   sort_order: 0,
@@ -73,6 +88,10 @@ export default function AdminEducation() {
   const [filterType, setFilterType] = useState<"all" | "scouts" | "homeschool">("all");
   const [formData, setFormData] = useState<ProgrammeFormData>(defaultForm);
   const [resourceInput, setResourceInput] = useState({ title: "", url: "" });
+  const [downloadInput, setDownloadInput] = useState({ title: "", url: "" });
+  const [topicInput, setTopicInput] = useState("");
+  const [activityInput, setActivityInput] = useState("");
+  const [subjectInput, setSubjectInput] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -101,6 +120,8 @@ export default function AdminEducation() {
     setEditing(null);
     setFormData(defaultForm);
     setResourceInput({ title: "", url: "" });
+    setDownloadInput({ title: "", url: "" });
+    setTopicInput(""); setActivityInput(""); setSubjectInput("");
     setDialogOpen(true);
   };
 
@@ -115,13 +136,20 @@ export default function AdminEducation() {
       level: programme.level,
       badge_name: programme.badge_name || "",
       badge_icon: programme.badge_icon || "",
+      ks_key: programme.ks_key || "",
       content: programme.content || "",
+      topics: programme.topics || [],
+      activities: programme.activities || [],
+      subjects: programme.subjects || [],
+      downloads: programme.downloads || [],
       resources: programme.resources || [],
       is_published: programme.is_published,
       sort_order: programme.sort_order,
       course_id: programme.course_id || "",
     });
     setResourceInput({ title: "", url: "" });
+    setDownloadInput({ title: "", url: "" });
+    setTopicInput(""); setActivityInput(""); setSubjectInput("");
     setDialogOpen(true);
   };
 
@@ -141,7 +169,12 @@ export default function AdminEducation() {
         level: formData.level,
         badge_name: formData.badge_name || null,
         badge_icon: formData.badge_icon || null,
+        ks_key: formData.ks_key || null,
         content: formData.content || null,
+        topics: formData.topics,
+        activities: formData.activities,
+        subjects: formData.subjects,
+        downloads: formData.downloads,
         resources: formData.resources,
         is_published: formData.is_published,
         sort_order: formData.sort_order,
@@ -488,6 +521,28 @@ export default function AdminEducation() {
               </div>
             </div>
 
+            {/* Homeschool KS key */}
+            {formData.programme_type === "homeschool" && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Key Stage (e.g. KS1)</Label>
+                  <Input
+                    value={formData.ks_key}
+                    onChange={e => setFormData(prev => ({ ...prev, ks_key: e.target.value }))}
+                    placeholder="KS1 / KS2 / KS3 / KS4"
+                  />
+                </div>
+                <div>
+                  <Label>Icon (emoji)</Label>
+                  <Input
+                    value={formData.badge_icon}
+                    onChange={e => setFormData(prev => ({ ...prev, badge_icon: e.target.value }))}
+                    placeholder="📚"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Badge (scouts only) */}
             {formData.programme_type === "scouts" && (
               <div className="grid grid-cols-2 gap-4">
@@ -510,6 +565,95 @@ export default function AdminEducation() {
               </div>
             )}
 
+            {/* Topics (homeschool) */}
+            {formData.programme_type === "homeschool" && (
+              <div>
+                <Label>Topics Covered</Label>
+                <div className="flex gap-2 mt-1 mb-2">
+                  <Input
+                    placeholder="e.g. What is an emergency?"
+                    value={topicInput}
+                    onChange={e => setTopicInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); if (topicInput.trim()) { setFormData(prev => ({ ...prev, topics: [...prev.topics, topicInput.trim()] })); setTopicInput(""); } } }}
+                    className="flex-1"
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={() => { if (topicInput.trim()) { setFormData(prev => ({ ...prev, topics: [...prev.topics, topicInput.trim()] })); setTopicInput(""); } }}>Add</Button>
+                </div>
+                {formData.topics.map((t, i) => (
+                  <div key={i} className="flex items-center justify-between bg-gray-50 rounded px-3 py-1 text-sm mb-1">
+                    <span>{t}</span>
+                    <button type="button" onClick={() => setFormData(prev => ({ ...prev, topics: prev.topics.filter((_, j) => j !== i) }))} className="text-red-500 ml-2">✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Activities (homeschool) */}
+            {formData.programme_type === "homeschool" && (
+              <div>
+                <Label>Practical Activities</Label>
+                <div className="flex gap-2 mt-1 mb-2">
+                  <Input
+                    placeholder="e.g. Draw your home's fire escape route"
+                    value={activityInput}
+                    onChange={e => setActivityInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); if (activityInput.trim()) { setFormData(prev => ({ ...prev, activities: [...prev.activities, activityInput.trim()] })); setActivityInput(""); } } }}
+                    className="flex-1"
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={() => { if (activityInput.trim()) { setFormData(prev => ({ ...prev, activities: [...prev.activities, activityInput.trim()] })); setActivityInput(""); } }}>Add</Button>
+                </div>
+                {formData.activities.map((a, i) => (
+                  <div key={i} className="flex items-center justify-between bg-gray-50 rounded px-3 py-1 text-sm mb-1">
+                    <span>{a}</span>
+                    <button type="button" onClick={() => setFormData(prev => ({ ...prev, activities: prev.activities.filter((_, j) => j !== i) }))} className="text-red-500 ml-2">✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Subjects (homeschool) */}
+            {formData.programme_type === "homeschool" && (
+              <div>
+                <Label>Subject Links</Label>
+                <div className="flex gap-2 mt-1 mb-2">
+                  <Input
+                    placeholder="e.g. Geography"
+                    value={subjectInput}
+                    onChange={e => setSubjectInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); if (subjectInput.trim()) { setFormData(prev => ({ ...prev, subjects: [...prev.subjects, subjectInput.trim()] })); setSubjectInput(""); } } }}
+                    className="flex-1"
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={() => { if (subjectInput.trim()) { setFormData(prev => ({ ...prev, subjects: [...prev.subjects, subjectInput.trim()] })); setSubjectInput(""); } }}>Add</Button>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {formData.subjects.map((s, i) => (
+                    <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">
+                      {s}
+                      <button type="button" onClick={() => setFormData(prev => ({ ...prev, subjects: prev.subjects.filter((_, j) => j !== i) }))} className="text-blue-500 hover:text-red-600">✕</button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Downloads (homeschool) */}
+            {formData.programme_type === "homeschool" && (
+              <div>
+                <Label>Free Downloads</Label>
+                <div className="flex gap-2 mt-1 mb-2">
+                  <Input placeholder="Download title" value={downloadInput.title} onChange={e => setDownloadInput(prev => ({ ...prev, title: e.target.value }))} className="flex-1" />
+                  <Input placeholder="URL" value={downloadInput.url} onChange={e => setDownloadInput(prev => ({ ...prev, url: e.target.value }))} className="flex-1" />
+                  <Button type="button" variant="outline" size="sm" onClick={() => { if (downloadInput.title.trim() && downloadInput.url.trim()) { setFormData(prev => ({ ...prev, downloads: [...prev.downloads, { title: downloadInput.title.trim(), url: downloadInput.url.trim() }] })); setDownloadInput({ title: "", url: "" }); } }}>Add</Button>
+                </div>
+                {formData.downloads.map((d, i) => (
+                  <div key={i} className="flex items-center justify-between bg-gray-50 rounded px-3 py-1 text-sm mb-1">
+                    <span className="font-medium">{d.title}</span>
+                    <button type="button" onClick={() => setFormData(prev => ({ ...prev, downloads: prev.downloads.filter((_, j) => j !== i) }))} className="text-red-500 ml-2">✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Main content */}
             <div>
               <Label>Content (HTML / Rich Text)</Label>
@@ -517,49 +661,24 @@ export default function AdminEducation() {
                 value={formData.content}
                 onChange={e => setFormData(prev => ({ ...prev, content: e.target.value }))}
                 placeholder="Full lesson content..."
-                rows={6}
+                rows={4}
               />
             </div>
 
             {/* Resources */}
             <div>
-              <Label>Downloadable Resources</Label>
+              <Label>Downloadable Resources (Scout links)</Label>
               <div className="flex gap-2 mt-1 mb-2">
-                <Input
-                  placeholder="Resource title"
-                  value={resourceInput.title}
-                  onChange={e => setResourceInput(prev => ({ ...prev, title: e.target.value }))}
-                  className="flex-1"
-                />
-                <Input
-                  placeholder="URL"
-                  value={resourceInput.url}
-                  onChange={e => setResourceInput(prev => ({ ...prev, url: e.target.value }))}
-                  className="flex-1"
-                />
-                <Button type="button" variant="outline" size="sm" onClick={addResource}>
-                  Add
-                </Button>
+                <Input placeholder="Resource title" value={resourceInput.title} onChange={e => setResourceInput(prev => ({ ...prev, title: e.target.value }))} className="flex-1" />
+                <Input placeholder="URL" value={resourceInput.url} onChange={e => setResourceInput(prev => ({ ...prev, url: e.target.value }))} className="flex-1" />
+                <Button type="button" variant="outline" size="sm" onClick={addResource}>Add</Button>
               </div>
-              {formData.resources.length > 0 && (
-                <ul className="space-y-1">
-                  {formData.resources.map((r, i) => (
-                    <li key={i} className="flex items-center justify-between bg-gray-50 rounded px-3 py-1 text-sm">
-                      <span>
-                        <span className="font-medium">{r.title}</span>
-                        <span className="text-gray-500 ml-2 truncate max-w-xs inline-block">{r.url}</span>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => removeResource(i)}
-                        className="text-red-500 hover:text-red-700 ml-2"
-                      >
-                        ✕
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              {formData.resources.map((r, i) => (
+                <div key={i} className="flex items-center justify-between bg-gray-50 rounded px-3 py-1 text-sm mb-1">
+                  <span><span className="font-medium">{r.title}</span><span className="text-gray-500 ml-2">{r.url}</span></span>
+                  <button type="button" onClick={() => removeResource(i)} className="text-red-500 ml-2">✕</button>
+                </div>
+              ))}
             </div>
 
             {/* Sort + Published */}

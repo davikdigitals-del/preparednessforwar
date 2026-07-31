@@ -4,7 +4,8 @@ import { ArrowLeft, Globe, MapPin } from "lucide-react";
 import { useData } from "@/contexts/DataContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { PostCard } from "@/components/PostCard";
-import { natoCountries } from "@/data/mockData";
+import { InteractiveWorldMap } from "@/components/InteractiveWorldMap";
+import { natoCountries, MAP_COUNTRIES } from "@/data/mockData";
 
 const CountryPostsPage = () => {
   const { countryCode } = useParams<{ countryCode: string }>();
@@ -91,6 +92,19 @@ const CountryPostsPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Map — only for countries in MAP_COUNTRIES */}
+          {MAP_COUNTRIES.has(country.code) && (
+            <div className="mb-6 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border-b border-gray-200">
+                <MapPin className="w-4 h-4 text-blue-900" />
+                <span className="text-sm font-semibold text-gray-700">{country.name} — Location Map</span>
+              </div>
+              <div className="h-64 sm:h-80">
+                <InteractiveWorldMap height="100%" highlightCountry={country.code} />
+              </div>
+            </div>
+          )}
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-start gap-3">

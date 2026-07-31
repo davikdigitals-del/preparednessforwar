@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   GraduationCap, BookOpen, Shield, Search, ChevronRight,
   Award, Loader2, Filter, Users, Star, Download, FileText,
-  Lightbulb, Target, Clock, CheckCircle
+  Lightbulb, Target, CheckCircle
 } from "lucide-react";
 import type { Course } from "@/types/monetization";
 
@@ -21,7 +21,12 @@ interface EducationProgramme {
   level: string;
   badge_name: string | null;
   badge_icon: string | null;
+  ks_key: string | null;
   content: string | null;
+  topics: string[];
+  activities: string[];
+  subjects: string[];
+  downloads: Array<{ title: string; url: string }>;
   resources: { title: string; url: string }[];
   sort_order: number;
   course_id: string | null;
@@ -35,135 +40,13 @@ const LEVEL_BADGE: Record<string, string> = {
   advanced: "bg-red-100 text-red-700",
 };
 
-// ── Static homeschool curriculum content (UK Key Stage aligned) ──────────────
-const HOMESCHOOL_CURRICULUM = [
-  {
-    ks: "KS1",
-    ages: "5–7",
-    colour: "blue",
-    icon: "🏠",
-    title: "Staying Safe at Home",
-    subtitle: "Foundation of personal safety",
-    overview:
-      "Young children learn what an emergency is, who the helpers are, and what simple actions keep them safe at home and school.",
-    topics: [
-      "What is an emergency? Fire, flood, and first aid basics",
-      "Know your address and when to call 999",
-      "Safe rooms and meeting points at home",
-      "Stranger awareness and asking trusted adults for help",
-      "Basic hygiene and hand-washing to prevent illness",
-    ],
-    activities: [
-      "Draw your home's fire escape route",
-      "Role-play calling 999 with a parent",
-      "Build a mini emergency kit from household items",
-    ],
-    subjects: ["PSHE", "Science", "Geography"],
-    downloads: [
-      { title: "KS1 Safety Colouring Sheet", url: "#" },
-      { title: "My Emergency Contact Card", url: "#" },
-    ],
-  },
-  {
-    ks: "KS2",
-    ages: "7–11",
-    colour: "green",
-    icon: "🎒",
-    title: "Natural Disasters & Emergency Services",
-    subtitle: "Understanding threats and community response",
-    overview:
-      "Children explore natural hazards, understand the role of emergency services, and learn how families and communities prepare for and recover from disasters.",
-    topics: [
-      "Types of natural disaster: floods, storms, earthquakes, wildfires",
-      "The role of police, fire, ambulance, and coastguard",
-      "Building a 72-hour emergency kit",
-      "First aid basics: cuts, burns, and choking",
-      "Climate change and its impact on extreme weather",
-      "Community resilience and neighbourhood planning",
-    ],
-    activities: [
-      "Map your local area for flood risk zones",
-      "Pack a real 72-hour kit as a family project",
-      "Write a family emergency communication plan",
-      "Research a real disaster and present findings",
-    ],
-    subjects: ["Geography", "Science", "PSHE", "Computing"],
-    downloads: [
-      { title: "72-Hour Kit Checklist", url: "#" },
-      { title: "UK Natural Hazards Worksheet", url: "#" },
-      { title: "Family Communication Plan Template", url: "#" },
-    ],
-  },
-  {
-    ks: "KS3",
-    ages: "11–14",
-    colour: "yellow",
-    icon: "🗺️",
-    title: "Geopolitics, Civil Defence & Resilience",
-    subtitle: "Wider threats and organised response",
-    overview:
-      "Students explore the geopolitical landscape, the history and purpose of civil defence, and what resilience means at national and individual levels.",
-    topics: [
-      "Introduction to NATO, the UN, and international security",
-      "Cold War civil defence history and modern equivalents",
-      "CBRN awareness: chemical, biological, radiological, nuclear basics",
-      "Psychological resilience and stress management in a crisis",
-      "Critical infrastructure: power, water, food supply chains",
-      "Media literacy: identifying misinformation in an emergency",
-      "Evacuation planning and reading topographic maps",
-    ],
-    activities: [
-      "Debate: should every citizen know how to respond to a national emergency?",
-      "Create an infographic on NATO Article 5",
-      "Design a community shelter plan for a fictional town",
-      "Analyse a real emergency broadcast for accuracy",
-    ],
-    subjects: ["Geography", "History", "Citizenship", "PSHE", "Computing"],
-    downloads: [
-      { title: "Civil Defence History Timeline", url: "#" },
-      { title: "Evacuation Route Planning Sheet", url: "#" },
-      { title: "Media Literacy Checklist", url: "#" },
-    ],
-  },
-  {
-    ks: "KS4",
-    ages: "14–16",
-    colour: "red",
-    icon: "🔬",
-    title: "Global Security & Survival Science",
-    subtitle: "Advanced preparedness and critical thinking",
-    overview:
-      "Advanced study combining geopolitics, survival science, first responder skills, and ethical considerations around national security and civil liberties.",
-    topics: [
-      "Global threat landscape: terrorism, cyber warfare, hybrid threats",
-      "First responder skills: triage, CPR, and casualty management",
-      "Water purification, food security, and off-grid living",
-      "Cyber security and protecting personal data in a crisis",
-      "UK Emergency Powers Act and civil contingencies legislation",
-      "Mental health in prolonged emergencies: PTSD and coping strategies",
-      "Ethics of preparedness: privacy vs. security debate",
-    ],
-    activities: [
-      "Complete a basic first aid qualification",
-      "Write a personal 30-day preparedness plan",
-      "Analyse the UK National Risk Register",
-      "Simulate a cyber incident response tabletop exercise",
-    ],
-    subjects: ["Geography", "Politics", "Biology", "Computing", "PSHE"],
-    downloads: [
-      { title: "30-Day Preparedness Planner", url: "#" },
-      { title: "UK National Risk Register Summary", url: "#" },
-      { title: "First Aid Quick Reference Card", url: "#" },
-    ],
-  },
-];
-
 const KS_COLOURS: Record<string, { bg: string; border: string; badge: string; text: string }> = {
-  blue:   { bg: "bg-blue-50",   border: "border-blue-200",  badge: "bg-blue-100 text-blue-800",  text: "text-blue-700" },
-  green:  { bg: "bg-green-50",  border: "border-green-200", badge: "bg-green-100 text-green-800", text: "text-green-700" },
-  yellow: { bg: "bg-yellow-50", border: "border-yellow-200",badge: "bg-yellow-100 text-yellow-800",text: "text-yellow-700" },
-  red:    { bg: "bg-red-50",    border: "border-red-200",   badge: "bg-red-100 text-red-800",    text: "text-red-700" },
+  KS1: { bg: "bg-blue-50",   border: "border-blue-200",   badge: "bg-blue-100 text-blue-800",   text: "text-blue-700" },
+  KS2: { bg: "bg-green-50",  border: "border-green-200",  badge: "bg-green-100 text-green-800",  text: "text-green-700" },
+  KS3: { bg: "bg-yellow-50", border: "border-yellow-200", badge: "bg-yellow-100 text-yellow-800",text: "text-yellow-700" },
+  KS4: { bg: "bg-red-50",    border: "border-red-200",    badge: "bg-red-100 text-red-800",      text: "text-red-700" },
 };
+const DEFAULT_KS_COLOUR = { bg: "bg-gray-50", border: "border-gray-200", badge: "bg-gray-100 text-gray-800", text: "text-gray-700" };
 
 export default function EducationPage() {
   const [activeTab, setActiveTab] = useState<Tab>("courses");
@@ -177,7 +60,7 @@ export default function EducationPage() {
   const [priceFilter, setPriceFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
 
-  // Expanded homeschool card
+  // Expanded homeschool card — uses programme ID
   const [expandedKS, setExpandedKS] = useState<string | null>(null);
 
   useEffect(() => { fetchAll(); }, []);
@@ -415,7 +298,7 @@ export default function EducationPage() {
               <div>
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Home Schooling Preparedness Curriculum</h2>
                 <p className="text-gray-600 text-sm leading-relaxed max-w-2xl">
-                  A structured, UK National Curriculum aligned programme covering personal safety, civil defence, global security, and survival science. Designed for home educators across all four Key Stages — ages 5 to 16.
+                  A structured, UK National Curriculum aligned programme covering personal safety, civil defence, global security, and survival science — from ages 5 to 16.
                 </p>
                 <div className="flex flex-wrap gap-2 sm:gap-3 mt-3 text-xs text-gray-500">
                   <span className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> KS1–KS4 aligned</span>
@@ -426,139 +309,146 @@ export default function EducationPage() {
               </div>
             </div>
 
-            {/* Static KS curriculum cards */}
-            <div className="space-y-5 mb-10">
-              {HOMESCHOOL_CURRICULUM.map(ks => {
-                const c = KS_COLOURS[ks.colour];
-                const isOpen = expandedKS === ks.ks;
-                return (
-                  <div key={ks.ks} className={`rounded-xl border-2 ${c.border} ${c.bg} overflow-hidden`}>
-                    {/* Header row — always visible */}
-                    <button
-                      onClick={() => setExpandedKS(isOpen ? null : ks.ks)}
-                      className="w-full text-left p-3 sm:p-5 flex items-center gap-3 sm:gap-4"
-                    >
-                      <span className="text-2xl sm:text-3xl leading-none flex-shrink-0">{ks.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-0.5">
-                          <span className={`text-xs font-black px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full ${c.badge}`}>{ks.ks}</span>
-                          <span className="text-xs text-gray-500 font-medium">Ages {ks.ages}</span>
+            {loading ? (
+              <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+            ) : dbHomeschool.length === 0 ? (
+              <div className="text-center py-12 text-gray-400">
+                <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p className="font-medium">No home schooling content published yet.</p>
+                <p className="text-sm mt-1">An admin can add programmes from the Education panel.</p>
+              </div>
+            ) : (
+              <div className="space-y-4 sm:space-y-5">
+                {dbHomeschool.map(prog => {
+                  const c = KS_COLOURS[prog.ks_key || ""] || DEFAULT_KS_COLOUR;
+                  const isOpen = expandedKS === prog.id;
+                  const hasDetail = (prog.topics?.length || 0) + (prog.activities?.length || 0) > 0;
+                  return (
+                    <div key={prog.id} className={`rounded-xl border-2 ${c.border} ${c.bg} overflow-hidden`}>
+                      {/* Header */}
+                      <button
+                        onClick={() => hasDetail && setExpandedKS(isOpen ? null : prog.id)}
+                        className={`w-full text-left p-3 sm:p-5 flex items-center gap-3 sm:gap-4 ${!hasDetail ? "cursor-default" : ""}`}
+                      >
+                        <span className="text-2xl sm:text-3xl leading-none flex-shrink-0">{prog.badge_icon || "📚"}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
+                            {prog.ks_key && (
+                              <span className={`text-xs font-black px-2 py-0.5 rounded-full ${c.badge}`}>{prog.ks_key}</span>
+                            )}
+                            <span className="text-xs text-gray-500 font-medium">Ages {prog.age_group}</span>
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${LEVEL_BADGE[prog.level] || LEVEL_BADGE.beginner}`}>{prog.level}</span>
+                          </div>
+                          <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-snug">{prog.title}</h3>
+                          <p className={`text-xs font-semibold ${c.text} mt-0.5 hidden sm:block`}>{prog.age_label}</p>
                         </div>
-                        <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-snug">{ks.title}</h3>
-                        <p className={`text-xs font-semibold ${c.text} mt-0.5 hidden sm:block`}>{ks.subtitle}</p>
-                      </div>
-                      <ChevronRight className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`} />
-                    </button>
+                        {hasDetail && (
+                          <ChevronRight className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`} />
+                        )}
+                      </button>
 
-                    {/* Expanded content */}
-                    {isOpen && (
-                      <div className="px-3 sm:px-5 pb-5 sm:pb-6 border-t border-white/60">
-                        <p className="text-sm text-gray-700 leading-relaxed mt-4 mb-4 sm:mb-5">{ks.overview}</p>
+                      {/* Expanded content */}
+                      {isOpen && (
+                        <div className="px-3 sm:px-5 pb-5 border-t border-white/60">
+                          {prog.description && (
+                            <p className="text-sm text-gray-700 leading-relaxed mt-4 mb-4">{prog.description}</p>
+                          )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                          {/* Topics */}
-                          <div>
-                            <div className="flex items-center gap-2 mb-3">
-                              <Target className={`w-4 h-4 ${c.text}`} />
-                              <span className="text-sm font-bold text-gray-800">Topics Covered</span>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                            {/* Topics */}
+                            {prog.topics?.length > 0 && (
+                              <div>
+                                <div className="flex items-center gap-2 mb-3">
+                                  <Target className={`w-4 h-4 ${c.text}`} />
+                                  <span className="text-sm font-bold text-gray-800">Topics Covered</span>
+                                </div>
+                                <ul className="space-y-2">
+                                  {prog.topics.map((t, i) => (
+                                    <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                                      {t}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            <div className="space-y-4 sm:space-y-5">
+                              {/* Activities */}
+                              {prog.activities?.length > 0 && (
+                                <div>
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <Lightbulb className={`w-4 h-4 ${c.text}`} />
+                                    <span className="text-sm font-bold text-gray-800">Practical Activities</span>
+                                  </div>
+                                  <ul className="space-y-2">
+                                    {prog.activities.map((a, i) => (
+                                      <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                                        <span className={`w-5 h-5 rounded-full ${c.badge} flex items-center justify-center text-xs font-bold flex-shrink-0`}>{i + 1}</span>
+                                        {a}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+
+                              {/* Subjects */}
+                              {prog.subjects?.length > 0 && (
+                                <div>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <BookOpen className={`w-4 h-4 ${c.text}`} />
+                                    <span className="text-sm font-bold text-gray-800">Subject Links</span>
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {prog.subjects.map(s => (
+                                      <span key={s} className="text-xs px-2 py-1 bg-white border border-gray-200 rounded text-gray-600">{s}</span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Downloads */}
+                              {prog.downloads?.length > 0 && (
+                                <div>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Download className={`w-4 h-4 ${c.text}`} />
+                                    <span className="text-sm font-bold text-gray-800">Free Downloads</span>
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    {prog.downloads.map((d, i) => (
+                                      <a key={i} href={d.url} className="flex items-center gap-2 text-sm text-blue-700 hover:underline">
+                                        <FileText className="w-3.5 h-3.5 flex-shrink-0" />
+                                        {d.title}
+                                      </a>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Resources */}
+                              {prog.resources?.length > 0 && (
+                                <div className="pt-2 border-t border-gray-100">
+                                  {prog.resources.map((r, i) => (
+                                    <a key={i} href={r.url} target="_blank" rel="noreferrer"
+                                      className="flex items-center gap-1.5 text-xs text-blue-700 hover:underline mb-1">
+                                      <ChevronRight className="w-3 h-3" />{r.title}
+                                    </a>
+                                  ))}
+                                </div>
+                              )}
                             </div>
-                            <ul className="space-y-2">
-                              {ks.topics.map((t, i) => (
-                                <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                                  <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                                  {t}
-                                </li>
-                              ))}
-                            </ul>
                           </div>
 
-                          {/* Activities + Subjects + Downloads */}
-                          <div className="space-y-4 sm:space-y-5">
-                            <div>
-                              <div className="flex items-center gap-2 mb-3">
-                                <Lightbulb className={`w-4 h-4 ${c.text}`} />
-                                <span className="text-sm font-bold text-gray-800">Practical Activities</span>
-                              </div>
-                              <ul className="space-y-2">
-                                {ks.activities.map((a, i) => (
-                                  <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                                    <span className={`w-5 h-5 rounded-full ${c.badge} flex items-center justify-center text-xs font-bold flex-shrink-0`}>{i + 1}</span>
-                                    {a}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-
-                            <div>
-                              <div className="flex items-center gap-2 mb-2">
-                                <BookOpen className={`w-4 h-4 ${c.text}`} />
-                                <span className="text-sm font-bold text-gray-800">Subject Links</span>
-                              </div>
-                              <div className="flex flex-wrap gap-1.5">
-                                {ks.subjects.map(s => (
-                                  <span key={s} className="text-xs px-2 py-1 bg-white border border-gray-200 rounded text-gray-600">{s}</span>
-                                ))}
-                              </div>
-                            </div>
-
-                            <div>
-                              <div className="flex items-center gap-2 mb-2">
-                                <Download className={`w-4 h-4 ${c.text}`} />
-                                <span className="text-sm font-bold text-gray-800">Free Downloads</span>
-                              </div>
-                              <div className="space-y-1.5">
-                                {ks.downloads.map((d, i) => (
-                                  <a key={i} href={d.url} className="flex items-center gap-2 text-sm text-blue-700 hover:underline">
-                                    <FileText className="w-3.5 h-3.5 flex-shrink-0" />
-                                    {d.title}
-                                  </a>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
+                          {prog.course_id && (
+                            <Link to={`/courses/${prog.course_id}`} className="inline-flex items-center gap-1 mt-4 text-sm font-semibold text-blue-900 hover:underline">
+                              Start Related Course <ChevronRight className="w-3.5 h-3.5" />
+                            </Link>
+                          )}
                         </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* DB programmes (admin-managed) — shown if any published */}
-            {dbHomeschool.length > 0 && (
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Additional Programmes</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {dbHomeschool.map(prog => (
-                    <div key={prog.id} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xl">{prog.badge_icon || "📚"}</span>
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${LEVEL_BADGE[prog.level] || LEVEL_BADGE.beginner}`}>
-                          {prog.age_label}
-                        </span>
-                      </div>
-                      <h3 className="font-bold text-gray-900 mb-1">{prog.title}</h3>
-                      <p className="text-xs text-blue-600 font-semibold mb-2">Ages {prog.age_group}</p>
-                      <p className="text-sm text-gray-600 leading-relaxed">{prog.description}</p>
-                      {prog.resources?.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-gray-100">
-                          <p className="text-xs font-semibold text-gray-500 mb-1.5">Resources:</p>
-                          {prog.resources.map((r, i) => (
-                            <a key={i} href={r.url} target="_blank" rel="noreferrer"
-                              className="flex items-center gap-1.5 text-xs text-blue-700 hover:underline mb-1">
-                              <ChevronRight className="w-3 h-3" />{r.title}
-                            </a>
-                          ))}
-                        </div>
-                      )}
-                      {prog.course_id && (
-                        <Link to={`/courses/${prog.course_id}`} className="inline-flex items-center gap-1 mt-3 text-sm font-semibold text-blue-900 hover:underline">
-                          Start Course <ChevronRight className="w-3.5 h-3.5" />
-                        </Link>
                       )}
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
             )}
           </div>

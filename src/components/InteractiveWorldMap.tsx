@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 interface InteractiveWorldMapProps {
   onCountryClick?: (countryId: string) => void;
   height?: string;
+  highlightCountry?: string; // ISO 2-letter code e.g. "FR"
 }
 
 const SCRIPT_SRC = "/svg-world-map/svg-world-map.js";
@@ -22,6 +23,7 @@ function loadScript(src: string): Promise<void> {
 export const InteractiveWorldMap = ({
   onCountryClick,
   height = "100%",
+  highlightCountry,
 }: InteractiveWorldMapProps) => {
   const navigate = useNavigate();
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -110,6 +112,7 @@ export const InteractiveWorldMap = ({
         const mapFn = (window as any).svgWorldMap;
         if (typeof mapFn !== "function") throw new Error("svgWorldMap library not available");
 
+        // Build country colors — highlight the target, dim everything else
         await mapFn({
           libPath: "/svg-world-map/",
           bigMap: false,
@@ -120,12 +123,57 @@ export const InteractiveWorldMap = ({
           showMicroStates: true,
           showInfoBox: false,
           oceanColor: "#dbeafe",
-          worldColor: "#e2e8f0",
+          worldColor: highlightCountry ? "#cbd5e1" : "#e2e8f0",
           countryStroke: { out: "#94a3b8", over: "#1e40af", click: "#1e3a8a" },
           mapClick: clickCb,
           mapOver:  overCb,
           mapOut:   outCb,
         });
+
+        if (cancelled) return;
+
+        // Highlight the target country directly in the SVG DOM
+        if (highlightCountry) {
+          const svgObj = document.getElementById("svg-world-map") as HTMLObjectElement | null;
+          const applyHighlight = () => {
+            try {
+              const innerDoc = svgObj?.contentDocument;
+              if (!innerDoc) return;
+              const code = highlightCountry.toLowerCase();
+              // The SVG uses group IDs matching the 2-letter country code
+              const targets = [
+                innerDoc.getElementById(code),
+                innerDoc.getElementById(code.toUpperCase()),
+                innerDoc.querySelector(`[id="${code}"]`),
+                innerDoc.querySelector(`[id="${code.toUpperCase()}"]`),
+              ].filter(Boolean);
+              targets.forEach(el => {
+                if (!el) return;
+                // Fill all child paths with highlight blue
+                el.querySelectorAll("path, polygon, circle").forEach(p => {
+                  (p as SVGElement).style.fill = "#1d4ed8";
+                  (p as SVGElement).style.stroke = "#1e3a8a";
+                  (p as SVGElement).style.strokeWidth = "1";
+                });
+                // Also try setting fill directly on the element
+                (el as SVGElement).style.fill = "#1d4ed8";
+              });
+            } catch (_) {
+              // cross-origin or not ready — silently ignore
+            }
+          };
+
+          // Try immediately and also on SVG object load
+          const svgObjEl = document.getElementById("svg-world-map") as HTMLObjectElement | null;
+          if (svgObjEl) {
+            applyHighlight();
+            svgObjEl.addEventListener("load", applyHighlight);
+            // Retry a few times as the SVG may not be fully parsed yet
+            setTimeout(applyHighlight, 300);
+            setTimeout(applyHighlight, 800);
+            setTimeout(applyHighlight, 1500);
+          }
+        }
 
         if (cancelled) return;
 

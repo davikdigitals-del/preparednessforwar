@@ -161,6 +161,15 @@ export const RISK_MAP: Record<string, "low" | "moderate" | "high" | "extreme"> =
   IR: "high", PK: "high", MM: "high",
 };
 
+// Countries that have a map on their detail page
+// (all 32 NATO members + Ireland, Australia, Switzerland from the image)
+export const MAP_COUNTRIES = new Set([
+  "AL","BE","BG","CA","HR","CZ","DK","EE","FI","FR",
+  "DE","GR","HU","IS","IT","LV","LT","LU","ME","NL",
+  "MK","NO","PL","PT","RO","SK","SI","ES","SE","TR",
+  "GB","US","IE","AU","CH",
+]);
+
 export const natoCountries: Country[] = [
   // Africa
   { code: "DZ", name: "Algeria", flag: "🇩🇿", continent: "Africa" },
