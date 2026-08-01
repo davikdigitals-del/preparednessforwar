@@ -5,11 +5,46 @@ import {
   Shield, Phone, Flag,
   ArrowRight, Circle,
 } from "lucide-react";
+
 import { natoCountries, RISK_MAP } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
-import { InteractiveWorldMap } from "@/components/InteractiveWorldMap";
 import { publicSupabase } from "@/integrations/supabase/publicClient";
+
+const ContinentMap = ({ onContinentClick, selectedContinent }: {
+  onContinentClick: (continent: string) => void;
+  selectedContinent: string | null;
+}) => (
+  <div className="relative w-full h-full bg-[#dbeafe] flex items-center justify-center overflow-hidden">
+    <svg viewBox="0 0 1000 500" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid meet">
+      {[
+        { name: "North America", cx: 180, cy: 170, rx: 120, ry: 110 },
+        { name: "South America", cx: 260, cy: 330, rx: 70,  ry: 100 },
+        { name: "Europe",        cx: 480, cy: 150, rx: 65,  ry: 70  },
+        { name: "Africa",        cx: 490, cy: 310, rx: 80,  ry: 110 },
+        { name: "Asia",          cx: 680, cy: 180, rx: 160, ry: 130 },
+        { name: "Oceania",       cx: 800, cy: 360, rx: 80,  ry: 55  },
+      ].map(({ name, cx, cy, rx, ry }) => {
+        const active = selectedContinent === name;
+        const lines = name.split(" ");
+        return (
+          <g key={name} onClick={() => onContinentClick(name)} style={{ cursor: "pointer" }}>
+            <ellipse cx={cx} cy={cy} rx={rx} ry={ry}
+              fill={active ? "#1e40af" : "#93c5fd"} stroke="#60a5fa" strokeWidth="1.5" />
+            {lines.map((line, i) => (
+              <text key={i} x={cx} y={cy + (i - (lines.length - 1) / 2) * 18}
+                textAnchor="middle" fontSize="14" fontWeight="800"
+                fill={active ? "white" : "#1e3a8a"} fontFamily="sans-serif"
+                style={{ pointerEvents: "none", userSelect: "none" }}>
+                {line}
+              </text>
+            ))}
+          </g>
+        );
+      })}
+    </svg>
+  </div>
+);
 
 const RISK_CONFIG = {
   low:      { label: "Low Risk",      color: "bg-green-500",  text: "text-green-600",  border: "border-green-200",  badge: "bg-green-100 text-green-700" },
@@ -37,7 +72,6 @@ const CountriesPage = () => {
   const { publishedPosts } = useData();
   const [search, setSearch] = useState("");
   const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
-  const [mapFullscreen, setMapFullscreen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [allDbCountries, setAllDbCountries] = useState<any[]>([]);
   const [dbRiskMap, setDbRiskMap] = useState<Record<string, string>>({});
@@ -109,20 +143,7 @@ const CountriesPage = () => {
     return matchSearch && matchContinent;
   });
 
-  /* ── Fullscreen map ── */
-  if (mapFullscreen) {
-    return (
-      <div className="relative w-full h-screen overflow-hidden">
-        <button
-          onClick={() => setMapFullscreen(false)}
-          className="absolute top-4 right-4 z-30 px-4 py-2 bg-white border border-gray-200 shadow-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
-        >
-          ✕ Exit Map
-        </button>
-        <InteractiveWorldMap height="100vh" />
-      </div>
-    );
-  }
+  /* ── Fullscreen map removed — using continent map ── */
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -268,35 +289,35 @@ const CountriesPage = () => {
           ══════════════════════════════════════════ */}
           <div className="flex-1 flex flex-col min-w-0 w-full lg:w-auto">
 
-            {/* ── Interactive Map ── */}
+            {/* ── Continent Map ── */}
             <div className="relative bg-blue-50 border-b border-gray-200 h-[300px] sm:h-[350px] md:h-[420px]">
-              {/* Map toggle tabs */}
-              <div className="absolute top-3 left-3 z-20 flex gap-1">
-                <button className="px-3 py-1 text-xs font-bold bg-white border border-gray-300 shadow-sm text-gray-900">
-                  Map
-                </button>
-                <button
-                  onClick={() => setMapFullscreen(true)}
-                  className="px-3 py-1 text-xs font-bold bg-white/80 border border-gray-200 text-gray-600 hover:bg-white transition-colors"
-                >
-                  Fullscreen
-                </button>
-              </div>
-
-              {/* Fullscreen icon */}
-              <button
-                onClick={() => setMapFullscreen(true)}
-                className="absolute top-3 right-3 z-20 w-8 h-8 bg-white border border-gray-200 shadow flex items-center justify-center hover:bg-gray-50 transition-colors"
-                title="Fullscreen map"
-              >
-                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                </svg>
-              </button>
-
-              {/* Map */}
+              {selectedContinent && (
+                <div className="absolute top-3 left-3 z-20 flex items-center gap-2">
+                  <span className="px-3 py-1 text-xs font-bold bg-blue-900 text-white shadow-sm">
+                    {CONTINENT_ICONS[selectedContinent]} {selectedContinent}
+                  </span>
+                  <button
+                    onClick={() => setSelectedContinent(null)}
+                    className="px-2 py-1 text-xs font-bold bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    ✕ Clear
+                  </button>
+                </div>
+              )}
+              {!selectedContinent && (
+                <div className="absolute top-3 left-3 z-20">
+                  <span className="px-3 py-1 text-xs font-semibold bg-white/90 border border-gray-200 text-gray-600 shadow-sm">
+                    Click a continent to filter
+                  </span>
+                </div>
+              )}
               <div className="absolute inset-0">
-                <InteractiveWorldMap height="100%" />
+                <ContinentMap
+                  onContinentClick={(continent) =>
+                    setSelectedContinent(prev => prev === continent ? null : continent)
+                  }
+                  selectedContinent={selectedContinent}
+                />
               </div>
             </div>
 
