@@ -281,14 +281,14 @@ const Index = () => {
             Stay Prepared. Stay Informed.
           </h2>
           <p className="text-blue-200 text-sm mb-6 max-w-xl mx-auto">
-            Sign up for free alerts, download survival guides, and access expert resources — all in one place.
+            Sign up for alerts, download survival guides, and access expert resources — all in one place.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link
               to="/subscribe?from=signup"
               className="px-6 py-3 bg-white text-blue-900 font-bold text-sm hover:bg-blue-50 transition-colors"
             >
-              Create Free Account
+              Create Account
             </Link>
             <Link
               to="/library"
