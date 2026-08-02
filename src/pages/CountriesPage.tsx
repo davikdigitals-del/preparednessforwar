@@ -1,123 +1,55 @@
 import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import {
-  Globe, Search, Download, ChevronRight,
-  Shield, Phone, Flag,
-  ArrowRight, Circle,
+  Globe, Search, ChevronRight,
 } from "lucide-react";
 
-import { natoCountries, RISK_MAP } from "@/data/mockData";
+import { RISK_MAP } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
 import { InteractiveWorldMap } from "@/components/InteractiveWorldMap";
 import { publicSupabase } from "@/integrations/supabase/publicClient";
 
 const RISK_CONFIG = {
-  low:      { label: "Low Risk",      color: "bg-green-500",  text: "text-green-600",  border: "border-green-200",  badge: "bg-green-100 text-green-700" },
-  moderate: { label: "Moderate Risk", color: "bg-yellow-500", text: "text-yellow-600", border: "border-yellow-200", badge: "bg-yellow-100 text-yellow-700" },
-  high:     { label: "High Risk",     color: "bg-orange-500", text: "text-orange-600", border: "border-orange-200", badge: "bg-orange-100 text-orange-700" },
-  extreme:  { label: "Extreme Risk",  color: "bg-red-600",    text: "text-red-600",    border: "border-red-200",    badge: "bg-red-100 text-red-700" },
+  low:      { label: "Low Risk",      color: "bg-green-500",  text: "text-green-600",  border: "border-green-200" },
+  moderate: { label: "Moderate Risk", color: "bg-yellow-500", text: "text-yellow-600", border: "border-yellow-200" },
+  high:     { label: "High Risk",     color: "bg-orange-500", text: "text-orange-600", border: "border-orange-200" },
+  extreme:  { label: "Extreme Risk",  color: "bg-red-600",    text: "text-red-600",    border: "border-red-200"   },
 };
 
-// Get unique continents from country data
-const CONTINENTS = Array.from(new Set(natoCountries.map(c => c.continent))).sort();
-
-const CONTINENT_ICONS: Record<string, string> = {
-  "Africa": "🌍",
-  "Asia": "🌏",
-  "Europe": "🌍",
-  "North America": "🌎",
-  "South America": "🌎",
-  "Oceania": "🌏",
-};
-
-const getRisk = (code: string) => (RISK_MAP as Record<string, string>)[code] || "low";
+const getRisk = (code: string, dbRiskMap: Record<string, string>) =>
+  (dbRiskMap[code] as keyof typeof RISK_CONFIG) || (RISK_MAP as Record<string, string>)[code] as keyof typeof RISK_CONFIG || "low";
 
 const CountriesPage = () => {
   const { user, loading } = useAuth();
   const { publishedPosts } = useData();
   const [search, setSearch] = useState("");
-  const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
   const [mapFullscreen, setMapFullscreen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [allDbCountries, setAllDbCountries] = useState<any[]>([]);
-  const [dbRiskMap, setDbRiskMap] = useState<Record<string, string>>({});
-  const [currentSpotlightIndex, setCurrentSpotlightIndex] = useState(0);
+  const [countries, setCountries] = useState<any[]>([]);
+  const [dbLoading, setDbLoading] = useState(true);
 
-  // Fetch all countries from DB (for auto-rotation spotlight + risk map)
   useEffect(() => {
     publicSupabase
       .from("countries")
-      .select("code, name, flag, risk_level, description")
+      .select("id, code, name, flag, risk_level, continent, description")
       .order("name")
-      .then(({ data: countries }) => {
-        if (countries && countries.length > 0) {
-          setAllDbCountries(countries);
-          const map: Record<string, string> = {};
-          countries.forEach((c: any) => { if (c.risk_level) map[c.code] = c.risk_level; });
-          setDbRiskMap(map);
-        }
-      });
+      .then(({ data }) => {
+        if (data && data.length > 0) setCountries(data);
+        setDbLoading(false);
+      })
+      .catch(() => setDbLoading(false));
   }, []);
-
-  // Auto-rotate spotlight every 20 minutes (separate effect so it always reads latest length)
-  useEffect(() => {
-    if (allDbCountries.length < 2) return;
-    const interval = setInterval(() => {
-      setCurrentSpotlightIndex(prev =>
-        prev + 1 >= allDbCountries.length ? 0 : prev + 1
-      );
-    }, 20 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [allDbCountries.length]);
 
   if (loading) return <div className="container py-8 text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
-
-  /* ── Derived data ── */
-  const getPostCount = (code: string) =>
-    publishedPosts.filter((p: any) => {
-      const pc = p.countryCodes || [];
-      // Only count posts specifically tagged with this country
-      return pc.includes(code);
-    }).length;
-
-  const riskCounts = {
-    low:      natoCountries.filter(c => (dbRiskMap[c.code] || getRisk(c.code)) === "low").length,
-    moderate: natoCountries.filter(c => (dbRiskMap[c.code] || getRisk(c.code)) === "moderate").length,
-    high:     natoCountries.filter(c => (dbRiskMap[c.code] || getRisk(c.code)) === "high").length,
-    extreme:  natoCountries.filter(c => (dbRiskMap[c.code] || getRisk(c.code)) === "extreme").length,
-  };
-  const totalForChart = Object.values(riskCounts).reduce((a, b) => a + b, 0) || 1;
-
-  // Country spotlight — auto-rotate from DB countries every 20 minutes
-  const dbSpotlight = allDbCountries.length > 0 ? allDbCountries[currentSpotlightIndex] : null;
-  const spotlightCode = dbSpotlight?.code || natoCountries.find(c => getRisk(c.code) === "high")?.code || natoCountries[0].code;
-  const spotlightCountry = natoCountries.find(c => c.code === spotlightCode) || natoCountries[0];
-  const spotlight = dbSpotlight
-    ? { ...spotlightCountry, ...dbSpotlight }
-    : spotlightCountry;
-  const spotlightRisk = (dbSpotlight?.risk_level as keyof typeof RISK_CONFIG) || getRisk(spotlight.code);
-
-  // Filtered countries
-  const continentCountries = selectedContinent
-    ? natoCountries.filter(c => c.continent === selectedContinent)
-    : null;
-
-  const filtered = natoCountries.filter(c => {
-    const matchSearch = c.name.toLowerCase().includes(search.toLowerCase());
-    const matchContinent = continentCountries ? continentCountries.includes(c) : true;
-    return matchSearch && matchContinent;
-  });
 
   /* ── Fullscreen map ── */
   if (mapFullscreen) {
     return (
       <div className="relative w-full h-screen overflow-hidden">
-        <button
-          onClick={() => setMapFullscreen(false)}
-          className="absolute top-4 right-4 z-30 px-4 py-2 bg-white border border-gray-200 shadow-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
-        >
+        <button onClick={() => setMapFullscreen(false)} className="absolute top-4 right-4 z-30 px-4 py-2 bg-white border border-gray-200 shadow-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2">
           ✕ Exit Map
         </button>
         <InteractiveWorldMap height="100vh" />
@@ -125,9 +57,16 @@ const CountriesPage = () => {
     );
   }
 
+  const getPostCount = (code: string) =>
+    publishedPosts.filter((p: any) => (p.countryCodes || []).includes(code)).length;
+
+  const filtered = countries.filter(c =>
+    c.name?.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* ── Top breadcrumb ── */}
+      {/* breadcrumb */}
       <div className="bg-white border-b border-gray-200 px-4 py-2">
         <div className="container mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -135,12 +74,7 @@ const CountriesPage = () => {
             <ChevronRight className="w-3.5 h-3.5" />
             <span className="text-blue-900 font-semibold">Countries</span>
           </div>
-          {/* Mobile sidebar toggle */}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden p-2 hover:bg-gray-100 rounded transition-colors"
-            aria-label="Toggle menu"
-          >
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 hover:bg-gray-100 rounded">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
@@ -148,224 +82,70 @@ const CountriesPage = () => {
         </div>
       </div>
 
-      <div className="container mx-auto">
-        <div className="flex gap-0 min-h-[calc(100vh-120px)] relative">
-
-          {/* Mobile sidebar backdrop */}
-          {sidebarOpen && (
-            <div
-              className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-              onClick={() => setSidebarOpen(false)}
-              aria-hidden="true"
+      <div className="container mx-auto px-4 py-6">
+        {/* Search */}
+        <div className="mb-5 flex items-center gap-3">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search country..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 bg-white focus:outline-none focus:ring-1 focus:ring-blue-900 rounded"
             />
-          )}
+          </div>
+          <span className="text-sm text-gray-400">{filtered.length} countries</span>
+        </div>
 
-          {/* ══════════════════════════════════════════
-              LEFT SIDEBAR - Mobile Responsive
-          ══════════════════════════════════════════ */}
-          <aside className={`
-            fixed lg:static inset-0 z-50 lg:z-auto
-            w-64 shrink-0 bg-white border-r border-gray-200 py-6 px-4 gap-6
-            transform transition-transform duration-300 lg:transform-none
-            ${sidebarOpen ? 'translate-x-0 flex flex-col' : '-translate-x-full lg:translate-x-0 hidden lg:flex lg:flex-col'}
-          `}>
-            {/* Mobile close button */}
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden absolute top-4 right-4 p-2 hover:bg-gray-100 rounded transition-colors"
-              aria-label="Close menu"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {/* Title */}
-            <div>
-              <h1 className="font-display font-black text-2xl text-gray-900 uppercase tracking-wide mb-1">
-                COUNTRIES
-              </h1>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                Country information, risk levels, and travel advisories.
-              </p>
-            </div>
-
-            {/* Risk Levels Legend */}
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
-                RISK LEVELS
-              </p>
-              <div className="space-y-2">
-                {(Object.entries(RISK_CONFIG) as [keyof typeof RISK_CONFIG, typeof RISK_CONFIG[keyof typeof RISK_CONFIG]][]).map(([key, cfg]) => (
-                  <div key={key} className="flex items-center gap-2.5">
-                    <div className={`w-3 h-3 rounded-full shrink-0 ${cfg.color}`} />
-                    <span className="text-sm text-gray-700">{cfg.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search country..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-900 focus:border-blue-900 transition"
-              />
-            </div>
-
-            {/* Browse by Continent */}
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
-                BROWSE BY CONTINENT
-              </p>
-              <div className="space-y-0.5">
-                {CONTINENTS.map(continent => {
-                  const count = natoCountries.filter(c => c.continent === continent).length;
-                  return (
-                    <button
-                      key={continent}
-                      onClick={() => {
-                        setSelectedContinent(selectedContinent === continent ? null : continent);
-                        setSidebarOpen(false); // Close sidebar on mobile after selection
-                      }}
-                      className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors rounded ${
-                        selectedContinent === continent
-                          ? "bg-blue-900 text-white"
-                          : "text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <span>{CONTINENT_ICONS[continent] || "🌍"}</span>
-                        <span className="font-medium">{continent}</span>
-                      </span>
-                      <span className="text-xs opacity-70">({count})</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Download */}
-            <div className="mt-auto border border-gray-200 p-3 bg-gray-50">
-              <div className="flex items-start gap-2 mb-2">
-                <Download className="w-4 h-4 text-blue-900 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm font-bold text-gray-900">Download Country List</p>
-                  <p className="text-xs text-gray-500">Get the full list of countries and risk data offline.</p>
-                </div>
-              </div>
-              <button className="w-full text-xs font-semibold text-blue-900 border border-blue-900 px-3 py-1.5 hover:bg-blue-900 hover:text-white transition-colors">
-                Download PDF
-              </button>
-            </div>
-          </aside>
-
-          {/* ══════════════════════════════════════════
-              MAIN CONTENT
-          ══════════════════════════════════════════ */}
-          <div className="flex-1 flex flex-col min-w-0 w-full lg:w-auto">
-
-            {/* ── Interactive Map ── */}
-            <div className="relative bg-blue-50 border-b border-gray-200 h-[300px] sm:h-[350px] md:h-[420px]">
-              <div className="absolute top-3 left-3 z-20 flex gap-1">
-                <button className="px-3 py-1 text-xs font-bold bg-white border border-gray-300 shadow-sm text-gray-900">Map</button>
-                <button onClick={() => setMapFullscreen(true)} className="px-3 py-1 text-xs font-bold bg-white/80 border border-gray-200 text-gray-600 hover:bg-white transition-colors">Fullscreen</button>
-              </div>
-              <button onClick={() => setMapFullscreen(true)} className="absolute top-3 right-3 z-20 w-8 h-8 bg-white border border-gray-200 shadow flex items-center justify-center hover:bg-gray-50 transition-colors" title="Fullscreen map">
-                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                </svg>
-              </button>
-              <div className="absolute inset-0 pointer-events-none">
-                <InteractiveWorldMap height="100%" />
-              </div>
-            </div>
-
-
-            {/* ── Country Grid ── */}
-            <div className="flex-1 bg-gray-50 p-4 sm:p-6">
-              {/* Mobile search */}
-              <div className="lg:hidden mb-4 relative">
-                <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search country..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 bg-white focus:outline-none focus:ring-1 focus:ring-blue-900"
-                />
-              </div>
-
-              {/* Mobile continent filter button */}
-              <div className="lg:hidden mb-4">
-                <button
-                  onClick={() => setSidebarOpen(true)}
-                  className="w-full flex items-center justify-between px-4 py-2 text-sm font-medium border border-gray-200 bg-white hover:bg-gray-50 transition-colors rounded"
-                >
-                  <span>
-                    {selectedContinent ? (
-                      <>
-                        {CONTINENT_ICONS[selectedContinent]} {selectedContinent}
-                      </>
-                    ) : (
-                      'All Continents'
-                    )}
-                  </span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-semibold text-gray-700">
-                  {selectedContinent ? selectedContinent : "All Countries"}
-                  <span className="text-gray-400 font-normal ml-2">({filtered.length})</span>
-                </p>
-                {selectedContinent && (
-                  <button
-                    onClick={() => setSelectedContinent(null)}
-                    className="text-xs text-blue-900 hover:underline"
-                  >
-                    Clear filter
-                  </button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-                {filtered.map(country => (
-                  <Link
-                    key={country.code}
-                    to={`/countries/${country.code.toLowerCase()}`}
-                    className="group relative rounded-xl overflow-hidden shadow hover:shadow-lg transition-all aspect-[4/3] bg-gray-200"
-                  >
-                    {/* Flag image via flagcdn */}
-                    <img
-                      src={`https://flagcdn.com/w320/${country.code.toLowerCase()}.png`}
-                      alt={country.name}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                    {/* Dark gradient overlay at bottom */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                    {/* Country name */}
-                    <span className="absolute bottom-2 left-3 text-white font-bold text-sm drop-shadow-md leading-tight">
-                      {country.name}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-
-              {filtered.length === 0 && (
-                <div className="text-center py-12 text-gray-400">
-                  <Globe className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                  <p className="text-sm">No countries match your search.</p>
-                </div>
-              )}
-            </div>
+        {/* Map */}
+        <div className="relative bg-blue-50 border border-gray-200 rounded-lg mb-6 h-[300px] sm:h-[380px]">
+          <button onClick={() => setMapFullscreen(true)} className="absolute top-3 right-3 z-20 w-8 h-8 bg-white border border-gray-200 shadow flex items-center justify-center hover:bg-gray-50 rounded">
+            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+          </button>
+          <div className="absolute inset-0 pointer-events-none rounded-lg overflow-hidden">
+            <InteractiveWorldMap height="100%" />
           </div>
         </div>
+
+        {/* Country Grid */}
+        {dbLoading ? (
+          <div className="text-center py-12 text-gray-400 text-sm">Loading countries...</div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            {filtered.map(country => {
+              const risk = getRisk(country.code, Object.fromEntries(countries.map(c => [c.code, c.risk_level])));
+              const cfg = RISK_CONFIG[risk] || RISK_CONFIG.low;
+              return (
+                <Link
+                  key={country.code}
+                  to={`/countries/${country.code.toLowerCase()}`}
+                  className="group relative rounded-xl overflow-hidden shadow hover:shadow-lg transition-all aspect-[4/3] bg-gray-200"
+                >
+                  <img
+                    src={`https://flagcdn.com/w320/${country.code.toLowerCase()}.png`}
+                    alt={country.name}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                  <div className={`absolute top-2 right-2 w-2.5 h-2.5 rounded-full ${cfg.color}`} title={cfg.label} />
+                  <span className="absolute bottom-2 left-2 right-2 text-white font-bold text-xs drop-shadow-md leading-tight">
+                    {country.name}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+
+        {!dbLoading && filtered.length === 0 && (
+          <div className="text-center py-12 text-gray-400">
+            <Globe className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p className="text-sm">No countries found.</p>
+          </div>
+        )}
       </div>
     </div>
   );

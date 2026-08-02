@@ -69,7 +69,7 @@ export default function AdminCategories() {
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
-    name: "",
+    title: "",
     slug: "",
     description: "",
     section_id: "",
@@ -156,7 +156,7 @@ export default function AdminCategories() {
   const handleEdit = (category: any) => {
     setEditingCategory(category);
     setFormData({
-      name: category.name,
+      title: category.title || category.name || "",
       slug: category.slug,
       description: category.description || "",
       section_id: category.section_id || "",
@@ -180,12 +180,7 @@ export default function AdminCategories() {
 
   const resetForm = () => {
     setEditingCategory(null);
-    setFormData({
-      name: "",
-      slug: "",
-      description: "",
-      section_id: "",
-    });
+    setFormData({ title: "", slug: "", description: "", section_id: "" });
   };
 
   const allSelected = categories.length > 0 && categories.every(c => selected.includes(c.id));
@@ -263,7 +258,7 @@ export default function AdminCategories() {
                 categories.map((category) => (
                   <tr key={category.id} className={selected.includes(category.id) ? "bg-blue-50" : ""}>
                     <td className="px-4 py-4"><input type="checkbox" checked={selected.includes(category.id)} onChange={() => toggleOne(category.id)} className="rounded" /></td>
-                    <td className="px-6 py-4 font-medium">{category.name}</td>
+                    <td className="px-6 py-4 font-medium">{category.title || category.name}</td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {category.sections?.title || "No Section"}
@@ -320,8 +315,8 @@ export default function AdminCategories() {
               <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
               />
             </div>
