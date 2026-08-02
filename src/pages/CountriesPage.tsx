@@ -9,42 +9,8 @@ import {
 import { natoCountries, RISK_MAP } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
+import { InteractiveWorldMap } from "@/components/InteractiveWorldMap";
 import { publicSupabase } from "@/integrations/supabase/publicClient";
-
-const ContinentMap = ({ onContinentClick, selectedContinent }: {
-  onContinentClick: (continent: string) => void;
-  selectedContinent: string | null;
-}) => (
-  <div className="relative w-full h-full bg-[#dbeafe] flex items-center justify-center overflow-hidden">
-    <svg viewBox="0 0 1000 500" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid meet">
-      {[
-        { name: "North America", cx: 180, cy: 170, rx: 120, ry: 110 },
-        { name: "South America", cx: 260, cy: 330, rx: 70,  ry: 100 },
-        { name: "Europe",        cx: 480, cy: 150, rx: 65,  ry: 70  },
-        { name: "Africa",        cx: 490, cy: 310, rx: 80,  ry: 110 },
-        { name: "Asia",          cx: 680, cy: 180, rx: 160, ry: 130 },
-        { name: "Oceania",       cx: 800, cy: 360, rx: 80,  ry: 55  },
-      ].map(({ name, cx, cy, rx, ry }) => {
-        const active = selectedContinent === name;
-        const lines = name.split(" ");
-        return (
-          <g key={name} onClick={() => onContinentClick(name)} style={{ cursor: "pointer" }}>
-            <ellipse cx={cx} cy={cy} rx={rx} ry={ry}
-              fill={active ? "#1e40af" : "#93c5fd"} stroke="#60a5fa" strokeWidth="1.5" />
-            {lines.map((line, i) => (
-              <text key={i} x={cx} y={cy + (i - (lines.length - 1) / 2) * 18}
-                textAnchor="middle" fontSize="14" fontWeight="800"
-                fill={active ? "white" : "#1e3a8a"} fontFamily="sans-serif"
-                style={{ pointerEvents: "none", userSelect: "none" }}>
-                {line}
-              </text>
-            ))}
-          </g>
-        );
-      })}
-    </svg>
-  </div>
-);
 
 const RISK_CONFIG = {
   low:      { label: "Low Risk",      color: "bg-green-500",  text: "text-green-600",  border: "border-green-200",  badge: "bg-green-100 text-green-700" },
@@ -72,6 +38,7 @@ const CountriesPage = () => {
   const { publishedPosts } = useData();
   const [search, setSearch] = useState("");
   const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
+  const [mapFullscreen, setMapFullscreen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [allDbCountries, setAllDbCountries] = useState<any[]>([]);
   const [dbRiskMap, setDbRiskMap] = useState<Record<string, string>>({});
@@ -143,7 +110,20 @@ const CountriesPage = () => {
     return matchSearch && matchContinent;
   });
 
-  /* ── Fullscreen map removed — using continent map ── */
+  /* ── Fullscreen map ── */
+  if (mapFullscreen) {
+    return (
+      <div className="relative w-full h-screen overflow-hidden">
+        <button
+          onClick={() => setMapFullscreen(false)}
+          className="absolute top-4 right-4 z-30 px-4 py-2 bg-white border border-gray-200 shadow-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+        >
+          ✕ Exit Map
+        </button>
+        <InteractiveWorldMap height="100vh" />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -289,158 +269,22 @@ const CountriesPage = () => {
           ══════════════════════════════════════════ */}
           <div className="flex-1 flex flex-col min-w-0 w-full lg:w-auto">
 
-            {/* ── Continent Map ── */}
+            {/* ── Interactive Map ── */}
             <div className="relative bg-blue-50 border-b border-gray-200 h-[300px] sm:h-[350px] md:h-[420px]">
-              {selectedContinent && (
-                <div className="absolute top-3 left-3 z-20 flex items-center gap-2">
-                  <span className="px-3 py-1 text-xs font-bold bg-blue-900 text-white shadow-sm">
-                    {CONTINENT_ICONS[selectedContinent]} {selectedContinent}
-                  </span>
-                  <button
-                    onClick={() => setSelectedContinent(null)}
-                    className="px-2 py-1 text-xs font-bold bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-                  >
-                    ✕ Clear
-                  </button>
-                </div>
-              )}
-              {!selectedContinent && (
-                <div className="absolute top-3 left-3 z-20">
-                  <span className="px-3 py-1 text-xs font-semibold bg-white/90 border border-gray-200 text-gray-600 shadow-sm">
-                    Click a continent to filter
-                  </span>
-                </div>
-              )}
+              <div className="absolute top-3 left-3 z-20 flex gap-1">
+                <button className="px-3 py-1 text-xs font-bold bg-white border border-gray-300 shadow-sm text-gray-900">Map</button>
+                <button onClick={() => setMapFullscreen(true)} className="px-3 py-1 text-xs font-bold bg-white/80 border border-gray-200 text-gray-600 hover:bg-white transition-colors">Fullscreen</button>
+              </div>
+              <button onClick={() => setMapFullscreen(true)} className="absolute top-3 right-3 z-20 w-8 h-8 bg-white border border-gray-200 shadow flex items-center justify-center hover:bg-gray-50 transition-colors" title="Fullscreen map">
+                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+              </button>
               <div className="absolute inset-0">
-                <ContinentMap
-                  onContinentClick={(continent) =>
-                    setSelectedContinent(prev => prev === continent ? null : continent)
-                  }
-                  selectedContinent={selectedContinent}
-                />
+                <InteractiveWorldMap height="100%" />
               </div>
             </div>
 
-            {/* ── Bottom panels ── */}
-            <div className="grid grid-cols-1 md:grid-cols-3 border-t border-gray-200 bg-white divide-y md:divide-y-0 md:divide-x divide-gray-200">
-
-              {/* Country Spotlight */}
-              <div className="p-4 sm:p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                    COUNTRY SPOTLIGHT
-                  </p>
-                  {allDbCountries.length > 0 && (
-                    <span className="text-[9px] text-gray-400 font-medium">
-                      rotates every 20 min
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">{spotlight.flag}</span>
-                  <span className="font-bold text-gray-900 text-base">{spotlight.name}</span>
-                </div>
-                <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded mb-3 ${RISK_CONFIG[spotlightRisk].badge}`}>
-                  <Circle className="w-2 h-2 fill-current" />
-                  {RISK_CONFIG[spotlightRisk].label}
-                </span>
-                <p className="text-xs text-gray-500 leading-relaxed mb-3">
-                  {dbSpotlight?.description || "Active security concerns and preparedness guidance available for this region."}
-                </p>
-                <div className="flex items-center justify-between">
-                  <Link
-                    to={`/countries/${spotlight.code.toLowerCase()}`}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-blue-900 hover:bg-blue-800 px-3 py-1.5 transition-colors"
-                  >
-                    View Full Report <ArrowRight className="w-3 h-3" />
-                  </Link>
-                  {allDbCountries.length > 1 && (
-                    <div className="flex gap-1">
-                      {allDbCountries.slice(0, 5).map((_, i) => (
-                        <button
-                          key={i}
-                          onClick={() => setCurrentSpotlightIndex(i)}
-                          className={`w-1.5 h-1.5 rounded-full transition-colors ${i === currentSpotlightIndex ? "bg-blue-900" : "bg-gray-300 hover:bg-gray-400"}`}
-                          aria-label={`Show country ${i + 1}`}
-                        />
-                      ))}
-                      {allDbCountries.length > 5 && <span className="text-[9px] text-gray-400">+{allDbCountries.length - 5}</span>}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Risk Summary */}
-              <div className="p-4 sm:p-5">
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
-                  RISK SUMMARY
-                </p>
-                {/* Donut chart — pure CSS */}
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="relative w-16 h-16 shrink-0">
-                    <svg viewBox="0 0 36 36" className="w-16 h-16 -rotate-90">
-                      {/* Background */}
-                      <circle cx="18" cy="18" r="14" fill="none" stroke="#f3f4f6" strokeWidth="5" />
-                      {/* Segments — proportional arcs from DB counts */}
-                      <circle cx="18" cy="18" r="14" fill="none" stroke="#22c55e" strokeWidth="5"
-                        strokeDasharray={`${(riskCounts.low / totalForChart) * 88} 88`}
-                        strokeDashoffset="0" />
-                      <circle cx="18" cy="18" r="14" fill="none" stroke="#eab308" strokeWidth="5"
-                        strokeDasharray={`${(riskCounts.moderate / totalForChart) * 88} 88`}
-                        strokeDashoffset={`-${(riskCounts.low / totalForChart) * 88}`} />
-                      <circle cx="18" cy="18" r="14" fill="none" stroke="#f97316" strokeWidth="5"
-                        strokeDasharray={`${(riskCounts.high / totalForChart) * 88} 88`}
-                        strokeDashoffset={`-${((riskCounts.low + riskCounts.moderate) / totalForChart) * 88}`} />
-                      <circle cx="18" cy="18" r="14" fill="none" stroke="#dc2626" strokeWidth="5"
-                        strokeDasharray={`${(riskCounts.extreme / totalForChart) * 88} 88`}
-                        strokeDashoffset={`-${((riskCounts.low + riskCounts.moderate + riskCounts.high) / totalForChart) * 88}`} />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-sm font-black text-gray-900 leading-none">{totalForChart}</span>
-                      <span className="text-[8px] text-gray-400 leading-none">Total</span>
-                    </div>
-                  </div>
-                  <div className="space-y-1.5 text-xs">
-                    {(Object.entries(riskCounts) as [keyof typeof RISK_CONFIG, number][]).map(([key, count]) => (
-                      <div key={key} className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full shrink-0 ${RISK_CONFIG[key].color}`} />
-                        <span className="text-gray-600">{RISK_CONFIG[key].label}</span>
-                        <span className="font-bold text-gray-900 ml-auto pl-2">{count}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Need Help */}
-              <div className="p-4 sm:p-5">
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
-                  NEED HELP?
-                </p>
-                <div className="space-y-2.5">
-                  {[
-                    { icon: Shield, label: "Travel Safety Tips", desc: "Stay safe while travelling", href: "/survival-guides/evacuation-shelter" },
-                    { icon: Phone, label: "Emergency Contacts", desc: "Important contacts by country", href: "/directives" },
-                    { icon: Flag, label: "Report an Incident", desc: "Submit a field report to help the community", href: "/dashboard/submit-report" },
-                  ].map(item => (
-                    <Link
-                      key={item.label}
-                      to={item.href}
-                      className="flex items-center gap-3 group p-2 hover:bg-gray-50 -mx-2 transition-colors"
-                    >
-                      <div className="w-7 h-7 shrink-0 border border-gray-200 flex items-center justify-center group-hover:border-blue-900 transition-colors">
-                        <item.icon className="w-3.5 h-3.5 text-blue-900" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-gray-900 leading-none mb-0.5">{item.label}</p>
-                        <p className="text-[10px] text-gray-400 leading-none">{item.desc}</p>
-                      </div>
-                      <ArrowRight className="w-3 h-3 text-gray-300 group-hover:text-blue-900 transition-colors shrink-0" />
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
 
             {/* ── Country Grid ── */}
             <div className="flex-1 bg-gray-50 p-4 sm:p-6">
@@ -490,34 +334,27 @@ const CountriesPage = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-5 gap-2 sm:gap-3">
-                {filtered.map(country => {
-                  const risk = (dbRiskMap[country.code] as keyof typeof RISK_CONFIG) || getRisk(country.code);
-                  const cfg = RISK_CONFIG[risk];
-                  const posts = getPostCount(country.code);
-                  return (
-                    <Link
-                      key={country.code}
-                      to={`/countries/${country.code.toLowerCase()}`}
-                      className={`group bg-white border ${cfg.border} hover:shadow-md transition-all p-2 sm:p-3 flex flex-col gap-1.5 sm:gap-2`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <span className="text-xl sm:text-2xl leading-none">{country.flag}</span>
-                        <div className={`w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full shrink-0 mt-1 ${cfg.color}`} title={cfg.label} />
-                      </div>
-                      <div>
-                        <p className="text-xs sm:text-sm font-bold text-gray-900 group-hover:text-blue-900 transition-colors leading-tight line-clamp-2">
-                          {country.name}
-                        </p>
-                        <p className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5 font-mono">{country.code}</p>
-                      </div>
-                      <div className="flex items-center justify-between mt-auto pt-1 border-t border-gray-100">
-                        <span className={`text-[9px] sm:text-[10px] font-bold ${cfg.text}`}>{cfg.label}</span>
-                        <span className="text-[9px] sm:text-[10px] text-gray-400">{posts} post{posts !== 1 ? "s" : ""}</span>
-                      </div>
-                    </Link>
-                  );
-                })}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+                {filtered.map(country => (
+                  <Link
+                    key={country.code}
+                    to={`/countries/${country.code.toLowerCase()}`}
+                    className="group relative rounded-xl overflow-hidden shadow hover:shadow-lg transition-all aspect-[4/3] bg-gray-200"
+                  >
+                    {/* Flag image via flagcdn */}
+                    <img
+                      src={`https://flagcdn.com/w320/${country.code.toLowerCase()}.png`}
+                      alt={country.name}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    {/* Dark gradient overlay at bottom */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                    {/* Country name */}
+                    <span className="absolute bottom-2 left-3 text-white font-bold text-sm drop-shadow-md leading-tight">
+                      {country.name}
+                    </span>
+                  </Link>
+                ))}
               </div>
 
               {filtered.length === 0 && (
