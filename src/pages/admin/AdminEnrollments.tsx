@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Users, TrendingUp, Award, DollarSign, Download } from "lucide-react";
+import { Search, Users, TrendingUp, Award, DollarSign, Download, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { CourseEnrollment, Course } from "@/types/monetization";
 
@@ -22,6 +22,7 @@ export default function AdminEnrollments() {
   const [searchTerm, setSearchTerm] = useState("");
   const [courseFilter, setCourseFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selected, setSelected] = useState<string[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -128,6 +129,22 @@ export default function AdminEnrollments() {
     ? ((enrollments.filter(e => e.is_completed).length / enrollments.length) * 100).toFixed(1)
     : "0.0";
 
+  const allSelected = filteredEnrollments.length > 0 && filteredEnrollments.every(e => selected.includes(e.id));
+  const toggleAll = () => setSelected(allSelected ? [] : filteredEnrollments.map(e => e.id));
+  const toggleOne = (id: string) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const bulkRefund = async () => {
+    if (!selected.length || !confirm(`Refund ${selected.length} enrollment(s)?`)) return;
+    await supabase.from("course_enrollments").update({ payment_status: "refunded" }).in("id", selected);
+    toast({ title: "Refunded", description: `${selected.length} enrollment(s) refunded` });
+    setSelected([]); fetchData();
+  };
+  const bulkDelete = async () => {
+    if (!selected.length || !confirm(`Delete ${selected.length} enrollment(s)?`)) return;
+    await supabase.from("course_enrollments").delete().in("id", selected);
+    toast({ title: "Deleted", description: `${selected.length} enrollment(s) deleted` });
+    setSelected([]); fetchData();
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
@@ -181,32 +198,19 @@ export default function AdminEnrollments() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div className="relative">
           <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-          <Input
-            placeholder="Search by student or course..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+          <Input placeholder="Search by student or course..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
         </div>
-
         <Select value={courseFilter} onValueChange={setCourseFilter}>
-          <SelectTrigger>
-            <SelectValue placeholder="All Courses" />
-          </SelectTrigger>
+          <SelectTrigger><SelectValue placeholder="All Courses" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Courses</SelectItem>
             {courses.map((course) => (
-              <SelectItem key={course.id} value={course.id}>
-                {course.title}
-              </SelectItem>
+              <SelectItem key={course.id} value={course.id}>{course.title}</SelectItem>
             ))}
           </SelectContent>
         </Select>
-
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger>
-            <SelectValue placeholder="All Statuses" />
-          </SelectTrigger>
+          <SelectTrigger><SelectValue placeholder="All Statuses" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
@@ -216,12 +220,22 @@ export default function AdminEnrollments() {
         </Select>
       </div>
 
+      {selected.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <span className="text-sm font-medium text-blue-800">{selected.length} selected</span>
+          <Button size="sm" variant="outline" onClick={bulkRefund}>Refund</Button>
+          <Button size="sm" variant="destructive" onClick={bulkDelete}><Trash2 className="w-3 h-3 mr-1" />Delete</Button>
+          <Button size="sm" variant="ghost" onClick={() => setSelected([])}>Clear</Button>
+        </div>
+      )}
+
       {/* Enrollments Table */}
       <div className="bg-white rounded-lg border">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
+                <th className="px-4 py-3"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded" /></th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Course</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Enrolled</th>
@@ -244,7 +258,8 @@ export default function AdminEnrollments() {
                 </tr>
               ) : (
                 filteredEnrollments.map((enrollment) => (
-                  <tr key={enrollment.id} className="hover:bg-gray-50">
+                  <tr key={enrollment.id} className={`hover:bg-gray-50 ${selected.includes(enrollment.id) ? "bg-blue-50" : ""}`}>
+                    <td className="px-4 py-4"><input type="checkbox" checked={selected.includes(enrollment.id)} onChange={() => toggleOne(enrollment.id)} className="rounded" /></td>
                     <td className="px-6 py-4">
                       <div>
                         <div className="font-medium">{enrollment.user?.full_name || "Unknown"}</div>

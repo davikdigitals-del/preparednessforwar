@@ -28,6 +28,7 @@ export default function AdminReports() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selected, setSelected] = useState<string[]>([]);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const { toast } = useToast();
@@ -141,6 +142,22 @@ export default function AdminReports() {
     return "bg-blue-100 text-blue-700";
   };
 
+  const allSelected = filtered.length > 0 && filtered.every(r => selected.includes(r.id));
+  const toggleAll = () => setSelected(allSelected ? [] : filtered.map(r => r.id));
+  const toggleOne = (id: string) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const bulkResolve = async (status: "resolved" | "dismissed") => {
+    if (!selected.length) return;
+    await supabase.from("reports").update({ status, resolved_at: new Date().toISOString() }).in("id", selected);
+    toast({ title: status === "resolved" ? "Resolved" : "Dismissed", description: `${selected.length} report(s) updated` });
+    setSelected([]); fetchReports();
+  };
+  const bulkDelete = async () => {
+    if (!selected.length || !confirm(`Delete ${selected.length} report(s)?`)) return;
+    await supabase.from("reports").delete().in("id", selected);
+    toast({ title: "Deleted", description: `${selected.length} report(s) deleted` });
+    setSelected([]); fetchReports();
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
@@ -203,12 +220,23 @@ export default function AdminReports() {
         </Select>
       </div>
 
+      {selected.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <span className="text-sm font-medium text-blue-800">{selected.length} selected</span>
+          <Button size="sm" variant="outline" onClick={() => bulkResolve("resolved")}>Resolve</Button>
+          <Button size="sm" variant="outline" onClick={() => bulkResolve("dismissed")}>Dismiss</Button>
+          <Button size="sm" variant="destructive" onClick={bulkDelete}><Trash2 className="w-3 h-3 mr-1" />Delete</Button>
+          <Button size="sm" variant="ghost" onClick={() => setSelected([])}>Clear</Button>
+        </div>
+      )}
+
       {/* Table */}
       <div className="bg-white rounded-lg border border-gray-200">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
+                <th className="px-4 py-3"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded" /></th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reported Content</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reporter</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
@@ -225,7 +253,8 @@ export default function AdminReports() {
                 <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">No reports found</td></tr>
               ) : (
                 filtered.map((report) => (
-                  <tr key={report.id} className="hover:bg-gray-50">
+                  <tr key={report.id} className={`hover:bg-gray-50 ${selected.includes(report.id) ? "bg-blue-50" : ""}`}>
+                    <td className="px-4 py-3"><input type="checkbox" checked={selected.includes(report.id)} onChange={() => toggleOne(report.id)} className="rounded" /></td>
                     <td className="px-4 py-3">
                       <div className="text-sm font-medium line-clamp-1 max-w-[180px]">
                         {report.post?.title || report.reason || "Unknown content"}

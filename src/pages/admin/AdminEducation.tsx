@@ -87,6 +87,7 @@ export default function AdminEducation() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "scouts" | "homeschool">("all");
   const [formData, setFormData] = useState<ProgrammeFormData>(defaultForm);
+  const [selected, setSelected] = useState<string[]>([]);
   const [resourceInput, setResourceInput] = useState({ title: "", url: "" });
   const [downloadInput, setDownloadInput] = useState({ title: "", url: "" });
   const [topicInput, setTopicInput] = useState("");
@@ -255,6 +256,22 @@ export default function AdminEducation() {
   const homeschoolCount = programmes.filter(p => p.programme_type === "homeschool").length;
   const publishedCount = programmes.filter(p => p.is_published).length;
 
+  const allSelected = filtered.length > 0 && filtered.every(p => selected.includes(p.id));
+  const toggleAll = () => setSelected(allSelected ? [] : filtered.map(p => p.id));
+  const toggleOne = (id: string) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const bulkDelete = async () => {
+    if (!selected.length || !confirm(`Delete ${selected.length} programme(s)?`)) return;
+    await supabase.from("education_programmes").delete().in("id", selected);
+    toast({ title: "Deleted", description: `${selected.length} programme(s) deleted` });
+    setSelected([]); fetchProgrammes();
+  };
+  const bulkPublish = async (val: boolean) => {
+    if (!selected.length) return;
+    await supabase.from("education_programmes").update({ is_published: val, updated_at: new Date().toISOString() }).in("id", selected);
+    toast({ title: val ? "Published" : "Unpublished", description: `${selected.length} programme(s) updated` });
+    setSelected([]); fetchProgrammes();
+  };
+
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
@@ -328,10 +345,21 @@ export default function AdminEducation() {
           <p className="text-sm mt-1">Try adjusting your filters or create a new programme.</p>
         </div>
       ) : (
+        <>
+          {selected.length > 0 && (
+            <div className="mb-3 flex flex-wrap items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <span className="text-sm font-medium text-blue-800">{selected.length} selected</span>
+              <Button size="sm" variant="outline" onClick={() => bulkPublish(true)}>Publish</Button>
+              <Button size="sm" variant="outline" onClick={() => bulkPublish(false)}>Unpublish</Button>
+              <Button size="sm" variant="destructive" onClick={bulkDelete}><Trash2 className="w-3 h-3 mr-1" />Delete</Button>
+              <Button size="sm" variant="ghost" onClick={() => setSelected([])}>Clear</Button>
+            </div>
+          )}
         <div className="bg-white border rounded-lg overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
+                <th className="px-4 py-3"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded" /></th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-700">Programme</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-700 hidden sm:table-cell">Type</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-700 hidden md:table-cell">Age Group</th>
@@ -342,7 +370,8 @@ export default function AdminEducation() {
             </thead>
             <tbody className="divide-y">
               {filtered.map(programme => (
-                <tr key={programme.id} className="hover:bg-gray-50">
+                <tr key={programme.id} className={`hover:bg-gray-50 ${selected.includes(programme.id) ? "bg-blue-50" : ""}`}>
+                  <td className="px-4 py-3"><input type="checkbox" checked={selected.includes(programme.id)} onChange={() => toggleOne(programme.id)} className="rounded" /></td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <span className="text-2xl leading-none">{programme.badge_icon || "📚"}</span>
@@ -428,6 +457,7 @@ export default function AdminEducation() {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       {/* Create / Edit Dialog */}

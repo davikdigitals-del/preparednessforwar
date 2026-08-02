@@ -19,6 +19,7 @@ export default function AdminAffiliateProducts() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<AffiliateProduct | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selected, setSelected] = useState<string[]>([]);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<AffiliateProductFormData>({
@@ -372,6 +373,24 @@ export default function AdminAffiliateProducts() {
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const allSelected = filteredProducts.length > 0 && filteredProducts.every(p => selected.includes(p.id));
+  const toggleAll = () => setSelected(allSelected ? [] : filteredProducts.map(p => p.id));
+  const toggleOne = (id: string) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const bulkDelete = async () => {
+    if (!selected.length || !confirm(`Delete ${selected.length} product(s)?`)) return;
+    await supabase.from("affiliate_products").delete().in("id", selected);
+    setProducts(prev => prev.filter(p => !selected.includes(p.id)));
+    toast({ title: "Deleted", description: `${selected.length} product(s) deleted` });
+    setSelected([]);
+  };
+  const bulkToggleActive = async (val: boolean) => {
+    if (!selected.length) return;
+    await supabase.from("affiliate_products").update({ is_active: val }).in("id", selected);
+    setProducts(prev => prev.map(p => selected.includes(p.id) ? { ...p, is_active: val } : p));
+    toast({ title: val ? "Activated" : "Deactivated", description: `${selected.length} product(s) updated` });
+    setSelected([]);
+  };
+
   const totalRevenue = products.reduce((sum, p) => sum + p.revenue_generated, 0);
   const totalClicks = products.reduce((sum, p) => sum + p.click_count, 0);
   const totalConversions = products.reduce((sum, p) => sum + p.conversion_count, 0);
@@ -433,14 +452,19 @@ export default function AdminAffiliateProducts() {
       <div className="mb-4">
         <div className="relative">
           <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-          <Input
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+          <Input placeholder="Search products..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
         </div>
       </div>
+
+      {selected.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <span className="text-sm font-medium text-blue-800">{selected.length} selected</span>
+          <Button size="sm" variant="outline" onClick={() => bulkToggleActive(true)}>Activate</Button>
+          <Button size="sm" variant="outline" onClick={() => bulkToggleActive(false)}>Deactivate</Button>
+          <Button size="sm" variant="destructive" onClick={bulkDelete}><Trash2 className="w-3 h-3 mr-1" />Delete</Button>
+          <Button size="sm" variant="ghost" onClick={() => setSelected([])}>Clear</Button>
+        </div>
+      )}
 
       {/* Products Table */}
       <div className="bg-white rounded-lg border">
@@ -448,6 +472,7 @@ export default function AdminAffiliateProducts() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
+                <th className="px-4 py-3"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded" /></th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
@@ -471,7 +496,8 @@ export default function AdminAffiliateProducts() {
                 </tr>
               ) : (
                 filteredProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
+                  <tr key={product.id} className={`hover:bg-gray-50 ${selected.includes(product.id) ? "bg-blue-50" : ""}`}>
+                    <td className="px-4 py-4"><input type="checkbox" checked={selected.includes(product.id)} onChange={() => toggleOne(product.id)} className="rounded" /></td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {product.image_url && (
