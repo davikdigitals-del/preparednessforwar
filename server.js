@@ -3,6 +3,34 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { existsSync } from 'fs';
 
+// ── Simple in-memory rate limiter (no extra deps needed) ──────────────────────
+const rateLimitStore = new Map();
+function rateLimit({ windowMs = 60000, max = 100, message = 'Too many requests' } = {}) {
+  return (req, res, next) => {
+    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
+    const now = Date.now();
+    const entry = rateLimitStore.get(ip) || { count: 0, reset: now + windowMs };
+    if (now > entry.reset) { entry.count = 0; entry.reset = now + windowMs; }
+    entry.count++;
+    rateLimitStore.set(ip, entry);
+    res.setHeader('X-RateLimit-Limit', max);
+    res.setHeader('X-RateLimit-Remaining', Math.max(0, max - entry.count));
+    res.setHeader('X-RateLimit-Reset', Math.ceil(entry.reset / 1000));
+    if (entry.count > max) {
+      return res.status(429).json({ error: message });
+    }
+    next();
+  };
+}
+
+// Clean up old entries every 5 minutes to prevent memory leak
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of rateLimitStore.entries()) {
+    if (now > entry.reset) rateLimitStore.delete(ip);
+  }
+}, 5 * 60 * 1000);
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -10,18 +38,44 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const distDir = join(__dirname, 'dist');
 
-// ÔöÇÔöÇ Security & compatibility headers for ALL responses ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ── Security & compatibility headers for ALL responses ───────────────────────
 app.use((req, res, next) => {
-  // Required for Chrome mobile to accept the connection
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  // Allow Chrome mobile to load all resources
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+  res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  res.setHeader('X-DNS-Prefetch-Control', 'off');
+  res.setHeader('X-Download-Options', 'noopen');
+  res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
   res.removeHeader('X-Powered-By');
+  res.removeHeader('Server');
   next();
 });
 
-// ÔöÇÔöÇ Keep-alive / health check ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ── Global rate limit: 200 req/min per IP ─────────────────────────────────────
+app.use(rateLimit({ windowMs: 60 * 1000, max: 200, message: 'Rate limit exceeded. Try again shortly.' }));
+
+// ── Strict rate limit on API routes: 30 req/min per IP ───────────────────────
+app.use('/api/', rateLimit({ windowMs: 60 * 1000, max: 30, message: 'API rate limit exceeded.' }));
+
+// ── Block common attack probes ────────────────────────────────────────────────
+app.use((req, res, next) => {
+  const blocked = [
+    /\.php$/i, /\.asp[x]?$/i, /\.env/i, /\.git/i,
+    /wp-admin/i, /wp-login/i, /xmlrpc/i, /phpmyadmin/i,
+    /\.htaccess/i, /\/etc\/passwd/i, /\/proc\//i,
+    /<script/i, /javascript:/i, /union.*select/i, /drop.*table/i,
+  ];
+  const target = req.path + (req.query ? JSON.stringify(req.query) : '');
+  if (blocked.some(re => re.test(target))) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  next();
+});
+
+// ── Keep-alive / health check ─────────────────────────────────────────────────
 app.get('/ping', (_req, res) => {
   res.setHeader('Content-Type', 'text/plain');
   res.send('pong');
