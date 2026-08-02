@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -149,6 +150,23 @@ export default function AdminAlerts() {
     }
   };
 
+  const [selected, setSelected] = useState<string[]>([]);
+  const allSelected = alerts.length > 0 && alerts.every(a => selected.includes(a.id));
+  const toggleAll = () => setSelected(allSelected ? [] : alerts.map(a => a.id));
+  const toggleOne = (id: string) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const bulkDelete = async () => {
+    if (!selected.length || !confirm(`Delete ${selected.length} alert(s)?`)) return;
+    await supabase.from("emergency_alerts").delete().in("id", selected);
+    toast({ title: "Deleted", description: `${selected.length} alert(s) deleted` });
+    setSelected([]); fetchAlerts();
+  };
+  const bulkActivate = async (val: boolean) => {
+    if (!selected.length) return;
+    await supabase.from("emergency_alerts").update({ is_active: val }).in("id", selected);
+    toast({ title: val ? "Activated" : "Deactivated", description: `${selected.length} alert(s) updated` });
+    setSelected([]); fetchAlerts();
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
@@ -167,11 +185,22 @@ export default function AdminAlerts() {
         </Button>
       </div>
 
+      {selected.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <span className="text-sm font-medium text-blue-800">{selected.length} selected</span>
+          <Button size="sm" variant="outline" onClick={() => bulkActivate(true)}>Activate</Button>
+          <Button size="sm" variant="outline" onClick={() => bulkActivate(false)}>Deactivate</Button>
+          <Button size="sm" variant="destructive" onClick={bulkDelete}><Trash2 className="w-3 h-3 mr-1" />Delete</Button>
+          <Button size="sm" variant="ghost" onClick={() => setSelected([])}>Clear</Button>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg border border-gray-200">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
+                <th className="px-4 py-3"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded" /></th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Alert
                 </th>
@@ -204,7 +233,8 @@ export default function AdminAlerts() {
                 </tr>
               ) : (
                 alerts.map((alert) => (
-                  <tr key={alert.id}>
+                  <tr key={alert.id} className={selected.includes(alert.id) ? "bg-blue-50" : ""}>
+                    <td className="px-4 py-4"><input type="checkbox" checked={selected.includes(alert.id)} onChange={() => toggleOne(alert.id)} className="rounded" /></td>
                     <td className="px-6 py-4">
                       <div className="flex items-start gap-3">
                         <AlertTriangle className="w-5 h-5 text-orange-500 mt-0.5" />

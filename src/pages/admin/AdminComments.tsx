@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -64,6 +65,25 @@ export default function AdminComments() {
     }
   };
 
+  const [selected, setSelected] = useState<string[]>([]);
+  const allSelected = comments.length > 0 && comments.every(c => selected.includes(c.id));
+  const toggleAll = () => setSelected(allSelected ? [] : comments.map(c => c.id));
+  const toggleOne = (id: string) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const bulkAction = async (action: "approved" | "rejected" | "delete") => {
+    if (!selected.length) return;
+    if (action === "delete") {
+      if (!confirm(`Delete ${selected.length} comment(s)?`)) return;
+      await supabase.from("comments").delete().in("id", selected);
+      setComments(prev => prev.filter(c => !selected.includes(c.id)));
+      toast({ title: "Deleted" });
+    } else {
+      await supabase.from("comments").update({ status: action }).in("id", selected);
+      setComments(prev => prev.map(c => selected.includes(c.id) ? { ...c, status: action } : c));
+      toast({ title: action === "approved" ? "Approved" : "Rejected" });
+    }
+    setSelected([]);
+  };
+
   const total = comments.length;
   const approved = comments.filter(c => c.status === "approved").length;
   const pending = comments.filter(c => c.status === "pending").length;
@@ -102,6 +122,16 @@ export default function AdminComments() {
         </div>
       </div>
 
+      {selected.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <span className="text-sm font-medium text-blue-800">{selected.length} selected</span>
+          <Button size="sm" variant="outline" onClick={() => bulkAction("approved")}>Approve</Button>
+          <Button size="sm" variant="outline" onClick={() => bulkAction("rejected")}>Reject</Button>
+          <Button size="sm" variant="destructive" onClick={() => bulkAction("delete")}><Trash2 className="w-3 h-3 mr-1" />Delete</Button>
+          <Button size="sm" variant="ghost" onClick={() => setSelected([])}>Clear</Button>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg border border-gray-200">
         {loading ? (
           <div className="p-12 text-center text-gray-500">Loading comments...</div>
@@ -114,9 +144,10 @@ export default function AdminComments() {
         ) : (
           <div className="divide-y divide-gray-200">
             {comments.map(comment => (
-              <div key={comment.id} className="p-4 hover:bg-gray-50">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
+              <div key={comment.id} className={`p-4 hover:bg-gray-50 ${selected.includes(comment.id) ? "bg-blue-50" : ""}`}>
+                <div className="flex items-start gap-3">
+                  <input type="checkbox" checked={selected.includes(comment.id)} onChange={() => toggleOne(comment.id)} className="rounded mt-1 shrink-0" />
+                  <div className="flex items-start justify-between gap-3 flex-1">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="font-semibold text-sm">{comment.author_name || "Anonymous"}</span>
                       {comment.author_email && <span className="text-xs text-gray-400">{comment.author_email}</span>}

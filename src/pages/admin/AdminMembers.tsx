@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Search, UserCheck, Crown, Edit, X } from "lucide-react";
+import { Search, UserCheck, Crown, Edit, X, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Member {
@@ -41,6 +41,7 @@ export default function AdminMembers() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selected, setSelected] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState("");
@@ -211,6 +212,17 @@ export default function AdminMembers() {
       member.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const allSelected = filteredMembers.length > 0 && filteredMembers.every(m => selected.includes(m.id));
+  const toggleAll = () => setSelected(allSelected ? [] : filteredMembers.map(m => m.id));
+  const toggleOne = (id: string) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+
+  const bulkDelete = async () => {
+    if (!selected.length || !confirm(`Delete ${selected.length} member(s)? This cannot be undone.`)) return;
+    await supabase.from("profiles").delete().in("id", selected);
+    toast({ title: "Deleted", description: `${selected.length} member(s) deleted` });
+    setSelected([]); fetchMembers();
+  };
+
   const premiumCount = members.filter(m => m.user_subscriptions && m.user_subscriptions.length > 0 && m.user_subscriptions[0].status === 'active').length;
 
   return (
@@ -235,23 +247,25 @@ export default function AdminMembers() {
       <div className="mb-4">
         <div className="relative">
           <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-          <Input
-            placeholder="Search members..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+          <Input placeholder="Search members..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
         </div>
       </div>
+
+      {selected.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <span className="text-sm font-medium text-blue-800">{selected.length} selected</span>
+          <Button size="sm" variant="destructive" onClick={bulkDelete}><Trash2 className="w-3 h-3 mr-1" />Delete</Button>
+          <Button size="sm" variant="ghost" onClick={() => setSelected([])}>Clear</Button>
+        </div>
+      )}
 
       <div className="bg-white rounded-lg border border-gray-200">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Member
-                </th>
+                <th className="px-4 py-3"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded" /></th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Member</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Email
                 </th>
@@ -264,9 +278,7 @@ export default function AdminMembers() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Joined
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                  Actions
-                </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -286,9 +298,9 @@ export default function AdminMembers() {
                 filteredMembers.map((member) => {
                   const subscription = member.user_subscriptions?.[0];
                   const hasPremium = subscription && subscription.status === 'active';
-                  
                   return (
-                    <tr key={member.id} className="hover:bg-gray-50">
+                    <tr key={member.id} className={`hover:bg-gray-50 ${selected.includes(member.id) ? "bg-blue-50" : ""}`}>
+                      <td className="px-4 py-4"><input type="checkbox" checked={selected.includes(member.id)} onChange={() => toggleOne(member.id)} className="rounded" /></td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-semibold">
@@ -324,6 +336,9 @@ export default function AdminMembers() {
                         {new Date(member.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 text-right">
+                        <Button variant="ghost" size="sm" onClick={() => handleManageSubscription(member)}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
                       </td>
                     </tr>
                   );

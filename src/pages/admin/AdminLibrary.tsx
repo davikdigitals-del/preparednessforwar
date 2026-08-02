@@ -17,6 +17,7 @@ export default function AdminLibrary() {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [selected, setSelected] = useState<string[]>([]);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -185,6 +186,16 @@ export default function AdminLibrary() {
     return matchesSearch && matchesCategory;
   });
 
+  const allSelected = filteredItems.length > 0 && filteredItems.every(i => selected.includes(i.id));
+  const toggleAll = () => setSelected(allSelected ? [] : filteredItems.map(i => i.id));
+  const toggleOne = (id: string) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const bulkDelete = async () => {
+    if (!selected.length || !confirm(`Delete ${selected.length} resource(s)?`)) return;
+    await supabase.from("library_items").delete().in("id", selected);
+    toast({ title: "Deleted", description: `${selected.length} resource(s) deleted` });
+    setSelected([]); fetchItems();
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
@@ -230,11 +241,20 @@ export default function AdminLibrary() {
         </Select>
       </div>
 
+      {selected.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <span className="text-sm font-medium text-blue-800">{selected.length} selected</span>
+          <Button size="sm" variant="destructive" onClick={bulkDelete}><Trash2 className="w-3 h-3 mr-1" />Delete</Button>
+          <Button size="sm" variant="ghost" onClick={() => setSelected([])}>Clear</Button>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg border border-gray-200">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
+                <th className="px-4 py-3"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded" /></th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Title
                 </th>
@@ -269,7 +289,8 @@ export default function AdminLibrary() {
                 </tr>
               ) : (
                 filteredItems.map((item) => (
-                  <tr key={item.id}>
+                  <tr key={item.id} className={selected.includes(item.id) ? "bg-blue-50" : ""}>
+                    <td className="px-4 py-4"><input type="checkbox" checked={selected.includes(item.id)} onChange={() => toggleOne(item.id)} className="rounded" /></td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {item.cover_image_url ? (

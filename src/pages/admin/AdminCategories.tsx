@@ -65,6 +65,7 @@ export default function AdminCategories() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [selected, setSelected] = useState<string[]>([]);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -187,6 +188,16 @@ export default function AdminCategories() {
     });
   };
 
+  const allSelected = categories.length > 0 && categories.every(c => selected.includes(c.id));
+  const toggleAll = () => setSelected(allSelected ? [] : categories.map(c => c.id));
+  const toggleOne = (id: string) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const bulkDelete = async () => {
+    if (!selected.length || !confirm(`Delete ${selected.length} category/categories?`)) return;
+    await supabase.from("categories").delete().in("id", selected);
+    toast({ title: "Deleted", description: `${selected.length} category/categories deleted` });
+    setSelected([]); fetchCategories();
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
@@ -203,10 +214,18 @@ export default function AdminCategories() {
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200">
+        {selected.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 p-3 bg-blue-50 border-b border-blue-200">
+            <span className="text-sm font-medium text-blue-800">{selected.length} selected</span>
+            <Button size="sm" variant="destructive" onClick={bulkDelete}><Trash2 className="w-3 h-3 mr-1" />Delete</Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelected([])}>Clear</Button>
+          </div>
+        )}
         <div className="overflow-x-auto overflow-y-auto max-h-[60vh]">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
+                <th className="px-4 py-3"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded" /></th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Name
                 </th>
@@ -242,7 +261,8 @@ export default function AdminCategories() {
                 </tr>
               ) : (
                 categories.map((category) => (
-                  <tr key={category.id}>
+                  <tr key={category.id} className={selected.includes(category.id) ? "bg-blue-50" : ""}>
+                    <td className="px-4 py-4"><input type="checkbox" checked={selected.includes(category.id)} onChange={() => toggleOne(category.id)} className="rounded" /></td>
                     <td className="px-6 py-4 font-medium">{category.name}</td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
