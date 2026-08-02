@@ -100,9 +100,8 @@ export default function AdminCategories() {
   const fetchSections = async () => {
     try {
       const { data, error } = await supabase
-        .from("nav_sections")
+        .from("sections")
         .select("id, title, slug")
-        .eq("is_active", true)
         .order("title");
 
       if (error) throw error;
@@ -118,7 +117,6 @@ export default function AdminCategories() {
         .from("categories")
         .select("*, sections(title), posts(count)")
         .order("name");
-
       if (error) throw error;
       setCategories(data || []);
     } catch (error: any) {
@@ -128,22 +126,24 @@ export default function AdminCategories() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Don't send empty string for section_id — Supabase expects UUID or null
+    const payload = {
+      ...formData,
+      section_id: formData.section_id || null,
+    };
     try {
       if (editingCategory) {
         const { error } = await supabase
           .from("categories")
-          .update(formData)
+          .update(payload)
           .eq("id", editingCategory.id);
-
         if (error) throw error;
         toast({ title: "Success", description: "Category updated successfully" });
       } else {
-        const { error } = await supabase.from("categories").insert([formData]);
-
+        const { error } = await supabase.from("categories").insert([payload]);
         if (error) throw error;
         toast({ title: "Success", description: "Category created successfully" });
       }
-
       setDialogOpen(false);
       resetForm();
       fetchCategories();
