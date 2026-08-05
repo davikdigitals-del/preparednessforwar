@@ -116,8 +116,8 @@ export default function AdminCategories() {
     try {
       const { data, error } = await supabase
         .from("categories")
-        .select("*, sections(title), posts(count)")
-        .order("name");
+        .select("*, sections(title)")
+        .order("title");
       if (error) throw error;
       setCategories(data || []);
     } catch (error: any) {
@@ -141,9 +141,15 @@ export default function AdminCategories() {
         if (error) throw error;
         toast({ title: "Success", description: "Category updated successfully" });
       } else {
-        const { error } = await supabase.from("categories").insert([payload]);
-        if (error) throw error;
-        toast({ title: "Success", description: "Category created successfully" });
+        const { error } = await supabase.from("categories").insert([payload]).select();
+        if (error && error.code === '23505') {
+          // Duplicate — silently ignore, just refresh
+          toast({ title: "Info", description: "Category with this slug already exists in this section" });
+        } else if (error) {
+          throw error;
+        } else {
+          toast({ title: "Success", description: "Category created successfully" });
+        }
       }
       setDialogOpen(false);
       resetForm();
