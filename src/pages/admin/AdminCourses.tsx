@@ -46,6 +46,7 @@ export default function AdminCourses() {
     is_published: false,
     is_featured: false,
     course_type: "course",
+    is_premium: false,
     country_codes: [],
   });
 
@@ -159,6 +160,7 @@ export default function AdminCourses() {
       is_published: course.is_published,
       is_featured: course.is_featured,
       course_type: course.course_type || "course",
+      is_premium: course.is_premium || false,
       country_codes: course.country_codes || [],
     });
     setDialogOpen(true);
@@ -208,6 +210,7 @@ export default function AdminCourses() {
       is_published: false,
       is_featured: false,
       course_type: "course",
+      is_premium: false,
       country_codes: [],
     });
     setWhatYouLearnInput("");
@@ -418,6 +421,11 @@ export default function AdminCourses() {
                         )}
                         {course.is_featured && (
                           <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Featured</span>
+                        )}
+                        {course.is_premium && (
+                          <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-800 flex items-center gap-1 w-fit">
+                            👑 Premium
+                          </span>
                         )}
                         {course.course_type === 'episode' && (
                           <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">Episodes</span>
@@ -786,7 +794,7 @@ export default function AdminCourses() {
             <div className="space-y-4 border-t pt-4">
               <h3 className="font-semibold text-lg">Status</h3>
               
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="is_published"
@@ -803,6 +811,17 @@ export default function AdminCourses() {
                     onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked as boolean })}
                   />
                   <Label htmlFor="is_featured">Featured</Label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="is_premium"
+                    checked={formData.is_premium || false}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_premium: checked as boolean })}
+                  />
+                  <Label htmlFor="is_premium" className="flex items-center gap-1">
+                    👑 Premium — requires subscription to access
+                  </Label>
                 </div>
               </div>
             </div>

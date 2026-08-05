@@ -4,8 +4,10 @@ import { Clock, Users, Star, BookOpen, Crown, Play, ChevronDown, ChevronUp, Lock
 import { supabase } from "@/integrations/supabase/client";
 import { publicSupabase } from "@/integrations/supabase/publicClient";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { MediaPlayer } from "@/components/MediaPlayer";
 import type { Course, CourseModule, CourseLesson } from "@/types/monetization";
 
@@ -16,11 +18,16 @@ interface CourseCardProps {
 
 export function CourseCard({ course, featured = false }: CourseCardProps) {
   const { user } = useAuth();
+  const { isPremium: hasPremiumAccess } = usePremiumStatus();
   const [expanded, setExpanded] = useState(false);
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [loadingModules, setLoadingModules] = useState(false);
   const [enrolled, setEnrolled] = useState(false);
   const [playingLesson, setPlayingLesson] = useState<CourseLesson | null>(null);
+  const [premiumPromptOpen, setPremiumPromptOpen] = useState(false);
+
+  // Whether this course is locked behind premium subscription
+  const isCourseLocked = course.is_premium && !hasPremiumAccess;
 
   // Fetch episodes when expanded
   useEffect(() => {
@@ -62,9 +69,10 @@ export function CourseCard({ course, featured = false }: CourseCardProps) {
   );
 
   const canPlay = (lesson: CourseLesson) =>
-    course.is_free || lesson.is_preview || enrolled;
+    !isCourseLocked && (course.is_free || lesson.is_preview || enrolled);
 
   const handlePlay = (lesson: CourseLesson) => {
+    if (isCourseLocked) { setPremiumPromptOpen(true); return; }
     if (!canPlay(lesson)) return;
     setPlayingLesson(lesson);
   };
@@ -108,17 +116,32 @@ export function CourseCard({ course, featured = false }: CourseCardProps) {
 
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-            {course.is_free ? (
+            {course.is_premium ? (
+              <span className="px-2.5 py-0.5 bg-amber-500 text-white text-xs font-bold uppercase rounded flex items-center gap-1">
+                <Crown className="w-3 h-3" /> Premium
+              </span>
+            ) : course.is_free ? (
               <span className="px-2.5 py-0.5 bg-green-600 text-white text-xs font-bold uppercase rounded">FREE</span>
             ) : (
               <span className="px-2.5 py-0.5 bg-primary text-white text-xs font-bold uppercase rounded flex items-center gap-1">
-                <Crown className="w-3 h-3" /> PREMIUM
+                <Crown className="w-3 h-3" /> PAID
               </span>
             )}
             {featured && (
               <span className="px-2.5 py-0.5 bg-yellow-500 text-white text-xs font-bold uppercase rounded">Featured</span>
             )}
           </div>
+
+          {/* Lock overlay for premium courses */}
+          {isCourseLocked && (
+            <div
+              className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center z-10 cursor-pointer"
+              onClick={() => setPremiumPromptOpen(true)}
+            >
+              <Lock className="w-10 h-10 text-white drop-shadow-lg mb-1" />
+              <span className="text-white text-xs font-bold uppercase tracking-wide">Premium Only</span>
+            </div>
+          )}
           <div className="absolute top-3 right-3">
             <span className="px-2.5 py-0.5 bg-white/90 backdrop-blur text-gray-900 text-xs font-semibold rounded capitalize">
               {course.level}
@@ -172,7 +195,14 @@ export function CourseCard({ course, featured = false }: CourseCardProps) {
           </div>
 
           {/* ── CTA button ── */}
-          {course.course_type === 'episode' ? (
+          {isCourseLocked ? (
+            <button
+              onClick={() => setPremiumPromptOpen(true)}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold transition-colors"
+            >
+              <Lock className="w-4 h-4" /> Unlock with Premium
+            </button>
+          ) : course.course_type === 'episode' ? (
             <>
               {/* Episodes toggle button — only for episode type */}
               <button
@@ -268,6 +298,57 @@ export function CourseCard({ course, featured = false }: CourseCardProps) {
           )}
         </div>
       </div>
+
+      {/* ── Premium upgrade prompt ── */}
+      <Dialog open={premiumPromptOpen} onOpenChange={setPremiumPromptOpen}>
+        <DialogContent className="max-w-md" aria-describedby={undefined}>
+          <Card className="border-0 shadow-none">
+            <CardContent className="pt-6 pb-4 text-center">
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Crown className="w-8 h-8 text-amber-500" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Premium Course</h3>
+              <p className="text-gray-600 mb-5 text-sm">
+                <strong>{course.title}</strong> is available exclusively to premium subscribers.
+              </p>
+              <ul className="space-y-2 text-sm text-left mb-6">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Unlimited access to all premium courses
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Full library of downloadable resources
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  Exclusive articles, videos &amp; country content
+                </li>
+              </ul>
+              <div className="flex flex-col gap-2">
+                {user ? (
+                  <Button asChild size="lg" className="w-full gap-2 bg-amber-500 hover:bg-amber-600">
+                    <Link to="/premium" onClick={() => setPremiumPromptOpen(false)}>
+                      <Crown className="w-4 h-4" /> Upgrade to Premium
+                    </Link>
+                  </Button>
+                ) : (
+                  <>
+                    <Button asChild size="lg" className="w-full gap-2 bg-amber-500 hover:bg-amber-600">
+                      <Link to="/signup" onClick={() => setPremiumPromptOpen(false)}>
+                        <Crown className="w-4 h-4" /> Start Free Trial
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="lg" className="w-full">
+                      <Link to="/login" onClick={() => setPremiumPromptOpen(false)}>Sign In</Link>
+                    </Button>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Direct Play Modal ── */}
       <Dialog open={!!playingLesson} onOpenChange={(open) => !open && setPlayingLesson(null)}>
