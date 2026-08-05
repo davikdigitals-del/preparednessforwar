@@ -1,127 +1,113 @@
--- ============================================
--- COUNTRIES TABLE SETUP
--- Run this in Supabase SQL Editor
--- ============================================
+-- Run this in Supabase SQL Editor to fully set up the countries table
 
--- Drop existing table if it exists (for clean setup)
-DROP TABLE IF EXISTS countries CASCADE;
-
--- Create countries table
-CREATE TABLE countries (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  code TEXT UNIQUE NOT NULL,
-  name TEXT NOT NULL,
-  flag TEXT NOT NULL,
-  continent TEXT NOT NULL CHECK (continent IN ('Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania')),
-  risk_level TEXT DEFAULT 'low' CHECK (risk_level IN ('low', 'moderate', 'high', 'extreme')),
-  description TEXT,
-  capital TEXT,
-  population BIGINT,
-  area_km2 BIGINT,
-  languages TEXT[],
-  currencies TEXT[],
-  emergency_numbers JSONB,
-  travel_advisory TEXT,
-  security_notes TEXT,
-  is_spotlight BOOLEAN DEFAULT FALSE,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+-- Step 1: Create table if it doesn't exist
+CREATE TABLE IF NOT EXISTS countries (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  code text UNIQUE NOT NULL,
+  name text NOT NULL,
+  flag text,
+  continent text,
+  risk_level text DEFAULT 'low',
+  description text,
+  capital text,
+  population bigint,
+  travel_advisory text,
+  security_notes text,
+  is_active boolean DEFAULT true,
+  is_spotlight boolean DEFAULT false,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
 );
 
--- Create indexes
-CREATE INDEX idx_countries_continent ON countries(continent);
-CREATE INDEX idx_countries_risk_level ON countries(risk_level);
-CREATE INDEX idx_countries_code ON countries(code);
+-- Step 2: Add missing columns if table already exists
+ALTER TABLE countries ADD COLUMN IF NOT EXISTS flag text;
+ALTER TABLE countries ADD COLUMN IF NOT EXISTS continent text;
+ALTER TABLE countries ADD COLUMN IF NOT EXISTS risk_level text DEFAULT 'low';
+ALTER TABLE countries ADD COLUMN IF NOT EXISTS description text;
+ALTER TABLE countries ADD COLUMN IF NOT EXISTS capital text;
+ALTER TABLE countries ADD COLUMN IF NOT EXISTS population bigint;
+ALTER TABLE countries ADD COLUMN IF NOT EXISTS travel_advisory text;
+ALTER TABLE countries ADD COLUMN IF NOT EXISTS security_notes text;
+ALTER TABLE countries ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true;
+ALTER TABLE countries ADD COLUMN IF NOT EXISTS is_spotlight boolean DEFAULT false;
 
--- Enable Row Level Security
+-- Step 3: Enable RLS
 ALTER TABLE countries ENABLE ROW LEVEL SECURITY;
 
--- Drop existing policies if they exist
-DROP POLICY IF EXISTS "Countries are viewable by everyone" ON countries;
-DROP POLICY IF EXISTS "Admins can insert countries" ON countries;
-DROP POLICY IF EXISTS "Admins can update countries" ON countries;
-DROP POLICY IF EXISTS "Admins can delete countries" ON countries;
+-- Step 4: Drop old policies if they exist
+DROP POLICY IF EXISTS "Countries are publicly readable" ON countries;
+DROP POLICY IF EXISTS "Admins can manage countries" ON countries;
+DROP POLICY IF EXISTS "Allow public read" ON countries;
+DROP POLICY IF EXISTS "Allow admin write" ON countries;
 
--- Public read access (everyone can view countries)
-CREATE POLICY "Countries are viewable by everyone"
-  ON countries
-  FOR SELECT
-  USING (true);
+-- Step 5: Create proper RLS policies
+-- Anyone can read countries
+CREATE POLICY "Countries are publicly readable"
+ON countries FOR SELECT
+TO public
+USING (true);
 
--- Admin write access (only admins can insert, update, delete)
-CREATE POLICY "Admins can insert countries"
-  ON countries
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.is_admin = true
-    )
-  );
-
-CREATE POLICY "Admins can update countries"
-  ON countries
-  FOR UPDATE
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.is_admin = true
-    )
+-- Authenticated users with admin role can insert/update/delete
+CREATE POLICY "Admins can manage countries"
+ON countries FOR ALL
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.id = auth.uid()
+    AND profiles.role = 'admin'
   )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.is_admin = true
-    )
-  );
+)
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.id = auth.uid()
+    AND profiles.role = 'admin'
+  )
+);
 
-CREATE POLICY "Admins can delete countries"
-  ON countries
-  FOR DELETE
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.is_admin = true
-    )
-  );
+-- Step 6: Insert all 35 countries
+INSERT INTO countries (code, name, flag, continent, risk_level, is_active) VALUES
+  ('AL', 'Albania',         '🇦🇱', 'Europe',        'low', true),
+  ('BE', 'Belgium',         '🇧🇪', 'Europe',        'low', true),
+  ('BG', 'Bulgaria',        '🇧🇬', 'Europe',        'low', true),
+  ('CA', 'Canada',          '🇨🇦', 'North America', 'low', true),
+  ('HR', 'Croatia',         '🇭🇷', 'Europe',        'low', true),
+  ('CZ', 'Czech Republic',  '🇨🇿', 'Europe',        'low', true),
+  ('DK', 'Denmark',         '🇩🇰', 'Europe',        'low', true),
+  ('EE', 'Estonia',         '🇪🇪', 'Europe',        'low', true),
+  ('FI', 'Finland',         '🇫🇮', 'Europe',        'low', true),
+  ('FR', 'France',          '🇫🇷', 'Europe',        'low', true),
+  ('DE', 'Germany',         '🇩🇪', 'Europe',        'low', true),
+  ('GR', 'Greece',          '🇬🇷', 'Europe',        'low', true),
+  ('HU', 'Hungary',         '🇭🇺', 'Europe',        'low', true),
+  ('IS', 'Iceland',         '🇮🇸', 'Europe',        'low', true),
+  ('IT', 'Italy',           '🇮🇹', 'Europe',        'low', true),
+  ('LV', 'Latvia',          '🇱🇻', 'Europe',        'low', true),
+  ('LT', 'Lithuania',       '🇱🇹', 'Europe',        'low', true),
+  ('LU', 'Luxembourg',      '🇱🇺', 'Europe',        'low', true),
+  ('ME', 'Montenegro',      '🇲🇪', 'Europe',        'low', true),
+  ('NL', 'Netherlands',     '🇳🇱', 'Europe',        'low', true),
+  ('MK', 'North Macedonia', '🇲🇰', 'Europe',        'low', true),
+  ('NO', 'Norway',          '🇳🇴', 'Europe',        'low', true),
+  ('PL', 'Poland',          '🇵🇱', 'Europe',        'low', true),
+  ('PT', 'Portugal',        '🇵🇹', 'Europe',        'low', true),
+  ('RO', 'Romania',         '🇷🇴', 'Europe',        'low', true),
+  ('SK', 'Slovakia',        '🇸🇰', 'Europe',        'low', true),
+  ('SI', 'Slovenia',        '🇸🇮', 'Europe',        'low', true),
+  ('ES', 'Spain',           '🇪🇸', 'Europe',        'low', true),
+  ('SE', 'Sweden',          '🇸🇪', 'Europe',        'low', true),
+  ('TR', 'Türkiye',         '🇹🇷', 'Europe',        'low', true),
+  ('GB', 'United Kingdom',  '🇬🇧', 'Europe',        'low', true),
+  ('US', 'United States',   '🇺🇸', 'North America', 'low', true),
+  ('IE', 'Ireland',         '🇮🇪', 'Europe',        'low', true),
+  ('AU', 'Australia',       '🇦🇺', 'Oceania',       'low', true),
+  ('CH', 'Switzerland',     '🇨🇭', 'Europe',        'low', true)
+ON CONFLICT (code) DO UPDATE SET
+  name      = EXCLUDED.name,
+  flag      = EXCLUDED.flag,
+  continent = EXCLUDED.continent,
+  is_active = EXCLUDED.is_active;
 
--- Auto-update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_countries_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS countries_updated_at ON countries;
-
-CREATE TRIGGER countries_updated_at
-  BEFORE UPDATE ON countries
-  FOR EACH ROW
-  EXECUTE FUNCTION update_countries_updated_at();
-
--- Success message
-DO $$ 
-BEGIN 
-  RAISE NOTICE 'Countries table created successfully! Now you can use the "Sync All Countries" button in Admin Countries page.';
-END $$;
-
--- ============================================
--- MIGRATION: Add is_spotlight column
--- Run this if the countries table already exists
--- ============================================
-ALTER TABLE countries ADD COLUMN IF NOT EXISTS is_spotlight BOOLEAN DEFAULT FALSE;
-
--- Ensure only one spotlight at a time (optional constraint via partial unique index)
-CREATE UNIQUE INDEX IF NOT EXISTS idx_countries_single_spotlight
-  ON countries (is_spotlight)
-  WHERE is_spotlight = TRUE;
+-- Done!
+SELECT 'Countries table set up with ' || COUNT(*) || ' countries' AS result FROM countries;

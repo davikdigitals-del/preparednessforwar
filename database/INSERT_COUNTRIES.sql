@@ -1,0 +1,43 @@
+-- Insert all countries from the static natoCountries list into the database
+-- Run this in Supabase SQL Editor
+
+INSERT INTO countries (code, name, flag, continent) VALUES
+  ('AL', 'Albania',         '🇦🇱', 'Europe'),
+  ('BE', 'Belgium',         '🇧🇪', 'Europe'),
+  ('BG', 'Bulgaria',        '🇧🇬', 'Europe'),
+  ('CA', 'Canada',          '🇨🇦', 'North America'),
+  ('HR', 'Croatia',         '🇭🇷', 'Europe'),
+  ('CZ', 'Czech Republic',  '🇨🇿', 'Europe'),
+  ('DK', 'Denmark',         '🇩🇰', 'Europe'),
+  ('EE', 'Estonia',         '🇪🇪', 'Europe'),
+  ('FI', 'Finland',         '🇫🇮', 'Europe'),
+  ('FR', 'France',          '🇫🇷', 'Europe'),
+  ('DE', 'Germany',         '🇩🇪', 'Europe'),
+  ('GR', 'Greece',          '🇬🇷', 'Europe'),
+  ('HU', 'Hungary',         '🇭🇺', 'Europe'),
+  ('IS', 'Iceland',         '🇮🇸', 'Europe'),
+  ('IT', 'Italy',           '🇮🇹', 'Europe'),
+  ('LV', 'Latvia',          '🇱🇻', 'Europe'),
+  ('LT', 'Lithuania',       '🇱🇹', 'Europe'),
+  ('LU', 'Luxembourg',      '🇱🇺', 'Europe'),
+  ('ME', 'Montenegro',      '🇲🇪', 'Europe'),
+  ('NL', 'Netherlands',     '🇳🇱', 'Europe'),
+  ('MK', 'North Macedonia', '🇲🇰', 'Europe'),
+  ('NO', 'Norway',          '🇳🇴', 'Europe'),
+  ('PL', 'Poland',          '🇵🇱', 'Europe'),
+  ('PT', 'Portugal',        '🇵🇹', 'Europe'),
+  ('RO', 'Romania',         '🇷🇴', 'Europe'),
+  ('SK', 'Slovakia',        '🇸🇰', 'Europe'),
+  ('SI', 'Slovenia',        '🇸🇮', 'Europe'),
+  ('ES', 'Spain',           '🇪🇸', 'Europe'),
+  ('SE', 'Sweden',          '🇸🇪', 'Europe'),
+  ('TR', 'Türkiye',         '🇹🇷', 'Europe'),
+  ('GB', 'United Kingdom',  '🇬🇧', 'Europe'),
+  ('US', 'United States',   '🇺🇸', 'North America'),
+  ('IE', 'Ireland',         '🇮🇪', 'Europe'),
+  ('AU', 'Australia',       '🇦🇺', 'Oceania'),
+  ('CH', 'Switzerland',     '🇨🇭', 'Europe')
+ON CONFLICT (code) DO UPDATE SET
+  name = EXCLUDED.name,
+  flag = EXCLUDED.flag,
+  continent = EXCLUDED.continent;
