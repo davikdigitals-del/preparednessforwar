@@ -11,6 +11,39 @@ ALTER TABLE IF EXISTS nav_sections ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP
 ALTER TABLE IF EXISTS nav_categories ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE IF EXISTS nav_tools ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
+-- Add unique constraints if they don't exist (needed for ON CONFLICT)
+DO $$ 
+BEGIN
+  -- nav_categories unique constraint
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'nav_categories_slug_section_id_key'
+  ) THEN
+    ALTER TABLE nav_categories ADD CONSTRAINT nav_categories_slug_section_id_key UNIQUE (slug, section_id);
+  END IF;
+  
+  -- nav_tools unique constraint
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'nav_tools_slug_section_id_key'
+  ) THEN
+    ALTER TABLE nav_tools ADD CONSTRAINT nav_tools_slug_section_id_key UNIQUE (slug, section_id);
+  END IF;
+  
+  -- categories unique constraint (if it has section_id)
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'categories' AND column_name = 'section_id'
+  ) THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_constraint 
+      WHERE conname = 'categories_slug_section_id_key'
+    ) THEN
+      ALTER TABLE categories ADD CONSTRAINT categories_slug_section_id_key UNIQUE (slug, section_id);
+    END IF;
+  END IF;
+END $$;
+
 -- 1. sections table (used by AdminCategories)
 CREATE TABLE IF NOT EXISTS sections (
   id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),

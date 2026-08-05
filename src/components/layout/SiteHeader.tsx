@@ -164,34 +164,21 @@ export function SiteHeader() {
       {/* Top utility bar - Hidden on mobile */}
       <div className="hidden md:block border-b border-gray-100 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-10 text-xs">
+          <div className="flex items-center justify-between h-8 text-xs">
             <div className="flex items-center gap-4">
               <Link to="/countries" className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors">
                 <Globe className="w-3 h-3" />
                 <span>{t.countries}</span>
               </Link>
-              <Link to="/newsletter" className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors">
-                <Mail className="w-3 h-3" />
-                <span>{t.newsletter}</span>
-              </Link>
               <Link to="/library" className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors">
                 <Newspaper className="w-3 h-3" />
                 <span>{t.library}</span>
-              </Link>
-              <Link to="/resources" className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors">
-                <FileText className="w-3 h-3" />
-                <span>Resources</span>
               </Link>
               <Link to="/encyclopaedia" className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors">
                 <Newspaper className="w-3 h-3" />
                 <span>{t.encyclopaedia}</span>
               </Link>
-              <Link to="/media" className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors">
-                <Video className="w-3 h-3" />
-                <span>{t.mediaHub}</span>
-              </Link>
             </div>
-            {/* Search icon — far right of top bar */}
             <button
               onClick={() => setSearchOpen(true)}
               className="flex items-center gap-1.5 text-gray-600 hover:text-primary transition-colors"
