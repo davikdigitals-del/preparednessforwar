@@ -27,9 +27,18 @@ export default function AdminPosts() {
   // Use DB sections/categories with fallback to static
   const sections = dbSections.length > 0 ? dbSections : navSections;
   const categoriesForSection = (sectionSlug: string) => {
-    if (dbSections.length > 0) {
+    if (dbCategories.length > 0) {
+      // First try: match by section_id from dbSections
       const section = dbSections.find((s: any) => s.slug === sectionSlug);
-      return section ? dbCategories.filter((c: any) => c.section_id === section.id) : [];
+      if (section) {
+        const matched = dbCategories.filter((c: any) => c.section_id === section.id);
+        if (matched.length > 0) return matched;
+      }
+      // Second try: match by section slug stored directly on category
+      const bySlug = dbCategories.filter((c: any) => c.section === sectionSlug || c.section_slug === sectionSlug);
+      if (bySlug.length > 0) return bySlug;
+      // Third try: return ALL categories if nothing matched (so admin can at least see them)
+      return dbCategories;
     }
     return navSections.find(s => s.slug === sectionSlug)?.categories || [];
   };
