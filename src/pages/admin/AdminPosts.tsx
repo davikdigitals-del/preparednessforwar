@@ -20,12 +20,19 @@ export default function AdminPosts() {
   const [editingPost, setEditingPost] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
+  const [dbSections, setDbSections] = useState<any[]>([]);
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
   const { toast } = useToast();
 
-  // Derived from static navSections — no DB calls needed
-  const sections = navSections;
-  const categoriesForSection = (sectionSlug: string) =>
-    navSections.find(s => s.slug === sectionSlug)?.categories || [];
+  // Use DB sections/categories with fallback to static
+  const sections = dbSections.length > 0 ? dbSections : navSections;
+  const categoriesForSection = (sectionSlug: string) => {
+    if (dbSections.length > 0) {
+      const section = dbSections.find((s: any) => s.slug === sectionSlug);
+      return section ? dbCategories.filter((c: any) => c.section_id === section.id) : [];
+    }
+    return navSections.find(s => s.slug === sectionSlug)?.categories || [];
+  };
 
   const [formData, setFormData] = useState({
     title: "",
@@ -44,7 +51,21 @@ export default function AdminPosts() {
 
   useEffect(() => {
     fetchPosts();
+    fetchSectionsAndCategories();
   }, []);
+
+  const fetchSectionsAndCategories = async () => {
+    try {
+      const [{ data: secs }, { data: cats }] = await Promise.all([
+        supabase.from("sections").select("*").order("title"),
+        supabase.from("categories").select("*").order("title"),
+      ]);
+      if (secs && secs.length > 0) setDbSections(secs);
+      if (cats && cats.length > 0) setDbCategories(cats);
+    } catch (err) {
+      // Silent fail - fallback to static sections
+    }
+  };
 
   const fetchPosts = async () => {
     try {
