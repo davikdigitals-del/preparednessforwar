@@ -281,7 +281,7 @@ const ArticlePage = () => {
 
   return (
     <div className="bg-white min-h-screen">
-      <div className="container py-8">
+      <div className="container max-w-screen-xl py-8">
         {/* Breadcrumb - Enhanced */}
         <nav className="flex items-center gap-2 text-sm mb-6 flex-wrap bg-white px-4 py-3 border border-gray-200">
           <Link to="/" className="text-blue-900 hover:text-blue-700 font-semibold transition-colors">Home</Link>
@@ -292,7 +292,7 @@ const ArticlePage = () => {
           <span className="text-gray-700 font-medium line-clamp-1 max-w-[200px]">{post.title}</span>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8 items-start">
           <article className="bg-white border border-gray-200">
 
             {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
