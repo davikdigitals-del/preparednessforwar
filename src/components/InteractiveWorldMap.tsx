@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 interface InteractiveWorldMapProps {
   onCountryClick?: (countryId: string) => void;
   height?: string;
-  highlightCountry?: string; // ISO 2-letter code e.g. "FR"
+  highlightCountry?: string;
 }
 
 const SCRIPT_SRC = "/svg-world-map/svg-world-map.js";
@@ -30,9 +30,7 @@ export const InteractiveWorldMap = ({
   const tooltipRef = useRef<HTMLDivElement>(null);
   const activeNameRef = useRef<string | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
-  const [errorMsg, setErrorMsg] = useState("");
 
-  // Position tooltip directly at the mouse cursor
   const showTooltipAt = (name: string, clientX: number, clientY: number) => {
     if (!tooltipRef.current || !wrapperRef.current) return;
     const rect = wrapperRef.current.getBoundingClientRect();
@@ -49,32 +47,20 @@ export const InteractiveWorldMap = ({
 
   useEffect(() => {
     let cancelled = false;
-    let timeoutId: NodeJS.Timeout;
 
-    // Shorter timeout - 5 seconds instead of 10
-    timeoutId = setTimeout(() => {
-      if (!cancelled && status === "loading") {
-        setErrorMsg("Map loading timed out - using fallback");
-        setStatus("error");
-      }
-    }, 5000);
-
-    // Global mousemove — fires even when pointer is over the <object>/SVG iframe.
-    // We use this to keep the tooltip glued to the real cursor position.
     const onWindowMouseMove = (e: MouseEvent) => {
-      if (activeNameRef.current) {
-        showTooltipAt(activeNameRef.current, e.clientX, e.clientY);
-      }
+      if (activeNameRef.current) showTooltipAt(activeNameRef.current, e.clientX, e.clientY);
     };
     window.addEventListener("mousemove", onWindowMouseMove);
 
     const init = async () => {
       try {
-        console.log("🗺️ Loading SVG world map script...");
         await loadScript(SCRIPT_SRC);
         if (cancelled) return;
 
-        console.log("🗺️ Script loaded, initializing map...");
+        const mapFn = (window as any).svgWorldMap;
+        if (typeof mapFn !== "function") throw new Error("svgWorldMap not available");
+
         const ts = Date.now();
         const clickCb = `_mapClick_${ts}`;
         const overCb  = `_mapOver_${ts}`;
@@ -90,26 +76,16 @@ export const InteractiveWorldMap = ({
 
         (window as any)[overCb] = (data: any) => {
           if (!data) return;
-          let name = "";
-          let code = "";
-          if (data.country) {
-            name = data.country.name || "";
-            code = data.country.id || "";
-          } else if (data.id && data.id.length === 2 && data.name) {
-            name = data.name;
-            code = data.id;
-          } else if (data.id && data.id.length === 2) {
-            name = data.id.toUpperCase();
-            code = data.id;
-          }
+          const name = data.country?.name || (data.id?.length === 2 ? data.name || data.id.toUpperCase() : "");
+          const code = data.country?.id || data.id || "";
           if (!name || name === "Ocean" || name === "World" || /^path\d+/i.test(name)) return;
-          if (code && (code.toLowerCase() === "ocean" || code.toLowerCase() === "world")) return;
-          // Set active name — the window mousemove handler will position and show it
+          if (code.toLowerCase() === "ocean" || code.toLowerCase() === "world") return;
           activeNameRef.current = name;
         };
 
         (window as any)[outCb] = () => hideTooltip();
 
+        // Hide the library's own container while we set it up
         if (!document.getElementById("_map_hide_style")) {
           const style = document.createElement("style");
           style.id = "_map_hide_style";
@@ -117,17 +93,12 @@ export const InteractiveWorldMap = ({
           document.head.appendChild(style);
         }
 
+        // Remove any stale container
         const staleContainer = document.getElementById("svg-world-map-container");
         if (staleContainer) staleContainer.remove();
 
-        const mapFn = (window as any).svgWorldMap;
-        if (typeof mapFn !== "function") {
-          throw new Error("svgWorldMap function not found after loading script");
-        }
-
-        console.log("🗺️ Calling svgWorldMap function...");
-        // Build country colors — highlight the target, dim everything else
-        await mapFn({
+        // Call the library — it's synchronous, creates a container + <object> in the DOM
+        mapFn({
           libPath: "/svg-world-map/",
           bigMap: false,
           showOcean: true,
@@ -145,96 +116,86 @@ export const InteractiveWorldMap = ({
         });
 
         if (cancelled) return;
-        console.log("🗺️ Map initialized, setting up DOM...");
 
-        // Highlight the target country directly in the SVG DOM
-        if (highlightCountry) {
-          const svgObj = document.getElementById("svg-world-map") as HTMLObjectElement | null;
-          const applyHighlight = () => {
-            try {
-              const innerDoc = svgObj?.contentDocument;
-              if (!innerDoc) return;
-              const code = highlightCountry.toLowerCase();
-              // The SVG uses group IDs matching the 2-letter country code
-              const targets = [
-                innerDoc.getElementById(code),
-                innerDoc.getElementById(code.toUpperCase()),
-                innerDoc.querySelector(`[id="${code}"]`),
-                innerDoc.querySelector(`[id="${code.toUpperCase()}"]`),
-              ].filter(Boolean);
-              targets.forEach(el => {
-                if (!el) return;
-                // Fill all child paths with highlight blue
-                el.querySelectorAll("path, polygon, circle").forEach(p => {
-                  (p as SVGElement).style.fill = "#1d4ed8";
-                  (p as SVGElement).style.stroke = "#1e3a8a";
-                  (p as SVGElement).style.strokeWidth = "1";
-                });
-                // Also try setting fill directly on the element
-                (el as SVGElement).style.fill = "#1d4ed8";
-              });
-            } catch (_) {
-              // cross-origin or not ready — silently ignore
-            }
-          };
+        // The library creates #svg-world-map-container synchronously
+        // but the <object> inside loads asynchronously — wait for it
+        const waitForContainer = () => {
+          return new Promise<void>((resolve) => {
+            let attempts = 0;
+            const check = () => {
+              const container = document.getElementById("svg-world-map-container");
+              const svgObj = document.getElementById("svg-world-map") as HTMLObjectElement | null;
+              if (container && svgObj) {
+                resolve();
+              } else if (attempts++ < 50) {
+                setTimeout(check, 100);
+              } else {
+                resolve(); // Give up after 5 seconds, try anyway
+              }
+            };
+            check();
+          });
+        };
 
-          // Try immediately and also on SVG object load
-          const svgObjEl = document.getElementById("svg-world-map") as HTMLObjectElement | null;
-          if (svgObjEl) {
-            applyHighlight();
-            svgObjEl.addEventListener("load", applyHighlight);
-            // Retry a few times as the SVG may not be fully parsed yet
-            setTimeout(applyHighlight, 300);
-            setTimeout(applyHighlight, 800);
-            setTimeout(applyHighlight, 1500);
-          }
-        }
-
+        await waitForContainer();
         if (cancelled) return;
 
         const libContainer = document.getElementById("svg-world-map-container");
+        const svgObj = document.getElementById("svg-world-map") as HTMLObjectElement | null;
+
         if (libContainer && wrapperRef.current) {
           wrapperRef.current.appendChild(libContainer);
           libContainer.style.cssText = "position:absolute;inset:0;width:100%;height:100%;overflow:hidden;margin:0;padding:0;visibility:visible;";
-          const svgObj = document.getElementById("svg-world-map") as HTMLObjectElement | null;
+
           if (svgObj) {
             svgObj.style.cssText = "width:100%;height:100%;display:block;border:none;";
 
-            // The SVG lives inside an <object> which has its own document context.
-            // Mouse events inside it don't bubble to window, so we attach a listener
-            // directly to the SVG's contentDocument to track cursor position.
             const attachInnerListener = () => {
               try {
                 const innerDoc = svgObj.contentDocument;
                 if (!innerDoc) return;
                 innerDoc.addEventListener("mousemove", (e: MouseEvent) => {
                   if (!activeNameRef.current) return;
-                  // e.clientX/Y is relative to the SVG iframe viewport.
-                  // Convert to page coords by adding the <object> element's offset.
                   const objRect = svgObj.getBoundingClientRect();
-                  const pageX = objRect.left + e.clientX;
-                  const pageY = objRect.top  + e.clientY;
-                  showTooltipAt(activeNameRef.current, pageX, pageY);
+                  showTooltipAt(activeNameRef.current, objRect.left + e.clientX, objRect.top + e.clientY);
                 });
                 innerDoc.addEventListener("mouseleave", () => hideTooltip());
-              } catch (_) {
-                // cross-origin or not ready — silently ignore
-              }
+              } catch (_) {}
             };
 
-            // Try immediately, then on load in case it's not ready yet
+            // Apply highlight
+            if (highlightCountry) {
+              const applyHighlight = () => {
+                try {
+                  const innerDoc = svgObj.contentDocument;
+                  if (!innerDoc) return;
+                  const code = highlightCountry.toLowerCase();
+                  [code, code.toUpperCase()].forEach(id => {
+                    const el = innerDoc.getElementById(id);
+                    if (!el) return;
+                    el.querySelectorAll("path, polygon, circle").forEach(p => {
+                      (p as SVGElement).style.fill = "#1d4ed8";
+                    });
+                  });
+                } catch (_) {}
+              };
+              svgObj.addEventListener("load", applyHighlight);
+              setTimeout(applyHighlight, 500);
+              setTimeout(applyHighlight, 1500);
+            }
+
             attachInnerListener();
             svgObj.addEventListener("load", attachInnerListener);
           }
+
+          setStatus("ready");
+        } else {
+          throw new Error("Map container not found after waiting");
         }
 
-        clearTimeout(timeoutId);
-        console.log("🗺️ Map setup complete!");
-        setStatus("ready");
       } catch (err: any) {
-        console.error("🗺️ Map loading error:", err);
-        clearTimeout(timeoutId);
-        if (!cancelled) { setErrorMsg(err?.message || "Failed to load map"); setStatus("error"); }
+        console.error("🗺️ Map error:", err);
+        if (!cancelled) setStatus("error");
       }
     };
 
@@ -242,7 +203,6 @@ export const InteractiveWorldMap = ({
 
     return () => {
       cancelled = true;
-      clearTimeout(timeoutId);
       window.removeEventListener("mousemove", onWindowMouseMove);
       const libContainer = document.getElementById("svg-world-map-container");
       if (libContainer) {
@@ -253,12 +213,7 @@ export const InteractiveWorldMap = ({
   }, []);
 
   return (
-    <div
-      ref={wrapperRef}
-      className="relative w-full overflow-hidden bg-blue-50"
-      style={{ height }}
-    >
-      {/* Loading */}
+    <div ref={wrapperRef} className="relative w-full overflow-hidden bg-blue-50" style={{ height }}>
       {status === "loading" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-blue-50 z-10">
           <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-900 rounded-full animate-spin mb-3" />
@@ -266,37 +221,18 @@ export const InteractiveWorldMap = ({
         </div>
       )}
 
-      {/* Error - Show simple fallback map */}
       {status === "error" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-blue-50 z-10">
-          <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 relative overflow-hidden rounded">
-            {/* Simple world map placeholder */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-32 h-20 bg-blue-300 rounded-lg mb-4 relative">
-                  <div className="absolute top-2 left-4 w-6 h-4 bg-blue-500 rounded"></div>
-                  <div className="absolute top-4 right-6 w-8 h-3 bg-blue-500 rounded"></div>
-                  <div className="absolute bottom-3 left-8 w-5 h-5 bg-blue-500 rounded"></div>
-                  <div className="absolute bottom-2 right-4 w-4 h-6 bg-blue-500 rounded"></div>
-                </div>
-                <p className="text-sm text-gray-600 mb-2">Interactive map unavailable</p>
-                <p className="text-xs text-gray-400 mb-4">Showing fallback view</p>
-                <button 
-                  onClick={() => {
-                    setStatus("loading");
-                    window.location.reload();
-                  }}
-                  className="px-4 py-2 text-xs font-bold bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                >
-                  Retry Loading Map
-                </button>
-              </div>
-            </div>
-          </div>
+          <p className="text-sm text-gray-500 mb-3">Map unavailable</p>
+          <button
+            onClick={() => { setStatus("loading"); window.location.reload(); }}
+            className="px-4 py-2 text-xs font-bold bg-blue-900 text-white hover:bg-blue-800 transition-colors rounded"
+          >
+            Retry
+          </button>
         </div>
       )}
 
-      {/* Tooltip — positioned directly at cursor via window mousemove */}
       <div
         ref={tooltipRef}
         style={{
