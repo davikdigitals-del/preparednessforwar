@@ -5,7 +5,7 @@ import {
   ExternalLink, Pin, Copy, Check, Link2, Star, Flag, Bookmark, BookmarkCheck,
 } from "lucide-react";
 import { FaXTwitter, FaFacebook, FaWhatsapp, FaTelegram } from "react-icons/fa6";
-import { navSections, formatDate, formatTimeAgo } from "@/data/mockData";
+import { navSections, formatDate, formatTimeAgo, formatDateTime } from "@/data/mockData";
 import { PostCard } from "@/components/PostCard";
 import { PremiumGate } from "@/components/PremiumGate";
 import { ArticleVideoPlayer } from "@/components/ArticleVideoPlayer";
@@ -292,7 +292,7 @@ const ArticlePage = () => {
           <span className="text-gray-700 font-medium line-clamp-1 max-w-[200px]">{post.title}</span>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 items-start">
           <article className="bg-white border border-gray-200">
 
             {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -338,7 +338,7 @@ const ArticlePage = () => {
                   By <span className="text-blue-600 font-semibold">{post.author}</span>
                 </p>
                 <p className="text-xs text-gray-500">
-                  <span title={formatDate(post.publishedAt)}>{formatTimeAgo(post.publishedAt)}</span>
+                  <span title={formatDate(post.publishedAt)}>{formatDateTime(post.publishedAt)}</span>
                   {post.readTime && <span> · {post.readTime} read</span>}
                 </p>
               </div>
@@ -496,7 +496,7 @@ const ArticlePage = () => {
                   {post.author}
                 </span>
                 <span className="flex items-center gap-1.5 text-gray-600"><Clock className="w-4 h-4 text-blue-900" />{post.readTime}</span>
-                <span className="text-gray-600" title={formatDate(post.publishedAt)}>{formatTimeAgo(post.publishedAt)}</span>
+                <span className="text-gray-600" title={formatDate(post.publishedAt)}>{formatDateTime(post.publishedAt)}</span>
                 <span className="flex items-center gap-1.5 text-gray-600"><Eye className="w-4 h-4 text-blue-900" />{post.viewCount?.toLocaleString()} views</span>
 
                 {/* Share dropdown */}

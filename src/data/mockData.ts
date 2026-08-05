@@ -218,6 +218,13 @@ export function formatDate(dateStr: string): string {
   });
 }
 
+export function formatDateTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  const time = date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const day = date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return `${time} · ${day}`;
+}
+
 export function formatTimeAgo(dateStr: string): string {
   const now = new Date();
   const date = new Date(dateStr);

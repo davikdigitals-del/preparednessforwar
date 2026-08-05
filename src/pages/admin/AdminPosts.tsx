@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Search, Video, CheckSquare } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Video } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/FileUpload";
 import { RichTextEditor } from "@/components/RichTextEditor";
@@ -15,8 +15,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 export default function AdminPosts() {
   const [posts, setPosts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [sections, setSections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<any>(null);
@@ -24,13 +22,18 @@ export default function AdminPosts() {
   const [selected, setSelected] = useState<string[]>([]);
   const { toast } = useToast();
 
+  // Derived from static navSections — no DB calls needed
+  const sections = navSections;
+  const categoriesForSection = (sectionSlug: string) =>
+    navSections.find(s => s.slug === sectionSlug)?.categories || [];
+
   const [formData, setFormData] = useState({
     title: "",
     content: "",
     excerpt: "",
     author: "",
     section: "",
-    category_id: "",
+    category: "",
     image_url: "",
     video_url: "",
     is_premium: false,
@@ -40,153 +43,58 @@ export default function AdminPosts() {
   });
 
   useEffect(() => {
-    let cancelled = false;
-    
-    const loadData = async () => {
-      console.log("AdminPosts: Loading data...");
-      setLoading(true);
-      
-      try {
-        await Promise.all([
-          fetchPosts(),
-          fetchCategories(),
-          fetchSections()
-        ]);
-        
-        if (!cancelled) {
-          console.log("AdminPosts: Data loaded successfully");
-          setLoading(false);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.error("AdminPosts: Error loading data:", error);
-          toast({ title: "Error", description: "Failed to load data. Please check your connection.", variant: "destructive" });
-          setLoading(false);
-        }
-      }
-    };
-
-    loadData();
-
-    return () => {
-      cancelled = true;
-    };
+    fetchPosts();
   }, []);
 
   const fetchPosts = async () => {
     try {
-      console.log("Fetching posts...");
+      setLoading(true);
       const { data, error } = await supabase
         .from("posts")
         .select("*")
         .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching posts:", error);
-        toast({ title: "Error", description: error.message, variant: "destructive" });
-      } else {
-        console.log("Fetched posts:", data?.length || 0, "posts");
-        setPosts(data || []);
-      }
+      if (error) throw error;
+      setPosts(data || []);
     } catch (error: any) {
-      console.error("Catch error:", error);
       toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("categories")
-        .select(`
-          *,
-          sections (
-            id,
-            title,
-            slug
-          )
-        `)
-        .order("title");
-
-      if (error) {
-        console.error("Error fetching categories:", error);
-        toast({ title: "Error", description: error.message, variant: "destructive" });
-      } else {
-        console.log("Fetched categories:", data);
-        setCategories(data || []);
-      }
-    } catch (error: any) {
-      console.error("Catch error:", error);
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
-  };
-
-  const fetchSections = async () => {
-    try {
-      const [{ data: secs }, { data: cats }] = await Promise.all([
-        supabase.from("nav_sections").select("*").eq("is_active", true).order("sort_order"),
-        supabase.from("nav_categories").select("*").order("sort_order"),
-      ]);
-      setSections(secs || []);
-      // Map categories to match the shape the form expects
-      setCategories((cats || []).map(c => ({
-        ...c,
-        sections: (secs || []).find(s => s.id === c.section_id),
-      })));
-    } catch (error: any) {
-      toast({ title: "Error loading sections", description: error.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const payload = {
+        title: formData.title,
+        content: formData.content,
+        body: formData.content,
+        standfirst: formData.excerpt,
+        excerpt: formData.excerpt,
+        author: formData.author,
+        section: formData.section,
+        category: formData.category,
+        image_url: formData.image_url || null,
+        video_url: formData.video_url || null,
+        is_premium: formData.is_premium,
+        is_published: formData.is_published,
+        is_pinned: formData.is_pinned,
+        country_codes: formData.country_codes,
+      };
+
       if (editingPost) {
         const { error } = await supabase
           .from("posts")
-          .update({
-            title: formData.title,
-            content: formData.content,
-            excerpt: formData.excerpt,
-            author: formData.author,
-            section: formData.section,
-            category_id: formData.category_id || null,
-            image_url: formData.image_url || null,
-            video_url: formData.video_url || null,
-            is_premium: formData.is_premium,
-            is_published: formData.is_published,
-            is_pinned: formData.is_pinned,
-            country_codes: formData.country_codes,
-            updated_at: new Date().toISOString(),
-          })
+          .update({ ...payload, updated_at: new Date().toISOString() })
           .eq("id", editingPost.id);
-
-        if (error) {
-          console.error("Update error:", error);
-          throw error;
-        }
+        if (error) throw error;
         toast({ title: "Success", description: "Post updated successfully" });
       } else {
         const { error } = await supabase.from("posts").insert([{
-          title: formData.title,
-          content: formData.content,
-          excerpt: formData.excerpt,
-          author: formData.author,
-          section: formData.section,
-          category_id: formData.category_id || null,
-          image_url: formData.image_url || null,
-          video_url: formData.video_url || null,
-          is_premium: formData.is_premium,
-          is_published: formData.is_published,
-          is_pinned: formData.is_pinned,
-          country_codes: formData.country_codes,
+          ...payload,
           published_at: formData.is_published ? new Date().toISOString() : null,
         }]);
-
-        if (error) {
-          console.error("Insert error:", error);
-          throw error;
-        }
+        if (error) throw error;
         toast({ title: "Success", description: "Post created successfully" });
       }
 
@@ -202,15 +110,15 @@ export default function AdminPosts() {
     setEditingPost(post);
     setFormData({
       title: post.title,
-      content: post.content,
-      excerpt: post.excerpt || "",
+      content: post.content || post.body || "",
+      excerpt: post.excerpt || post.standfirst || "",
       author: post.author || "",
       section: post.section || "",
-      category_id: post.category_id,
+      category: post.category || "",
       image_url: post.image_url || "",
       video_url: post.video_url || "",
-      is_premium: post.is_premium,
-      is_published: post.is_published,
+      is_premium: post.is_premium || false,
+      is_published: post.is_published || false,
       is_pinned: post.is_pinned || false,
       country_codes: post.country_codes || [],
     });
@@ -255,7 +163,7 @@ export default function AdminPosts() {
       excerpt: "",
       author: "",
       section: "",
-      category_id: "",
+      category: "",
       image_url: "",
       video_url: "",
       is_premium: false,
@@ -372,7 +280,7 @@ export default function AdminPosts() {
                     </td>
                     <td className="px-6 py-4 text-sm">{post.author || "Unknown"}</td>
                     <td className="px-6 py-4 text-sm">
-                      {sections.find(s => s.slug === post.section)?.title || post.section || "-"}
+                      {navSections.find(s => s.slug === post.section)?.title || post.section || "-"}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1">
@@ -559,12 +467,12 @@ export default function AdminPosts() {
                   <Label>Section</Label>
                   <Select
                     value={formData.section}
-                    onValueChange={(value) => setFormData({ ...formData, section: value, category_id: "" })}
+                    onValueChange={(value) => setFormData({ ...formData, section: value, category: "" })}
                   >
                     <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
                     <SelectContent className="max-h-48 overflow-y-auto">
-                      {sections.map((sec) => (
-                        <SelectItem key={sec.id} value={sec.slug}>{sec.title}</SelectItem>
+                      {navSections.map((sec) => (
+                        <SelectItem key={sec.slug} value={sec.slug}>{sec.title}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -573,19 +481,17 @@ export default function AdminPosts() {
                 <div>
                   <Label>Category</Label>
                   <Select
-                    value={formData.category_id}
-                    onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                    value={formData.category}
+                    onValueChange={(value) => setFormData({ ...formData, category: value })}
                     disabled={!formData.section}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder={formData.section ? "Select category" : "Select section first"} />
                     </SelectTrigger>
                     <SelectContent className="max-h-48 overflow-y-auto">
-                      {categories
-                        .filter((cat) => cat.sections?.slug === formData.section)
-                        .map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>{cat.title || cat.name}</SelectItem>
-                        ))}
+                      {categoriesForSection(formData.section).map((cat) => (
+                        <SelectItem key={cat.slug} value={cat.slug}>{cat.title}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
