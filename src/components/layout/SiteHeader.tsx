@@ -161,35 +161,7 @@ export function SiteHeader() {
           </div>
         </div>
       )}
-      {/* Top utility bar - Hidden on mobile */}
-      <div className="hidden md:block border-b border-gray-100 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-8 text-xs">
-            <div className="flex items-center gap-4">
-              <Link to="/countries" className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors">
-                <Globe className="w-3 h-3" />
-                <span>{t.countries}</span>
-              </Link>
-              <Link to="/library" className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors">
-                <Newspaper className="w-3 h-3" />
-                <span>{t.library}</span>
-              </Link>
-              <Link to="/encyclopaedia" className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors">
-                <Newspaper className="w-3 h-3" />
-                <span>{t.encyclopaedia}</span>
-              </Link>
-            </div>
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-1.5 text-gray-600 hover:text-primary transition-colors"
-              aria-label="Search"
-            >
-              <Search className="w-3.5 h-3.5" />
-              <span className="hidden xl:inline">Search</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Top utility bar removed — links available in mobile menu and nav */}
 
       {/* Main header */}
       <div className="container mx-auto px-3 sm:px-4">
@@ -313,10 +285,10 @@ export function SiteHeader() {
               </>
             )}
 
-            {/* Search — mobile only (desktop uses top bar search) */}
+            {/* Search */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-primary lg:hidden"
+              className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-primary"
               aria-label="Search"
             >
               <Search className="w-4 h-4 sm:w-5 sm:h-5" />
