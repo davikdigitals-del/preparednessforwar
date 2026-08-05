@@ -109,7 +109,7 @@ const mapPost = (p: DbPost & { country_codes?: string[] }): AdminPost => ({
   readTime: p.read_time || "5 min",
   isPinned: p.is_pinned || false,
   isPremium: p.is_premium || false,
-  status: (p.status === "published" || p.is_published ? "published" : p.status || "draft") as PostStatus,
+  status: (p.is_published === true || p.status === "published" ? "published" : p.status || "draft") as PostStatus,
   body: p.content || p.body || "",
   countryCodes: p.country_codes || [],
   videoUrl: p.video_url || undefined,
@@ -305,7 +305,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     };
   }, [refreshAlerts, refreshBanner, refreshEncyclopaedia, refreshLibrary, refreshMedia, refreshPosts]);
 
-  const publishedPosts = posts.filter((p) => p.status === "published");
+  const publishedPosts = posts.filter((p) => 
+    p.status === "published" || (p as any).is_published === true
+  );
 
   const createPost = async (post: Omit<AdminPost, "id">) => {
     await (supabase.from("posts") as any).insert({
