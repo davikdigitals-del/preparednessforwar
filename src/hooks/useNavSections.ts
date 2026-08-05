@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { publicSupabase as supabase } from "@/integrations/supabase/publicClient";
 import { navSections as fallbackSections } from "@/data/mockData";
 
 export interface NavCategoryDb { id: string; title: string; slug: string; sort_order: number; }
@@ -22,8 +22,16 @@ export function useNavSections() {
   useEffect(() => {
     const fetch = async () => {
       try {
-        // Just get categories - simple approach
-        const { data: cats } = await supabase.from("categories").select("*").order("sort_order");
+        // Just get categories - match the working AdminCategories query pattern
+        const { data: cats, error } = await supabase
+          .from("categories")
+          .select("*")
+          .order("title");
+        
+        if (error) {
+          console.error('🔍 Categories query error:', error);
+          return;
+        }
         
         if (cats && cats.length > 0) {
           console.log('🔍 Found categories:', cats);
