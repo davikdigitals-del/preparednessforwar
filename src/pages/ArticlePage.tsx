@@ -285,7 +285,7 @@ const ArticlePage = () => {
 
   return (
     <div className="bg-white min-h-screen">
-      <div className="container max-w-screen-xl py-8">
+      <div className="container max-w-screen-lg py-8">
         {/* Breadcrumb - Enhanced */}
         <nav className="flex items-center gap-2 text-sm mb-6 flex-wrap bg-white px-4 py-3 border border-gray-200">
           <Link to="/" className="text-blue-900 hover:text-blue-700 font-semibold transition-colors">Home</Link>
@@ -296,7 +296,7 @@ const ArticlePage = () => {
           <span className="text-gray-700 font-medium line-clamp-1 max-w-[200px]">{post.title}</span>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 items-start">
           <article className="bg-white border border-gray-200">
 
             {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -506,8 +506,8 @@ const ArticlePage = () => {
                 )}
               </div>
 
-              <h1 className="font-display font-black text-3xl md:text-4xl lg:text-5xl leading-tight text-gray-900 px-6">{post.title}</h1>
-              <p className="text-lg text-gray-600 mt-4 leading-relaxed border-l-2 border-blue-900 pl-5 bg-blue-50/50 py-3 mx-6">{post.standfirst}</p>
+              <h1 className="font-display font-black text-2xl md:text-3xl leading-tight text-gray-900 px-6">{post.title}</h1>
+              <p className="text-base text-gray-600 mt-3 leading-relaxed border-l-2 border-blue-900 pl-4 bg-blue-50/50 py-2 mx-6">{post.standfirst}</p>
 
               {/* Meta row */}
               <div className="flex flex-wrap items-center gap-4 mt-6 pt-5 border-t border-gray-200 text-sm px-6">
@@ -568,7 +568,7 @@ const ArticlePage = () => {
               </div>
 
               {/* Hero image */}
-              <div className="aspect-[16/9] bg-gray-100 overflow-hidden relative mt-6">
+              <div className="aspect-[16/7] bg-gray-100 overflow-hidden relative mt-4 mx-6">
                 {post.image && (
                   <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
                 )}
