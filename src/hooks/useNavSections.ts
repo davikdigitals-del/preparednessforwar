@@ -24,7 +24,7 @@ export function useNavSections() {
       try {
         const [{ data: secs }, { data: cats }, { data: tools }] = await Promise.all([
           supabase.from("nav_sections").select("*").eq("is_active", true).order("sort_order"),
-          supabase.from("nav_categories").select("*").order("sort_order"),
+          supabase.from("categories").select("*").order("sort_order"),
           supabase.from("nav_tools").select("*").order("sort_order"),
         ]);
 
