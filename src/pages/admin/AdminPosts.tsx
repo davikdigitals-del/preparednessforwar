@@ -502,7 +502,7 @@ export default function AdminPosts() {
                   >
                     <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
                     <SelectContent className="max-h-48 overflow-y-auto">
-                      {navSections.map((sec) => (
+                      {sections.map((sec: any) => (
                         <SelectItem key={sec.slug} value={sec.slug}>{sec.title}</SelectItem>
                       ))}
                     </SelectContent>
