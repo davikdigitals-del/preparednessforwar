@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useState } from "react";
 import { BookOpen, Download, Search, Eye, Crown, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -13,13 +14,15 @@ import { CheckCircle } from "lucide-react";
 
 export default function LibraryPage() {
   const { libraryItems } = useData();
-  const { user } = useAuth();
-  const { isPremium: hasPremiumAccess } = usePremiumStatus();
+  const { user, loading: authLoading } = useAuth();
+  const { isPremium: hasPremiumAccess, loading: premiumLoading } = usePremiumStatus();
   const location = useLocation();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<typeof libraryItems[0] | null>(null);
   const [premiumPromptOpen, setPremiumPromptOpen] = useState(false);
+
+  const isLoading = authLoading || premiumLoading;
 
   // Check if we're on the /resources route
   const isResourcesRoute = location.pathname === '/resources';
@@ -63,7 +66,16 @@ export default function LibraryPage() {
 
   return (
     <div className="container py-8">
-      <div className="bg-primary text-primary-foreground rounded-sm p-6 md:p-10 mb-8">
+      {isLoading ? (
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading library...</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="bg-primary text-primary-foreground rounded-sm p-6 md:p-10 mb-8">
         <div className="flex items-center gap-3 mb-3">
           <BookOpen className="w-8 h-8" />
           <h1 className="font-display font-bold text-3xl md:text-4xl">{pageTitle}</h1>
@@ -89,7 +101,7 @@ export default function LibraryPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
         {filtered.map((item) => {
           const isLocked = item.isPremium && !hasPremiumAccess;
           return (
@@ -198,9 +210,9 @@ export default function LibraryPage() {
                 ) : (
                   <>
                     <Button asChild size="lg" className="w-full gap-2">
-                      <Link to="/signup" onClick={() => setPremiumPromptOpen(false)}>
+                      <Link to="/subscribe" onClick={() => setPremiumPromptOpen(false)}>
                         <Crown className="w-4 h-4" />
-                        Start Free Trial
+                        Upgrade to Premium
                       </Link>
                     </Button>
                     <Button asChild variant="outline" size="lg" className="w-full">
@@ -232,6 +244,8 @@ export default function LibraryPage() {
           )}
         </DialogContent>
       </Dialog>
+        </>
+      )}
     </div>
   );
 }
