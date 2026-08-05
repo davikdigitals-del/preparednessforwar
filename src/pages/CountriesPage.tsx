@@ -1,10 +1,11 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Globe, Search, Download, ChevronRight, Shield, Phone, Flag, ArrowRight, Circle } from "lucide-react";
-import { natoCountries, RISK_MAP, formatTimeAgo } from "@/data/mockData";
+import { RISK_MAP, formatTimeAgo } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
 import { InteractiveWorldMap } from "@/components/InteractiveWorldMap";
+import { publicSupabase as supabase } from "@/integrations/supabase/publicClient";
 
 const RISK_CONFIG = {
   low:      { label: "Low Risk",      color: "bg-green-500",  text: "text-green-600",  border: "border-green-200",  badge: "bg-green-100 text-green-700" },
@@ -29,10 +30,36 @@ const CountriesPage = () => {
   const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
   const [mapFullscreen, setMapFullscreen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [countries, setCountries] = useState<any[]>([]);
+  const [loadingCountries, setLoadingCountries] = useState(true);
 
-  if (loading) return <div className="container py-8 text-muted-foreground">Loading...</div>;
+  // Load countries from database
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("countries")
+          .select("*")
+          .order("name");
+        
+        if (error) throw error;
+        console.log('🗺️ Loaded countries from database:', data);
+        setCountries(data || []);
+      } catch (error) {
+        console.error('🗺️ Error loading countries:', error);
+        setCountries([]); // Use empty array on error
+      } finally {
+        setLoadingCountries(false);
+      }
+    };
+    fetchCountries();
+  }, []);
+
+  if (loading || loadingCountries) return <div className="container py-8 text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
 
+  const natoCountries = countries; // Use database countries
+  
   const getPostCount = (code: string) =>
     publishedPosts.filter((p: any) => (p.countryCodes || []).includes(code)).length;
 

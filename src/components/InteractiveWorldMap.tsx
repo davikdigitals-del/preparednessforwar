@@ -51,13 +51,13 @@ export const InteractiveWorldMap = ({
     let cancelled = false;
     let timeoutId: NodeJS.Timeout;
 
-    // Timeout fallback — if map doesn't load in 10 seconds, show error
+    // Shorter timeout - 5 seconds instead of 10
     timeoutId = setTimeout(() => {
       if (!cancelled && status === "loading") {
-        setErrorMsg("Map loading timed out");
+        setErrorMsg("Map loading timed out - using fallback");
         setStatus("error");
       }
-    }, 10000);
+    }, 5000);
 
     // Global mousemove — fires even when pointer is over the <object>/SVG iframe.
     // We use this to keep the tooltip glued to the real cursor position.
@@ -266,15 +266,33 @@ export const InteractiveWorldMap = ({
         </div>
       )}
 
-      {/* Error */}
+      {/* Error - Show simple fallback map */}
       {status === "error" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 z-10">
-          <p className="text-sm text-red-500 font-semibold mb-2">Map failed to load</p>
-          <p className="text-xs text-gray-400 mb-4">{errorMsg}</p>
-          <button onClick={() => window.location.reload()}
-            className="px-4 py-1.5 text-xs font-bold bg-blue-900 text-white hover:bg-blue-800 transition-colors">
-            Retry
-          </button>
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-blue-50 z-10">
+          <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 relative overflow-hidden rounded">
+            {/* Simple world map placeholder */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-32 h-20 bg-blue-300 rounded-lg mb-4 relative">
+                  <div className="absolute top-2 left-4 w-6 h-4 bg-blue-500 rounded"></div>
+                  <div className="absolute top-4 right-6 w-8 h-3 bg-blue-500 rounded"></div>
+                  <div className="absolute bottom-3 left-8 w-5 h-5 bg-blue-500 rounded"></div>
+                  <div className="absolute bottom-2 right-4 w-4 h-6 bg-blue-500 rounded"></div>
+                </div>
+                <p className="text-sm text-gray-600 mb-2">Interactive map unavailable</p>
+                <p className="text-xs text-gray-400 mb-4">Showing fallback view</p>
+                <button 
+                  onClick={() => {
+                    setStatus("loading");
+                    window.location.reload();
+                  }}
+                  className="px-4 py-2 text-xs font-bold bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                >
+                  Retry Loading Map
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
