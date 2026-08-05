@@ -66,6 +66,8 @@ export default function SubscribePage() {
         : `${window.location.origin}/dashboard?payment=success`;
       const cancelUrl = `${window.location.origin}/subscribe?plan=${plan.id}${fromSignup ? '&from=signup' : ''}`;
 
+      console.log('🔵 Creating checkout session...', { planId: plan.id, supabaseUrl });
+
       const { data: sessionData } = await supabase.auth.getSession();
       const session = sessionData?.session;
 
@@ -78,27 +80,78 @@ export default function SubscribePage() {
         headers['Authorization'] = `Bearer ${session.access_token}`;
       }
 
-      const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {
+      const payload = {
+        planId: plan.id,
+        userId: session?.user?.id || null,
+        userEmail: session?.user?.email || null,
+        successUrl,
+        cancelUrl,
+      };
+
+      console.log('🔵 Request payload:', payload);
+      console.log('🔵 Headers:', { ...headers, Authorization: headers.Authorization ? 'Bearer [HIDDEN]' : undefined });
+
+      const functionUrl = `${supabaseUrl}/functions/v1/create-checkout-session`;
+      console.log('🔵 Function URL:', functionUrl);
+
+      // Development fallback - skip Stripe in development
+      if (import.meta.env.DEV && !import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) {
+        console.log('🟡 Development mode - simulating successful payment');
+        toast({ 
+          title: 'Development Mode', 
+          description: 'Stripe not configured. Redirecting to success page.',
+          duration: 3000
+        });
+        setTimeout(() => {
+          navigate(successUrl.replace(window.location.origin, ''));
+        }, 1000);
+        return;
+      }
+
+      const response = await fetch(functionUrl, {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          planId: plan.id,
-          userId: session?.user?.id || null,
-          userEmail: session?.user?.email || null,
-          successUrl,
-          cancelUrl,
-        }),
+        body: JSON.stringify(payload),
       });
 
+      console.log('🔵 Response status:', response.status);
+      console.log('🔵 Response headers:', Object.fromEntries(response.headers.entries()));
+
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Failed to create checkout session');
+      console.log('🔵 Response body:', result);
+
+      if (!response.ok) {
+        throw new Error(result.error || `HTTP ${response.status}: Failed to create checkout session`);
+      }
+      
       if (result.url) {
+        console.log('🔵 Redirecting to:', result.url);
         window.location.href = result.url;
       } else {
-        throw new Error('No checkout URL returned');
+        throw new Error('No checkout URL returned from server');
       }
     } catch (error: any) {
-      toast({ title: 'Payment Error', description: error.message, variant: 'destructive' });
+      console.error('🔴 Payment Error:', error);
+      
+      let errorMessage = error.message;
+      
+      // Provide specific error messages for common issues
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        errorMessage = 'Network error - please check your internet connection and try again';
+      } else if (error.message.includes('HTTP 404')) {
+        errorMessage = 'Payment service not found - please contact support';
+      } else if (error.message.includes('HTTP 500')) {
+        errorMessage = 'Payment service error - please try again in a moment';
+      } else if (error.message.includes('CORS')) {
+        errorMessage = 'Browser security error - please try refreshing the page';
+      }
+
+      toast({ 
+        title: 'Payment Error', 
+        description: errorMessage,
+        variant: 'destructive',
+        duration: 6000
+      });
       setProcessingId(null);
     }
   };
