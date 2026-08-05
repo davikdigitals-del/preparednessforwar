@@ -14,15 +14,13 @@ import { CheckCircle } from "lucide-react";
 
 export default function LibraryPage() {
   const { libraryItems } = useData();
-  const { user, loading: authLoading } = useAuth();
-  const { isPremium: hasPremiumAccess, loading: premiumLoading } = usePremiumStatus();
+  const { user } = useAuth(); // Remove loading state
+  const { isPremium: hasPremiumAccess } = usePremiumStatus(); // Remove loading state
   const location = useLocation();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<typeof libraryItems[0] | null>(null);
   const [premiumPromptOpen, setPremiumPromptOpen] = useState(false);
-
-  const isLoading = authLoading || premiumLoading;
 
   // Check if we're on the /resources route
   const isResourcesRoute = location.pathname === '/resources';
@@ -66,16 +64,7 @@ export default function LibraryPage() {
 
   return (
     <div className="container py-8">
-      {isLoading ? (
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading library...</p>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="bg-primary text-primary-foreground rounded-sm p-6 md:p-10 mb-8">
+      <div className="bg-primary text-primary-foreground rounded-sm p-6 md:p-10 mb-8">
         <div className="flex items-center gap-3 mb-3">
           <BookOpen className="w-8 h-8" />
           <h1 className="font-display font-bold text-3xl md:text-4xl">{pageTitle}</h1>
@@ -241,11 +230,8 @@ export default function LibraryPage() {
               <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
               <p className="text-sm text-muted-foreground">No document has been uploaded yet for this item.</p>
             </div>
-          )}
         </DialogContent>
       </Dialog>
-        </>
-      )}
     </div>
   );
 }

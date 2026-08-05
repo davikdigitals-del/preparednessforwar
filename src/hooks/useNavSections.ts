@@ -16,8 +16,8 @@ export interface NavSectionDb {
 }
 
 export function useNavSections() {
-  const [sections, setSections] = useState<NavSectionDb[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [sections, setSections] = useState<NavSectionDb[]>(fallbackSections as any); // Start with fallback
+  const [loading, setLoading] = useState(false); // Don't block UI with loading
 
   useEffect(() => {
     const fetch = async () => {
@@ -39,12 +39,10 @@ export function useNavSections() {
             };
           });
           setSections(merged);
-        } else {
-          // Fallback to mockData if DB is empty
-          setSections(fallbackSections as any);
         }
+        // Don't fallback here - already set fallback as initial state
       } catch {
-        setSections(fallbackSections as any);
+        // Silent fail - keep using fallback sections
       } finally {
         setLoading(false);
       }

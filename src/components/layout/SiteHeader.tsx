@@ -126,7 +126,7 @@ export function SiteHeader() {
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  // Use DB sections for nav, fall back to static navSections
+  // Use DB sections for nav, fall back to static navSections immediately
   // "Essential Supplies" (slug: supplies) is intentionally excluded from the public nav
   const activeSections = (dbSections.length > 0 ? dbSections : navSections)
     .filter(s => s.slug !== "supplies");
