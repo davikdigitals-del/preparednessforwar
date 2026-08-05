@@ -4,6 +4,7 @@ import { useData } from "@/contexts/DataContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { formatTimeAgo } from "@/data/mockData";
 
 export function SidebarModules() {
   const { publishedPosts } = useData();
@@ -54,7 +55,7 @@ export function SidebarModules() {
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    {post.readTime}
+                    {formatTimeAgo(post.publishedAt)}
                   </span>
                 </div>
               </div>

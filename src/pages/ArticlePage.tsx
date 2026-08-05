@@ -495,8 +495,8 @@ const ArticlePage = () => {
                   </div>
                   {post.author}
                 </span>
-                <span className="flex items-center gap-1.5 text-gray-600"><Clock className="w-4 h-4 text-blue-900" />{post.readTime}</span>
-                <span className="text-gray-600" title={formatDate(post.publishedAt)}>{formatDateTime(post.publishedAt)}</span>
+                <span className="flex items-center gap-1.5 text-gray-600"><Clock className="w-4 h-4 text-blue-900" />{formatDateTime(post.publishedAt)}</span>
+                {post.readTime && <span className="text-gray-500 text-xs">{post.readTime} read</span>}
                 <span className="flex items-center gap-1.5 text-gray-600"><Eye className="w-4 h-4 text-blue-900" />{post.viewCount?.toLocaleString()} views</span>
 
                 {/* Share dropdown */}

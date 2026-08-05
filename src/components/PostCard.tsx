@@ -40,8 +40,8 @@ export function PostCard({ post, variant = "default" }: PostCardProps) {
             <p className="text-card/80 text-sm mt-2 line-clamp-2">{post.standfirst}</p>
             <div className="flex items-center gap-4 mt-3 text-card/60 text-xs">
               <span>{post.author}</span>
-              <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{post.readTime}</span>
-              <span>{formatTimeAgo(post.publishedAt)}</span>
+              <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{formatTimeAgo(post.publishedAt)}</span>
+              {post.readTime && <span>{post.readTime} read</span>}
               {hasVideo && (
                 <span className="ml-auto flex items-center gap-1 text-white font-bold">
                   <Play className="w-3.5 h-3.5 fill-white" />
@@ -124,8 +124,8 @@ export function PostCard({ post, variant = "default" }: PostCardProps) {
         <p className="text-sm text-gray-600 line-clamp-2 mb-4">{post.standfirst}</p>
         <div className="flex items-center gap-4 text-xs text-gray-500 pt-3 border-t border-gray-100">
           <span className="font-semibold text-gray-700">{post.author}</span>
-          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-blue-900" />{post.readTime}</span>
-          <span>{formatTimeAgo(post.publishedAt)}</span>
+          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-blue-900" />{formatTimeAgo(post.publishedAt)}</span>
+          {post.readTime && <span className="text-gray-400">{post.readTime} read</span>}
           {hasVideo && (
             <span className="ml-auto flex items-center gap-1 text-red-600 font-bold">
               <Play className="w-3.5 h-3.5 fill-red-600" />
