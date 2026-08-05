@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Edit, Trash2, Search, Globe, MapPin, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { natoCountries, type Country } from "@/data/mockData";
 
 export default function AdminCountries() {
   const [countries, setCountries] = useState<any[]>([]);
@@ -68,37 +66,10 @@ export default function AdminCountries() {
   };
 
   const syncAllCountries = async () => {
-    try {
-      setLoading(true);
-      
-      // Prepare all countries data from mockData
-      const countryData = natoCountries.map((country) => ({
-        code: country.code,
-        name: country.name,
-        flag: country.flag,
-        continent: country.continent,
-        risk_level: "low", // Default risk level
-        is_active: true,
-      }));
-
-      // Upsert all countries
-      const { error } = await supabase
-        .from("countries")
-        .upsert(countryData, { onConflict: "code" });
-
-      if (error) throw error;
-
-      toast({ 
-        title: "Success", 
-        description: `Synced ${countryData.length} countries to database` 
-      });
-      
-      fetchCountries();
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
+    toast({ 
+      title: "Info", 
+      description: "Use the INSERT_COUNTRIES.sql file in Supabase SQL Editor to seed countries." 
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
