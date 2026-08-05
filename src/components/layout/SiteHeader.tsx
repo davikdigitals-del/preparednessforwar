@@ -163,7 +163,7 @@ export function SiteHeader() {
       )}
       {/* Top utility bar - Hidden on mobile */}
       <div className="hidden md:block border-b border-gray-100 bg-gray-50">
-        <div className="container mx-auto px-4">
+        <div className="w-full px-4 lg:px-8">
           <div className="flex items-center justify-between h-10 text-xs">
             <div className="flex items-center gap-4">
               <Link to="/countries" className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors">
@@ -204,7 +204,7 @@ export function SiteHeader() {
       </div>
 
       {/* Main header */}
-      <div className="container mx-auto px-3 sm:px-4">
+      <div className="w-full px-4 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Mobile Menu Button & Logo */}
           <div className="flex items-center gap-2 sm:gap-4">
@@ -340,7 +340,7 @@ export function SiteHeader() {
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
         <div className="lg:hidden bg-white border-b border-gray-200 shadow-lg">
-          <div className="container mx-auto px-4 py-4 max-h-[70vh] overflow-y-auto">
+          <div className="w-full px-4 lg:px-8 py-4 max-h-[70vh] overflow-y-auto">
             {/* Quick Links */}
             <div className="mb-4">
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Quick Access</h3>
