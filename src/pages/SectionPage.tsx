@@ -21,6 +21,11 @@ const SectionPage = () => {
     return matchSection && matchCategory;
   });
 
+  // Debug
+  console.log(`📄 SectionPage: section="${section}" category="${category}"`);
+  console.log(`📄 All posts:`, allPosts.map((p: any) => ({ section: p.section, category: p.category, title: p.title })));
+  console.log(`📄 Filtered posts:`, posts.length);
+
   // Find category from sectionData categories (which now includes DB categories)
   const categoryData = category
     ? sectionData?.categories.find((c: any) => c.slug === category)
