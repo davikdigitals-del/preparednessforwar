@@ -118,18 +118,18 @@ export function PostCard({ post, variant = "default" }: PostCardProps) {
           </div>
         )}
       </div>
-      <div className="p-2 sm:p-5">
-        <span className="inline-block px-2 py-0.5 sm:px-3 sm:py-1 bg-blue-900 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wide mb-2">
+      <div className="p-2 sm:p-3">
+        <span className="inline-block px-2 py-0.5 bg-blue-900 text-white text-[10px] font-bold uppercase tracking-wide mb-1.5">
           {section?.title}
         </span>
-        <h3 className="font-display font-bold text-sm sm:text-lg leading-snug line-clamp-2 text-gray-900 group-hover:text-blue-900 transition-colors mb-1 sm:mb-2">
+        <h3 className="font-display font-bold text-sm leading-snug line-clamp-2 text-gray-900 group-hover:text-blue-900 transition-colors mb-1">
           {post.title}
         </h3>
-        <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-2 sm:mb-4 hidden sm:block">{post.standfirst}</p>
-        <div className="flex flex-wrap items-center gap-1 sm:gap-4 text-[10px] sm:text-xs text-gray-500 pt-2 sm:pt-3 border-t border-gray-100">
+        <p className="text-xs text-gray-600 line-clamp-2 mb-2 hidden md:block">{post.standfirst}</p>
+        <div className="flex flex-wrap items-center gap-1 sm:gap-3 text-[10px] text-gray-500 pt-1.5 border-t border-gray-100">
           <span className="font-semibold text-gray-700 truncate max-w-[80px] sm:max-w-none">{post.author}</span>
-          <span className="flex items-center gap-1"><Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-900" />{formatTimeAgo(post.publishedAt)}</span>
-          {post.readTime && <span className="text-gray-400 hidden sm:inline">{post.readTime} read</span>}
+          <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-blue-900" />{formatTimeAgo(post.publishedAt)}</span>
+          {post.readTime && <span className="text-gray-400 hidden lg:inline">{post.readTime} read</span>}
         </div>
       </div>
     </Link>
