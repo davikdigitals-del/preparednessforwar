@@ -21,9 +21,17 @@ const SectionPage = () => {
     return matchSection && matchCategory;
   });
 
-  const categoryData = category ? sectionData?.categories.find((c) => c.slug === category) : null;
+  // Find category from sectionData categories (which now includes DB categories)
+  const categoryData = category
+    ? sectionData?.categories.find((c: any) => c.slug === category)
+    : null;
+
+  // Fallback: derive title from slug if category not found in sections
+  const categoryTitle = categoryData?.title ||
+    (category ? category.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()) : null);
+
   const pageTitle =
-    categoryData?.title ||
+    categoryTitle ||
     sectionData?.title ||
     section?.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()) ||
     "Section";
@@ -51,10 +59,10 @@ const SectionPage = () => {
                 {sectionData.title}
               </Link>
             )}
-            {categoryData && (
+            {categoryTitle && (
               <>
                 <span>›</span>
-                <span className="text-white">{categoryData.title}</span>
+                <span className="text-white">{categoryTitle}</span>
               </>
             )}
           </nav>
