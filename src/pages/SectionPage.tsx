@@ -1,14 +1,16 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect } from "react";
-import { navSections } from "@/data/mockData";
+import { useParams, Link } from "react-router-dom";
+import { useData } from "@/contexts/DataContext";
+import { useNavSections } from "@/hooks/useNavSections";
 import { PostCard } from "@/components/PostCard";
 import { SidebarModules } from "@/components/SidebarModules";
-import { useData } from "@/contexts/DataContext";
 import { ArrowRight } from "lucide-react";
 
 const SectionPage = () => {
   const { section, category } = useParams<{ section: string; category?: string }>();
   const { publishedPosts, loading } = useData();
+  const { sections: navSections } = useNavSections(); // Use database sections
 
   const allPosts = publishedPosts;
   const sectionData = navSections.find((s) => s.slug === section);

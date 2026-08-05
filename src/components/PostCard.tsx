@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { Clock, Eye, Play } from "lucide-react";
 import type { Post } from "@/data/mockData";
-import { formatTimeAgo, navSections } from "@/data/mockData";
+import { formatTimeAgo } from "@/data/mockData";
+import { useNavSections } from "@/hooks/useNavSections";
 
 interface PostCardProps {
   post: Post;
@@ -9,6 +10,7 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, variant = "default" }: PostCardProps) {
+  const { sections: navSections } = useNavSections();
   const section = navSections.find((s) => s.slug === post.section);
   const sectionColor = section?.color || "category-emergency";
 

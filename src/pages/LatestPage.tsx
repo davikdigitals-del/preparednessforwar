@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Clock, Eye, Radio } from "lucide-react";
-import { navSections, formatTimeAgo } from "@/data/mockData";
+import { formatTimeAgo } from "@/data/mockData";
 import { useData } from "@/contexts/DataContext";
+import { useNavSections } from "@/hooks/useNavSections";
 
 export default function LatestPage() {
   const { publishedPosts } = useData();
+  const { sections: navSections } = useNavSections();
   const allPosts = publishedPosts;
   const [sectionFilter, setSectionFilter] = useState("all");
 
