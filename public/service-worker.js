@@ -1,5 +1,5 @@
-﻿// v5 — never intercept Supabase requests
-const CACHE_NAME = 'pfw-v5';
+﻿// v6 — never intercept Supabase requests, clear old caches
+const CACHE_NAME = 'pfw-v6';
 
 self.addEventListener('install', () => {
   self.skipWaiting();
@@ -26,7 +26,15 @@ self.addEventListener('fetch', (event) => {
   // Never intercept Supabase API or storage requests — let them go direct.
   if (request.url.includes('supabase.co')) return;
 
-  // For all other requests (JS, CSS, images) — passthrough fetch.
+  // Never intercept JS/CSS chunks — always fetch fresh from network.
+  // This prevents stale cached bundles from causing 503 errors.
+  const url = new URL(request.url);
+  if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // For all other requests (images, fonts) — passthrough fetch with offline fallback.
   event.respondWith(
     fetch(request).catch(() => {
       return new Response('', { status: 503, statusText: 'Offline' });

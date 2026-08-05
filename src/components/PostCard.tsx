@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { Clock, Eye, Play } from "lucide-react";
 import type { Post } from "@/data/mockData";
-import { formatTimeAgo } from "@/data/mockData";
-import { useNavSections } from "@/hooks/useNavSections";
+import { formatTimeAgo, navSections } from "@/data/mockData";
+
+// PostCard uses static navSections for section label only - dynamic categories
+// are handled at the page level (SectionPage, LatestPage etc.)
 
 interface PostCardProps {
   post: Post;
@@ -10,7 +12,7 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, variant = "default" }: PostCardProps) {
-  const { sections: navSections } = useNavSections();
+  // Use static sections for display label - this is just a fallback label
   const section = navSections.find((s) => s.slug === post.section);
   const sectionColor = section?.color || "category-emergency";
 
