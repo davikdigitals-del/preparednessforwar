@@ -119,9 +119,9 @@ export function PremiumGate({
             ) : (
               <>
                 <Button asChild size="lg" className="gap-2">
-                  <Link to="/signup">
+                  <Link to="/subscribe">
                     <Crown className="w-4 h-4" />
-                    Start Free Trial
+                    Upgrade to Premium
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
