@@ -1,7 +1,8 @@
 ﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Globe, Search, Download, ChevronRight, Shield, Phone, Flag, ArrowRight, Circle } from "lucide-react";
-import { RISK_MAP, formatTimeAgo } from "@/data/mockData";
+import { RISK_MAP } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
 import { InteractiveWorldMap } from "@/components/InteractiveWorldMap";
@@ -17,8 +18,6 @@ const RISK_CONFIG = {
 const CONTINENT_ICONS: Record<string, string> = {
   "Europe": "🌍", "North America": "🌎", "Oceania": "🌏",
 };
-
-const CONTINENTS = Array.from(new Set(natoCountries.map(c => c.continent))).sort();
 
 const getRisk = (code: string) =>
   ((RISK_MAP as Record<string, string>)[code] as keyof typeof RISK_CONFIG) || "low";
@@ -59,6 +58,9 @@ const CountriesPage = () => {
   if (!user) return <Navigate to="/login" replace />;
 
   const natoCountries = countries; // Use database countries
+
+  // Compute continents dynamically from database countries
+  const CONTINENTS = Array.from(new Set(natoCountries.map((c: any) => c.continent).filter(Boolean))).sort() as string[];
   
   const getPostCount = (code: string) =>
     publishedPosts.filter((p: any) => (p.countryCodes || []).includes(code)).length;
