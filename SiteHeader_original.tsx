@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+﻿import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, Search, User, Globe, Mail, X, Video, Newspaper, LogOut, ChevronDown, ChevronUp, FileText, GraduationCap, ShoppingBag } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -17,7 +17,7 @@ function buildMenuConfig(
   section: (typeof navSections)[number],
   featuredPosts?: { id: string; title: string; image: string | null; category: string; standfirst: string | null }[]
 ): MegaMenuConfig {
-  console.log(`🔧 Building menu for section: ${section.slug}`, { featuredPosts });
+  console.log(`­ƒöº Building menu for section: ${section.slug}`, { featuredPosts });
   
   // Only use real pinned posts from database, ignore mock data
   const featuredItems = featuredPosts && featuredPosts.length > 0
@@ -30,7 +30,7 @@ function buildMenuConfig(
       }))
     : []; // No fallback to mock data
   
-  console.log(`✨ Featured items for ${section.slug}:`, featuredItems);
+  console.log(`Ô£¿ Featured items for ${section.slug}:`, featuredItems);
 
   return {
     menuId: section.slug,
@@ -246,7 +246,7 @@ export function SiteHeader() {
                     className="text-gray-700 font-semibold text-xs px-2"
                   />
                 ))}
-                {/* More — mega menu */}
+                {/* More ÔÇö mega menu */}
                 <MegaMenuTrigger
                   menuId="more"
                   label="More"
@@ -325,7 +325,7 @@ export function SiteHeader() {
               </>
             )}
 
-            {/* Search — mobile only (desktop uses top bar search) */}
+            {/* Search ÔÇö mobile only (desktop uses top bar search) */}
             <button
               onClick={() => setSearchOpen(true)}
               className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-primary lg:hidden"
@@ -471,7 +471,7 @@ export function SiteHeader() {
                               className="block px-3 py-1.5 text-xs text-primary font-medium hover:bg-gray-100 rounded-md transition-colors"
                               onClick={() => setMobileMenuOpen(false)}
                             >
-                              View all {section.categories.length} categories →
+                              View all {section.categories.length} categories ÔåÆ
                             </Link>
                           )}
                         </div>
