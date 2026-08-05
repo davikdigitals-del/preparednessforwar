@@ -95,6 +95,3 @@ export function useNavSections() {
 
   return { sections, loading };
 }
-
-  return { sections, loading };
-}
