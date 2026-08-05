@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Edit, Trash2, Search, Download, FileText, ExternalLink, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/FileUpload";
@@ -457,10 +457,10 @@ export default function AdminLibrary() {
                 </Label>
                 <p className="text-xs text-gray-500 mt-0.5">Restrict this item to premium subscribers only</p>
               </div>
-              <Switch
+              <Checkbox
                 id="is_premium"
                 checked={formData.is_premium}
-                onCheckedChange={(checked) => setFormData({ ...formData, is_premium: checked })}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_premium: !!checked })}
               />
             </div>
 
