@@ -22,14 +22,13 @@ export function useNavSections() {
   useEffect(() => {
     const fetch = async () => {
       try {
-        // Just get categories - ignore complex section relationships for now
+        // Just get categories - simple approach
         const { data: cats } = await supabase.from("categories").select("*").order("sort_order");
         
         if (cats && cats.length > 0) {
           console.log('🔍 Found categories:', cats);
           
-          // Simple approach: Add all database categories to survival-guides section
-          // This ensures they show up in navigation while we debug the proper section mapping
+          // Add all database categories to survival-guides section
           const updatedSections = fallbackSections.map(section => {
             if (section.slug === 'survival-guides') {
               return {
@@ -40,7 +39,7 @@ export function useNavSections() {
             return section;
           }) as NavSectionDb[];
           
-          console.log('🔍 Updated sections with categories:', updatedSections);
+          console.log('🔍 Updated sections:', updatedSections);
           setSections(updatedSections);
         }
       } catch (err) {
@@ -51,9 +50,6 @@ export function useNavSections() {
     };
     fetch();
   }, []);
-
-  return { sections, loading };
-}
 
   return { sections, loading };
 }
