@@ -230,6 +230,7 @@ export default function LibraryPage() {
               <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
               <p className="text-sm text-muted-foreground">No document has been uploaded yet for this item.</p>
             </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
