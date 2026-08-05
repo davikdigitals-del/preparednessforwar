@@ -107,7 +107,7 @@ export function PremiumGate({
             {user ? (
               <>
                 <Button asChild size="lg" className="gap-2">
-                  <Link to="/premium">
+                  <Link to="/subscribe">
                     <Crown className="w-4 h-4" />
                     Upgrade to Premium
                   </Link>
@@ -132,7 +132,11 @@ export function PremiumGate({
           </div>
 
           <p className="text-xs text-gray-500 mt-4">
-            Already a premium member? <Link to="/login" className="text-primary hover:underline">Sign in</Link>
+            {user ? (
+              <>Already subscribed? <Link to="/dashboard" className="text-primary hover:underline">Go to your account</Link></>
+            ) : (
+              <>Already a premium member? <Link to="/login" className="text-primary hover:underline">Sign in</Link></>
+            )}
           </p>
         </CardContent>
       </Card>
