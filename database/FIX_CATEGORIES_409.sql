@@ -14,15 +14,25 @@ CREATE TABLE IF NOT EXISTS categories (
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Step 2: Drop any existing unique constraint on slug alone
-ALTER TABLE categories DROP CONSTRAINT IF EXISTS categories_slug_key;
-ALTER TABLE categories DROP CONSTRAINT IF EXISTS categories_slug_unique;
-ALTER TABLE categories DROP CONSTRAINT IF EXISTS categories_slug_section_id_key;
+-- Step 2: Drop ALL unique constraints on slug (any name)
+DO $$
+DECLARE
+  r RECORD;
+BEGIN
+  FOR r IN
+    SELECT con.conname
+    FROM pg_constraint con
+    JOIN pg_class rel ON rel.oid = con.conrelid
+    WHERE rel.relname = 'categories'
+      AND con.contype = 'u'
+  LOOP
+    EXECUTE 'ALTER TABLE categories DROP CONSTRAINT ' || quote_ident(r.conname);
+  END LOOP;
+END $$;
 
 -- Step 3: Add correct composite unique (slug + section_id)
--- so same slug can exist in different sections
 ALTER TABLE categories
-  ADD CONSTRAINT IF NOT EXISTS categories_slug_section_id_unique
+  ADD CONSTRAINT categories_slug_section_id_unique
   UNIQUE (slug, section_id);
 
 -- Step 4: Enable RLS

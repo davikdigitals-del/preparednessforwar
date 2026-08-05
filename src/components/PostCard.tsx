@@ -102,36 +102,30 @@ export function PostCard({ post, variant = "default" }: PostCardProps) {
         )}
         {hasVideo && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
-            <div className="w-16 h-16 rounded-full bg-blue-900 flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
-              <Play className="w-8 h-8 text-white fill-white ml-1" />
+            <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-blue-900 flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+              <Play className="w-5 h-5 sm:w-8 sm:h-8 text-white fill-white ml-0.5" />
             </div>
           </div>
         )}
         {hasVideo && (
-          <div className="absolute top-3 right-3 px-2 py-1 bg-red-600 text-white text-xs font-bold uppercase tracking-wide flex items-center gap-1">
-            <Play className="w-3 h-3 fill-white" />
+          <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-red-600 text-white text-[10px] font-bold uppercase tracking-wide flex items-center gap-1">
+            <Play className="w-2.5 h-2.5 fill-white" />
             Video
           </div>
         )}
       </div>
-      <div className="p-5">
-        <span className="inline-block px-3 py-1 bg-blue-900 text-white text-xs font-bold uppercase tracking-wide mb-3">
+      <div className="p-2 sm:p-5">
+        <span className="inline-block px-2 py-0.5 sm:px-3 sm:py-1 bg-blue-900 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wide mb-2">
           {section?.title}
         </span>
-        <h3 className="font-display font-bold text-lg leading-snug line-clamp-2 text-gray-900 group-hover:text-blue-900 transition-colors mb-2">
+        <h3 className="font-display font-bold text-sm sm:text-lg leading-snug line-clamp-2 text-gray-900 group-hover:text-blue-900 transition-colors mb-1 sm:mb-2">
           {post.title}
         </h3>
-        <p className="text-sm text-gray-600 line-clamp-2 mb-4">{post.standfirst}</p>
-        <div className="flex items-center gap-4 text-xs text-gray-500 pt-3 border-t border-gray-100">
-          <span className="font-semibold text-gray-700">{post.author}</span>
-          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-blue-900" />{formatTimeAgo(post.publishedAt)}</span>
-          {post.readTime && <span className="text-gray-400">{post.readTime} read</span>}
-          {hasVideo && (
-            <span className="ml-auto flex items-center gap-1 text-red-600 font-bold">
-              <Play className="w-3.5 h-3.5 fill-red-600" />
-              Watch
-            </span>
-          )}
+        <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-2 sm:mb-4 hidden sm:block">{post.standfirst}</p>
+        <div className="flex flex-wrap items-center gap-1 sm:gap-4 text-[10px] sm:text-xs text-gray-500 pt-2 sm:pt-3 border-t border-gray-100">
+          <span className="font-semibold text-gray-700 truncate max-w-[80px] sm:max-w-none">{post.author}</span>
+          <span className="flex items-center gap-1"><Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-900" />{formatTimeAgo(post.publishedAt)}</span>
+          {post.readTime && <span className="text-gray-400 hidden sm:inline">{post.readTime} read</span>}
         </div>
       </div>
     </Link>
