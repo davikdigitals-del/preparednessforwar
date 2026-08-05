@@ -152,15 +152,12 @@ export default function AdminCategories() {
         if (error) throw error;
         toast({ title: "Success", description: "Category updated successfully" });
       } else {
-        const { error } = await supabase.from("categories").insert([payload]).select();
-        if (error && error.code === '23505') {
-          // Duplicate — silently ignore, just refresh
-          toast({ title: "Info", description: "Category with this slug already exists in this section" });
-        } else if (error) {
-          throw error;
-        } else {
-          toast({ title: "Success", description: "Category created successfully" });
-        }
+        const { error } = await supabase
+          .from("categories")
+          .upsert([payload], { onConflict: "slug,section_id" })
+          .select();
+        if (error) throw error;
+        toast({ title: "Success", description: "Category created successfully" });
       }
       setDialogOpen(false);
       resetForm();
