@@ -100,10 +100,21 @@ export default function AdminCategories() {
 
   const fetchSections = async () => {
     try {
-      const { data, error } = await supabase
-        .from("sections")
+      // Try nav_sections first, then sections table
+      let { data, error } = await supabase
+        .from("nav_sections")
         .select("id, title, slug")
-        .order("title");
+        .eq("is_active", true)
+        .order("sort_order");
+
+      if (error || !data || data.length === 0) {
+        const result = await supabase
+          .from("sections")
+          .select("id, title, slug")
+          .order("title");
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) throw error;
       setSections(data || []);

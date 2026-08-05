@@ -20,69 +20,58 @@ export function useNavSections() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetch = async () => {
+    const load = async () => {
       try {
-        // Get both sections and categories
-        const [sectionsResult, categoriesResult] = await Promise.all([
-          supabase.from("sections").select("*").order("title"),
-          supabase.from("categories").select("*").order("title")
-        ]);
-        
-        console.log('🔍 Sections:', sectionsResult.data);
-        console.log('🔍 Categories:', categoriesResult.data);
-        
-        const dbSections = sectionsResult.data || [];
-        const dbCategories = categoriesResult.data || [];
-        
-        if (dbCategories.length > 0) {
-          // Create a mapping of section_id to section slug
-          const sectionIdToSlug: Record<string, string> = {};
-          dbSections.forEach(section => {
-            sectionIdToSlug[section.id] = section.slug;
-          });
-          
-          console.log('🔍 Section ID to slug mapping:', sectionIdToSlug);
-          
-          // Group categories by section slug
-          const categoriesBySlug: Record<string, any[]> = {};
-          
-          dbCategories.forEach(cat => {
-            let sectionSlug = 'survival-guides'; // default
-            
-            if (cat.section_id && sectionIdToSlug[cat.section_id]) {
-              sectionSlug = sectionIdToSlug[cat.section_id];
-            } else {
-              // Try to guess section from category name if section_id is missing
-              const catName = cat.title?.toLowerCase() || cat.slug?.toLowerCase() || '';
-              if (catName.includes('directive')) sectionSlug = 'directives';
-              else if (catName.includes('intel')) sectionSlug = 'intelligence';
-              else if (catName.includes('news')) sectionSlug = 'news';
-            }
-            
-            if (!categoriesBySlug[sectionSlug]) {
-              categoriesBySlug[sectionSlug] = [];
-            }
-            categoriesBySlug[sectionSlug].push(cat);
-          });
-          
-          console.log('🔍 Categories grouped by section:', categoriesBySlug);
-          
-          // Update fallback sections with proper categories
-          const updatedSections = fallbackSections.map(section => ({
-            ...section,
-            categories: categoriesBySlug[section.slug] || section.categories
-          })) as NavSectionDb[];
-          
-          console.log('🔍 Final sections with proper assignment:', updatedSections);
-          setSections(updatedSections);
-        }
+        // Load categories from db
+        const { data: cats } = await supabase
+          .from("categories")
+          .select("*")
+          .order("title");
+
+        if (!cats || cats.length === 0) return; // keep fallback
+
+        // Try nav_sections first (has sort_order + is_active)
+        const { data: navSecs } = await supabase
+          .from("nav_sections")
+          .select("*")
+          .eq("is_active", true)
+          .order("sort_order");
+
+        // Fallback to sections table
+        const { data: altSecs } = await supabase
+          .from("sections")
+          .select("*")
+          .order("title");
+
+        const dbSections = (navSecs && navSecs.length > 0) ? navSecs : (altSecs || []);
+
+        // Build merged sections: match categories by section_id
+        const merged = fallbackSections.map(fallback => {
+          // Find the DB section that matches this fallback slug
+          const dbSection = dbSections.find((s: any) => s.slug === fallback.slug);
+          const sectionId = dbSection?.id;
+
+          // Get categories assigned to this section
+          const dbCats = sectionId
+            ? cats.filter((c: any) => c.section_id === sectionId)
+            : [];
+
+          return {
+            ...fallback,
+            id: dbSection?.id || fallback.slug,
+            categories: dbCats.length > 0 ? dbCats : fallback.categories,
+          } as NavSectionDb;
+        });
+
+        setSections(merged);
       } catch (err) {
-        console.error('🔍 useNavSections error:', err);
+        console.error("useNavSections error:", err);
+        // keep fallback on error
       } finally {
         setLoading(false);
       }
     };
-    fetch();
+    load();
   }, []);
 
   return { sections, loading };

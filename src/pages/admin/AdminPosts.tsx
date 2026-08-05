@@ -56,10 +56,20 @@ export default function AdminPosts() {
 
   const fetchSectionsAndCategories = async () => {
     try {
-      const [{ data: secs }, { data: cats }] = await Promise.all([
-        supabase.from("sections").select("*").order("title"),
-        supabase.from("categories").select("*").order("title"),
-      ]);
+      // Try nav_sections first, then sections table
+      let { data: secs } = await supabase
+        .from("nav_sections")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order");
+
+      if (!secs || secs.length === 0) {
+        const result = await supabase.from("sections").select("*").order("title");
+        secs = result.data;
+      }
+
+      const { data: cats } = await supabase.from("categories").select("*").order("title");
+
       if (secs && secs.length > 0) setDbSections(secs);
       if (cats && cats.length > 0) setDbCategories(cats);
     } catch (err) {
