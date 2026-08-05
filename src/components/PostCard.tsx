@@ -68,7 +68,7 @@ export function PostCard({ post, variant = "default" }: PostCardProps) {
           </h3>
           <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
             <span>{formatTimeAgo(post.publishedAt)}</span>
-            <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{(post.viewCount / 1000).toFixed(1)}k</span>
+            <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{post.viewCount >= 1000 ? `${(post.viewCount / 1000).toFixed(1)}k` : post.viewCount}</span>
           </div>
         </div>
       </Link>

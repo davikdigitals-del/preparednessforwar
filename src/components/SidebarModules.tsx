@@ -51,7 +51,7 @@ export function SidebarModules() {
                 <div className="flex items-center gap-3 text-xs text-gray-500">
                   <span className="flex items-center gap-1">
                     <Eye className="w-3 h-3" />
-                    {(post.viewCount / 1000).toFixed(1)}k
+                    {post.viewCount >= 1000 ? `${(post.viewCount / 1000).toFixed(1)}k` : post.viewCount}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />

@@ -8,7 +8,7 @@ import { ArrowRight } from "lucide-react";
 
 const SectionPage = () => {
   const { section, category } = useParams<{ section: string; category?: string }>();
-  const { publishedPosts } = useData();
+  const { publishedPosts, loading } = useData();
 
   const allPosts = publishedPosts;
   const sectionData = navSections.find((s) => s.slug === section);
@@ -82,8 +82,23 @@ const SectionPage = () => {
       <div className="container py-8">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
           <main>
-            {posts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {/* Loading skeleton — prevents flash of empty state */}
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="animate-pulse border border-gray-200">
+                    <div className="aspect-[16/10] bg-gray-200" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-3 bg-gray-200 rounded w-1/3" />
+                      <div className="h-5 bg-gray-200 rounded w-full" />
+                      <div className="h-5 bg-gray-200 rounded w-4/5" />
+                      <div className="h-3 bg-gray-200 rounded w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : posts.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                 {posts.map((post: any) => (
                   <PostCard key={post.id} post={post} />
                 ))}
