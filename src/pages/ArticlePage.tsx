@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import {
   Clock, Eye, Share2, ChevronRight, Tag, ArrowLeft, Play,
   ExternalLink, Pin, Copy, Check, Link2, Star, Flag, Bookmark, BookmarkCheck,
@@ -245,10 +246,13 @@ const ArticlePage = () => {
     if (navigator.share) {
       try {
         await navigator.share({ title: post.title, text: post.standfirst || post.title, url: pageUrl });
+        setShareOpen(false); // Close dropdown after successful share
         return;
-      } catch {}
+      } catch (err) {
+        // User cancelled or error - keep dropdown open
+        console.log('Share cancelled or failed:', err);
+      }
     }
-    setShareOpen(o => !o);
   };
 
   // Share links — using <a> tags so browsers never block them
@@ -345,12 +349,60 @@ const ArticlePage = () => {
 
               {/* Share / Bookmark / Report bar */}
               <div className="flex items-center gap-3 px-4 py-3 border-t border-b border-gray-200 mb-4">
-                <button
-                  onClick={handleNativeShare}
-                  className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 border border-blue-200 rounded px-3 py-1.5"
-                >
-                  <Share2 className="w-4 h-4" /> Share
-                </button>
+                <div className="relative" ref={shareRef}>
+                  <button
+                    onClick={() => setShareOpen(!shareOpen)}
+                    className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 border border-blue-200 rounded px-3 py-1.5"
+                  >
+                    <Share2 className="w-4 h-4" /> Share
+                  </button>
+                  
+                  {/* Mobile share panel - dropdown style */}
+                  {shareOpen && (
+                    <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 shadow-lg rounded-lg overflow-hidden z-20">
+                      {/* Native share option if available */}
+                      {navigator.share && (
+                        <button 
+                          onClick={handleNativeShare} 
+                          className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold hover:bg-gray-50 text-left border-b border-gray-100"
+                        >
+                          <Share2 className="w-4 h-4 text-blue-600" />
+                          Share via device
+                        </button>
+                      )}
+                      
+                      <div className="p-3 border-b border-gray-100">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Copy link</p>
+                        <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded">
+                          <Link2 className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                          <span className="text-xs text-gray-500 truncate flex-1 font-mono">{pageUrl}</span>
+                          <button onClick={copyLink} className="ml-2 p-1 hover:bg-gray-200 rounded">
+                            {shareCopied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5 text-gray-500" />}
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="p-2">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-2">Share on social</p>
+                        <div className="space-y-0.5">
+                          {shareLinks.map((s) => (
+                            <a
+                              key={s.label}
+                              href={s.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setShareOpen(false)}
+                              className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-left rounded ${s.bg}`}
+                            >
+                              {s.icon} {s.label.replace("Share on ", "")}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
                 <button
                   onClick={handleBookmark}
                   disabled={bookmarking}
@@ -366,36 +418,6 @@ const ArticlePage = () => {
                   <Flag className="w-4 h-4" /> Report
                 </button>
               </div>
-
-              {/* Share panel (mobile) — shown below bar when native share unavailable */}
-              {shareOpen && (
-                <div className="mx-4 mb-4 bg-white border border-gray-200 shadow-lg rounded overflow-hidden">
-                  <div className="p-3 border-b border-gray-100">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Article link</p>
-                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded">
-                      <Link2 className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                      <span className="text-xs text-gray-500 truncate flex-1 font-mono">{pageUrl}</span>
-                    </div>
-                  </div>
-                  <div className="p-2 space-y-0.5">
-                    <button onClick={copyLink} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-gray-50 text-left rounded">
-                      {shareCopied ? <><Check className="w-4 h-4 text-green-600" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy link</>}
-                    </button>
-                    {shareLinks.map((s) => (
-                      <a
-                        key={s.label}
-                        href={s.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => setShareOpen(false)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-left rounded ${s.bg}`}
-                      >
-                        {s.icon} {s.label}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* Standfirst */}
               <p className="px-4 pb-4 text-base font-bold leading-snug text-gray-900">
