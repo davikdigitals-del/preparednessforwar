@@ -1,16 +1,19 @@
 import { useState } from "react";
-import { BookOpen, Download, Search, Eye } from "lucide-react";
+import { BookOpen, Download, Search, Eye, Crown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useData } from "@/contexts/DataContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { useLocation } from "react-router-dom";
+import { PremiumGate } from "@/components/PremiumGate";
 
 export default function LibraryPage() {
   const { libraryItems } = useData();
   const { user } = useAuth();
+  const { isPremium: hasPremiumAccess } = usePremiumStatus();
   const location = useLocation();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -36,9 +39,21 @@ export default function LibraryPage() {
     return matchSearch && matchCat;
   });
 
-  const handleRead = (item: typeof libraryItems[0]) => setPreviewItem(item);
+  const handleRead = (item: typeof libraryItems[0]) => {
+    // Check if item is premium and user doesn't have access
+    if (item.isPremium && !hasPremiumAccess) {
+      // Still open the preview - PremiumGate will handle the blocking
+      setPreviewItem(item);
+      return;
+    }
+    setPreviewItem(item);
+  };
 
   const handleDownload = (item: typeof libraryItems[0]) => {
+    // Block download for premium items without access
+    if (item.isPremium && !hasPremiumAccess) {
+      return;
+    }
     if (!item.fileUrl) return;
     const a = document.createElement("a");
     a.href = item.fileUrl;
@@ -83,6 +98,14 @@ export default function LibraryPage() {
               ) : (
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-foreground/20" />
               )}
+              {item.isPremium && (
+                <div className="absolute top-3 right-3 z-20">
+                  <div className="px-2 py-1 bg-amber-500 text-white text-xs font-bold uppercase tracking-wide flex items-center gap-1 shadow-md">
+                    <Crown className="w-3 h-3" />
+                    Premium
+                  </div>
+                </div>
+              )}
               <div className="relative z-10">
                 <Badge variant="secondary" className="text-[10px] mb-2">{item.format}</Badge>
                 <h3 className="font-display font-bold text-lg leading-tight">{item.title}</h3>
@@ -99,7 +122,12 @@ export default function LibraryPage() {
                 <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => handleRead(item)}>
                   <Eye className="w-3 h-3 mr-1" /> Read
                 </Button>
-                <Button size="sm" className="flex-1 text-xs" onClick={() => handleDownload(item)} disabled={!item.fileUrl}>
+                <Button 
+                  size="sm" 
+                  className="flex-1 text-xs" 
+                  onClick={() => handleDownload(item)} 
+                  disabled={!item.fileUrl || (item.isPremium && !hasPremiumAccess)}
+                >
                   <Download className="w-3 h-3 mr-1" /> Download
                 </Button>
               </div>
@@ -113,18 +141,32 @@ export default function LibraryPage() {
       <Dialog open={!!previewItem} onOpenChange={() => setPreviewItem(null)}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle className="font-display">{previewItem?.title}</DialogTitle>
+            <DialogTitle className="font-display flex items-center gap-2">
+              {previewItem?.title}
+              {previewItem?.isPremium && (
+                <Badge variant="secondary" className="text-xs">
+                  <Crown className="w-3 h-3 mr-1" />
+                  Premium
+                </Badge>
+              )}
+            </DialogTitle>
           </DialogHeader>
-          {previewItem?.fileUrl ? (
-            <div className="space-y-3">
-              <iframe src={previewItem.fileUrl} title={previewItem.title} className="w-full h-[70vh] rounded-sm border border-border" />
-            </div>
-          ) : (
-            <div className="bg-muted rounded-sm p-8 text-center">
-              <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">No document has been uploaded yet for this item.</p>
-            </div>
-          )}
+          <PremiumGate 
+            isPremium={previewItem?.isPremium || false}
+            contentType="document"
+            showPreview={false}
+          >
+            {previewItem?.fileUrl ? (
+              <div className="space-y-3">
+                <iframe src={previewItem.fileUrl} title={previewItem.title} className="w-full h-[70vh] rounded-sm border border-border" />
+              </div>
+            ) : (
+              <div className="bg-muted rounded-sm p-8 text-center">
+                <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">No document has been uploaded yet for this item.</p>
+              </div>
+            )}
+          </PremiumGate>
         </DialogContent>
       </Dialog>
     </div>

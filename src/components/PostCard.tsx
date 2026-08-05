@@ -125,6 +125,7 @@ export function PostCard({ post, variant = "default" }: PostCardProps) {
         <div className="flex items-center gap-4 text-xs text-gray-500 pt-3 border-t border-gray-100">
           <span className="font-semibold text-gray-700">{post.author}</span>
           <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-blue-900" />{post.readTime}</span>
+          <span>{formatTimeAgo(post.publishedAt)}</span>
           {hasVideo && (
             <span className="ml-auto flex items-center gap-1 text-red-600 font-bold">
               <Play className="w-3.5 h-3.5 fill-red-600" />

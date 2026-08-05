@@ -77,6 +77,7 @@ export interface LibraryItem {
   coverColor: string;
   coverImageUrl: string;
   countryCodes: string[];
+  isPremium?: boolean;
 }
 
 export interface EncEntry {
@@ -130,7 +131,7 @@ const mapMedia = (m: DbMediaItem & { country_codes?: string[] }): MediaItem => (
   isPremium: (m as any).is_premium || false,
 });
 
-const mapLibrary = (l: DbLibraryItem & { country_codes?: string[]; cover_image_url?: string }): LibraryItem => ({
+const mapLibrary = (l: DbLibraryItem & { country_codes?: string[]; cover_image_url?: string; is_premium?: boolean }): LibraryItem => ({
   id: l.id,
   title: l.title,
   author: l.author || "",
@@ -142,6 +143,7 @@ const mapLibrary = (l: DbLibraryItem & { country_codes?: string[]; cover_image_u
   coverColor: l.cover_color || "bg-primary",
   coverImageUrl: l.cover_image_url || "",
   countryCodes: l.country_codes || [],
+  isPremium: l.is_premium || false,
 });
 
 const mapEnc = (e: DbEncEntry): EncEntry => ({
@@ -249,7 +251,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const refreshLibrary = useCallback(async () => {
     const { data } = await supabase.from("library_items").select("*");
     if (data) {
-      setLibraryItems(data.map((row) => mapLibrary(row as DbLibraryItem & { country_codes?: string[]; cover_image_url?: string })));
+      setLibraryItems(data.map((row) => mapLibrary(row as DbLibraryItem & { country_codes?: string[]; cover_image_url?: string; is_premium?: boolean })));
     }
   }, []);
 
@@ -431,6 +433,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       cover_color: item.coverColor,
       cover_image_url: item.coverImageUrl,
       country_codes: item.countryCodes,
+      is_premium: item.isPremium || false,
     });
     await refreshLibrary();
   };
@@ -447,6 +450,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (item.coverColor !== undefined) update.cover_color = item.coverColor;
     if (item.coverImageUrl !== undefined) update.cover_image_url = item.coverImageUrl;
     if (item.countryCodes !== undefined) update.country_codes = item.countryCodes;
+    if (item.isPremium !== undefined) update.is_premium = item.isPremium;
 
     await (supabase.from("library_items") as any).update(update).eq("id", id);
     await refreshLibrary();

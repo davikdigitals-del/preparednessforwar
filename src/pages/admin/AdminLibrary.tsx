@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Search, Download, FileText, ExternalLink } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Plus, Edit, Trash2, Search, Download, FileText, ExternalLink, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/FileUpload";
 
@@ -30,6 +31,7 @@ export default function AdminLibrary() {
     cover_color: "bg-primary",
     format: "PDF",
     pages: "",
+    is_premium: false,
   });
 
   const categories = ["Guides", "Checklists", "Templates", "Reports", "Manuals", "Other"];
@@ -93,6 +95,7 @@ export default function AdminLibrary() {
         cover_color: formData.cover_color,
         format: formData.format,
         pages: formData.pages ? parseInt(formData.pages) : null,
+        is_premium: formData.is_premium,
       };
 
       if (editingItem) {
@@ -130,6 +133,7 @@ export default function AdminLibrary() {
       cover_color: item.cover_color || "bg-primary",
       format: item.format || "PDF",
       pages: item.pages?.toString() || "",
+      is_premium: item.is_premium || false,
     });
     setDialogOpen(true);
   };
@@ -177,6 +181,7 @@ export default function AdminLibrary() {
       cover_color: "bg-primary",
       format: "PDF",
       pages: "",
+      is_premium: false,
     });
   };
 
@@ -255,33 +260,24 @@ export default function AdminLibrary() {
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-4 py-3"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded" /></th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Title
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Category
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Format
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Downloads
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                  Actions
-                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Format</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Premium</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Downloads</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                     Loading...
                   </td>
                 </tr>
               ) : filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                     {searchTerm || filterCategory !== "all"
                       ? "No resources match your filters"
                       : "No resources yet. Click 'Add Resource' to get started."}
@@ -320,6 +316,15 @@ export default function AdminLibrary() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm">{item.format}</td>
+                    <td className="px-6 py-4 text-sm">
+                      {item.is_premium ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-800 font-semibold">
+                          <Crown className="w-3 h-3" /> Premium
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400">Free</span>
+                      )}
+                    </td>
                     <td className="px-6 py-4 text-sm">
                       <div className="flex items-center gap-1">
                         <Download className="w-4 h-4 text-gray-400" />
@@ -441,6 +446,21 @@ export default function AdminLibrary() {
                 currentUrl={formData.cover_image_url}
                 onUrlChange={(url) => setFormData({ ...formData, cover_image_url: url })}
                 label="Cover Image (optional)"
+              />
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4">
+              <div>
+                <Label htmlFor="is_premium" className="text-sm font-semibold flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-amber-500" />
+                  Premium Content
+                </Label>
+                <p className="text-xs text-gray-500 mt-0.5">Restrict this item to premium subscribers only</p>
+              </div>
+              <Switch
+                id="is_premium"
+                checked={formData.is_premium}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_premium: checked })}
               />
             </div>
 
