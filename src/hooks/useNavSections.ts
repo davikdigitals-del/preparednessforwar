@@ -28,20 +28,63 @@ export function useNavSections() {
           supabase.from("nav_tools").select("*").order("sort_order"),
         ]);
 
+        console.log('🔍 DB Sections:', secs);
+        console.log('🔍 DB Categories:', cats);
+        console.log('🔍 DB Tools:', tools);
+
+        // Always use fallback sections as the base structure
+        let finalSections = fallbackSections.map(fallbackSection => ({ ...fallbackSection })) as NavSectionDb[];
+
+        // If we have database sections, merge them
         if (secs && secs.length > 0) {
-          const merged: NavSectionDb[] = secs.map(s => {
-            const fallback = fallbackSections.find(f => f.slug === s.slug);
+          finalSections = secs.map(dbSection => {
+            const fallback = fallbackSections.find(f => f.slug === dbSection.slug);
+            const sectionCategories = (cats || []).filter(c => c.section_id === dbSection.id);
+            console.log(`🔍 Section ${dbSection.slug} (id: ${dbSection.id}) has ${sectionCategories.length} categories:`, sectionCategories);
+            
             return {
-              ...s,
-              categories: (cats || []).filter(c => c.section_id === s.id),
-              tools: (tools || []).filter(t => t.section_id === s.id).map(t => ({ title: t.title, slug: t.slug })),
+              ...dbSection,
+              categories: sectionCategories.length > 0 ? sectionCategories : (fallback?.categories || []),
+              tools: (tools || []).filter(t => t.section_id === dbSection.id).map(t => ({ title: t.title, slug: t.slug })) || [],
               featured: fallback?.featured || [],
             };
           });
-          setSections(merged);
+        } else {
+          // No DB sections, but we might have categories - try to map them to fallback sections
+          if (cats && cats.length > 0) {
+            // Try to find section IDs by looking up section slugs
+            const sectionLookup = await Promise.all(
+              fallbackSections.map(async (fallbackSection) => {
+                const { data: foundSection } = await supabase
+                  .from("nav_sections")
+                  .select("id")
+                  .eq("slug", fallbackSection.slug)
+                  .single();
+                return { slug: fallbackSection.slug, id: foundSection?.id };
+              })
+            );
+
+            finalSections = fallbackSections.map(fallbackSection => {
+              const sectionData = sectionLookup.find(s => s.slug === fallbackSection.slug);
+              const dbCategories = sectionData?.id 
+                ? cats.filter(c => c.section_id === sectionData.id)
+                : [];
+              
+              console.log(`🔍 Fallback section ${fallbackSection.slug} gets ${dbCategories.length} DB categories`);
+              
+              return {
+                ...fallbackSection,
+                id: sectionData?.id || fallbackSection.slug, // Use DB ID if available
+                categories: dbCategories.length > 0 ? dbCategories : fallbackSection.categories,
+              } as NavSectionDb;
+            });
+          }
         }
-        // Don't fallback here - already set fallback as initial state
-      } catch {
+
+        console.log('🔍 Final sections with categories:', finalSections);
+        setSections(finalSections);
+      } catch (err) {
+        console.error('🔍 useNavSections error:', err);
         // Silent fail - keep using fallback sections
       } finally {
         setLoading(false);
@@ -49,6 +92,9 @@ export function useNavSections() {
     };
     fetch();
   }, []);
+
+  return { sections, loading };
+}
 
   return { sections, loading };
 }
