@@ -80,11 +80,11 @@ const SectionPage = () => {
       </div>
 
       <div className="container py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
           <main>
             {/* Loading skeleton — prevents flash of empty state */}
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="animate-pulse border border-gray-200">
                     <div className="aspect-[16/10] bg-gray-200" />
@@ -98,7 +98,7 @@ const SectionPage = () => {
                 ))}
               </div>
             ) : posts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {posts.map((post: any) => (
                   <PostCard key={post.id} post={post} />
                 ))}
