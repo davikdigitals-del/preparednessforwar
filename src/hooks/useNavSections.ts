@@ -22,38 +22,20 @@ export function useNavSections() {
   useEffect(() => {
     const load = async () => {
       try {
-        // Load categories from db
-        const { data: cats } = await supabase
-          .from("categories")
-          .select("*")
-          .order("title");
+        // categories.section_id FK references `sections` table
+        const [{ data: secs }, { data: cats }] = await Promise.all([
+          supabase.from("sections").select("*").order("title"),
+          supabase.from("categories").select("*").order("title"),
+        ]);
 
         if (!cats || cats.length === 0) return; // keep fallback
 
-        // Try nav_sections first (has sort_order + is_active)
-        const { data: navSecs } = await supabase
-          .from("nav_sections")
-          .select("*")
-          .eq("is_active", true)
-          .order("sort_order");
-
-        // Fallback to sections table
-        const { data: altSecs } = await supabase
-          .from("sections")
-          .select("*")
-          .order("title");
-
-        const dbSections = (navSecs && navSecs.length > 0) ? navSecs : (altSecs || []);
-
-        // Build merged sections: match categories by section_id
+        // Merge: match fallback sections to DB sections by slug
+        // then attach categories by section_id
         const merged = fallbackSections.map(fallback => {
-          // Find the DB section that matches this fallback slug
-          const dbSection = dbSections.find((s: any) => s.slug === fallback.slug);
-          const sectionId = dbSection?.id;
-
-          // Get categories assigned to this section
-          const dbCats = sectionId
-            ? cats.filter((c: any) => c.section_id === sectionId)
+          const dbSection = (secs || []).find((s: any) => s.slug === fallback.slug);
+          const dbCats = dbSection
+            ? cats.filter((c: any) => c.section_id === dbSection.id)
             : [];
 
           return {
@@ -66,7 +48,6 @@ export function useNavSections() {
         setSections(merged);
       } catch (err) {
         console.error("useNavSections error:", err);
-        // keep fallback on error
       } finally {
         setLoading(false);
       }
