@@ -49,6 +49,15 @@ export const InteractiveWorldMap = ({
 
   useEffect(() => {
     let cancelled = false;
+    let timeoutId: NodeJS.Timeout;
+
+    // Timeout fallback — if map doesn't load in 10 seconds, show error
+    timeoutId = setTimeout(() => {
+      if (!cancelled && status === "loading") {
+        setErrorMsg("Map loading timed out");
+        setStatus("error");
+      }
+    }, 10000);
 
     // Global mousemove — fires even when pointer is over the <object>/SVG iframe.
     // We use this to keep the tooltip glued to the real cursor position.
@@ -61,9 +70,11 @@ export const InteractiveWorldMap = ({
 
     const init = async () => {
       try {
+        console.log("🗺️ Loading SVG world map script...");
         await loadScript(SCRIPT_SRC);
         if (cancelled) return;
 
+        console.log("🗺️ Script loaded, initializing map...");
         const ts = Date.now();
         const clickCb = `_mapClick_${ts}`;
         const overCb  = `_mapOver_${ts}`;
@@ -110,8 +121,11 @@ export const InteractiveWorldMap = ({
         if (staleContainer) staleContainer.remove();
 
         const mapFn = (window as any).svgWorldMap;
-        if (typeof mapFn !== "function") throw new Error("svgWorldMap library not available");
+        if (typeof mapFn !== "function") {
+          throw new Error("svgWorldMap function not found after loading script");
+        }
 
+        console.log("🗺️ Calling svgWorldMap function...");
         // Build country colors — highlight the target, dim everything else
         await mapFn({
           libPath: "/svg-world-map/",
@@ -131,6 +145,7 @@ export const InteractiveWorldMap = ({
         });
 
         if (cancelled) return;
+        console.log("🗺️ Map initialized, setting up DOM...");
 
         // Highlight the target country directly in the SVG DOM
         if (highlightCountry) {
@@ -213,8 +228,12 @@ export const InteractiveWorldMap = ({
           }
         }
 
+        clearTimeout(timeoutId);
+        console.log("🗺️ Map setup complete!");
         setStatus("ready");
       } catch (err: any) {
+        console.error("🗺️ Map loading error:", err);
+        clearTimeout(timeoutId);
         if (!cancelled) { setErrorMsg(err?.message || "Failed to load map"); setStatus("error"); }
       }
     };
@@ -223,6 +242,7 @@ export const InteractiveWorldMap = ({
 
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
       window.removeEventListener("mousemove", onWindowMouseMove);
       const libContainer = document.getElementById("svg-world-map-container");
       if (libContainer) {
