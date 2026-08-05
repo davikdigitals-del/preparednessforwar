@@ -22,32 +22,58 @@ export function useNavSections() {
   useEffect(() => {
     const fetch = async () => {
       try {
-        // Just get categories - match the working AdminCategories query pattern
-        const { data: cats, error } = await supabase
-          .from("categories")
-          .select("*")
-          .order("title");
+        // Get both sections and categories
+        const [sectionsResult, categoriesResult] = await Promise.all([
+          supabase.from("sections").select("*").order("title"),
+          supabase.from("categories").select("*").order("title")
+        ]);
         
-        if (error) {
-          console.error('🔍 Categories query error:', error);
-          return;
-        }
+        console.log('🔍 Sections:', sectionsResult.data);
+        console.log('🔍 Categories:', categoriesResult.data);
         
-        if (cats && cats.length > 0) {
-          console.log('🔍 Found categories:', cats);
+        const dbSections = sectionsResult.data || [];
+        const dbCategories = categoriesResult.data || [];
+        
+        if (dbCategories.length > 0) {
+          // Create a mapping of section_id to section slug
+          const sectionIdToSlug: Record<string, string> = {};
+          dbSections.forEach(section => {
+            sectionIdToSlug[section.id] = section.slug;
+          });
           
-          // Add all database categories to survival-guides section
-          const updatedSections = fallbackSections.map(section => {
-            if (section.slug === 'survival-guides') {
-              return {
-                ...section,
-                categories: [...section.categories, ...cats]
-              };
+          console.log('🔍 Section ID to slug mapping:', sectionIdToSlug);
+          
+          // Group categories by section slug
+          const categoriesBySlug: Record<string, any[]> = {};
+          
+          dbCategories.forEach(cat => {
+            let sectionSlug = 'survival-guides'; // default
+            
+            if (cat.section_id && sectionIdToSlug[cat.section_id]) {
+              sectionSlug = sectionIdToSlug[cat.section_id];
+            } else {
+              // Try to guess section from category name if section_id is missing
+              const catName = cat.title?.toLowerCase() || cat.slug?.toLowerCase() || '';
+              if (catName.includes('directive')) sectionSlug = 'directives';
+              else if (catName.includes('intel')) sectionSlug = 'intelligence';
+              else if (catName.includes('news')) sectionSlug = 'news';
             }
-            return section;
-          }) as NavSectionDb[];
+            
+            if (!categoriesBySlug[sectionSlug]) {
+              categoriesBySlug[sectionSlug] = [];
+            }
+            categoriesBySlug[sectionSlug].push(cat);
+          });
           
-          console.log('🔍 Updated sections:', updatedSections);
+          console.log('🔍 Categories grouped by section:', categoriesBySlug);
+          
+          // Update fallback sections with proper categories
+          const updatedSections = fallbackSections.map(section => ({
+            ...section,
+            categories: categoriesBySlug[section.slug] || section.categories
+          })) as NavSectionDb[];
+          
+          console.log('🔍 Final sections with proper assignment:', updatedSections);
           setSections(updatedSections);
         }
       } catch (err) {
