@@ -59,14 +59,15 @@ export default function AdminPosts() {
 
   const fetchSectionsAndCategories = async () => {
     try {
+      // categories.section_id FK references `sections` table — use that
       const [{ data: secs }, { data: cats }] = await Promise.all([
-        supabase.from("nav_sections").select("*").eq("is_active", true).order("sort_order"),
-        supabase.from("nav_categories").select("*").order("sort_order"),
+        supabase.from("sections").select("*").order("title"),
+        supabase.from("categories").select("*").order("title"),
       ]);
       if (secs && secs.length > 0) setDbSections(secs);
       if (cats && cats.length > 0) setDbCategories(cats);
     } catch (err) {
-      // Silent fail
+      // Silent fail - fallback to static sections
     }
   };
 
