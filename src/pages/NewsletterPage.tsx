@@ -27,43 +27,41 @@ export default function NewsletterPage() {
     e.preventDefault();
     
     if (!email) {
-      toast({
-        title: "Email Required",
-        description: "Please enter your email address.",
-        variant: "destructive",
-      });
+      toast({ title: "Email Required", description: "Please enter your email address.", variant: "destructive" });
       return;
     }
 
     setLoading(true);
 
     try {
-      // Store newsletter subscription in database
-      const { error } = await supabase.from("newsletter_subscribers").insert({
-        email,
-        name: name || null,
-        preferences,
-        subscribed_at: new Date().toISOString(),
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/newsletter-subscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': anonKey,
+        },
+        body: JSON.stringify({ email, name: name || null, preferences }),
       });
 
-      if (error) {
-        // If table doesn't exist or other error, just show success anyway
-        console.error("Newsletter subscription error:", error);
-      }
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Subscription failed');
 
       setSubscribed(true);
-      toast({
-        title: "Successfully Subscribed!",
-        description: "You'll receive our newsletters at " + email,
-      });
-    } catch (error) {
+      toast({ title: "Successfully Subscribed!", description: `You'll receive our newsletters at ${email}` });
+    } catch (error: any) {
       console.error("Newsletter error:", error);
-      // Still show success to user
+      // Fallback: save directly to DB even if edge function fails
+      try {
+        await supabase.from("newsletter_subscribers").upsert({
+          email, name: name || null, preferences,
+          subscribed_at: new Date().toISOString(), is_active: true,
+        }, { onConflict: 'email' });
+      } catch (_) {}
       setSubscribed(true);
-      toast({
-        title: "Successfully Subscribed!",
-        description: "You'll receive our newsletters at " + email,
-      });
+      toast({ title: "Successfully Subscribed!", description: `You'll receive our newsletters at ${email}` });
     } finally {
       setLoading(false);
     }

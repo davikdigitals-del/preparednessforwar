@@ -20,6 +20,7 @@ import {
   X,
   ExternalLink,
   GraduationCap,
+  Mail,
 } from "lucide-react";
 
 export default function AdminLayout() {
@@ -152,6 +153,7 @@ export default function AdminLayout() {
       title: "SITE",
       items: [
         { icon: Megaphone, label: "Banner", path: "/admin/banner" },
+        { icon: Mail, label: "Newsletter", path: "/admin/newsletter" },
         { icon: Globe, label: "Countries", path: "/admin/countries" },
         { icon: Settings, label: "Site Settings", path: "/admin/settings" },
       ],

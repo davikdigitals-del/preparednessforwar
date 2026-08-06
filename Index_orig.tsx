@@ -86,7 +86,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* ÔöÇÔöÇ MISSION SECTION ÔöÇÔöÇ */}
+      {/*  MISSION SECTION  */}
       <div className="bg-blue-50 border-y border-blue-100">
         <div className="container mx-auto px-4 py-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -122,10 +122,7 @@ const Index = () => {
                 alt="World preparedness"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-blue-900/20" />
-              <div className="absolute bottom-4 left-4 bg-blue-900 text-white px-4 py-2">
-                <p className="text-xs font-black uppercase tracking-wide">195 Countries Monitored</p>
-              </div>
+    
             </div>
           </div>
         </div>
