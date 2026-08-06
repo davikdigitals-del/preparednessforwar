@@ -27,7 +27,7 @@ const Index = () => {
         .order("price", { ascending: true });
       setPlans(data || []);
     } catch {
-      // silently fail ÔÇö subscription section is non-critical
+
     } finally {
       setPlansLoading(false);
     }
@@ -63,7 +63,7 @@ const Index = () => {
               Preparedness For War
             </span>
             <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-4 uppercase">
-              Prepare.<br />Inform.<br />Survive.
+              Prepare,<br />Inform,<br />Survive.
             </h1>
             <p className="text-blue-100 text-lg mb-8 max-w-lg leading-relaxed">
               Your trusted resource for war preparedness, safety information, and survival guidance worldwide.
