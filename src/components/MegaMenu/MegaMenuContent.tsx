@@ -132,6 +132,12 @@ export function MegaMenuContent({
                         alt={item.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
+                        onError={(e) => {
+                          const img = e.currentTarget;
+                          if (img.src !== window.location.origin + '/placeholder.svg') {
+                            img.src = '/placeholder.svg';
+                          }
+                        }}
                       />
                     </div>
                     <div className="flex-1 min-w-0">
