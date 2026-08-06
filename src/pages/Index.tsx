@@ -194,7 +194,7 @@ const Index = () => {
                       <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{plan.name}</p>
                       <div className="flex items-end gap-1">
                         <span className="text-5xl font-black text-gray-900">
-                          {plan.currency === "GBP" ? "┬ú" : plan.currency === "USD" ? "$" : "Ôé¼"}{plan.price}
+                          {plan.currency === "GBP" ? "£" : plan.currency === "GBP" ? "$" : "Ôé¼"}{plan.price}
                         </span>
                         <span className="text-gray-400 text-sm mb-2">/mo</span>
                       </div>
