@@ -10,6 +10,7 @@ export interface FeaturedPost {
   standfirst: string | null;
 }
 
+
 // Returns a map of section slug -> up to 2 pinned posts
 export function useFeaturedPosts() {
   const [featuredMap, setFeaturedMap] = useState<Record<string, FeaturedPost[]>>({});
@@ -19,7 +20,7 @@ export function useFeaturedPosts() {
       console.log("🔍 Fetching featured posts...");
       const { data, error } = await supabase
         .from("posts")
-        .select("id, title, image, section, category, standfirst, is_pinned, published_at")
+        .select("id, title, image_url, section, category, standfirst, is_pinned, published_at")
         .eq("status", "published")
         .eq("is_pinned", true) // Only get pinned posts
         .order("published_at", { ascending: false });
@@ -42,7 +43,7 @@ export function useFeaturedPosts() {
           map[post.section].push({
             id: post.id,
             title: post.title,
-            image: post.image,
+            image: post.image_url || null,
             section: post.section,
             category: post.category,
             standfirst: post.standfirst,
