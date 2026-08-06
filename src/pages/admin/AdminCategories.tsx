@@ -129,7 +129,8 @@ export default function AdminCategories() {
     e.preventDefault();
     // Don't send empty string for section_id — Supabase expects UUID or null
     const payload = {
-      ...formData,
+      title: formData.title,
+      slug: formData.slug,
       section_id: formData.section_id || null,
     };
     try {
