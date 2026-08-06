@@ -100,12 +100,11 @@ export default function AdminCategories() {
 
   const fetchSections = async () => {
     try {
-      // categories.section_id FK references the `sections` table
       const { data, error } = await supabase
-        .from("sections")
+        .from("nav_sections")
         .select("id, title, slug")
-        .order("title");
-
+        .eq("is_active", true)
+        .order("sort_order");
       if (error) throw error;
       setSections(data || []);
     } catch (error: any) {
@@ -116,9 +115,9 @@ export default function AdminCategories() {
   const fetchCategories = async () => {
     try {
       const { data, error } = await supabase
-        .from("categories")
-        .select("*, sections(title)")
-        .order("title");
+        .from("nav_categories")
+        .select("*, nav_sections(title)")
+        .order("sort_order");
       if (error) throw error;
       setCategories(data || []);
     } catch (error: any) {
@@ -136,14 +135,14 @@ export default function AdminCategories() {
     try {
       if (editingCategory) {
         const { error } = await supabase
-          .from("categories")
+          .from("nav_categories")
           .update(payload)
           .eq("id", editingCategory.id);
         if (error) throw error;
         toast({ title: "Success", description: "Category updated successfully" });
       } else {
         const { error } = await supabase
-          .from("categories")
+          .from("nav_categories")
           .upsert([payload], { onConflict: "slug,section_id" })
           .select();
         if (error) throw error;
@@ -172,7 +171,7 @@ export default function AdminCategories() {
     if (!confirm("Are you sure you want to delete this category?")) return;
 
     try {
-      const { error } = await supabase.from("categories").delete().eq("id", id);
+      const { error } = await supabase.from("nav_categories").delete().eq("id", id);
 
       if (error) throw error;
       toast({ title: "Success", description: "Category deleted successfully" });
@@ -265,7 +264,7 @@ export default function AdminCategories() {
                     <td className="px-6 py-4 font-medium">{category.title || category.name}</td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {category.sections?.title || "No Section"}
+                        {category.nav_sections?.title || category.sections?.title || "No Section"}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">{category.slug}</td>
