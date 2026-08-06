@@ -16,38 +16,37 @@ export interface NavSectionDb {
 }
 
 export function useNavSections() {
-  const [sections, setSections] = useState<NavSectionDb[]>(fallbackSections as any);
-  const [loading, setLoading] = useState(false);
+  const [sections, setSections] = useState<NavSectionDb[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        // categories.section_id FK references `sections` table
-        const [{ data: secs }, { data: cats }] = await Promise.all([
-          supabase.from("sections").select("*").order("title"),
-          supabase.from("categories").select("*").order("title"),
+        const [{ data: navSecs }, { data: navCats }, { data: navTools }] = await Promise.all([
+          supabase.from("nav_sections").select("*").eq("is_active", true).order("sort_order"),
+          supabase.from("nav_categories").select("*").order("sort_order"),
+          supabase.from("nav_tools").select("*").order("sort_order"),
         ]);
 
-        if (!cats || cats.length === 0) return; // keep fallback
-
-        // Merge: match fallback sections to DB sections by slug
-        // then attach categories by section_id
-        const merged = fallbackSections.map(fallback => {
-          const dbSection = (secs || []).find((s: any) => s.slug === fallback.slug);
-          const dbCats = dbSection
-            ? cats.filter((c: any) => c.section_id === dbSection.id)
-            : [];
-
-          return {
-            ...fallback,
-            id: dbSection?.id || fallback.slug,
-            categories: dbCats.length > 0 ? dbCats : fallback.categories,
-          } as NavSectionDb;
-        });
-
-        setSections(merged);
+        if (navSecs && navSecs.length > 0) {
+          const merged = navSecs.map((s: any) => {
+            const fallback = fallbackSections.find(f => f.slug === s.slug);
+            return {
+              ...s,
+              categories: (navCats || []).filter((c: any) => c.section_id === s.id),
+              tools: (navTools || []).filter((t: any) => t.section_id === s.id)
+                .map((t: any) => ({ title: t.title, slug: t.slug })),
+              featured: fallback?.featured || [],
+            } as NavSectionDb;
+          });
+          setSections(merged);
+        } else {
+          // DB empty — use fallback so nav is never blank
+          setSections(fallbackSections as any);
+        }
       } catch (err) {
         console.error("useNavSections error:", err);
+        setSections(fallbackSections as any);
       } finally {
         setLoading(false);
       }

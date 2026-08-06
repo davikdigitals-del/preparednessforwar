@@ -100,12 +100,12 @@ export default function AdminCategories() {
 
   const fetchSections = async () => {
     try {
-      // categories.section_id FK references the `sections` table
+      // nav_sections — same table Admin Sections page manages
       const { data, error } = await supabase
-        .from("sections")
+        .from("nav_sections")
         .select("id, title, slug")
-        .order("title");
-
+        .eq("is_active", true)
+        .order("sort_order");
       if (error) throw error;
       setSections(data || []);
     } catch (error: any) {
@@ -116,9 +116,9 @@ export default function AdminCategories() {
   const fetchCategories = async () => {
     try {
       const { data, error } = await supabase
-        .from("categories")
-        .select("*, sections(title)")
-        .order("title");
+        .from("nav_categories")
+        .select("*, nav_sections(title)")
+        .order("sort_order");
       if (error) throw error;
       setCategories(data || []);
     } catch (error: any) {
@@ -136,14 +136,14 @@ export default function AdminCategories() {
     try {
       if (editingCategory) {
         const { error } = await supabase
-          .from("categories")
+          .from("nav_categories")
           .update(payload)
           .eq("id", editingCategory.id);
         if (error) throw error;
         toast({ title: "Success", description: "Category updated successfully" });
       } else {
         const { error } = await supabase
-          .from("categories")
+          .from("nav_categories")
           .upsert([payload], { onConflict: "slug,section_id" })
           .select();
         if (error) throw error;
@@ -172,7 +172,7 @@ export default function AdminCategories() {
     if (!confirm("Are you sure you want to delete this category?")) return;
 
     try {
-      const { error } = await supabase.from("categories").delete().eq("id", id);
+      const { error } = await supabase.from("nav_categories").delete().eq("id", id);
 
       if (error) throw error;
       toast({ title: "Success", description: "Category deleted successfully" });
