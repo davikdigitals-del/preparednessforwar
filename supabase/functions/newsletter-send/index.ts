@@ -21,24 +21,22 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization') ?? ''
     const token = authHeader.replace('Bearer ', '').trim()
 
+    if (!token) throw new Error('Authorization token missing')
+
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false },
     })
 
-    if (token) {
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-      if (authError || !user) throw new Error('Unauthorized - invalid token')
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    if (authError || !user) throw new Error('Unauthorized - invalid token')
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
 
-      if (!profile || profile.role !== 'admin') throw new Error('Admin access required')
-    } else {
-      throw new Error('Authorization token missing')
-    }
+    if (!profile || profile.role !== 'admin') throw new Error('Admin access required')
 
     // Parse request
     const { subject, html, text, previewText } = await req.json()
