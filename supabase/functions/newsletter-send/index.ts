@@ -65,7 +65,7 @@ serve(async (req) => {
 
       // Use Resend batch API
       const emails = chunk.map((sub: any) => ({
-        from: 'Preparedness For War <newsletter@preparednessforwar.com>',
+        from: 'Preparedness For War <onboarding@resend.dev>',
         to: [sub.email],
         subject,
         html: html.replace('{{name}}', sub.name || 'Subscriber'),
@@ -94,13 +94,15 @@ serve(async (req) => {
     }
 
     // Log the send in database
-    await supabase.from('newsletter_sends').insert({
-      subject,
-      sent_count: sent,
-      failed_count: failed,
-      sent_by: user.id,
-      sent_at: new Date().toISOString(),
-    }).catch(() => {}) // Ignore if table doesn't exist yet
+    try {
+      await supabase.from('newsletter_sends').insert({
+        subject,
+        sent_count: sent,
+        failed_count: failed,
+        sent_by: user.id,
+        sent_at: new Date().toISOString(),
+      });
+    } catch (_) {} // Ignore if table doesn't exist yet
 
     return new Response(
       JSON.stringify({ success: true, sent, failed, total: subscribers.length }),

@@ -48,7 +48,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'Preparedness For War <newsletter@preparednessforwar.com>',
+          from: 'Preparedness For War <onboarding@resend.dev>',
           to: [email],
           subject: 'Welcome to Preparedness For War Newsletter',
           html: `
