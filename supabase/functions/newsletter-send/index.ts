@@ -15,7 +15,7 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const resendApiKey = Deno.env.get('RESEND_API_KEY') ?? ''
 
-    if (!resendApiKey) throw new Error('RESEND_API_KEY is not configured')
+    if (!resendApiKey) throw new Error('RESEND_API_KEY is not configured in Supabase secrets')
 
     // Verify admin
     const authHeader = req.headers.get('Authorization') ?? ''
@@ -25,16 +25,20 @@ serve(async (req) => {
       auth: { persistSession: false },
     })
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-    if (authError || !user) throw new Error('Unauthorized')
+    if (token) {
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+      if (authError || !user) throw new Error('Unauthorized - invalid token')
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
 
-    if (profile?.role !== 'admin') throw new Error('Admin access required')
+      if (!profile || profile.role !== 'admin') throw new Error('Admin access required')
+    } else {
+      throw new Error('Authorization token missing')
+    }
 
     // Parse request
     const { subject, html, text, previewText } = await req.json()

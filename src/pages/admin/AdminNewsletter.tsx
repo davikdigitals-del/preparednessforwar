@@ -109,7 +109,7 @@ export default function AdminNewsletter() {
       );
 
       const result = await res.json();
-      if (!res.ok) throw new Error(result.error || 'Failed to send');
+      if (!res.ok) throw new Error(result.error || `HTTP ${res.status}: Failed to send`);
 
       setSent(true);
       toast({
