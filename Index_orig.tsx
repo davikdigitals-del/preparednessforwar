@@ -268,14 +268,14 @@ const Index = () => {
         </div>
       </div>
 
-      {/* ÔöÇÔöÇ CTA STRIP ÔöÇÔöÇ */}
+      {/* ÔöÇÔöÇ CTA STRIP  */}
       <div className="bg-blue-900">
         <div className="container mx-auto px-4 py-12 text-center">
           <h2 className="text-2xl md:text-3xl font-black text-white mb-3 uppercase">
             Stay Prepared. Stay Informed.
           </h2>
           <p className="text-blue-200 text-sm mb-6 max-w-xl mx-auto">
-            Sign up for alerts, download survival guides, and access expert resources  all in one place.
+            Sign up for alerts, download survival guides, and access expert resources all in one place.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link
