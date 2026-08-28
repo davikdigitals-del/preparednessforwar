@@ -5,9 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Search, Eye, EyeOff, ExternalLink, Code, PenLine } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Eye, EyeOff, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { RichTextEditor } from "@/components/RichTextEditor";
 
 export default function AdminPages() {
   const [pages, setPages] = useState<any[]>([]);
@@ -15,7 +14,6 @@ export default function AdminPages() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPage, setEditingPage] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [contentMode, setContentMode] = useState<"visual" | "html">("visual");
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -27,9 +25,7 @@ export default function AdminPages() {
     is_published: true,
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -91,7 +87,6 @@ export default function AdminPages() {
       meta_description: page.meta_description || "",
       is_published: page.is_published,
     });
-    setContentMode("visual");
     setDialogOpen(true);
   };
 
@@ -109,7 +104,6 @@ export default function AdminPages() {
 
   const resetForm = () => {
     setEditingPage(null);
-    setContentMode("visual");
     setFormData({ slug: "", title: "", content: "", meta_title: "", meta_description: "", is_published: true });
   };
 
@@ -121,11 +115,12 @@ export default function AdminPages() {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Pages Management</h1>
-          <p className="text-sm text-gray-600 mt-1">Create pages using the visual editor or paste raw HTML code.</p>
+          <p className="text-sm text-gray-600 mt-1">
+            Paste HTML + CSS to build pages. Your code saves and renders exactly as written.
+          </p>
         </div>
         <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
           <Plus className="w-4 h-4 mr-2" />
@@ -133,7 +128,6 @@ export default function AdminPages() {
         </Button>
       </div>
 
-      {/* Search */}
       <div className="mb-4">
         <div className="relative">
           <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -146,7 +140,6 @@ export default function AdminPages() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-lg border border-gray-200">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -208,15 +201,15 @@ export default function AdminPages() {
         </div>
       </div>
 
-      {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent aria-describedby={undefined} className="max-w-5xl max-h-[95vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingPage ? "Edit Page" : "Create New Page"}</DialogTitle>
+            <DialogTitle>
+              {editingPage ? `Editing: ${editingPage.title}` : "Create New Page"}
+            </DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Title + Slug */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="title">Page Title</Label>
@@ -225,7 +218,7 @@ export default function AdminPages() {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
-                  placeholder="e.g., Contact Us"
+                  placeholder="e.g., Privacy Policy"
                 />
               </div>
               <div>
@@ -235,7 +228,7 @@ export default function AdminPages() {
                   value={formData.slug}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                   required
-                  placeholder="e.g., contact-us"
+                  placeholder="e.g., privacy"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Live at: <span className="font-mono">/pages/{formData.slug || "slug"}</span>
@@ -243,91 +236,57 @@ export default function AdminPages() {
               </div>
             </div>
 
-            {/* Content editor — Visual / Code tabs */}
+            {/* HTML + CSS editor — single textarea, always raw */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label>Page Content</Label>
-                <div className="flex rounded-md border border-gray-200 overflow-hidden text-sm">
-                  <button
-                    type="button"
-                    onClick={() => setContentMode("visual")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors ${contentMode === "visual"
-                      ? "bg-primary text-white"
-                      : "bg-white text-gray-600 hover:bg-gray-50"
-                      }`}
-                  >
-                    <PenLine className="w-3.5 h-3.5" />
-                    Visual
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setContentMode("html")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 border-l border-gray-200 transition-colors ${contentMode === "html"
-                      ? "bg-primary text-white"
-                      : "bg-white text-gray-600 hover:bg-gray-50"
-                      }`}
-                  >
-                    <Code className="w-3.5 h-3.5" />
-                    Code / HTML
-                  </button>
-                </div>
+              <div className="flex items-center justify-between mb-1">
+                <Label>Page Content (HTML + CSS)</Label>
+                <span className="text-xs text-gray-400 font-mono">{formData.content.length} chars</span>
               </div>
-
-              {contentMode === "visual" ? (
-                <RichTextEditor
-                  value={formData.content}
-                  onChange={(value) => setFormData({ ...formData, content: value })}
-                  placeholder="Write your page content here..."
-                />
-              ) : (
-                <div className="space-y-2">
-                  <Textarea
-                    value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    rows={20}
-                    placeholder={`Paste any code here — full HTML, JSX, CSS styles, tables, embeds, anything.\n\nExamples:\n<h1>My Page</h1>\n<p>Some text here</p>\n\n<section style="background:#f5f5f5; padding:20px">\n  <h2>Section Title</h2>\n</section>`}
-                    className="font-mono text-sm bg-gray-950 text-green-400 border-gray-700 resize-y leading-relaxed"
-                    spellCheck={false}
-                  />
-                  <p className="text-xs text-gray-500">
-                    Paste <strong>any code</strong> — HTML, inline styles, tables, embeds, full page markup. It saves and renders exactly as written.
-                  </p>
-                  {/* Live preview */}
-                  {formData.content.trim() && (
-                    <div>
-                      <p className="text-xs font-medium text-gray-600 mb-1 mt-3">Live Preview:</p>
-                      <div
-                        className="border border-gray-200 rounded-md p-4 bg-white min-h-[100px] prose prose-slate max-w-none text-sm overflow-auto"
-                        dangerouslySetInnerHTML={{ __html: formData.content }}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* SEO */}
-            <div>
-              <Label htmlFor="meta_title">Meta Title (SEO)</Label>
-              <Input
-                id="meta_title"
-                value={formData.meta_title}
-                onChange={(e) => setFormData({ ...formData, meta_title: e.target.value })}
-                placeholder="Leave empty to use page title"
-              />
-            </div>
-            <div>
-              <Label htmlFor="meta_description">Meta Description (SEO)</Label>
               <Textarea
-                id="meta_description"
-                value={formData.meta_description}
-                onChange={(e) => setFormData({ ...formData, meta_description: e.target.value })}
-                rows={2}
-                placeholder="Brief description for search engines..."
+                value={formData.content}
+                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                rows={24}
+                placeholder={`Paste your HTML and CSS here. Example:\n\n<style>\n  h1 { color: navy; font-size: 2rem; }\n  p  { font-size: 1rem; line-height: 1.7; }\n</style>\n\n<h1>Page Title</h1>\n<p>Your content here...</p>`}
+                className="font-mono text-sm bg-gray-950 text-green-400 border-gray-700 resize-y leading-relaxed"
+                spellCheck={false}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Paste HTML and CSS together — nothing is stripped or converted.
+              </p>
             </div>
 
-            {/* Publish toggle */}
+            {/* Live preview */}
+            {formData.content.trim() && (
+              <div>
+                <Label className="mb-1 block">Live Preview</Label>
+                <div
+                  className="border border-gray-200 rounded-md p-4 bg-white min-h-[120px] max-h-[320px] overflow-auto"
+                  dangerouslySetInnerHTML={{ __html: formData.content }}
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="meta_title">Meta Title (SEO)</Label>
+                <Input
+                  id="meta_title"
+                  value={formData.meta_title}
+                  onChange={(e) => setFormData({ ...formData, meta_title: e.target.value })}
+                  placeholder="Leave empty to use page title"
+                />
+              </div>
+              <div>
+                <Label htmlFor="meta_description">Meta Description (SEO)</Label>
+                <Input
+                  id="meta_description"
+                  value={formData.meta_description}
+                  onChange={(e) => setFormData({ ...formData, meta_description: e.target.value })}
+                  placeholder="Brief description for search engines"
+                />
+              </div>
+            </div>
+
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -338,12 +297,11 @@ export default function AdminPages() {
               <span className="text-sm">Publish page (visible to public)</span>
             </label>
 
-            {/* Actions */}
             <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>
                 Cancel
               </Button>
-              <Button type="submit">{editingPage ? "Update Page" : "Create Page"}</Button>
+              <Button type="submit">{editingPage ? "Save Changes" : "Create Page"}</Button>
             </div>
           </form>
         </DialogContent>
