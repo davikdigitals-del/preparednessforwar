@@ -7,10 +7,7 @@ interface Page {
   slug: string;
   title: string;
   content: string;
-  meta_title: string | null;
-  meta_description: string | null;
   is_published: boolean;
-  updated_at: string;
 }
 
 export default function DynamicPage() {
@@ -27,7 +24,7 @@ export default function DynamicPage() {
 
     supabase
       .from("pages")
-      .select("*")
+      .select("id, slug, title, content, is_published")
       .eq("slug", slug)
       .eq("is_published", true)
       .maybeSingle()
@@ -41,12 +38,10 @@ export default function DynamicPage() {
       });
   }, [slug]);
 
-  // Extract <style> blocks from content and inject into <head>
-  // so inline CSS actually applies even inside a React-rendered div
+  // Extract <style> blocks and inject into <head> so CSS applies globally
   useEffect(() => {
     if (!page?.content) return;
 
-    // Remove any previously injected style
     if (styleRef.current) {
       styleRef.current.remove();
       styleRef.current = null;
@@ -54,15 +49,13 @@ export default function DynamicPage() {
 
     const styleMatches = [...page.content.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)];
     if (styleMatches.length > 0) {
-      const combinedCSS = styleMatches.map((m) => m[1]).join("\n");
       const el = document.createElement("style");
       el.setAttribute("data-dynamic-page", slug || "");
-      el.textContent = combinedCSS;
+      el.textContent = styleMatches.map((m) => m[1]).join("\n");
       document.head.appendChild(el);
       styleRef.current = el;
     }
 
-    // Cleanup when leaving the page
     return () => {
       if (styleRef.current) {
         styleRef.current.remove();
@@ -71,12 +64,10 @@ export default function DynamicPage() {
     };
   }, [page, slug]);
 
-  // Strip <style> tags from the rendered HTML (already injected into head above)
+  // Remove <style> tags (already in head) and strip outer html/head/body wrappers
   const getBodyHTML = (content: string) =>
     content
-      // Remove <style> blocks (injected into head)
       .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-      // Remove <html>, <head>, <body> wrapper tags if a full page was pasted
       .replace(/<\/?html[^>]*>/gi, "")
       .replace(/<head[^>]*>[\s\S]*?<\/head>/gi, "")
       .replace(/<\/?body[^>]*>/gi, "")
@@ -95,38 +86,15 @@ export default function DynamicPage() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center px-4">
         <h1 className="text-4xl font-bold">Page Not Found</h1>
         <p className="text-muted-foreground">
-          The page you're looking for doesn't exist or has been unpublished.
+          This page doesn't exist or has been unpublished.
         </p>
-        <Link to="/" className="text-primary hover:underline">
-          Return Home
-        </Link>
+        <Link to="/" className="text-primary hover:underline">Return Home</Link>
       </div>
     );
   }
 
+  // Render the uploaded content full-width, no wrapper title or date
   return (
-    <div className="min-h-screen bg-background">
-      {/* Page header */}
-      <div className="border-b bg-card">
-        <div className="container max-w-5xl py-10 md:py-14">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{page.title}</h1>
-          {page.updated_at && (
-            <p className="mt-2 text-sm text-muted-foreground">
-              Last updated:{" "}
-              {new Date(page.updated_at).toLocaleDateString("en-GB", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Page content — renders HTML + CSS exactly as pasted, no overrides */}
-      <div className="container max-w-5xl py-10">
-        <div dangerouslySetInnerHTML={{ __html: getBodyHTML(page.content) }} />
-      </div>
-    </div>
+    <div dangerouslySetInnerHTML={{ __html: getBodyHTML(page.content) }} />
   );
 }
