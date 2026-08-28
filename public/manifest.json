@@ -1,0 +1,40 @@
+﻿{
+  "name": "Preparedness For War - Member Portal",
+  "short_name": "PFW Portal",
+  "description": "Offline-capable member portal for war preparedness and survival training",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#1e40af",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "lifestyle", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your member dashboard",
+      "url": "/dashboard"
+    },
+    {
+      "name": "My Courses",
+      "short_name": "Courses",
+      "description": "Access your training courses",
+      "url": "/my-courses"
+    },
+    {
+      "name": "Submit Report",
+      "short_name": "Report",
+      "description": "Submit a field report",
+      "url": "/dashboard/submit-report"
+    }
+  ],
+  "prefer_related_applications": false
+}

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline - Preparedness For War</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      text-align: center;
+      max-width: 500px;
+    }
+    
+    .icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 30px;
+      background: #1e40af;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+    }
+    
+    h1 {
+      font-size: 32px;
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+    
+    p {
+      font-size: 18px;
+      color: #cbd5e1;
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+    
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #ef4444;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin: 20px 0;
+    }
+    
+    .status.online {
+      background: #10b981;
+    }
+    
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .button {
+      display: inline-block;
+      background: #1e40af;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      margin-top: 20px;
+      transition: background 0.3s;
+    }
+    
+    .button:hover {
+      background: #1e3a8a;
+    }
+    
+    .features {
+      margin-top: 40px;
+      text-align: left;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 20px;
+      border-radius: 12px;
+    }
+    
+    .features h3 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: #60a5fa;
+    }
+    
+    .features ul {
+      list-style: none;
+      font-size: 14px;
+      color: #cbd5e1;
+    }
+    
+    .features li {
+      padding: 6px 0;
+      padding-left: 24px;
+      position: relative;
+    }
+    
+    .features li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #10b981;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📡</div>
+    <h1>You're Offline</h1>
+    <p>No internet connection detected.</p>
+    <p>Don't worry - your downloaded content is still accessible!</p>
+    
+    <div class="status" id="status">
+      <span class="dot"></span>
+      <span>Offline Mode</span>
+    </div>
+    
+    <a href="/dashboard" class="button">Go to Dashboard</a>
+    
+    <div class="features">
+      <h3>Available Offline:</h3>
+      <ul>
+        <li>Downloaded courses and videos</li>
+        <li>Saved articles and library content</li>
+        <li>Your personal notes and checklists</li>
+        <li>Emergency contacts</li>
+        <li>Previously viewed content</li>
+      </ul>
+    </div>
+  </div>
+  
+  <script>
+    // Check online status
+    function updateStatus() {
+      const status = document.getElementById('status');
+      if (navigator.onLine) {
+        status.classList.add('online');
+        status.innerHTML = '<span class="dot"></span><span>Back Online</span>';
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1000);
+      } else {
+        status.classList.remove('online');
+        status.innerHTML = '<span class="dot"></span><span>Offline Mode</span>';
+      }
+    }
+    
+    // Listen for online/offline events
+    window.addEventListener('online', updateStatus);
+    window.addEventListener('offline', updateStatus);
+    
+    // Initial check
+    updateStatus();
+  </script>
+</body>
+</html>
