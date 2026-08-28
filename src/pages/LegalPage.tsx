@@ -1,7 +1,6 @@
-import { useParams, Link } from "react-router-dom";
+﻿import { useParams, Link, useLocation } from "react-router-dom";
 import { Shield, Scale, Lock, Cookie, AlertCircle, FileText, CheckCircle2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
 const legalContent: Record<string, { 
   title: string; 
   icon: any;
@@ -335,13 +334,21 @@ const legalContent: Record<string, {
     ]
   }
 };
-
+const pathToKey: Record<string, string> = {
+  privacy: "privacy",
+  terms: "terms",
+  disclaimer: "disclaimer",
+  cookies: "cookies",
+  "about-us": "about",
+  about: "about",
+};
 export default function LegalPage() {
   const { page } = useParams<{ page: string }>();
-  const selectedPage = page || "about";
+  const { pathname } = useLocation();
+  const pathSegment = pathname.replace(/^\//, "").split("/")[0];
+  const selectedPage = page || pathToKey[pathSegment] || "about";
   const content = legalContent[selectedPage] || legalContent.about;
   const Icon = content.icon;
-
   const legalPages = [
     { key: "about", label: "About Us", icon: Info },
     { key: "terms", label: "Terms of Service", icon: Scale },
@@ -349,7 +356,6 @@ export default function LegalPage() {
     { key: "cookies", label: "Cookie Policy", icon: Cookie },
     { key: "disclaimer", label: "Disclaimer", icon: AlertCircle },
   ];
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/10">
       {/* Header */}
@@ -364,7 +370,6 @@ export default function LegalPage() {
               <p className="text-sm text-muted-foreground mt-1">Last updated: {content.lastUpdated}</p>
             </div>
           </div>
-
           {/* Navigation Pills */}
           <div className="flex flex-wrap gap-2">
             {legalPages.map((legalPage) => {
@@ -387,7 +392,6 @@ export default function LegalPage() {
           </div>
         </div>
       </div>
-
       {/* Content */}
       <div className="container py-12 max-w-4xl">
         <div className="bg-card border border-border rounded-lg p-8 md:p-12 shadow-sm">
@@ -411,7 +415,6 @@ export default function LegalPage() {
             ))}
           </div>
         </div>
-
         {/* Footer Note */}
         <div className="mt-8 p-6 bg-muted/50 border border-border rounded-lg">
           <div className="flex items-start gap-3">
