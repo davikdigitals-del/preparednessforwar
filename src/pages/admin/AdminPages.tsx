@@ -243,18 +243,17 @@ export default function AdminPages() {
               </div>
             </div>
 
-            {/* Content editor — Visual / HTML tabs */}
+            {/* Content editor — Visual / Code tabs */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <Label>Page Content</Label>
-                {/* Mode toggle */}
                 <div className="flex rounded-md border border-gray-200 overflow-hidden text-sm">
                   <button
                     type="button"
                     onClick={() => setContentMode("visual")}
                     className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors ${contentMode === "visual"
-                        ? "bg-primary text-white"
-                        : "bg-white text-gray-600 hover:bg-gray-50"
+                      ? "bg-primary text-white"
+                      : "bg-white text-gray-600 hover:bg-gray-50"
                       }`}
                   >
                     <PenLine className="w-3.5 h-3.5" />
@@ -264,12 +263,12 @@ export default function AdminPages() {
                     type="button"
                     onClick={() => setContentMode("html")}
                     className={`flex items-center gap-1.5 px-3 py-1.5 border-l border-gray-200 transition-colors ${contentMode === "html"
-                        ? "bg-primary text-white"
-                        : "bg-white text-gray-600 hover:bg-gray-50"
+                      ? "bg-primary text-white"
+                      : "bg-white text-gray-600 hover:bg-gray-50"
                       }`}
                   >
                     <Code className="w-3.5 h-3.5" />
-                    HTML
+                    Code / HTML
                   </button>
                 </div>
               </div>
@@ -281,18 +280,28 @@ export default function AdminPages() {
                   placeholder="Write your page content here..."
                 />
               ) : (
-                <div>
+                <div className="space-y-2">
                   <Textarea
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                     rows={20}
-                    placeholder="Paste your full HTML here, e.g. <h1>Hello</h1><p>My page content...</p>"
-                    className="font-mono text-sm bg-gray-950 text-green-400 border-gray-700 resize-y"
+                    placeholder={`Paste any code here — full HTML, JSX, CSS styles, tables, embeds, anything.\n\nExamples:\n<h1>My Page</h1>\n<p>Some text here</p>\n\n<section style="background:#f5f5f5; padding:20px">\n  <h2>Section Title</h2>\n</section>`}
+                    className="font-mono text-sm bg-gray-950 text-green-400 border-gray-700 resize-y leading-relaxed"
                     spellCheck={false}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Paste any HTML — headings, paragraphs, tables, images, embeds. It will render exactly as-is on the public page.
+                  <p className="text-xs text-gray-500">
+                    Paste <strong>any code</strong> — HTML, inline styles, tables, embeds, full page markup. It saves and renders exactly as written.
                   </p>
+                  {/* Live preview */}
+                  {formData.content.trim() && (
+                    <div>
+                      <p className="text-xs font-medium text-gray-600 mb-1 mt-3">Live Preview:</p>
+                      <div
+                        className="border border-gray-200 rounded-md p-4 bg-white min-h-[100px] prose prose-slate max-w-none text-sm overflow-auto"
+                        dangerouslySetInnerHTML={{ __html: formData.content }}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
