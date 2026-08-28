@@ -151,7 +151,7 @@ function MediaCard({ item, onClick }: { item: MediaItem; onClick: () => void }) 
    MEDIA HUB PAGE
 ══════════════════════════════════════════════ */
 export default function MediaHubPage() {
-  const { mediaItems } = useData();
+  const { mediaItems, mediaLoading } = useData();
   const { user } = useAuth();
   const [filter, setFilter] = useState<"all" | "video" | "podcast">("all");
   const [search, setSearch] = useState("");
@@ -231,7 +231,17 @@ export default function MediaHubPage() {
           </div>
         )}
 
-        {filtered.length === 0 && (
+        {/* Loading state */}
+        {mediaLoading && (
+          <div className="bg-white border border-border p-16 text-center">
+            <div className="w-12 h-12 border-4 border-gray-200 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
+            <h2 className="font-bold text-lg mb-2">Loading media...</h2>
+            <p className="text-sm text-muted-foreground">Please wait while we load the latest content.</p>
+          </div>
+        )}
+
+        {/* No media found - only show when not loading */}
+        {!mediaLoading && filtered.length === 0 && (
           <div className="bg-white border border-border p-16 text-center">
             <Video className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
             <h2 className="font-bold text-lg mb-2">No media found</h2>

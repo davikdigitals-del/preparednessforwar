@@ -169,6 +169,7 @@ interface DataContextType {
   banner: BannerSettings;
   publishedPosts: AdminPost[];
   loading: boolean;
+  mediaLoading: boolean;
   createPost: (post: Omit<AdminPost, "id">) => Promise<void>;
   updatePost: (id: string, post: Partial<AdminPost>) => Promise<void>;
   deletePost: (id: string) => Promise<void>;
@@ -205,6 +206,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [banner, setBanner] = useState<BannerSettings>({ enabled: true, text: "", priority: "high" });
   const [loading, setLoading] = useState(true);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [mediaLoading, setMediaLoading] = useState(true);
 
   const refreshPosts = useCallback(async () => {
     try {
@@ -214,13 +216,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
         .select("*")
         .or("is_published.eq.true,status.eq.published")
         .order("published_at", { ascending: false });
-      
+
       if (error) {
         console.error("Error loading posts:", error);
         // Don't clear existing posts on error - keep showing what we have
         return;
       }
-      
+
       if (data) {
         setPosts(data.map((row) => mapPost(row as DbPost & { country_codes?: string[] })));
       }
@@ -244,8 +246,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshMedia = useCallback(async () => {
+    setMediaLoading(true);
     const { data } = await supabase.from("media_items").select("*").order("published_at", { ascending: false });
     if (data) setMediaItems(data.map((row) => mapMedia(row as DbMediaItem & { country_codes?: string[] })));
+    setMediaLoading(false);
   }, []);
 
   const refreshLibrary = useCallback(async () => {
@@ -268,17 +272,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
-      
+
       // Load only critical data first (posts and alerts for homepage)
       await Promise.all([
         refreshPosts(),
         refreshAlerts(),
         refreshBanner(),
       ]);
-      
+
       setLoading(false);
       setInitialLoadComplete(true);
-      
+
       // Load remaining data in background
       Promise.all([
         refreshMedia(),
@@ -305,7 +309,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     };
   }, [refreshAlerts, refreshBanner, refreshEncyclopaedia, refreshLibrary, refreshMedia, refreshPosts]);
 
-  const publishedPosts = posts.filter((p) => 
+  const publishedPosts = posts.filter((p) =>
     p.status === "published" || (p as any).is_published === true
   );
 
@@ -530,6 +534,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         banner,
         publishedPosts,
         loading,
+        mediaLoading,
         createPost,
         updatePost,
         deletePost,

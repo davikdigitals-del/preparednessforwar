@@ -243,14 +243,65 @@ const ArticlePage = () => {
   };
 
   const handleNativeShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: post.title, text: post.standfirst || post.title, url: pageUrl });
-        setShareOpen(false); // Close dropdown after successful share
+    console.log('handleNativeShare called');
+    console.log('navigator.share available:', !!navigator.share);
+    console.log('Current URL:', pageUrl);
+
+    if (!navigator.share) {
+      console.log('Native share not supported on this device/browser');
+      toast({
+        title: "Share not available",
+        description: "Native sharing is not supported on this device. Use the copy link option instead.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const shareData = {
+        title: post.title,
+        text: post.standfirst || post.title,
+        url: pageUrl
+      };
+
+      console.log('Attempting to share:', shareData);
+
+      // Check if we can share this data
+      if (navigator.canShare && !navigator.canShare(shareData)) {
+        console.log('Cannot share this data');
+        toast({
+          title: "Cannot share",
+          description: "This content cannot be shared on your device.",
+          variant: "destructive"
+        });
         return;
-      } catch (err) {
-        // User cancelled or error - keep dropdown open
-        console.log('Share cancelled or failed:', err);
+      }
+
+      await navigator.share(shareData);
+      console.log('Share successful');
+      setShareOpen(false); // Close dropdown after successful share
+      toast({
+        title: "Shared successfully",
+        description: "The article has been shared.",
+      });
+    } catch (err) {
+      console.error('Share failed:', err);
+      // User cancelled or error - keep dropdown open
+      if (err.name === 'AbortError') {
+        console.log('User cancelled share');
+      } else {
+        console.log('Share failed with error:', err.message);
+        toast({
+          title: "Share failed",
+          description: "Unable to share. Try copying the link instead.",
+          variant: "destructive"
+        });
+        // Fallback to copy to clipboard
+        try {
+          await copyLink();
+        } catch (copyErr) {
+          console.error('Fallback copy also failed:', copyErr);
+        }
       }
     }
   };
@@ -361,7 +412,7 @@ const ArticlePage = () => {
                   {shareOpen && (
                     <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 shadow-lg rounded-lg overflow-hidden z-20">
                       {/* Native share option if available */}
-                      {navigator.share && (
+                      {typeof navigator !== 'undefined' && navigator.share && (
                         <button
                           onClick={handleNativeShare}
                           className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold hover:bg-gray-50 text-left border-b border-gray-100"
