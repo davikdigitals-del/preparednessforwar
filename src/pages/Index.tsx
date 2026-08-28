@@ -131,7 +131,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* ������ SUBSCRIPTION PLANS (below mission) ������ */}
+      {/* SUBSCRIPTION PLANS (below mission) */}
       <div className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-16">
           <div className="text-center mb-10">
@@ -151,7 +151,7 @@ const Index = () => {
               <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
             </div>
           ) : plans.length === 0 ? (
-            /* Fallback if no plans fetched � show a single CTA card */
+            /* Fallback if no plans fetched show a single CTA card */
             <div className="max-w-md mx-auto bg-blue-900 text-white rounded-2xl p-8 text-center shadow-xl">
               <Crown className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
               <h3 className="text-2xl font-black mb-2">Premium Membership</h3>
@@ -192,7 +192,7 @@ const Index = () => {
                       <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{plan.name}</p>
                       <div className="flex items-end gap-1">
                         <span className="text-5xl font-black text-gray-900">
-                          {plan.currency === "GBP" ? "�" : plan.currency === "GBP" ? "$" : "��"}{plan.price}
+                          {plan.currency === "GBP" ? "£" : plan.currency === "GBP" ? "$" : }{plan.price}
                         </span>
                         <span className="text-gray-400 text-sm mb-2">/mo</span>
                       </div>
@@ -232,7 +232,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* ������ FEATURED CATEGORIES ������ */}
+      {/*  FEATURED CATEGORIES */}
       <div className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-14">
           <div className="mb-8">
