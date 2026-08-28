@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useData } from "@/contexts/DataContext";
 import { useNavSections } from "@/hooks/useNavSections";
@@ -47,7 +47,7 @@ const Index = () => {
   return (
     <div className="bg-white min-h-screen">
 
-      {/* ÔöÇÔöÇ HERO BANNER ÔöÇÔöÇ */}
+      {/* ������ HERO BANNER ������ */}
       <div className="relative w-full overflow-hidden" style={{ minHeight: "520px" }}>
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -86,7 +86,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* ÔöÇÔöÇ MISSION SECTION ÔöÇÔöÇ */}
+      {/* ������ MISSION SECTION ������ */}
       <div className="bg-blue-50 border-y border-blue-100">
         <div className="container mx-auto px-4 py-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -131,7 +131,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* ÔöÇÔöÇ SUBSCRIPTION PLANS (below mission) ÔöÇÔöÇ */}
+      {/* ������ SUBSCRIPTION PLANS (below mission) ������ */}
       <div className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-16">
           <div className="text-center mb-10">
@@ -151,7 +151,7 @@ const Index = () => {
               <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
             </div>
           ) : plans.length === 0 ? (
-            /* Fallback if no plans fetched ÔÇö show a single CTA card */
+            /* Fallback if no plans fetched � show a single CTA card */
             <div className="max-w-md mx-auto bg-blue-900 text-white rounded-2xl p-8 text-center shadow-xl">
               <Crown className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
               <h3 className="text-2xl font-black mb-2">Premium Membership</h3>
@@ -166,21 +166,19 @@ const Index = () => {
               </Link>
             </div>
           ) : (
-            <div className={`grid gap-6 mx-auto ${
-              plans.length === 1 ? "max-w-sm grid-cols-1" :
+            <div className={`grid gap-6 mx-auto ${plans.length === 1 ? "max-w-sm grid-cols-1" :
               plans.length === 2 ? "max-w-2xl grid-cols-1 sm:grid-cols-2" :
-              "max-w-4xl grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-            }`}>
+                "max-w-4xl grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+              }`}>
               {plans.map((plan, idx) => {
                 const isPopular = plans.length > 1 && idx === Math.floor(plans.length / 2);
                 return (
                   <div
                     key={plan.id}
-                    className={`relative rounded-2xl border-2 p-7 flex flex-col gap-5 transition-all hover:shadow-lg ${
-                      isPopular
-                        ? "border-yellow-400 bg-yellow-50 shadow-md"
-                        : "border-gray-200 bg-white"
-                    }`}
+                    className={`relative rounded-2xl border-2 p-7 flex flex-col gap-5 transition-all hover:shadow-lg ${isPopular
+                      ? "border-yellow-400 bg-yellow-50 shadow-md"
+                      : "border-gray-200 bg-white"
+                      }`}
                   >
                     {isPopular && (
                       <div className="absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
@@ -194,7 +192,7 @@ const Index = () => {
                       <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{plan.name}</p>
                       <div className="flex items-end gap-1">
                         <span className="text-5xl font-black text-gray-900">
-                          {plan.currency === "GBP" ? "£" : plan.currency === "GBP" ? "$" : "Ôé¼"}{plan.price}
+                          {plan.currency === "GBP" ? "�" : plan.currency === "GBP" ? "$" : "��"}{plan.price}
                         </span>
                         <span className="text-gray-400 text-sm mb-2">/mo</span>
                       </div>
@@ -211,11 +209,10 @@ const Index = () => {
 
                     <Link
                       to={`/subscribe?plan=${plan.id}`}
-                      className={`w-full py-3 text-sm font-bold text-center rounded-xl transition-colors ${
-                        isPopular
-                          ? "bg-blue-900 text-white hover:bg-blue-800"
-                          : "bg-gray-900 text-white hover:bg-gray-800"
-                      }`}
+                      className={`w-full py-3 text-sm font-bold text-center rounded-xl transition-colors ${isPopular
+                        ? "bg-blue-900 text-white hover:bg-blue-800"
+                        : "bg-gray-900 text-white hover:bg-gray-800"
+                        }`}
                     >
                       <span className="flex items-center justify-center gap-2">
                         <Crown className="w-4 h-4" /> Get Started
@@ -235,7 +232,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* ÔöÇÔöÇ FEATURED CATEGORIES ÔöÇÔöÇ */}
+      {/* ������ FEATURED CATEGORIES ������ */}
       <div className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-14">
           <div className="mb-8">
@@ -274,14 +271,14 @@ const Index = () => {
         </div>
       </div>
 
-      {/* ÔöÇÔöÇ CTA STRIP ÔöÇÔöÇ */}
+      {/* ������ CTA STRIP ������ */}
       <div className="bg-blue-900">
         <div className="container mx-auto px-4 py-12 text-center">
           <h2 className="text-2xl md:text-3xl font-black text-white mb-3 uppercase">
             Stay Prepared. Stay Informed.
           </h2>
           <p className="text-blue-200 text-sm mb-6 max-w-xl mx-auto">
-            Sign up for alerts, download survival guides, and access expert resources ÔÇö all in one place.
+            Sign up for alerts, download survival guides, and access expert resources all in one place.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link
