@@ -1,7 +1,27 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { LanguagePicker } from "@/components/LanguagePicker";
+import { supabase } from "@/integrations/supabase/client";
+
+interface FooterPage {
+  slug: string;
+  title: string;
+}
 
 export function SiteFooter() {
+  const [pages, setPages] = useState<FooterPage[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("pages")
+      .select("slug, title")
+      .eq("is_published", true)
+      .order("title")
+      .then(({ data }) => {
+        if (data && data.length > 0) setPages(data as FooterPage[]);
+      });
+  }, []);
+
   return (
     <footer className="border-t bg-background">
       <div className="container py-8 md:py-12">
@@ -36,6 +56,25 @@ export function SiteFooter() {
               <li><Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">About Us</Link></li>
             </ul>
           </div>
+
+          {/* Dynamic pages from DB */}
+          {pages.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold">Pages</h4>
+              <ul className="space-y-2 text-sm">
+                {pages.map((page) => (
+                  <li key={page.slug}>
+                    <Link
+                      to={`/pages/${page.slug}`}
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {page.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Legal */}
           <div className="space-y-3">

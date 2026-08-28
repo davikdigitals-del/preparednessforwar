@@ -16,6 +16,7 @@ import Index from "./pages/Index";
 import ArticlePage from "./pages/ArticlePage";
 import PublicLayout from "./pages/PublicLayout";
 import NotFound from "./pages/NotFound";
+const DynamicPage = lazy(() => import("./pages/DynamicPage"));
 
 // Lazy-loaded pages — only loaded when visited
 const SectionPage = lazy(() => import("./pages/SectionPage"));
@@ -102,112 +103,113 @@ const PageLoader = () => (
 const App = () => {
   // Initialize security protection
   useSecurity();
-  
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <DataProvider>
           <LanguageProvider>
-          <TooltipProvider>
-            <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <CookieConsent />
-            <ErrorBoundary>
-            <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/admin-login" element={<AdminLoginPage />} />
-              {/* Course Player - Full screen, no main navigation */}
-              <Route path="/courses/:slug/learn" element={<CoursePlayerPage />} />
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="analytics" element={<AdminAnalytics />} />
-                <Route path="posts" element={<AdminPosts />} />
-                <Route path="categories" element={<AdminCategories />} />
-                <Route path="sections" element={<AdminSections />} />
-                <Route path="preparedness-templates" element={<AdminPreparednessTemplates />} />
-                <Route path="alerts" element={<AdminAlerts />} />
-                <Route path="banner" element={<AdminBanner />} />
-                <Route path="media" element={<AdminMedia />} />
-                <Route path="podcast-videos" element={<AdminPodcastVideos />} />
-                <Route path="library" element={<AdminLibrary />} />
-                <Route path="encyclopaedia" element={<AdminEncyclopaedia />} />
-                <Route path="pages" element={<AdminPages />} />
-                <Route path="settings" element={<AdminSiteSettings />} />
-                <Route path="subscriptions" element={<AdminSubscriptions />} />
-                <Route path="members" element={<AdminMembers />} />
-                <Route path="courses" element={<AdminCourses />} />
-                <Route path="courses/:id/builder" element={<AdminCourseBuilder />} />
-                <Route path="education" element={<AdminEducation />} />
-                <Route path="enrollments" element={<AdminEnrollments />} />
-                <Route path="affiliate-products" element={<AdminAffiliateProducts />} />
-                <Route path="sponsors" element={<AdminSponsors />} />
-                <Route path="advertisements" element={<AdminAdvertisements />} />
-                <Route path="revenue" element={<AdminRevenue />} />
-                <Route path="ads" element={<AdminAds />} />
-                <Route path="sponsorships" element={<AdminSponsorshipInquiries />} />
-                <Route path="countries" element={<AdminCountries />} />
-                <Route path="newsletter" element={<AdminNewsletter />} />
-                <Route path="member-reports" element={<AdminMemberReports />} />
-              </Route>
-              <Route element={<PublicLayout />}>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<SignInPage />} />
-                <Route path="/signin" element={<SignInPage />} />
-                <Route path="/signup" element={<SignUpPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path="/education" element={<EducationPage />} />
-                <Route path="/subscribe" element={<SubscribePage />} />
-                <Route path="/courses" element={<CoursesPage />} />
-                <Route path="/dashboard" element={<MemberDashboard />} />
-                <Route path="/dashboard/home" element={<DashboardHome />} />
-                <Route path="/dashboard/training" element={<TrainingAcademy />} />
-                <Route path="/dashboard/submit-report" element={<SubmitReport />} />
-                <Route path="/dashboard/my-reports" element={<MyReports />} />
-                <Route path="/dashboard/offline-content" element={<OfflineContentManager />} />
-                <Route path="/dashboard/my-bunker" element={<MyBunker />} />
-                <Route path="/dashboard/advertise" element={<AdvertiseWithUs />} />
-                <Route path="/dashboard/my-ads" element={<AdvertiseWithUs />} />
-                <Route path="/dashboard/sponsorship" element={<SponsorshipInquiry />} />
-                <Route path="/my-subscription" element={<MemberSubscription />} />
-                <Route path="/courses/:slug" element={<CourseDetailPage />} />
-                <Route path="/my-courses" element={<MyCoursesPage />} />
-                <Route path="/checkout/course/:courseId" element={<CheckoutPage />} />
-                <Route path="/shop" element={<ShopPage />} />
-                <Route path="/community-reports" element={<CommunityReports />} />
-                <Route path="/debug/featured-posts" element={<DebugFeaturedPosts />} />
-                <Route path="/countries" element={<CountriesPage />} />
-                <Route path="/countries/:countryCode" element={<CountryPostsPage />} />
-                <Route path="/notifications" element={<NotificationsPage />} />
-                <Route path="/latest" element={<LatestPage />} />
-                <Route path="/library" element={<LibraryPage />} />
-                <Route path="/resources" element={<LibraryPage />} />
-                <Route path="/encyclopaedia" element={<EncyclopaediaPage />} />
-                <Route path="/media" element={<MediaHubPage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/newsletter" element={<NewsletterPage />} />
-                <Route path="/legal/:page" element={<LegalPage />} />
-                <Route path="/about-us" element={<LegalPage />} />
-                <Route path="/privacy" element={<LegalPage />} />
-                <Route path="/terms" element={<LegalPage />} />
-                <Route path="/cookies" element={<LegalPage />} />
-                <Route path="/disclaimer" element={<LegalPage />} />
-                <Route path="/tag/:tag" element={<TagPage />} />
-                <Route path="/:section" element={<SectionPage />} />
-                <Route path="/:section/:category" element={<SectionPage />} />
-                <Route path="/:section/:category/:id" element={<ArticlePage />} />
-                <Route path="*" element={<NotFound />} />
-              </Route>
-            </Routes>
-            </Suspense>
-            </ErrorBoundary>
-          </BrowserRouter>
-        </TooltipProvider>
-        </LanguageProvider>
-      </DataProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <CookieConsent />
+                <ErrorBoundary>
+                  <Suspense fallback={<PageLoader />}>
+                    <Routes>
+                      <Route path="/admin-login" element={<AdminLoginPage />} />
+                      {/* Course Player - Full screen, no main navigation */}
+                      <Route path="/courses/:slug/learn" element={<CoursePlayerPage />} />
+                      <Route path="/admin" element={<AdminLayout />}>
+                        <Route index element={<AdminDashboard />} />
+                        <Route path="analytics" element={<AdminAnalytics />} />
+                        <Route path="posts" element={<AdminPosts />} />
+                        <Route path="categories" element={<AdminCategories />} />
+                        <Route path="sections" element={<AdminSections />} />
+                        <Route path="preparedness-templates" element={<AdminPreparednessTemplates />} />
+                        <Route path="alerts" element={<AdminAlerts />} />
+                        <Route path="banner" element={<AdminBanner />} />
+                        <Route path="media" element={<AdminMedia />} />
+                        <Route path="podcast-videos" element={<AdminPodcastVideos />} />
+                        <Route path="library" element={<AdminLibrary />} />
+                        <Route path="encyclopaedia" element={<AdminEncyclopaedia />} />
+                        <Route path="pages" element={<AdminPages />} />
+                        <Route path="settings" element={<AdminSiteSettings />} />
+                        <Route path="subscriptions" element={<AdminSubscriptions />} />
+                        <Route path="members" element={<AdminMembers />} />
+                        <Route path="courses" element={<AdminCourses />} />
+                        <Route path="courses/:id/builder" element={<AdminCourseBuilder />} />
+                        <Route path="education" element={<AdminEducation />} />
+                        <Route path="enrollments" element={<AdminEnrollments />} />
+                        <Route path="affiliate-products" element={<AdminAffiliateProducts />} />
+                        <Route path="sponsors" element={<AdminSponsors />} />
+                        <Route path="advertisements" element={<AdminAdvertisements />} />
+                        <Route path="revenue" element={<AdminRevenue />} />
+                        <Route path="ads" element={<AdminAds />} />
+                        <Route path="sponsorships" element={<AdminSponsorshipInquiries />} />
+                        <Route path="countries" element={<AdminCountries />} />
+                        <Route path="newsletter" element={<AdminNewsletter />} />
+                        <Route path="member-reports" element={<AdminMemberReports />} />
+                      </Route>
+                      <Route element={<PublicLayout />}>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/login" element={<SignInPage />} />
+                        <Route path="/signin" element={<SignInPage />} />
+                        <Route path="/signup" element={<SignUpPage />} />
+                        <Route path="/reset-password" element={<ResetPasswordPage />} />
+                        <Route path="/auth/callback" element={<AuthCallback />} />
+                        <Route path="/education" element={<EducationPage />} />
+                        <Route path="/subscribe" element={<SubscribePage />} />
+                        <Route path="/courses" element={<CoursesPage />} />
+                        <Route path="/dashboard" element={<MemberDashboard />} />
+                        <Route path="/dashboard/home" element={<DashboardHome />} />
+                        <Route path="/dashboard/training" element={<TrainingAcademy />} />
+                        <Route path="/dashboard/submit-report" element={<SubmitReport />} />
+                        <Route path="/dashboard/my-reports" element={<MyReports />} />
+                        <Route path="/dashboard/offline-content" element={<OfflineContentManager />} />
+                        <Route path="/dashboard/my-bunker" element={<MyBunker />} />
+                        <Route path="/dashboard/advertise" element={<AdvertiseWithUs />} />
+                        <Route path="/dashboard/my-ads" element={<AdvertiseWithUs />} />
+                        <Route path="/dashboard/sponsorship" element={<SponsorshipInquiry />} />
+                        <Route path="/my-subscription" element={<MemberSubscription />} />
+                        <Route path="/courses/:slug" element={<CourseDetailPage />} />
+                        <Route path="/my-courses" element={<MyCoursesPage />} />
+                        <Route path="/checkout/course/:courseId" element={<CheckoutPage />} />
+                        <Route path="/shop" element={<ShopPage />} />
+                        <Route path="/community-reports" element={<CommunityReports />} />
+                        <Route path="/debug/featured-posts" element={<DebugFeaturedPosts />} />
+                        <Route path="/countries" element={<CountriesPage />} />
+                        <Route path="/countries/:countryCode" element={<CountryPostsPage />} />
+                        <Route path="/notifications" element={<NotificationsPage />} />
+                        <Route path="/latest" element={<LatestPage />} />
+                        <Route path="/library" element={<LibraryPage />} />
+                        <Route path="/resources" element={<LibraryPage />} />
+                        <Route path="/encyclopaedia" element={<EncyclopaediaPage />} />
+                        <Route path="/media" element={<MediaHubPage />} />
+                        <Route path="/about" element={<AboutPage />} />
+                        <Route path="/newsletter" element={<NewsletterPage />} />
+                        <Route path="/legal/:page" element={<LegalPage />} />
+                        <Route path="/about-us" element={<LegalPage />} />
+                        <Route path="/privacy" element={<LegalPage />} />
+                        <Route path="/terms" element={<LegalPage />} />
+                        <Route path="/cookies" element={<LegalPage />} />
+                        <Route path="/disclaimer" element={<LegalPage />} />
+                        <Route path="/tag/:tag" element={<TagPage />} />
+                        <Route path="/pages/:slug" element={<DynamicPage />} />
+                        <Route path="/:section" element={<SectionPage />} />
+                        <Route path="/:section/:category" element={<SectionPage />} />
+                        <Route path="/:section/:category/:id" element={<ArticlePage />} />
+                        <Route path="*" element={<NotFound />} />
+                      </Route>
+                    </Routes>
+                  </Suspense>
+                </ErrorBoundary>
+              </BrowserRouter>
+            </TooltipProvider>
+          </LanguageProvider>
+        </DataProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 };
 
