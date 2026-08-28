@@ -226,11 +226,10 @@ export default function MyBunker() {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`w-full flex items-center justify-between px-4 py-3 text-sm border-b border-[#f3f2f1] last:border-0 transition-colors ${
-                    activeTab === tab.key
-                      ? "bg-[#1d70b8] text-white font-medium"
-                      : "text-[#0b0c0c] hover:bg-[#e8f0f8] hover:text-[#1d70b8]"
-                  }`}
+                  className={`w-full flex items-center justify-between px-4 py-3 text-sm border-b border-[#f3f2f1] last:border-0 transition-colors ${activeTab === tab.key
+                    ? "bg-[#1d70b8] text-white font-medium"
+                    : "text-[#0b0c0c] hover:bg-[#e8f0f8] hover:text-[#1d70b8]"
+                    }`}
                 >
                   <div className="flex items-center gap-2">
                     <tab.icon className="w-4 h-4" />
@@ -267,7 +266,7 @@ export default function MyBunker() {
 
 // ── OVERVIEW TAB ─────────────────────────────────────────────────────────────
 function OverviewTab({ score, scoreColor, scoreBg, contacts, inventory, checklists, savedArticles, orderQueue, setActiveTab, isOnline }: any) {
-  const categories = ["water","food","medical","communication"];
+  const categories = ["water", "food", "medical", "communication"];
   const covered = categories.filter(cat => inventory.some((i: any) => i.category === cat && i.quantity > 0));
   const totalItems = checklists.reduce((s: number, c: any) => s + (c.items?.length || 0), 0);
   const completedItems = checklists.reduce((s: number, c: any) => s + (c.items?.filter((i: any) => i.completed).length || 0), 0);
@@ -409,21 +408,21 @@ function ContactsTab({ user }: any) {
         <div className="bg-white border border-[#b1b4b6] p-5 space-y-4">
           <h3 className="font-semibold text-[#0b0c0c]">{editId ? "Edit Contact" : "New Emergency Contact"}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><Label>Full Name *</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g. Jane Smith" /></div>
-            <div><Label>Relationship</Label><Input value={form.relationship} onChange={e => setForm({...form, relationship: e.target.value})} placeholder="e.g. Spouse, Parent, Neighbour" /></div>
-            <div><Label>Primary Phone *</Label><Input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="e.g. 07700 900000" /></div>
-            <div><Label>Secondary Phone</Label><Input type="tel" value={form.phone2} onChange={e => setForm({...form, phone2: e.target.value})} placeholder="Alternative number" /></div>
-            <div><Label>Email</Label><Input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="email@example.com" /></div>
+            <div><Label>Full Name *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Jane Smith" /></div>
+            <div><Label>Relationship</Label><Input value={form.relationship} onChange={e => setForm({ ...form, relationship: e.target.value })} placeholder="e.g. Spouse, Parent, Neighbour" /></div>
+            <div><Label>Primary Phone *</Label><Input type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="e.g. 07700 900000" /></div>
+            <div><Label>Secondary Phone</Label><Input type="tel" value={form.phone2} onChange={e => setForm({ ...form, phone2: e.target.value })} placeholder="Alternative number" /></div>
+            <div><Label>Email</Label><Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="email@example.com" /></div>
             <div>
               <Label>Priority</Label>
-              <select value={form.priority} onChange={e => setForm({...form, priority: e.target.value})} className="w-full border border-[#b1b4b6] px-3 py-2 text-sm bg-white">
+              <select value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })} className="w-full border border-[#b1b4b6] px-3 py-2 text-sm bg-white">
                 <option value="high">High — First to call</option>
                 <option value="medium">Medium</option>
                 <option value="low">Low — Backup</option>
               </select>
             </div>
-            <div className="sm:col-span-2"><Label>Address</Label><Input value={form.address} onChange={e => setForm({...form, address: e.target.value})} placeholder="Home or meeting point address" /></div>
-            <div className="sm:col-span-2"><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} rows={2} placeholder="Any important notes (medical info, availability, etc.)" /></div>
+            <div className="sm:col-span-2"><Label>Address</Label><Input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Home or meeting point address" /></div>
+            <div className="sm:col-span-2"><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} placeholder="Any important notes (medical info, availability, etc.)" /></div>
           </div>
           <div className="flex gap-2 pt-1">
             <Button onClick={handleSave} disabled={saving} size="sm"><Save className="w-4 h-4 mr-1" />{saving ? "Saving..." : "Save Contact"}</Button>
@@ -538,19 +537,19 @@ function InventoryTab({ user }: any) {
         <div className="bg-white border border-[#b1b4b6] p-5 space-y-4">
           <h3 className="font-semibold text-[#0b0c0c]">{editId ? "Edit Item" : "Add Supply Item"}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><Label>Item Name *</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g. Bottled Water, First Aid Kit" /></div>
+            <div><Label>Item Name *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Bottled Water, First Aid Kit" /></div>
             <div>
               <Label>Category</Label>
-              <select value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="w-full border border-[#b1b4b6] px-3 py-2 text-sm bg-white capitalize">
+              <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="w-full border border-[#b1b4b6] px-3 py-2 text-sm bg-white capitalize">
                 {categories.map(c => <option key={c} value={c} className="capitalize">{c}</option>)}
               </select>
             </div>
-            <div><Label>Quantity</Label><Input type="number" value={form.quantity} onChange={e => setForm({...form, quantity: e.target.value})} placeholder="0" min="0" /></div>
-            <div><Label>Unit</Label><Input value={form.unit} onChange={e => setForm({...form, unit: e.target.value})} placeholder="e.g. litres, packs, units" /></div>
-            <div><Label>Expiry Date</Label><Input type="date" value={form.expiry_date} onChange={e => setForm({...form, expiry_date: e.target.value})} /></div>
-            <div><Label>Minimum Stock Alert</Label><Input type="number" value={form.minimum_quantity} onChange={e => setForm({...form, minimum_quantity: e.target.value})} placeholder="Alert when below this" min="0" /></div>
-            <div><Label>Storage Location</Label><Input value={form.location} onChange={e => setForm({...form, location: e.target.value})} placeholder="e.g. Garage shelf, Kitchen cupboard" /></div>
-            <div><Label>Notes</Label><Input value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} placeholder="Brand, condition, etc." /></div>
+            <div><Label>Quantity</Label><Input type="number" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} placeholder="0" min="0" /></div>
+            <div><Label>Unit</Label><Input value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })} placeholder="e.g. litres, packs, units" /></div>
+            <div><Label>Expiry Date</Label><Input type="date" value={form.expiry_date} onChange={e => setForm({ ...form, expiry_date: e.target.value })} /></div>
+            <div><Label>Minimum Stock Alert</Label><Input type="number" value={form.minimum_quantity} onChange={e => setForm({ ...form, minimum_quantity: e.target.value })} placeholder="Alert when below this" min="0" /></div>
+            <div><Label>Storage Location</Label><Input value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="e.g. Garage shelf, Kitchen cupboard" /></div>
+            <div><Label>Notes</Label><Input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Brand, condition, etc." /></div>
           </div>
           <div className="flex gap-2 pt-1">
             <Button onClick={handleSave} disabled={saving} size="sm"><Save className="w-4 h-4 mr-1" />{saving ? "Saving..." : "Save Item"}</Button>
@@ -644,8 +643,8 @@ function BugoutTab({ user }: any) {
     <div>
       <Label className="font-semibold text-sm">{label}</Label>
       {type === "textarea"
-        ? <Textarea value={plan[key]} onChange={e => { setPlan({...plan, [key]: e.target.value}); setSaved(false); }} rows={3} placeholder={placeholder} className="mt-1" />
-        : <Input value={plan[key]} onChange={e => { setPlan({...plan, [key]: e.target.value}); setSaved(false); }} placeholder={placeholder} className="mt-1" />
+        ? <Textarea value={plan[key]} onChange={e => { setPlan({ ...plan, [key]: e.target.value }); setSaved(false); }} rows={3} placeholder={placeholder} className="mt-1" />
+        : <Input value={plan[key]} onChange={e => { setPlan({ ...plan, [key]: e.target.value }); setSaved(false); }} placeholder={placeholder} className="mt-1" />
       }
     </div>
   );
@@ -759,9 +758,9 @@ function NotesTab({ notes, setNotes, user, isOnline, toast }: any) {
       </div>
       {adding && (
         <div className="bg-white border border-[#b1b4b6] p-5 space-y-3">
-          <div><Label>Title *</Label><Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="Note title" /></div>
-          <div><Label>Category</Label><Input value={form.category} onChange={e => setForm({...form, category: e.target.value})} placeholder="e.g. Medical, Security, Contacts" /></div>
-          <div><Label>Content</Label><Textarea value={form.content} onChange={e => setForm({...form, content: e.target.value})} rows={5} placeholder="Write your note..." /></div>
+          <div><Label>Title *</Label><Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Note title" /></div>
+          <div><Label>Category</Label><Input value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} placeholder="e.g. Medical, Security, Contacts" /></div>
+          <div><Label>Content</Label><Textarea value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} rows={5} placeholder="Write your note..." /></div>
           <div className="flex gap-2">
             <Button onClick={handleSave} disabled={saving} size="sm"><Save className="w-4 h-4 mr-1" />{saving ? "Saving..." : "Save"}</Button>
             <Button variant="outline" size="sm" onClick={() => setAdding(false)}>Cancel</Button>
@@ -866,9 +865,9 @@ function ChecklistsTab({ checklists, setChecklists, user, isOnline, toast }: any
       </div>
       {adding && (
         <div className="bg-white border border-[#b1b4b6] p-5 space-y-3">
-          <div><Label>Title *</Label><Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="e.g. 72-Hour Bug-Out Bag" /></div>
-          <div><Label>Category</Label><Input value={form.category} onChange={e => setForm({...form, category: e.target.value})} placeholder="e.g. Evacuation, Medical, Home" /></div>
-          <div><Label>Description</Label><Input value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Brief description..." /></div>
+          <div><Label>Title *</Label><Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. 72-Hour Bug-Out Bag" /></div>
+          <div><Label>Category</Label><Input value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} placeholder="e.g. Evacuation, Medical, Home" /></div>
+          <div><Label>Description</Label><Input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Brief description..." /></div>
           <div className="flex gap-2">
             <Button onClick={handleCreateChecklist} disabled={saving} size="sm"><Save className="w-4 h-4 mr-1" />{saving ? "Saving..." : "Create"}</Button>
             <Button variant="outline" size="sm" onClick={() => setAdding(false)}>Cancel</Button>
@@ -954,7 +953,7 @@ function SavedArticlesTab({ articles, setSavedArticles, user, isOnline, toast }:
         <div className="space-y-3">
           {articles.map((article: any) => (
             <div key={article.post_id || article.id} className="bg-white border border-[#b1b4b6] p-4 flex items-start gap-4">
-              {article.post_image && <img src={article.post_image} alt={article.post_title} className="w-16 h-12 object-cover rounded flex-shrink-0" />}
+              {article.post_image && <img src={article.post_image} alt={article.post_title} className="w-12 h-9 object-cover rounded flex-shrink-0" />}
               <div className="flex-1 min-w-0">
                 <h3 className="font-medium text-[#0b0c0c] line-clamp-2">{article.post_title}</h3>
                 {article.post_excerpt && <p className="text-sm text-[#505a5f] line-clamp-2 mt-0.5">{article.post_excerpt}</p>}
@@ -1120,7 +1119,7 @@ function OrderQueueTab({ orders, setOrderQueue, user, isOnline, toast }: any) {
         <div className="space-y-3">
           {orders.map((order: any) => (
             <div key={order.id} className="bg-white border border-[#b1b4b6] p-4 flex items-center gap-4">
-              {order.product_image && <img src={order.product_image} alt={order.product_name} className="w-14 h-14 object-cover rounded flex-shrink-0" />}
+              {order.product_image && <img src={order.product_image} alt={order.product_name} className="w-10 h-10 object-cover rounded flex-shrink-0" />}
               <div className="flex-1 min-w-0">
                 <h3 className="font-medium text-[#0b0c0c]">{order.product_name}</h3>
                 <p className="text-sm text-[#505a5f]">Qty: {order.quantity}</p>
@@ -1315,7 +1314,7 @@ function SuppliesTab({ user, isOnline, toast, wishlist, setWishlist, orderQueue,
               {filtered.map((product: any) => (
                 <div key={product.id} className="bg-white border border-[#b1b4b6] overflow-hidden hover:shadow-md transition-shadow">
                   {product.image_url && (
-                    <img src={product.image_url} alt={product.name} className="w-full h-36 object-cover" />
+                    <img src={product.image_url} alt={product.name} className="w-full h-28 object-cover" />
                   )}
                   <div className="p-4">
                     <div className="flex items-start justify-between gap-2 mb-1">
@@ -1377,7 +1376,7 @@ function SuppliesTab({ user, isOnline, toast, wishlist, setWishlist, orderQueue,
               {wishlist.map((item: any) => (
                 <div key={item.id} className="bg-white border border-[#b1b4b6] p-4 flex items-center gap-4">
                   {item.product_image && (
-                    <img src={item.product_image} alt={item.product_name} className="w-16 h-12 object-cover rounded flex-shrink-0" />
+                    <img src={item.product_image} alt={item.product_name} className="w-12 h-9 object-cover rounded flex-shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-[#0b0c0c] text-sm">{item.product_name}</h3>

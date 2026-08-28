@@ -70,7 +70,7 @@ export default function AdminAffiliateProducts() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       if (editingProduct) {
         const { data, error } = await supabase
@@ -189,7 +189,7 @@ export default function AdminAffiliateProducts() {
 
   const handleScrapeUrl = async () => {
     if (!scrapeUrl.trim()) return;
-    
+
     console.log(`🚀 Starting scrape for URL: ${scrapeUrl.trim()}`);
     setScraping(true);
 
@@ -202,8 +202,8 @@ export default function AdminAffiliateProducts() {
       const isAmazon = url.includes("amazon.");
       let affiliate_network = isAmazon ? "amazon"
         : url.includes("ebay.") ? "custom"
-        : url.includes("shareasale") ? "shareasale"
-        : url.includes("cj.com") ? "cj" : "custom";
+          : url.includes("shareasale") ? "shareasale"
+            : url.includes("cj.com") ? "cj" : "custom";
 
       console.log(`🏪 Detected network: ${affiliate_network}`);
 
@@ -236,13 +236,13 @@ export default function AdminAffiliateProducts() {
       try {
         const { supabase } = await import("@/integrations/supabase/client");
         console.log(`📡 Supabase client loaded, invoking scrape-product...`);
-        
+
         const { data, error } = await supabase.functions.invoke("scrape-product", {
           body: { url },
         });
-        
+
         console.log(`📊 Scrape result:`, { data, error });
-        
+
         if (error) {
           console.error(`❌ Supabase function error:`, error);
           // Don't throw - continue with basic data extraction
@@ -254,27 +254,27 @@ export default function AdminAffiliateProducts() {
           // Don't throw - continue with basic data extraction
         } else {
           console.log(`✅ Scrape successful, processing data...`);
-          
+
           name = data.name || slugName;
           description = data.description || "";
           image_url = data.image_url || data.images?.[0] || "";
-          
+
           // Handle price and currency conversion
           let convertedPrice = data.price || 0;
           const originalCurrency = (data.currency || "GBP").toUpperCase();
-          
+
           console.log(`💰 Found price: ${convertedPrice} ${originalCurrency}`);
-          
+
           if (convertedPrice > 0 && originalCurrency !== "GBP") {
             try {
               console.log(`💱 Converting ${convertedPrice} ${originalCurrency} to GBP...`);
               const { convertToGBPWithGoogle } = await import("@/utils/currency");
               const conversionResult = await convertToGBPWithGoogle(convertedPrice, originalCurrency);
               const gbpAmount = conversionResult.amount;
-              
+
               console.log(`✅ Conversion: ${convertedPrice} ${originalCurrency} = £${gbpAmount}`);
               convertedPrice = gbpAmount;
-              
+
             } catch (conversionError) {
               console.warn(`❌ Live conversion failed, using fallback rate:`, conversionError);
               // Use fallback rate from our static table
@@ -291,10 +291,10 @@ export default function AdminAffiliateProducts() {
           } else if (convertedPrice > 0) {
             console.log(`✅ Price already in GBP: £${convertedPrice}`);
           }
-          
+
           price = convertedPrice;
           // Always store as GBP — conversion happened above
-          
+
           if (data.images?.length > 0) {
             fetchedImages = data.images.slice(0, 8);
             setScrapedImages(fetchedImages);
@@ -501,7 +501,7 @@ export default function AdminAffiliateProducts() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {product.image_url && (
-                          <img src={product.image_url} alt={product.name} className="w-16 h-12 object-cover rounded" />
+                          <img src={product.image_url} alt={product.name} className="w-12 h-9 object-cover rounded" />
                         )}
                         <div>
                           <div className="font-medium">{product.name}</div>
@@ -711,7 +711,7 @@ export default function AdminAffiliateProducts() {
                 <Label htmlFor="currency">Currency</Label>
                 <Select
                   value="GBP"
-                  onValueChange={() => {}}
+                  onValueChange={() => { }}
                 >
                   <SelectTrigger>
                     <SelectValue />

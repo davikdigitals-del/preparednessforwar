@@ -150,7 +150,7 @@ export default function MemberDashboard() {
       {/* ── IDENTITY BAR ── */}
       <div className="sticky top-12 z-30 bg-[#1d70b8] text-white">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-5">
-        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>
               <p className="text-[#b1b4b6] text-xs uppercase tracking-wider mb-1">Signed in as</p>
               <h1 className="text-lg sm:text-2xl font-bold">{user.name || user.email}</h1>
@@ -439,7 +439,7 @@ export default function MemberDashboard() {
                       className={`flex items-start gap-4 bg-white p-4 hover:bg-[#f3f2f1] transition-colors group ${i > 0 ? "border-t border-[#b1b4b6]" : ""}`}
                     >
                       {post.image && (
-                        <img src={post.image} alt={post.title} className="w-16 sm:w-20 h-12 sm:h-14 object-cover flex-shrink-0" />
+                        <img src={post.image} alt={post.title} className="w-12 sm:w-16 h-9 sm:h-12 object-cover flex-shrink-0" />
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-[#0b0c0c] line-clamp-2 group-hover:text-[#1d70b8] transition-colors">
@@ -504,7 +504,7 @@ export default function MemberDashboard() {
             {/* ── FOOTER ── */}
             <div className="pt-4 border-t border-[#b1b4b6]">
               <p className="text-xs text-[#505a5f]">
-            
+
               </p>
             </div>
 

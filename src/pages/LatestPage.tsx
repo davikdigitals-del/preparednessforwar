@@ -66,8 +66,8 @@ export default function LatestPage() {
                 to={`/${post.section}/${post.category}/${post.id}`}
                 className="flex items-start gap-4 p-4 hover:bg-primary/5 transition-colors group"
               >
-                {/* Thumbnail */}
-                <div className="w-24 h-16 bg-muted shrink-0 overflow-hidden">
+                {/* Thumbnail - reduced size */}
+                <div className="w-20 h-14 bg-muted shrink-0 overflow-hidden">
                   {post.image ? (
                     <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   ) : (

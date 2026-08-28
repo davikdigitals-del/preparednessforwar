@@ -2,10 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Search, UserCheck, Crown, Edit, X, Trash2 } from "lucide-react";
+import { Search, UserCheck, Crown, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Member {
@@ -27,26 +24,11 @@ interface Member {
   }[];
 }
 
-interface SubscriptionPlan {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  currency: string;
-  interval: string;
-}
-
 export default function AdminMembers() {
   const [members, setMembers] = useState<Member[]>([]);
-  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [selectedPlanId, setSelectedPlanId] = useState("");
-  const [subscriptionStatus, setSubscriptionStatus] = useState("active");
-  const [expiresAt, setExpiresAt] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -56,13 +38,13 @@ export default function AdminMembers() {
   const loadData = async () => {
     console.log("AdminMembers: Loading data...");
     setLoading(true);
-    
+
     try {
-      const dataPromise = Promise.all([fetchMembers(), fetchPlans()]);
-      const timeoutPromise = new Promise((_, reject) => 
+      const dataPromise = fetchMembers();
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Data load timeout")), 8000)
       );
-      
+
       await Promise.race([dataPromise, timeoutPromise]);
       console.log("AdminMembers: Data loaded successfully");
     } catch (error) {
@@ -106,101 +88,6 @@ export default function AdminMembers() {
       }));
 
       setMembers(merged);
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
-  };
-
-  const fetchPlans = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("subscription_plans")
-        .select("*")
-        .eq("is_active", true)
-        .neq("slug", "free")
-        .order("price", { ascending: true });
-
-      if (error) throw error;
-      setPlans(data || []);
-    } catch (error: any) {
-      console.error("Error fetching plans:", error);
-    }
-  };
-
-  const handleManageSubscription = (member: Member) => {
-    setSelectedMember(member);
-    const currentSub = member.user_subscriptions?.[0];
-    if (currentSub) {
-      setSelectedPlanId(currentSub.plan_id);
-      setSubscriptionStatus(currentSub.status);
-      setExpiresAt(currentSub.expires_at ? new Date(currentSub.expires_at).toISOString().split('T')[0] : "");
-    } else {
-      setSelectedPlanId("");
-      setSubscriptionStatus("active");
-      setExpiresAt("");
-    }
-    setDialogOpen(true);
-  };
-
-  const handleSaveSubscription = async () => {
-    if (!selectedMember || !selectedPlanId) {
-      toast({ title: "Error", description: "Please select a plan", variant: "destructive" });
-      return;
-    }
-
-    try {
-      const currentSub = selectedMember.user_subscriptions?.[0];
-      const subscriptionData = {
-        user_id: selectedMember.id,
-        plan_id: selectedPlanId,
-        status: subscriptionStatus,
-        expires_at: expiresAt || null,
-      };
-
-      if (currentSub) {
-        // Update existing subscription
-        const { error } = await supabase
-          .from("user_subscriptions")
-          .update(subscriptionData)
-          .eq("id", currentSub.id);
-
-        if (error) throw error;
-        toast({ title: "Success", description: "Subscription updated successfully" });
-      } else {
-        // Create new subscription
-        const { error } = await supabase
-          .from("user_subscriptions")
-          .insert([subscriptionData]);
-
-        if (error) throw error;
-        toast({ title: "Success", description: "Subscription created successfully" });
-      }
-
-      setDialogOpen(false);
-      fetchMembers();
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
-  };
-
-  const handleCancelSubscription = async () => {
-    if (!selectedMember) return;
-
-    const currentSub = selectedMember.user_subscriptions?.[0];
-    if (!currentSub) return;
-
-    if (!confirm("Are you sure you want to cancel this subscription?")) return;
-
-    try {
-      const { error } = await supabase
-        .from("user_subscriptions")
-        .delete()
-        .eq("id", currentSub.id);
-
-      if (error) throw error;
-      toast({ title: "Success", description: "Subscription cancelled successfully" });
-      setDialogOpen(false);
-      fetchMembers();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
@@ -278,7 +165,7 @@ export default function AdminMembers() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Joined
                 </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -318,11 +205,10 @@ export default function AdminMembers() {
                               <Crown className="w-3 h-3" />
                               {subscription.subscription_plans?.name || 'Premium'}
                             </span>
-                            <span className={`text-xs px-2 py-0.5 rounded ${
-                              subscription.status === 'active' ? 'bg-green-100 text-green-700' :
+                            <span className={`text-xs px-2 py-0.5 rounded ${subscription.status === 'active' ? 'bg-green-100 text-green-700' :
                               subscription.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                              'bg-gray-100 text-gray-700'
-                            }`}>
+                                'bg-gray-100 text-gray-700'
+                              }`}>
                               {subscription.status}
                             </span>
                           </div>
@@ -336,9 +222,7 @@ export default function AdminMembers() {
                         {new Date(member.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Button variant="ghost" size="sm" onClick={() => handleManageSubscription(member)}>
-                          <Edit className="w-4 h-4" />
-                        </Button>
+                        {/* Edit functionality removed */}
                       </td>
                     </tr>
                   );
@@ -348,79 +232,6 @@ export default function AdminMembers() {
           </table>
         </div>
       </div>
-
-      {/* Manage Subscription Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent aria-describedby={undefined} className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Manage Subscription</DialogTitle>
-          </DialogHeader>
-          {selectedMember && (
-            <div className="space-y-4">
-              <div className="bg-gray-50 p-3 rounded">
-                <p className="text-sm font-semibold">{selectedMember.name}</p>
-                <p className="text-xs text-gray-600">{selectedMember.email}</p>
-              </div>
-
-              <div>
-                <Label>Subscription Plan</Label>
-                <Select value={selectedPlanId} onValueChange={setSelectedPlanId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a plan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {plans.map((plan) => (
-                      <SelectItem key={plan.id} value={plan.id}>
-                        {plan.name} - £{plan.price}/{plan.interval}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Status</Label>
-                <Select value={subscriptionStatus} onValueChange={setSubscriptionStatus}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                    <SelectItem value="expired">Expired</SelectItem>
-                    <SelectItem value="trial">Trial</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Expires At (Optional)</Label>
-                <Input
-                  type="date"
-                  value={expiresAt}
-                  onChange={(e) => setExpiresAt(e.target.value)}
-                />
-                <p className="text-xs text-gray-500 mt-1">Leave empty for no expiration</p>
-              </div>
-
-              <div className="flex gap-2 pt-4">
-                <Button onClick={handleSaveSubscription} className="flex-1">
-                  Save Subscription
-                </Button>
-                {selectedMember.user_subscriptions?.[0] && (
-                  <Button
-                    variant="destructive"
-                    onClick={handleCancelSubscription}
-                  >
-                    <X className="w-4 h-4 mr-1" />
-                    Cancel
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -93,7 +93,7 @@ export default function AdminAds() {
       <CardContent className="py-4">
         <div className="flex items-start gap-4">
           {ad.image_url && (
-            <img src={ad.image_url} alt={ad.title} className="w-24 h-16 object-cover rounded border flex-shrink-0" />
+            <img src={ad.image_url} alt={ad.title} className="w-20 h-14 object-cover rounded border flex-shrink-0" />
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2 mb-1">

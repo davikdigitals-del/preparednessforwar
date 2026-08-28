@@ -59,7 +59,7 @@ export default function AdminSponsors() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       if (editingSponsor) {
         const { error } = await supabase
@@ -246,7 +246,7 @@ export default function AdminSponsors() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {sponsor.logo_url && (
-                          <img src={sponsor.logo_url} alt={sponsor.company_name} className="w-12 h-12 object-contain rounded" />
+                          <img src={sponsor.logo_url} alt={sponsor.company_name} className="w-10 h-10 object-contain rounded" />
                         )}
                         <div>
                           <div className="font-medium">{sponsor.company_name}</div>

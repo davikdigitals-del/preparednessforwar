@@ -18,7 +18,7 @@ export function PostCard({ post, variant = "default" }: PostCardProps) {
 
   if (variant === "hero") {
     const hasVideo = (post as any).videoUrl || (post as any).video_url;
-    
+
     return (
       <Link to={`/${post.section}/${post.category}/${post.id}`} className="card-news group block">
         <div className="aspect-[16/9] bg-muted relative overflow-hidden">
@@ -62,7 +62,7 @@ export function PostCard({ post, variant = "default" }: PostCardProps) {
   if (variant === "horizontal") {
     return (
       <Link to={`/${post.section}/${post.category}/${post.id}`} className="card-news group flex gap-4">
-        <div className="w-32 h-24 bg-muted shrink-0 rounded-sm" />
+        <div className="w-24 h-18 bg-muted shrink-0 rounded-sm" />
         <div className="flex flex-col justify-center py-1 min-w-0">
           <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {section?.title}
@@ -97,10 +97,10 @@ export function PostCard({ post, variant = "default" }: PostCardProps) {
 
   // Default card - Professional government design
   const hasVideo = (post as any).videoUrl || (post as any).video_url;
-  
+
   return (
     <Link to={`/${post.section}/${post.category}/${post.id}`} className="group block bg-white hover:shadow-md transition-all duration-300 border border-gray-200 hover:border-blue-900">
-      <div className="aspect-[16/10] bg-gray-100 overflow-hidden relative">
+      <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
         {post.image && (
           <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         )}

@@ -368,9 +368,10 @@ const ArticlePage = () => {
               </h1>
 
               {/* Full-width image â€” edge to edge */}
-              <div className="w-full bg-gray-100 overflow-hidden relative">
+              {/* Post image - reduced size */}
+              <div className="w-full max-w-2xl mx-auto bg-gray-100 overflow-hidden relative">
                 {post.image && (
-                  <img src={post.image} alt={post.title} className="w-full object-cover" />
+                  <img src={post.image} alt={post.title} className="w-full h-auto max-h-80 object-cover" />
                 )}
                 {((post as any).videoUrl || (post as any).video_url) && !videoPlaying && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer"
@@ -524,7 +525,7 @@ const ArticlePage = () => {
                   <div className="space-y-4">
                     {relatedPosts.map((p: any) => (
                       <Link key={p.id} to={`/${p.section}/${p.category}/${p.id}`} className="flex gap-3 group">
-                        <div className="w-24 h-16 bg-gray-100 shrink-0 overflow-hidden">
+                        <div className="w-20 h-14 bg-gray-100 shrink-0 overflow-hidden">
                           {p.image && <img src={p.image} alt={p.title} className="w-full h-full object-cover" />}
                         </div>
                         <h4 className="text-sm font-bold leading-snug group-hover:text-primary transition-colors line-clamp-3">{p.title}</h4>
@@ -618,8 +619,8 @@ const ArticlePage = () => {
                 </button>
               </div>
 
-              {/* Hero image */}
-              <div className="aspect-[16/7] bg-gray-100 overflow-hidden relative mt-4 mx-6">
+              {/* Hero image - reduced size */}
+              <div className="aspect-[3/2] max-w-xl mx-auto bg-gray-100 overflow-hidden relative mt-4 mx-6">
                 {post.image && (
                   <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
                 )}

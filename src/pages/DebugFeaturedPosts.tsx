@@ -47,7 +47,7 @@ export default function DebugFeaturedPosts() {
         <p className="text-sm text-gray-600 mb-4">
           Direct query: <code className="bg-gray-100 px-2 py-1 rounded">posts WHERE status='published' AND is_pinned=true</code>
         </p>
-        
+
         {rawData.length === 0 ? (
           <div className="bg-yellow-50 border border-yellow-200 rounded p-4">
             <p className="text-yellow-800 font-semibold">⚠️ No pinned posts found!</p>
@@ -116,7 +116,7 @@ export default function DebugFeaturedPosts() {
                     {posts.map((post) => (
                       <li key={post.id} className="flex items-start gap-3 text-sm">
                         {post.image && (
-                          <img src={post.image} alt="" className="w-16 h-16 object-cover rounded" />
+                          <img src={post.image} alt="" className="w-12 h-12 object-cover rounded" />
                         )}
                         <div>
                           <p className="font-semibold">{post.title}</p>
