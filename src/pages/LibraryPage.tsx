@@ -25,8 +25,8 @@ export default function LibraryPage() {
   // Check if we're on the /resources route
   const isResourcesRoute = location.pathname === '/resources';
   const pageTitle = isResourcesRoute ? "Resources" : "Library";
-  const pageDescription = isResourcesRoute 
-    ? "Download essential resources, guides, checklists, and documents for emergency preparedness." 
+  const pageDescription = isResourcesRoute
+    ? "Download essential resources, guides, checklists, and documents for emergency preparedness."
     : "Browse, read, and download essential guides and manuals.";
 
   const visibleLibraryItems = libraryItems.filter((item) => {
@@ -191,7 +191,7 @@ export default function LibraryPage() {
               <div className="flex flex-col gap-2">
                 {user ? (
                   <Button asChild size="lg" className="w-full gap-2">
-                    <Link to="/premium" onClick={() => setPremiumPromptOpen(false)}>
+                    <Link to="/subscribe" onClick={() => setPremiumPromptOpen(false)}>
                       <Crown className="w-4 h-4" />
                       Upgrade to Premium
                     </Link>

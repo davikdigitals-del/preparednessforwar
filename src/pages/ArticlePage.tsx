@@ -64,7 +64,7 @@ const ArticlePage = () => {
     if (post) {
       document.title = `${post.title} | Preparedness For War`;
     }
-    
+
     // Reset title when leaving page
     return () => {
       document.title = "Preparedness For War - Latest News & Updates";
@@ -175,7 +175,7 @@ const ArticlePage = () => {
     }
   };
 
-  const openShare = (_url: string) => {}; // kept for safety, unused
+  const openShare = (_url: string) => { }; // kept for safety, unused
 
   if (dataLoading) {
     return (
@@ -236,7 +236,7 @@ const ArticlePage = () => {
         el.select();
         document.execCommand("copy");
         container.removeChild(el);
-      } catch {}
+      } catch { }
     }
     setShareCopied(true);
     setTimeout(() => setShareCopied(false), 2500);
@@ -285,7 +285,7 @@ const ArticlePage = () => {
 
   return (
     <div className="bg-white min-h-screen">
-      <div className="container max-w-screen-lg py-8">
+      <div className="container max-w-screen-xl py-8">
         {/* Breadcrumb - Enhanced */}
         <nav className="flex items-center gap-2 text-sm mb-6 flex-wrap bg-white px-4 py-3 border border-gray-200">
           <Link to="/" className="text-blue-900 hover:text-blue-700 font-semibold transition-colors">Home</Link>
@@ -296,7 +296,7 @@ const ArticlePage = () => {
           <span className="text-gray-700 font-medium line-clamp-1 max-w-[200px]">{post.title}</span>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8 items-start">
           <article className="bg-white border border-gray-200">
 
             {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -323,7 +323,7 @@ const ArticlePage = () => {
                 )}
                 {((post as any).videoUrl || (post as any).video_url) && !videoPlaying && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer"
-                       onClick={() => setVideoPlaying(true)}>
+                    onClick={() => setVideoPlaying(true)}>
                     <div className="w-16 h-16 rounded-full bg-blue-900 flex items-center justify-center shadow-2xl">
                       <Play className="w-8 h-8 text-white fill-white ml-1" />
                     </div>
@@ -356,21 +356,21 @@ const ArticlePage = () => {
                   >
                     <Share2 className="w-4 h-4" /> Share
                   </button>
-                  
+
                   {/* Mobile share panel - dropdown style */}
                   {shareOpen && (
                     <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 shadow-lg rounded-lg overflow-hidden z-20">
                       {/* Native share option if available */}
                       {navigator.share && (
-                        <button 
-                          onClick={handleNativeShare} 
+                        <button
+                          onClick={handleNativeShare}
                           className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold hover:bg-gray-50 text-left border-b border-gray-100"
                         >
                           <Share2 className="w-4 h-4 text-blue-600" />
                           Share via device
                         </button>
                       )}
-                      
+
                       <div className="p-3 border-b border-gray-100">
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Copy link</p>
                         <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded">
@@ -381,7 +381,7 @@ const ArticlePage = () => {
                           </button>
                         </div>
                       </div>
-                      
+
                       <div className="p-2">
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-2">Share on social</p>
                         <div className="space-y-0.5">
@@ -402,7 +402,7 @@ const ArticlePage = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <button
                   onClick={handleBookmark}
                   disabled={bookmarking}
@@ -574,7 +574,7 @@ const ArticlePage = () => {
                 )}
                 {((post as any).videoUrl || (post as any).video_url) && !videoPlaying && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer group hover:bg-black/50 transition-colors"
-                       onClick={() => setVideoPlaying(true)}>
+                    onClick={() => setVideoPlaying(true)}>
                     <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-blue-900 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
                       <Play className="w-10 h-10 md:w-12 md:h-12 text-white fill-white ml-1" />
                     </div>
