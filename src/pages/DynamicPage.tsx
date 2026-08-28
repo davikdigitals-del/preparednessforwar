@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Helmet } from "react-helmet-async";
 
 interface Page {
   id: string;
@@ -62,45 +61,36 @@ export default function DynamicPage() {
   }
 
   return (
-    <>
-      <Helmet>
-        <title>{page.meta_title || page.title}</title>
-        {page.meta_description && (
-          <meta name="description" content={page.meta_description} />
-        )}
-      </Helmet>
-
-      <div className="min-h-screen bg-background">
-        {/* Page header */}
-        <div className="border-b bg-card">
-          <div className="container max-w-4xl py-10 md:py-14">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{page.title}</h1>
-            {page.updated_at && (
-              <p className="mt-2 text-sm text-muted-foreground">
-                Last updated:{" "}
-                {new Date(page.updated_at).toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </p>
-            )}
-          </div>
+    <div className="min-h-screen bg-background">
+      {/* Page header */}
+      <div className="border-b bg-card">
+        <div className="container max-w-4xl py-10 md:py-14">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{page.title}</h1>
+          {page.updated_at && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Last updated:{" "}
+              {new Date(page.updated_at).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </p>
+          )}
         </div>
+      </div>
 
-        {/* Page content — render stored HTML safely */}
-        <div className="container max-w-4xl py-10">
-          <div
-            className="prose prose-slate dark:prose-invert max-w-none
+      {/* Page content — render stored HTML safely */}
+      <div className="container max-w-4xl py-10">
+        <div
+          className="prose prose-slate dark:prose-invert max-w-none
               prose-headings:font-bold prose-headings:tracking-tight
               prose-a:text-primary prose-a:no-underline hover:prose-a:underline
               prose-img:rounded-lg prose-img:shadow-md
               prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground
               prose-code:bg-muted prose-code:rounded prose-code:px-1"
-            dangerouslySetInnerHTML={{ __html: page.content }}
-          />
-        </div>
+          dangerouslySetInnerHTML={{ __html: page.content }}
+        />
       </div>
-    </>
+    </div>
   );
 }
