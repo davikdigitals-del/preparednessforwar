@@ -6,8 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, CheckCircle, Loader2, Calendar, CreditCard, AlertCircle, ArrowRight } from "lucide-react";
+import { Crown, CheckCircle, Loader2, Calendar, CreditCard, AlertCircle, ArrowRight, RotateCcw } from "lucide-react";
 import { PortalBreadcrumb } from "@/components/PortalBreadcrumb";
 
 interface SubscriptionPlan {
@@ -28,6 +29,7 @@ interface UserSubscription {
   started_at: string;
   expires_at: string | null;
   cancelled_at: string | null;
+  auto_renew: boolean;
   subscription_plans?: SubscriptionPlan;
 }
 
@@ -40,6 +42,7 @@ export default function MemberSubscription() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [loading, setLoading] = useState(true);
+  const [updateLoading, setUpdateLoading] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -118,33 +121,70 @@ export default function MemberSubscription() {
   const handleCancelSubscription = async () => {
     if (!subscription) return;
 
-    if (!confirm("Are you sure you want to cancel your subscription? You'll lose access to premium features.")) {
+    const confirmMessage = "⚠️ WARNING: Cancelling your subscription will PERMANENTLY DELETE your entire account and all data. This cannot be undone. Are you sure you want to continue?";
+
+    if (!confirm(confirmMessage)) {
       return;
     }
 
+    // Double confirmation for permanent deletion
+    const doubleConfirm = confirm("FINAL CONFIRMATION: This will permanently delete your account and ALL your data including saved articles, preparedness plans, emergency contacts, and everything else. Are you absolutely sure?");
+    if (!doubleConfirm) return;
+
+    setUpdateLoading(true);
+
     try {
-      const { error } = await supabase
-        .from("user_subscriptions")
-        .update({
-          status: "cancelled",
-          cancelled_at: new Date().toISOString(),
-        })
-        .eq("id", subscription.id);
+      const { data, error } = await supabase.functions.invoke('cancel-subscription', {
+        body: {}
+      });
 
       if (error) throw error;
 
       toast({
-        title: "Subscription Cancelled",
-        description: "Your subscription has been cancelled. You'll have access until the end of your billing period.",
+        title: "Account Deleted",
+        description: "Your subscription has been cancelled and your account has been permanently deleted.",
+        variant: "destructive",
       });
 
-      fetchData();
+      // User will be automatically logged out since account is deleted
+      navigate("/");
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
+  const handleAutoRenewalToggle = async (enabled: boolean) => {
+    if (!subscription) return;
+
+    setUpdateLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('toggle-auto-renewal', {
+        body: { auto_renew: enabled }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: enabled ? "Auto-Renewal Enabled" : "Auto-Renewal Disabled",
+        description: data.message,
+      });
+
+      fetchData(); // Refresh subscription data
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUpdateLoading(false);
     }
   };
 
@@ -210,10 +250,57 @@ export default function MemberSubscription() {
                 {subscription.expires_at && (
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Renews:</span>
+                    <span className="text-muted-foreground">
+                      {subscription.auto_renew ? 'Auto-renews:' : 'Expires:'}
+                    </span>
                     <span className="font-medium">
                       {new Date(subscription.expires_at).toLocaleDateString()}
                     </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Auto-Renewal Toggle */}
+              <div className="pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Auto-Renewal</div>
+                    <p className="text-xs text-muted-foreground">
+                      Automatically renew your subscription before it expires
+                    </p>
+                  </div>
+                  <Switch
+                    checked={subscription.auto_renew}
+                    onCheckedChange={handleAutoRenewalToggle}
+                    disabled={updateLoading}
+                  />
+                </div>
+
+                {subscription.auto_renew && (
+                  <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-md">
+                    <div className="flex items-center gap-2">
+                      <RotateCcw className="w-4 h-4 text-green-600" />
+                      <p className="text-sm text-green-800">
+                        Your subscription will automatically renew on{' '}
+                        <span className="font-medium">
+                          {subscription.expires_at && new Date(subscription.expires_at).toLocaleDateString()}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {!subscription.auto_renew && (
+                  <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-600" />
+                      <p className="text-sm text-amber-800">
+                        Auto-renewal is disabled. Your subscription will expire on{' '}
+                        <span className="font-medium">
+                          {subscription.expires_at && new Date(subscription.expires_at).toLocaleDateString()}
+                        </span>
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -232,14 +319,40 @@ export default function MemberSubscription() {
                 </div>
               )}
 
+              {/* Cancellation Section */}
               <div className="pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={handleCancelSubscription}
-                  className="text-[#d4351c] hover:text-[#aa2a12]"
-                >
-                  Cancel Subscription
-                </Button>
+                <div className="space-y-3">
+                  <h4 className="font-medium text-sm">Subscription Management</h4>
+
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-red-800">
+                        <p className="font-medium mb-1">⚠️ Important Notice</p>
+                        <p>Cancelling your subscription will permanently delete your entire account and all data. This cannot be undone.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    disabled={updateLoading}
+                    onClick={handleCancelSubscription}
+                    className="text-red-600 hover:text-red-700 border-red-300 hover:border-red-400"
+                  >
+                    {updateLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="w-4 h-4 mr-2" />
+                        Cancel Subscription & Delete Account
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (
@@ -285,11 +398,10 @@ export default function MemberSubscription() {
           return (
             <Card
               key={plan.id}
-              className={`relative ${
-                isPopular
-                  ? 'border-2 border-primary shadow-lg'
-                  : 'border-2 border-border'
-              } ${isCurrentPlan ? 'bg-primary/5' : ''}`}
+              className={`relative ${isPopular
+                ? 'border-2 border-primary shadow-lg'
+                : 'border-2 border-border'
+                } ${isCurrentPlan ? 'bg-primary/5' : ''}`}
             >
               {isPopular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
