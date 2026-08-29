@@ -7,7 +7,8 @@ import { Suspense, lazy } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DataProvider } from "@/contexts/DataContext";
-import { LanguageProvider } from "@/contexts/LanguageContext";
+import { LanguageProvider } from "@/contexts/LanguageProvider";
+import { JWTRefreshHandler } from "@/components/auth/JWTRefreshHandler";
 import CookieConsent from "@/components/CookieConsent";
 import { useSecurity } from "@/hooks/useSecurity";
 
@@ -107,6 +108,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <JWTRefreshHandler />
         <DataProvider>
           <LanguageProvider>
             <TooltipProvider>

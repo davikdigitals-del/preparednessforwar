@@ -1,6 +1,8 @@
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
+import { useNavigate, useLocation, Outlet, Link } from "react-router-dom";
+import { SessionStatus } from "@/hooks/useJWTExpiration";
 import {
   LayoutDashboard,
   FileText,
@@ -36,7 +38,7 @@ export default function AdminLayout() {
       if (isChecking) {
         console.warn("Auth check timeout - forcing check completion");
         setIsChecking(false);
-        
+
         // If still no user after timeout, redirect to login
         if (!user) {
           navigate("/admin-login");
@@ -60,7 +62,7 @@ export default function AdminLayout() {
       clearTimeout(timeout);
       return;
     }
-    
+
     // Check if user is actually an admin
     if (!isAdmin) {
       console.warn("Non-admin user attempted to access admin panel");
@@ -186,6 +188,7 @@ export default function AdminLayout() {
             <h1 className="font-display font-black text-base sm:text-xl">Admin Portal</h1>
           </div>
           <div className="flex items-center gap-1 sm:gap-4">
+            <SessionStatus />
             <Link
               to="/"
               className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 text-xs sm:text-sm hover:bg-gray-100 rounded"
@@ -206,9 +209,8 @@ export default function AdminLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-14 sm:top-16 left-0 bottom-0 w-64 bg-white border-r border-gray-200 overflow-y-auto transition-transform lg:translate-x-0 z-20 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed top-14 sm:top-16 left-0 bottom-0 w-64 bg-white border-r border-gray-200 overflow-y-auto transition-transform lg:translate-x-0 z-20 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <nav className="p-4 space-y-6">
           {menuSections.map((section) => (
@@ -225,11 +227,10 @@ export default function AdminLayout() {
                       key={item.path}
                       to={item.path}
                       onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors ${
-                        active
-                          ? "bg-primary text-white"
-                          : "text-gray-700 hover:bg-gray-100"
-                      }`}
+                      className={`flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors ${active
+                        ? "bg-primary text-white"
+                        : "text-gray-700 hover:bg-gray-100"
+                        }`}
                     >
                       <Icon className="w-4 h-4" />
                       {item.label}

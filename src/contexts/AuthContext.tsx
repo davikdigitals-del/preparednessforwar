@@ -109,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Fallback: check user metadata if profile read failed or returned no admin
     if (!isAdmin) {
       const metaIsAdmin = supaUser.user_metadata?.is_admin === true ||
-                          (supaUser as any).raw_user_meta_data?.is_admin === true;
+        (supaUser as any).raw_user_meta_data?.is_admin === true;
       if (metaIsAdmin) isAdmin = true;
     }
 
@@ -155,6 +155,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
     let debounceTimer: NodeJS.Timeout | null = null;
     let lastProcessedUserId: string | null = null;
+    let jwtCheckInterval: NodeJS.Timeout | null = null;
+
+    // Function to check JWT expiration and handle automatic logout
+    const checkJWTExpiration = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session?.access_token) {
+          return; // No session, nothing to check
+        }
+
+        // Parse JWT payload to check expiration
+        try {
+          const tokenPayload = JSON.parse(atob(session.access_token.split('.')[1]));
+          const expirationTime = tokenPayload.exp * 1000; // Convert to milliseconds
+          const currentTime = Date.now();
+          const timeUntilExpiry = expirationTime - currentTime;
+
+          console.log(`JWT expires in ${Math.floor(timeUntilExpiry / 1000)} seconds`);
+
+          // If JWT expires in the next 5 minutes or has already expired
+          if (timeUntilExpiry <= 300000) { // 5 minutes = 300000ms
+            console.log('🔒 JWT expired or expiring soon - logging out gracefully');
+
+            // Clear user state first
+            if (mounted) {
+              setUser(null);
+              setNotifications([]);
+              setLoading(false);
+            }
+
+            // Clear localStorage
+            Object.keys(localStorage)
+              .filter(k => k.startsWith("admin_status_") || k.startsWith("signup_provider_") || k.includes("oauth_intent"))
+              .forEach(k => localStorage.removeItem(k));
+
+            // Sign out from Supabase
+            await supabase.auth.signOut();
+
+            // Show friendly message and redirect
+            const currentPath = window.location.pathname;
+            const isAdminPath = currentPath.startsWith('/admin');
+
+            // Only show alert if we're not already on login/signup pages
+            if (!currentPath.includes('/login') && !currentPath.includes('/register') && !currentPath.includes('/auth')) {
+              alert(`Your session has expired. Please ${isAdminPath ? 'sign in again as an administrator' : 'log in again'}.`);
+
+              // Redirect appropriately
+              if (isAdminPath) {
+                window.location.href = '/admin-login';
+              } else {
+                window.location.href = '/login';
+              }
+            }
+          }
+        } catch (parseError) {
+          console.warn('Could not parse JWT token:', parseError);
+        }
+      } catch (error) {
+        console.warn('JWT expiration check failed:', error);
+      }
+    };
 
     const handleAuthChange = async (event: string, session: any) => {
       if (debounceTimer) clearTimeout(debounceTimer);
@@ -169,6 +231,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
           setNotifications([]);
           setLoading(false);
+        }
+
+        // Clear JWT check interval when signed out
+        if (jwtCheckInterval) {
+          clearInterval(jwtCheckInterval);
+          jwtCheckInterval = null;
         }
         return;
       }
@@ -185,7 +253,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
           setNotifications([]);
           setLoading(false);
+
+          // Clear JWT check interval when no user
+          if (jwtCheckInterval) {
+            clearInterval(jwtCheckInterval);
+            jwtCheckInterval = null;
+          }
           return;
+        }
+
+        // Start JWT expiration checking when user is signed in
+        if (!jwtCheckInterval) {
+          // Check JWT expiration every 30 seconds
+          jwtCheckInterval = setInterval(checkJWTExpiration, 30000);
+          // Also check immediately
+          checkJWTExpiration();
         }
 
         // When a user signs in via OAuth, cache their provider and ensure member role
@@ -266,6 +348,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      // Start JWT checking for initial session
+      if (!jwtCheckInterval) {
+        jwtCheckInterval = setInterval(checkJWTExpiration, 30000);
+        checkJWTExpiration();
+      }
+
       const built = await buildUser(session.user);
       if (mounted) {
         setUser(built);
@@ -277,6 +365,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false;
       if (debounceTimer) clearTimeout(debounceTimer);
+      if (jwtCheckInterval) clearInterval(jwtCheckInterval);
       authListener.subscription.unsubscribe();
     };
   }, []);
@@ -396,7 +485,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // Get the current session — don't sign in again if already authenticated
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       const supaUser = session?.user;
       if (!supaUser) {
         // No existing session — sign in

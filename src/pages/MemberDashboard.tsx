@@ -2,6 +2,7 @@ import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
+import { useJWTExpiration, SessionStatus } from "@/hooks/useJWTExpiration";
 import { natoCountries } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -22,6 +23,7 @@ export default function MemberDashboard() {
   const { user, logout, notifications, markAllNotificationsRead, loading, isAdmin } = useAuth();
   const { publishedPosts } = useData();
   const { isPremium, plan: currentPlan } = usePremiumStatus();
+  const { isExpiringSoon, timeUntilExpiry } = useJWTExpiration();
 
   const [stats, setStats] = useState({
     coursesEnrolled: 0,
@@ -161,6 +163,8 @@ export default function MemberDashboard() {
                   ? <span className="text-[#ffdd00] font-semibold">Premium Member</span>
                   : <span>Free Account</span>
                 }
+                <span>·</span>
+                <SessionStatus />
               </div>
             </div>
             {!isPremium && (
