@@ -14,9 +14,6 @@ const SectionPage = () => {
   const allPosts = publishedPosts;
   const sectionData = navSections.find((s) => s.slug === section);
 
-  const allPosts = publishedPosts;
-  const sectionData = navSections.find((s) => s.slug === section);
-
   const posts = allPosts.filter((p: any) => {
     const matchSection = p.section === section;
     const matchCategory = !category || p.category === category;
