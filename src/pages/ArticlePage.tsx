@@ -403,27 +403,23 @@ const ArticlePage = () => {
               <div className="flex items-center gap-3 px-4 py-3 border-t border-b border-gray-200 mb-4">
                 <div className="relative" ref={shareRef}>
                   <button
-                    onClick={() => setShareOpen(!shareOpen)}
+                    onClick={() => {
+                      // On mobile with native share, use it directly
+                      if (typeof navigator !== 'undefined' && navigator.share) {
+                        handleNativeShare();
+                      } else {
+                        // Desktop fallback - open dropdown
+                        setShareOpen(!shareOpen);
+                      }
+                    }}
                     className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 border border-blue-200 rounded px-3 py-1.5"
                   >
                     <Share2 className="w-4 h-4" /> Share
                   </button>
 
-                  {/* Mobile share panel - dropdown style */}
-                  {shareOpen && (
-                    <div className="absolute top-full left-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 shadow-lg rounded-lg overflow-hidden z-50 sm:left-0 -translate-x-0 sm:translate-x-0"
-                      style={{ left: 'max(-1rem, -50vw + 50%)' }}>
-                      {/* Native share option if available */}
-                      {typeof navigator !== 'undefined' && navigator.share && (
-                        <button
-                          onClick={handleNativeShare}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold hover:bg-gray-50 text-left border-b border-gray-100"
-                        >
-                          <Share2 className="w-4 h-4 text-blue-600" />
-                          Share via device
-                        </button>
-                      )}
-
+                  {/* Desktop share panel - only show when no native share */}
+                  {shareOpen && (!navigator.share) && (
+                    <div className="absolute top-full left-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 shadow-lg rounded-lg overflow-hidden z-50">
                       <div className="p-3 border-b border-gray-100">
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Copy link</p>
                         <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded">
@@ -577,11 +573,19 @@ const ArticlePage = () => {
                 {/* Share dropdown */}
                 <div ref={shareRef} className="ml-auto relative">
                   <button
-                    onClick={() => setShareOpen(o => !o)}
+                    onClick={() => {
+                      // On mobile with native share, use it directly
+                      if (typeof navigator !== 'undefined' && navigator.share) {
+                        handleNativeShare();
+                      } else {
+                        // Desktop fallback - open dropdown
+                        setShareOpen(o => !o);
+                      }
+                    }}
                     className={`flex items-center gap-2 text-sm font-bold px-4 py-2 transition-all ${shareOpen ? "bg-blue-900 text-white" : "bg-white border-2 border-blue-900 text-blue-900 hover:bg-blue-50"}`}>
                     <Share2 className="w-4 h-4" /> Share
                   </button>
-                  {shareOpen && (
+                  {shareOpen && (!navigator.share) && (
                     <div className="absolute right-0 top-full mt-1 w-72 bg-white border border-gray-200 shadow-xl z-50">
                       <div className="p-3 border-b border-gray-100">
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Article link</p>
