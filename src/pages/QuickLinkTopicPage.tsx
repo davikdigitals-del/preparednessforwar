@@ -7,17 +7,19 @@ import { Link } from "react-router-dom";
 import { useData } from "@/contexts/DataContext";
 
 export default function QuickLinkTopicPage() {
-  const { section: sectionSlug, category: topicSlug } = useParams();
+  const params = useParams<{ section?: string; category?: string }>();
+  const sectionSlug = params.section;
+  const topicSlug = params.category;
   const { publishedPosts, loading: dataLoading } = useData();
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState<any[]>([]);
 
   // Find the section and topic info
-  const section = navSections.find(s => s.slug === sectionSlug);
+  const section = sectionSlug ? navSections.find(s => s.slug === sectionSlug) : undefined;
   const topic = section?.tools?.find(t => t.slug === topicSlug);
 
   // If section or topic doesn't exist, redirect to 404
-  if (!section || !topic) {
+  if (!sectionSlug || !topicSlug || !section || !topic) {
     return <Navigate to="/404" replace />;
   }
 
