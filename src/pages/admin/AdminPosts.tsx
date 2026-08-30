@@ -105,7 +105,7 @@ export default function AdminPosts() {
         is_published: formData.is_published,
         is_pinned: formData.is_pinned,
         country_codes: formData.country_codes,
-        quick_link_topic: formData.quick_link_topic || null,
+        quick_link_topic: formData.quick_link_topic === "none" ? null : formData.quick_link_topic || null,
       };
 
       if (editingPost) {
@@ -147,7 +147,7 @@ export default function AdminPosts() {
       is_published: post.is_published || false,
       is_pinned: post.is_pinned || false,
       country_codes: post.country_codes || [],
-      quick_link_topic: post.quick_link_topic || "",
+      quick_link_topic: post.quick_link_topic || "none",
     });
     setDialogOpen(true);
   };
@@ -197,7 +197,7 @@ export default function AdminPosts() {
       is_published: true,
       is_pinned: false,
       country_codes: [],
-      quick_link_topic: "",
+      quick_link_topic: "none",
     });
   };
 
@@ -540,7 +540,7 @@ export default function AdminPosts() {
                       <SelectValue placeholder={formData.section ? "Assign to quick link topic" : "Select section first"} />
                     </SelectTrigger>
                     <SelectContent className="max-h-48 overflow-y-auto">
-                      <SelectItem value="">None - Don't assign to quick links</SelectItem>
+                      <SelectItem value="none">None - Don't assign to quick links</SelectItem>
                       {sections.find(s => s.slug === formData.section)?.tools?.map((tool) => (
                         <SelectItem key={tool.slug} value={tool.slug}>{tool.title}</SelectItem>
                       )) || []}
