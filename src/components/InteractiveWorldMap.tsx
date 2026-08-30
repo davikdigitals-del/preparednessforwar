@@ -36,7 +36,7 @@ export const InteractiveWorldMap = ({
     const rect = wrapperRef.current.getBoundingClientRect();
     tooltipRef.current.textContent = name;
     tooltipRef.current.style.left = `${clientX - rect.left + 14}px`;
-    tooltipRef.current.style.top  = `${clientY - rect.top  - 10}px`;
+    tooltipRef.current.style.top = `${clientY - rect.top - 10}px`;
     tooltipRef.current.style.display = "block";
   };
 
@@ -55,16 +55,21 @@ export const InteractiveWorldMap = ({
 
     const init = async () => {
       try {
+        console.log('🗺️ Loading map script...');
         await loadScript(SCRIPT_SRC);
         if (cancelled) return;
 
         const mapFn = (window as any).svgWorldMap;
-        if (typeof mapFn !== "function") throw new Error("svgWorldMap not available");
+        console.log('🗺️ Map function available:', typeof mapFn);
+        if (typeof mapFn !== "function") {
+          console.error('❌ svgWorldMap function not found');
+          throw new Error("svgWorldMap not available");
+        }
 
         const ts = Date.now();
         const clickCb = `_mapClick_${ts}`;
-        const overCb  = `_mapOver_${ts}`;
-        const outCb   = `_mapOut_${ts}`;
+        const overCb = `_mapOver_${ts}`;
+        const outCb = `_mapOut_${ts}`;
 
         (window as any)[clickCb] = (data: any) => {
           if (!data) return;
@@ -111,8 +116,8 @@ export const InteractiveWorldMap = ({
           worldColor: highlightCountry ? "#cbd5e1" : "#e2e8f0",
           countryStroke: { out: "#94a3b8", over: "#1e40af", click: "#1e3a8a" },
           mapClick: clickCb,
-          mapOver:  overCb,
-          mapOut:   outCb,
+          mapOver: overCb,
+          mapOut: outCb,
         });
 
         if (cancelled) return;
@@ -160,7 +165,7 @@ export const InteractiveWorldMap = ({
                   showTooltipAt(activeNameRef.current, objRect.left + e.clientX, objRect.top + e.clientY);
                 });
                 innerDoc.addEventListener("mouseleave", () => hideTooltip());
-              } catch (_) {}
+              } catch (_) { }
             };
 
             // Apply highlight
@@ -177,7 +182,7 @@ export const InteractiveWorldMap = ({
                       (p as SVGElement).style.fill = "#1d4ed8";
                     });
                   });
-                } catch (_) {}
+                } catch (_) { }
               };
               svgObj.addEventListener("load", applyHighlight);
               setTimeout(applyHighlight, 500);
