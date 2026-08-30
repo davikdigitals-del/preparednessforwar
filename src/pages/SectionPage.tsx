@@ -15,8 +15,16 @@ const SectionPage = () => {
   const allPosts = publishedPosts;
   const sectionData = navSections.find((s) => s.slug === section);
 
-  // Check if this is a quick link topic
-  const isQuickLinkTopic = category && sectionData?.tools?.some((t: any) => t.slug === category);
+  // Check if this is a quick link topic - with safe checks
+  let isQuickLinkTopic = false;
+  try {
+    if (category && sectionData && sectionData.tools && Array.isArray(sectionData.tools)) {
+      isQuickLinkTopic = sectionData.tools.some((t: any) => t && typeof t === 'object' && t.slug === category);
+    }
+  } catch (err) {
+    console.error('Error checking quick link topic:', err);
+    isQuickLinkTopic = false;
+  }
 
   // If it's a quick link topic, render the dedicated page
   if (isQuickLinkTopic) {
