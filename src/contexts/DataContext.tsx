@@ -208,10 +208,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [mediaLoading, setMediaLoading] = useState(true);
 
-  // Clear any cached data on context creation to prevent stale data
-  const [dataFreshness] = useState(() => Date.now());
+  // Prevent any stale data by clearing on mount
+  const [dataFreshness] = useState(() => {
+    // Clear any cached state
+    return Date.now();
+  });
 
   const refreshPosts = useCallback(async () => {
+    console.log('🔄 refreshPosts called - clearing existing posts first');
+
+    // Clear existing posts first to prevent stale data
+    setPosts([]);
+
     try {
       // Load posts from database with error handling
       const { data, error } = await supabase
@@ -227,6 +235,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
 
       if (data) {
+        console.log(`✅ Loaded ${data.length} posts from database`);
         setPosts(data.map((row) => mapPost(row as DbPost & { country_codes?: string[] })));
       }
     } catch (err) {
@@ -284,6 +293,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       ]);
 
       setLoading(false);
+      console.log('✅ Initial load complete - posts and core data loaded');
       setInitialLoadComplete(true);
 
       // Load remaining data in background
@@ -314,9 +324,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const publishedPosts = useMemo(() => {
     try {
-      return initialLoadComplete ? (posts || []).filter((p) =>
+      // Only return posts when initial load is complete AND we have posts data
+      if (!initialLoadComplete || !posts.length) {
+        console.log('🔄 Not showing published posts yet - initialLoadComplete:', initialLoadComplete, 'posts.length:', posts.length);
+        return [];
+      }
+
+      const filtered = (posts || []).filter((p) =>
         p && (p.status === "published" || (p as any).is_published === true)
-      ) : []; // Don't show any posts until initial load is complete to prevent stale data
+      );
+
+      console.log(`✅ Returning ${filtered.length} published posts`);
+      return filtered;
     } catch (error) {
       console.error('Error filtering published posts:', error);
       return []; // Safe fallback

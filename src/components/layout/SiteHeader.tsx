@@ -16,7 +16,8 @@ import { useLang } from "@/contexts/LanguageContext";
 function buildMenuConfig(
   section: (typeof navSections)[number],
   featuredPosts?: { id: string; title: string; image: string | null; category: string; standfirst: string | null }[],
-  publishedPosts: any[] = []
+  publishedPosts: any[] = [],
+  initialLoadComplete: boolean = false
 ): MegaMenuConfig {
   console.log(`🔧 Building menu for section: ${section.slug}`, { featuredPosts });
 
@@ -56,15 +57,15 @@ function buildMenuConfig(
           label: tool.title,
           href: `/${section.slug}/${tool.slug}`,
         })),
-        // Add popular posts from this section (with safety check)
-        ...(publishedPosts || [])
+        // Add popular posts from this section (only when data is fully loaded)
+        ...(initialLoadComplete ? (publishedPosts || [])
           .filter(post => post && post.section === section.slug)
           .slice(0, 4)
           .map((post) => ({
             id: `post-${post.id}`,
             label: (post.title || '').length > 40 ? (post.title || '').substring(0, 40) + '...' : (post.title || 'Untitled'),
             href: `/${section.slug}/${post.category || 'general'}/${post.id}`,
-          })),
+          })) : []),
       ],
     },
     featured: {
@@ -105,7 +106,7 @@ export function SiteHeader() {
   const { user, logout } = useAuth();
   const featuredMap = useFeaturedPosts();
   const { sections: dbSections = [] } = useNavSections();
-  const { banner, publishedPosts = [] } = useData();
+  const { banner, publishedPosts = [], initialLoadComplete } = useData();
   const { t } = useLang();
 
   const headerRef = useRef<HTMLElement>(null);
@@ -267,7 +268,7 @@ export function SiteHeader() {
               {/* Dropdown panels */}
               {mainNavItems.map((item) => {
                 const section = activeSections.find((s) => s.slug === item.section);
-                const config = section ? buildMenuConfig(section, featuredMap[item.section], publishedPosts || []) : null;
+                const config = section ? buildMenuConfig(section, featuredMap[item.section], publishedPosts || [], initialLoadComplete) : null;
                 return config ? (
                   <MegaMenuContent
                     key={item.section}
