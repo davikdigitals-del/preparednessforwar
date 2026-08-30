@@ -40,7 +40,9 @@ export default function AdminPosts() {
   const toolsForSection = (sectionSlug: string) => {
     if (!sectionSlug) return [];
     // Always use static navSections for tools/quick links since DB sections don't have this data yet
-    return navSections.find(s => s.slug === sectionSlug)?.tools || [];
+    const tools = navSections.find(s => s.slug === sectionSlug)?.tools || [];
+    console.log(`🔧 Tools for section "${sectionSlug}":`, tools);
+    return tools;
   };
 
   const [formData, setFormData] = useState({

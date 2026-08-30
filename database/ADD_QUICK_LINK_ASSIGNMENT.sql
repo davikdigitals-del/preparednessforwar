@@ -15,8 +15,27 @@ END $$;
 -- Create index for quick lookup
 CREATE INDEX IF NOT EXISTS idx_posts_quick_link_topic ON posts(quick_link_topic) WHERE quick_link_topic IS NOT NULL;
 
--- Update RLS policies to include the new column
+-- Enable RLS on posts table if not already enabled
+ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies to recreate them
 DROP POLICY IF EXISTS "Posts are viewable by everyone" ON posts;
-CREATE POLICY "Posts are viewable by everyone" ON posts FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Admins can do everything with posts" ON posts;
+
+-- Allow public read access to published posts
+CREATE POLICY "Posts are viewable by everyone" 
+ON posts FOR SELECT 
+USING (true);
+
+-- Allow admins full access to posts
+CREATE POLICY "Admins can do everything with posts" 
+ON posts FOR ALL 
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles 
+    WHERE profiles.id = auth.uid() 
+    AND profiles.is_admin = true
+  )
+);
 
 COMMENT ON TABLE posts IS 'Blog posts with support for quick link topic assignment';
