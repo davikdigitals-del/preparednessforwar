@@ -37,6 +37,12 @@ export default function AdminPosts() {
     return navSections.find(s => s.slug === sectionSlug)?.categories || [];
   };
 
+  const toolsForSection = (sectionSlug: string) => {
+    if (!sectionSlug) return [];
+    // Always use static navSections for tools/quick links since DB sections don't have this data yet
+    return navSections.find(s => s.slug === sectionSlug)?.tools || [];
+  };
+
   const [formData, setFormData] = useState({
     title: "",
     content: "",
@@ -541,9 +547,9 @@ export default function AdminPosts() {
                     </SelectTrigger>
                     <SelectContent className="max-h-48 overflow-y-auto">
                       <SelectItem value="none">None - Don't assign to quick links</SelectItem>
-                      {sections.find(s => s.slug === formData.section)?.tools?.map((tool) => (
+                      {toolsForSection(formData.section).map((tool) => (
                         <SelectItem key={tool.slug} value={tool.slug}>{tool.title}</SelectItem>
-                      )) || []}
+                      ))}
                     </SelectContent>
                   </Select>
                   <p className="text-sm text-gray-500 mt-1">
