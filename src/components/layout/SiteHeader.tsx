@@ -18,18 +18,18 @@ function buildMenuConfig(
   featuredPosts?: { id: string; title: string; image: string | null; category: string; standfirst: string | null }[]
 ): MegaMenuConfig {
   console.log(`🔧 Building menu for section: ${section.slug}`, { featuredPosts });
-  
+
   // Only use real pinned posts from database, ignore mock data
   const featuredItems = featuredPosts && featuredPosts.length > 0
     ? featuredPosts.map(post => ({
-        id: post.id,
-        title: post.title,
-        description: post.standfirst?.replace(/<[^>]*>/g, '').substring(0, 80) || "",
-        imageUrl: post.image || "/placeholder.svg",
-        href: `/${section.slug}/${post.category}/${post.id}`,
-      }))
+      id: post.id,
+      title: post.title,
+      description: post.standfirst?.replace(/<[^>]*>/g, '').substring(0, 80) || "",
+      imageUrl: post.image || "/placeholder.svg",
+      href: `/${section.slug}/${post.category}/${post.id}`,
+    }))
     : []; // No fallback to mock data
-  
+
   console.log(`✨ Featured items for ${section.slug}:`, featuredItems);
 
   return {
@@ -43,7 +43,7 @@ function buildMenuConfig(
       })),
     },
     programmes: {
-      heading: "Quick Links",
+      heading: "Popular Articles",
       groups: [
         {
           id: "all",
@@ -55,6 +55,15 @@ function buildMenuConfig(
           label: tool.title,
           href: `/${section.slug}/${tool.slug}`,
         })),
+        // Add popular posts from this section
+        ...publishedPosts
+          .filter(post => post.section === section.slug)
+          .slice(0, 4)
+          .map((post) => ({
+            id: `post-${post.id}`,
+            label: post.title.length > 40 ? post.title.substring(0, 40) + '...' : post.title,
+            href: `/${section.slug}/${post.category}/${post.id}`,
+          })),
       ],
     },
     featured: {
@@ -95,7 +104,7 @@ export function SiteHeader() {
   const { user, logout } = useAuth();
   const featuredMap = useFeaturedPosts();
   const { sections: dbSections } = useNavSections();
-  const { banner } = useData();
+  const { banner, publishedPosts } = useData();
   const { t } = useLang();
 
   const headerRef = useRef<HTMLElement>(null);

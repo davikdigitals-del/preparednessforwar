@@ -22,6 +22,8 @@ export function useNavSections() {
   useEffect(() => {
     const load = async () => {
       try {
+        setLoading(true); // Ensure loading state is set
+
         // Read from nav_sections + nav_categories — these are what Admin Sections manages
         const [{ data: navSecs }, { data: navCats }, { data: navTools }] = await Promise.all([
           supabase.from("nav_sections").select("*").eq("is_active", true).order("sort_order"),
@@ -53,5 +55,9 @@ export function useNavSections() {
     load();
   }, []);
 
-  return { sections, loading };
+  // Don't return sections until loading is complete to prevent stale data
+  return {
+    sections: loading ? [] : sections,
+    loading
+  };
 }

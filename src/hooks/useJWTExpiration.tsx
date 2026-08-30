@@ -141,12 +141,12 @@ export function SessionStatus() {
 
   return (
     <div className={`text-xs px-2 py-1 rounded ${isExpired ? 'bg-red-100 text-red-800' :
-        isExpiringSoon ? 'bg-amber-100 text-amber-800' :
-          'bg-green-100 text-green-800'
+      isExpiringSoon ? 'bg-amber-100 text-amber-800' :
+        'bg-gray-100 text-gray-600'
       }`}>
       {isExpired ? '🔒 Expired' :
         isExpiringSoon ? `⏰ ${formatTimeRemaining(timeUntilExpiry)}` :
-          '🟢 Active'}
+          '⚪ Active'}
     </div>
   );
 }

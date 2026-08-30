@@ -208,6 +208,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [mediaLoading, setMediaLoading] = useState(true);
 
+  // Clear any cached data on context creation to prevent stale data
+  const [dataFreshness] = useState(() => Date.now());
+
   const refreshPosts = useCallback(async () => {
     try {
       // Load posts from database with error handling
@@ -309,9 +312,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     };
   }, [refreshAlerts, refreshBanner, refreshEncyclopaedia, refreshLibrary, refreshMedia, refreshPosts]);
 
-  const publishedPosts = posts.filter((p) =>
+  const publishedPosts = initialLoadComplete ? posts.filter((p) =>
     p.status === "published" || (p as any).is_published === true
-  );
+  ) : []; // Don't show any posts until initial load is complete to prevent stale data
 
   const createPost = async (post: Omit<AdminPost, "id">) => {
     await (supabase.from("posts") as any).insert({
@@ -531,6 +534,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         mediaItems,
         libraryItems,
         encEntries,
+        dataFreshness, // Include freshness key to prevent stale data
         banner,
         publishedPosts,
         loading,
