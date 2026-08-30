@@ -103,6 +103,7 @@ export const InteractiveWorldMap = ({
         if (staleContainer) staleContainer.remove();
 
         // Call the library — it's synchronous, creates a container + <object> in the DOM
+        console.log('🗺️ Calling mapFn...');
         mapFn({
           libPath: "/svg-world-map/",
           bigMap: false,
@@ -119,6 +120,7 @@ export const InteractiveWorldMap = ({
           mapOver: overCb,
           mapOut: outCb,
         });
+        console.log('🗺️ mapFn called, checking for container...');
 
         if (cancelled) return;
 
@@ -145,12 +147,16 @@ export const InteractiveWorldMap = ({
         await waitForContainer();
         if (cancelled) return;
 
+        console.log('🗺️ Wait complete, getting elements...');
         const libContainer = document.getElementById("svg-world-map-container");
         const svgObj = document.getElementById("svg-world-map") as HTMLObjectElement | null;
+        console.log('🗺️ libContainer:', !!libContainer, 'svgObj:', !!svgObj, 'wrapperRef:', !!wrapperRef.current);
 
         if (libContainer && wrapperRef.current) {
+          console.log('🗺️ Appending container to wrapper...');
           wrapperRef.current.appendChild(libContainer);
           libContainer.style.cssText = "position:absolute;inset:0;width:100%;height:100%;overflow:hidden;margin:0;padding:0;visibility:visible;";
+          console.log('🗺️ Container appended and styled');
 
           if (svgObj) {
             svgObj.style.cssText = "width:100%;height:100%;display:block;border:none;";
@@ -194,7 +200,9 @@ export const InteractiveWorldMap = ({
           }
 
           setStatus("ready");
+          console.log('🗺️ Map ready!');
         } else {
+          console.error('🗺️ Container or wrapper not found:', { libContainer: !!libContainer, wrapperRef: !!wrapperRef.current });
           throw new Error("Map container not found after waiting");
         }
 
