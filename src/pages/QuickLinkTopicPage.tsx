@@ -120,7 +120,7 @@ export default function QuickLinkTopicPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
             {posts.map((post) => {
               const postId = String(post.id || '');
               const postTitle = String(post.title || 'Untitled');
@@ -142,12 +142,12 @@ export default function QuickLinkTopicPage() {
                       </div>
                     )}
 
-                    <div className="p-4 sm:p-6">
-                      <h2 className="text-lg sm:text-xl font-semibold mb-2 line-clamp-2">{postTitle}</h2>
+                    <div className="p-3 sm:p-6">
+                      <h2 className="text-sm sm:text-lg lg:text-xl font-semibold mb-2 line-clamp-2">{postTitle}</h2>
                       {postExcerpt && (
                         <p className="text-sm sm:text-base text-gray-600 mb-4 line-clamp-3">{postExcerpt}</p>
                       )}
-                      <p className="text-sm text-gray-500">By {postAuthor}</p>
+                      <p className="text-xs sm:text-sm text-gray-500">By {postAuthor}</p>
                     </div>
                   </Link>
                 </article>
