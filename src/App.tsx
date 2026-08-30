@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -7,7 +8,7 @@ import { Suspense, lazy } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DataProvider } from "@/contexts/DataContext";
-import { LanguageProvider } from "@/contexts/LanguageProvider";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { JWTRefreshHandler } from "@/components/auth/JWTRefreshHandler";
 import CookieConsent from "@/components/CookieConsent";
 import { useSecurity } from "@/hooks/useSecurity";
