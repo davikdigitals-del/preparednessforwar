@@ -5,6 +5,8 @@ import { useNavSections } from "@/hooks/useNavSections";
 import { PostCard } from "@/components/PostCard";
 import { SidebarModules } from "@/components/SidebarModules";
 import { ArrowRight } from "lucide-react";
+import QuickLinkTopicPage from "./QuickLinkTopicPage";
+import { navSections as staticSections } from "@/data/mockData";
 
 const SectionPage = () => {
   const { section, category } = useParams<{ section: string; category?: string }>();
@@ -13,6 +15,20 @@ const SectionPage = () => {
 
   const allPosts = publishedPosts;
   const sectionData = navSections.find((s) => s.slug === section);
+
+  // Check if this is a quick link topic using static sections
+  let isQuickLinkTopic = false;
+  if (category) {
+    const staticSection = staticSections.find(s => s.slug === section);
+    if (staticSection && staticSection.tools) {
+      isQuickLinkTopic = staticSection.tools.some(t => t.slug === category);
+    }
+  }
+
+  // Render quick link topic page
+  if (isQuickLinkTopic) {
+    return <QuickLinkTopicPage />;
+  }
 
   const posts = allPosts.filter((p: any) => {
     const matchSection = p.section === section;
