@@ -16,7 +16,6 @@ import { useSecurity } from "@/hooks/useSecurity";
 // Core public pages — loaded immediately
 import Index from "./pages/Index";
 import ArticlePage from "./pages/ArticlePage";
-import QuickLinkTopicPage from "./pages/QuickLinkTopicPage";
 import PublicLayout from "./pages/PublicLayout";
 import NotFound from "./pages/NotFound";
 const DynamicPage = lazy(() => import("./pages/DynamicPage"));
