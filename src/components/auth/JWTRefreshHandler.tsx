@@ -17,7 +17,8 @@ export function JWTRefreshHandler() {
     let refreshInterval: NodeJS.Timeout;
     let expirationCheckInterval: NodeJS.Timeout;
 
-    const handleTokenExpiration = async () => {
+    // Handle token expiration
+    const handleTokenExpiration = () => {
       console.log('🔒 JWT token expired - logging out user');
 
       toast({
@@ -26,19 +27,20 @@ export function JWTRefreshHandler() {
         variant: "destructive",
       });
 
-      // Wait a moment for the toast to show
-      setTimeout(async () => {
-        await logout();
-      }, 1000);
+      // Wait a moment for the toast to show then logout
+      setTimeout(() => {
+        logout();
+      }, 1500);
     };
 
+    // Check if token is expired
     const checkTokenExpiration = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!session?.access_token) {
           console.log('⚠️ No active session found');
-          await handleTokenExpiration();
+          handleTokenExpiration();
           return;
         }
 
@@ -47,16 +49,17 @@ export function JWTRefreshHandler() {
         const expirationTime = tokenPayload.exp * 1000;
         const currentTime = Date.now();
 
-        // If token is expired, logout immediately
+        // If token is expired, logout
         if (currentTime >= expirationTime) {
           console.log('⚠️ Token is expired');
-          await handleTokenExpiration();
+          handleTokenExpiration();
         }
       } catch (error) {
         console.error('❌ Error checking token expiration:', error);
       }
     };
 
+    // Refresh token
     const refreshToken = async () => {
       try {
         console.log('🔄 Attempting to refresh JWT token...');
@@ -65,7 +68,7 @@ export function JWTRefreshHandler() {
 
         if (error) {
           console.error('❌ Token refresh failed:', error);
-          // If refresh fails, token might be expired - check and logout if needed
+          // Check if token is expired
           await checkTokenExpiration();
           return;
         }
@@ -74,7 +77,7 @@ export function JWTRefreshHandler() {
           console.log('✅ JWT token refreshed successfully');
         } else {
           // No session returned - token likely expired
-          await handleTokenExpiration();
+          handleTokenExpiration();
         }
       } catch (error) {
         console.error('❌ Token refresh exception:', error);
@@ -82,12 +85,13 @@ export function JWTRefreshHandler() {
       }
     };
 
+    // Setup token refresh
     const setupTokenRefresh = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!session?.access_token) {
-          await handleTokenExpiration();
+          handleTokenExpiration();
           return;
         }
 
@@ -99,7 +103,7 @@ export function JWTRefreshHandler() {
 
         // If token is already expired, logout immediately
         if (timeUntilExpiry <= 0) {
-          await handleTokenExpiration();
+          handleTokenExpiration();
           return;
         }
 
@@ -128,14 +132,14 @@ export function JWTRefreshHandler() {
 
       } catch (error) {
         console.warn('Could not setup token refresh:', error);
-        await handleTokenExpiration();
+        handleTokenExpiration();
       }
     };
 
     // Setup refresh on mount
     setupTokenRefresh();
 
-    // Listen for auth state changes to reset refresh timing
+    // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'TOKEN_REFRESHED' && session) {
         console.log('🔄 Token was refreshed, resetting refresh timer');
@@ -150,6 +154,7 @@ export function JWTRefreshHandler() {
       }
     });
 
+    // Cleanup
     return () => {
       if (refreshInterval) {
         clearInterval(refreshInterval);
@@ -159,8 +164,7 @@ export function JWTRefreshHandler() {
       }
       authListener.subscription.unsubscribe();
     };
-  }, [user, logout, toast]);
+  }, [user]); // Only depend on user to avoid circular dependencies
 
-  // This component doesn't render anything
   return null;
 }
