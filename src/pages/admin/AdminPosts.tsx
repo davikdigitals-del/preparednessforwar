@@ -50,6 +50,7 @@ export default function AdminPosts() {
     is_published: true,
     is_pinned: false,
     country_codes: [] as string[],
+    quick_link_topic: "", // Quick link topic assignment
   });
 
   useEffect(() => {
@@ -104,6 +105,7 @@ export default function AdminPosts() {
         is_published: formData.is_published,
         is_pinned: formData.is_pinned,
         country_codes: formData.country_codes,
+        quick_link_topic: formData.quick_link_topic || null,
       };
 
       if (editingPost) {
@@ -145,6 +147,7 @@ export default function AdminPosts() {
       is_published: post.is_published || false,
       is_pinned: post.is_pinned || false,
       country_codes: post.country_codes || [],
+      quick_link_topic: post.quick_link_topic || "",
     });
     setDialogOpen(true);
   };
@@ -194,6 +197,7 @@ export default function AdminPosts() {
       is_published: true,
       is_pinned: false,
       country_codes: [],
+      quick_link_topic: "",
     });
   };
 
@@ -314,6 +318,11 @@ export default function AdminPosts() {
                         {post.is_pinned && (
                           <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">📌 Pinned</span>
                         )}
+                        {post.quick_link_topic && (
+                          <span className="px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-800">
+                            🔗 Quick Link
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -339,7 +348,7 @@ export default function AdminPosts() {
                         onClick={async () => {
                           try {
                             console.log("📌 Pin button clicked for post:", post.id, "Current is_pinned:", post.is_pinned);
-                            
+
                             // If trying to pin, check if section already has 2 pinned posts
                             if (!post.is_pinned) {
                               const { data: pinnedPosts, error: checkError } = await supabase
@@ -347,9 +356,9 @@ export default function AdminPosts() {
                                 .select("id")
                                 .eq("section", post.section)
                                 .eq("is_pinned", true);
-                              
+
                               console.log("Current pinned posts in section:", pinnedPosts, checkError);
-                              
+
                               if (checkError) {
                                 console.error("Error checking pinned posts:", checkError);
                                 toast({
@@ -359,7 +368,7 @@ export default function AdminPosts() {
                                 });
                                 return;
                               }
-                              
+
                               if (pinnedPosts && pinnedPosts.length >= 2) {
                                 toast({
                                   title: "Maximum Limit Reached",
@@ -369,15 +378,15 @@ export default function AdminPosts() {
                                 return;
                               }
                             }
-                            
+
                             const newPinnedState = !post.is_pinned;
                             console.log("Updating is_pinned to:", newPinnedState);
-                            
+
                             const { error: updateError } = await supabase
                               .from("posts")
                               .update({ is_pinned: newPinnedState })
                               .eq("id", post.id);
-                            
+
                             if (updateError) {
                               console.error("Update error:", updateError);
                               toast({
@@ -387,14 +396,14 @@ export default function AdminPosts() {
                               });
                               return;
                             }
-                            
+
                             console.log("✅ Update successful!");
-                            
+
                             toast({
                               title: post.is_pinned ? "Post Unpinned" : "Post Pinned",
                               description: post.is_pinned ? "Removed from menu featured" : "Added to menu featured",
                             });
-                            
+
                             fetchPosts();
                           } catch (err: any) {
                             console.error("Exception in pin handler:", err);
@@ -518,6 +527,28 @@ export default function AdminPosts() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div>
+                  <Label>Quick Link Topic (Optional)</Label>
+                  <Select
+                    value={formData.quick_link_topic}
+                    onValueChange={(value) => setFormData({ ...formData, quick_link_topic: value })}
+                    disabled={!formData.section}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={formData.section ? "Assign to quick link topic" : "Select section first"} />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-48 overflow-y-auto">
+                      <SelectItem value="">None - Don't assign to quick links</SelectItem>
+                      {sections.find(s => s.slug === formData.section)?.tools?.map((tool) => (
+                        <SelectItem key={tool.slug} value={tool.slug}>{tool.title}</SelectItem>
+                      )) || []}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Assign this post to appear on a specific quick link topic page
+                  </p>
                 </div>
 
                 <div>
