@@ -411,7 +411,8 @@ const ArticlePage = () => {
 
                   {/* Mobile share panel - dropdown style */}
                   {shareOpen && (
-                    <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 shadow-lg rounded-lg overflow-hidden z-20">
+                    <div className="absolute top-full left-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 shadow-lg rounded-lg overflow-hidden z-50 sm:left-0 -translate-x-0 sm:translate-x-0"
+                      style={{ left: 'max(-1rem, -50vw + 50%)' }}>
                       {/* Native share option if available */}
                       {typeof navigator !== 'undefined' && navigator.share && (
                         <button

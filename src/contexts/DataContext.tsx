@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from "react";
 import { publicSupabase as supabase } from "@/integrations/supabase/publicClient";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -312,9 +312,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     };
   }, [refreshAlerts, refreshBanner, refreshEncyclopaedia, refreshLibrary, refreshMedia, refreshPosts]);
 
-  const publishedPosts = initialLoadComplete ? posts.filter((p) =>
-    p.status === "published" || (p as any).is_published === true
-  ) : []; // Don't show any posts until initial load is complete to prevent stale data
+  const publishedPosts = useMemo(() => {
+    try {
+      return initialLoadComplete ? (posts || []).filter((p) =>
+        p && (p.status === "published" || (p as any).is_published === true)
+      ) : []; // Don't show any posts until initial load is complete to prevent stale data
+    } catch (error) {
+      console.error('Error filtering published posts:', error);
+      return []; // Safe fallback
+    }
+  }, [posts, initialLoadComplete]);
 
   const createPost = async (post: Omit<AdminPost, "id">) => {
     await (supabase.from("posts") as any).insert({
@@ -536,7 +543,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         encEntries,
         dataFreshness, // Include freshness key to prevent stale data
         banner,
-        publishedPosts,
+        publishedPosts: initialLoadComplete ? publishedPosts : [], // Safe fallback to prevent crashes
         loading,
         mediaLoading,
         createPost,

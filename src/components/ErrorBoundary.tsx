@@ -1,78 +1,47 @@
-import React from "react";
+import React, { Component, ReactNode } from 'react';
+
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
 
 interface State {
   hasError: boolean;
-  error: string;
+  error?: Error;
 }
 
-export class ErrorBoundary extends React.Component<{ children: React.ReactNode }, State> {
-  constructor(props: any) {
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: "" };
+    this.state = { hasError: false };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error: error.message || String(error) };
+    return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, info: React.ErrorInfo) {
-    console.error("App crashed:", error, info);
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
-      return (
-        <div style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "20px",
-          background: "#fff",
-          fontFamily: "sans-serif",
-          textAlign: "center"
-        }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
-          <h1 style={{ fontSize: 20, fontWeight: "bold", marginBottom: 8, color: "#111" }}>
-            Something went wrong
-          </h1>
-          <p style={{ color: "#666", marginBottom: 24, fontSize: 14 }}>
-            The page encountered an error. Please try refreshing.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              background: "#1d4ed8",
-              color: "#fff",
-              border: "none",
-              padding: "12px 24px",
-              borderRadius: 8,
-              fontSize: 14,
-              fontWeight: "bold",
-              cursor: "pointer"
-            }}
-          >
-            Refresh Page
-          </button>
-          {process.env.NODE_ENV === "development" && (
-            <pre style={{
-              marginTop: 24,
-              padding: 12,
-              background: "#fee2e2",
-              borderRadius: 8,
-              fontSize: 11,
-              textAlign: "left",
-              maxWidth: "100%",
-              overflow: "auto",
-              color: "#991b1b"
-            }}>
-              {this.state.error}
-            </pre>
-          )}
+      return this.props.fallback || (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">Loading...</h2>
+            <p className="text-gray-600 mb-4">Please wait while we load the content.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Refresh Page
+            </button>
+          </div>
         </div>
       );
     }
+
     return this.props.children;
   }
 }

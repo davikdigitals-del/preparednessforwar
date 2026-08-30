@@ -15,7 +15,8 @@ import { useLang } from "@/contexts/LanguageContext";
 // Build a MegaMenuConfig from a navSection, injecting live featured posts if available
 function buildMenuConfig(
   section: (typeof navSections)[number],
-  featuredPosts?: { id: string; title: string; image: string | null; category: string; standfirst: string | null }[]
+  featuredPosts?: { id: string; title: string; image: string | null; category: string; standfirst: string | null }[],
+  publishedPosts: any[] = []
 ): MegaMenuConfig {
   console.log(`🔧 Building menu for section: ${section.slug}`, { featuredPosts });
 
@@ -55,14 +56,14 @@ function buildMenuConfig(
           label: tool.title,
           href: `/${section.slug}/${tool.slug}`,
         })),
-        // Add popular posts from this section
-        ...publishedPosts
-          .filter(post => post.section === section.slug)
+        // Add popular posts from this section (with safety check)
+        ...(publishedPosts || [])
+          .filter(post => post && post.section === section.slug)
           .slice(0, 4)
           .map((post) => ({
             id: `post-${post.id}`,
-            label: post.title.length > 40 ? post.title.substring(0, 40) + '...' : post.title,
-            href: `/${section.slug}/${post.category}/${post.id}`,
+            label: (post.title || '').length > 40 ? (post.title || '').substring(0, 40) + '...' : (post.title || 'Untitled'),
+            href: `/${section.slug}/${post.category || 'general'}/${post.id}`,
           })),
       ],
     },
@@ -103,8 +104,8 @@ export function SiteHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const { user, logout } = useAuth();
   const featuredMap = useFeaturedPosts();
-  const { sections: dbSections } = useNavSections();
-  const { banner, publishedPosts } = useData();
+  const { sections: dbSections = [] } = useNavSections();
+  const { banner, publishedPosts = [] } = useData();
   const { t } = useLang();
 
   const headerRef = useRef<HTMLElement>(null);
@@ -266,7 +267,7 @@ export function SiteHeader() {
               {/* Dropdown panels */}
               {mainNavItems.map((item) => {
                 const section = activeSections.find((s) => s.slug === item.section);
-                const config = section ? buildMenuConfig(section, featuredMap[item.section]) : null;
+                const config = section ? buildMenuConfig(section, featuredMap[item.section], publishedPosts || []) : null;
                 return config ? (
                   <MegaMenuContent
                     key={item.section}
