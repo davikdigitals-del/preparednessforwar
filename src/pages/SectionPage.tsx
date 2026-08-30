@@ -5,7 +5,6 @@ import { useNavSections } from "@/hooks/useNavSections";
 import { PostCard } from "@/components/PostCard";
 import { SidebarModules } from "@/components/SidebarModules";
 import { ArrowRight } from "lucide-react";
-import QuickLinkTopicPage from "./QuickLinkTopicPage";
 
 const SectionPage = () => {
   const { section, category } = useParams<{ section: string; category?: string }>();
@@ -14,22 +13,6 @@ const SectionPage = () => {
 
   const allPosts = publishedPosts;
   const sectionData = navSections.find((s) => s.slug === section);
-
-  // Check if this is a quick link topic - with safe checks
-  let isQuickLinkTopic = false;
-  try {
-    if (category && sectionData && sectionData.tools && Array.isArray(sectionData.tools)) {
-      isQuickLinkTopic = sectionData.tools.some((t: any) => t && typeof t === 'object' && t.slug === category);
-    }
-  } catch (err) {
-    console.error('Error checking quick link topic:', err);
-    isQuickLinkTopic = false;
-  }
-
-  // If it's a quick link topic, render the dedicated page
-  if (isQuickLinkTopic) {
-    return <QuickLinkTopicPage />;
-  }
 
   const posts = allPosts.filter((p: any) => {
     const matchSection = p.section === section;
