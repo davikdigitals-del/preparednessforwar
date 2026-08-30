@@ -4,8 +4,6 @@ import { useData } from "@/contexts/DataContext";
 import { useNavSections } from "@/hooks/useNavSections";
 import { PostCard } from "@/components/PostCard";
 import { SidebarModules } from "@/components/SidebarModules";
-import QuickLinkTopicPage from "./QuickLinkTopicPage";
-import { navSections } from "@/data/mockData";
 import { ArrowRight } from "lucide-react";
 
 const SectionPage = () => {
@@ -13,16 +11,11 @@ const SectionPage = () => {
   const { publishedPosts, loading } = useData();
   const { sections: navSections } = useNavSections(); // Use database sections
 
-  // Check if this is a quick link topic instead of a category
+  const allPosts = publishedPosts;
   const sectionData = navSections.find((s) => s.slug === section);
-  const isQuickLinkTopic = category && sectionData?.tools?.some(tool => tool.slug === category);
-
-  // If this is a quick link topic, render the QuickLinkTopicPage component
-  if (isQuickLinkTopic) {
-    return <QuickLinkTopicPage />;
-  }
 
   const allPosts = publishedPosts;
+  const sectionData = navSections.find((s) => s.slug === section);
 
   const posts = allPosts.filter((p: any) => {
     const matchSection = p.section === section;
