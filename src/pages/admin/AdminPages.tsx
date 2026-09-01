@@ -246,34 +246,50 @@ export default function AdminPages() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <Label>Page Content (HTML + CSS)</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    if (textareaRef.current) {
-                      textareaRef.current.value = "";
-                      textareaRef.current.focus();
-                    }
-                  }}
-                >
-                  Clear All
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (textareaRef.current) {
+                        textareaRef.current.value = "";
+                      }
+                    }}
+                  >
+                    Clear All
+                  </Button>
+                </div>
               </div>
               <textarea
                 ref={textareaRef}
                 key={editingPage?.id || 'new'}
                 defaultValue={formData.content}
-                rows={24}
+                rows={18}
+                disabled={false}
+                readOnly={false}
                 placeholder={`Paste your HTML and CSS here. Example:\n\n<style>\n  h1 { color: navy; font-size: 2rem; }\n  p  { font-size: 1rem; line-height: 1.7; }\n</style>\n\n<h1>Page Title</h1>\n<p>Your content here...</p>`}
-                className="w-full font-mono text-sm bg-gray-950 text-green-400 border border-gray-700 rounded-md p-3 resize-y leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{
+                  width: '100%',
+                  fontFamily: 'monospace',
+                  fontSize: '13px',
+                  background: '#0a0a0a',
+                  color: '#4ade80',
+                  border: '1px solid #374151',
+                  borderRadius: '6px',
+                  padding: '12px',
+                  resize: 'vertical',
+                  lineHeight: '1.6',
+                  outline: 'none',
+                  pointerEvents: 'auto'
+                }}
                 spellCheck={false}
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="off"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Paste HTML and CSS together — nothing is stripped or converted. Use "Clear All" button to reset.
+                💡 <strong>Tip:</strong> If the editor is slow with large content, use the "Clear All" button before pasting new code.
               </p>
             </div>
 
