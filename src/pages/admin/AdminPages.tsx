@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ export default function AdminPages() {
   const [editingPage, setEditingPage] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showPreview, setShowPreview] = useState(false);
-  const [contentBuffer, setContentBuffer] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -26,12 +26,6 @@ export default function AdminPages() {
     meta_description: "",
     is_published: true,
   });
-
-  // Debounced content update to prevent performance issues
-  const handleContentChange = useCallback((value: string) => {
-    setContentBuffer(value);
-    setFormData(prev => ({ ...prev, content: value }));
-  }, []);
 
   useEffect(() => { loadData(); }, []);
 
@@ -87,12 +81,10 @@ export default function AdminPages() {
 
   const handleEdit = (page: any) => {
     setEditingPage(page);
-    const content = page.content || "";
-    setContentBuffer(content);
     setFormData({
       slug: page.slug,
       title: page.title,
-      content: content,
+      content: page.content || "",
       meta_title: page.meta_title || "",
       meta_description: page.meta_description || "",
       is_published: page.is_published,
@@ -115,7 +107,6 @@ export default function AdminPages() {
   const resetForm = () => {
     setEditingPage(null);
     setShowPreview(false);
-    setContentBuffer("");
     setFormData({ slug: "", title: "", content: "", meta_title: "", meta_description: "", is_published: true });
   };
 
@@ -248,18 +239,18 @@ export default function AdminPages() {
               </div>
             </div>
 
-            {/* HTML + CSS editor — optimized for performance */}
+            {/* HTML + CSS editor — uncontrolled for better performance */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <Label>Page Content (HTML + CSS)</Label>
-                <span className="text-xs text-gray-400 font-mono">{formData.content.length} chars</span>
               </div>
-              <Textarea
-                value={formData.content}
-                onChange={(e) => handleContentChange(e.target.value)}
+              <textarea
+                ref={textareaRef}
+                defaultValue={formData.content}
+                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                 rows={24}
                 placeholder={`Paste your HTML and CSS here. Example:\n\n<style>\n  h1 { color: navy; font-size: 2rem; }\n  p  { font-size: 1rem; line-height: 1.7; }\n</style>\n\n<h1>Page Title</h1>\n<p>Your content here...</p>`}
-                className="font-mono text-sm bg-gray-950 text-green-400 border-gray-700 resize-y leading-relaxed"
+                className="w-full font-mono text-sm bg-gray-950 text-green-400 border border-gray-700 rounded-md p-3 resize-y leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500"
                 spellCheck={false}
                 autoComplete="off"
                 autoCorrect="off"
