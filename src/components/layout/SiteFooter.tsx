@@ -51,7 +51,7 @@ export function SiteFooter() {
           {/* Dynamic pages from DB */}
           {pages.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold">Pages</h4>
+              <h4 className="text-sm font-semibold">Legal</h4>
               <ul className="space-y-2 text-sm">
                 {pages.map((page) => (
                   <li key={page.slug}>
