@@ -242,11 +242,25 @@ export default function AdminPages() {
               </div>
             </div>
 
-            {/* HTML + CSS editor — fully uncontrolled */}
+            {/* HTML + CSS editor — optimized workflow */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <Label>Page Content (HTML + CSS)</Label>
                 <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (textareaRef.current) {
+                        const content = textareaRef.current.value;
+                        navigator.clipboard.writeText(content);
+                        toast({ title: "Copied!", description: "Content copied to clipboard" });
+                      }
+                    }}
+                  >
+                    Copy to Clipboard
+                  </Button>
                   <Button
                     type="button"
                     variant="outline"
@@ -268,7 +282,14 @@ export default function AdminPages() {
                 rows={18}
                 disabled={false}
                 readOnly={false}
-                placeholder={`Paste your HTML and CSS here. Example:\n\n<style>\n  h1 { color: navy; font-size: 2rem; }\n  p  { font-size: 1rem; line-height: 1.7; }\n</style>\n\n<h1>Page Title</h1>\n<p>Your content here...</p>`}
+                placeholder={`RECOMMENDED WORKFLOW FOR LARGE CONTENT:
+1. Click "Copy to Clipboard" to get existing content
+2. Edit in your preferred code editor (VS Code, Notepad++, etc.)
+3. Click "Clear All" button
+4. Paste your edited content here
+5. Click "Save Changes"
+
+For small edits, you can type directly here.`}
                 style={{
                   width: '100%',
                   fontFamily: 'monospace',
@@ -288,9 +309,13 @@ export default function AdminPages() {
                 autoCorrect="off"
                 autoCapitalize="off"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                💡 <strong>Tip:</strong> If the editor is slow with large content, use the "Clear All" button before pasting new code.
-              </p>
+              <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded text-xs">
+                <strong className="text-amber-900">⚠️ Performance Notice:</strong>
+                <p className="text-amber-800 mt-1 mb-0">
+                  Browser textareas struggle with large HTML/CSS content (1000+ lines).
+                  For best experience: <strong>Copy → Edit in external editor → Clear → Paste → Save</strong>
+                </p>
+              </div>
             </div>
 
             {/* Live preview - toggle button */}
