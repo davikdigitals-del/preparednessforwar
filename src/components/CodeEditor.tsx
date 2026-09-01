@@ -1,8 +1,9 @@
 import { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
-import { EditorView, basicSetup } from "@codemirror/view";
+import { EditorView } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { html } from "@codemirror/lang-html";
 import { oneDark } from "@codemirror/theme-one-dark";
+import { history } from "@codemirror/commands";
 
 interface CodeEditorProps {
     defaultValue?: string;
@@ -42,9 +43,9 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
             const state = EditorState.create({
                 doc: defaultValue,
                 extensions: [
-                    basicSetup,
                     html(),
                     oneDark,
+                    history(),
                     EditorView.lineWrapping,
                     EditorView.theme({
                         "&": {
