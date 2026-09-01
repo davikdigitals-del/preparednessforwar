@@ -1,42 +1,87 @@
---Add simple About Us and Contact pages
---You can edit and add full content from the admin panel
+import { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
+import { EditorView, basicSetup } from "@codemirror/view";
+import { EditorState } from "@codemirror/state";
+import { html } from "@codemirror/lang-html";
+import { oneDark } from "@codemirror/theme-one-dark";
 
---About Us(empty template - add content in admin)
-INSERT INTO pages(slug, title, content, meta_title, meta_description, is_published)
-VALUES(
-    'about',
-    'About Us',
-    '<div style="max-width: 800px; margin: 0 auto; padding: 2rem;">
-    < h1 > About Us</h1 >
-<p>Content coming soon...</p>
-</div > ',
-  'About Us - Preparedness for War',
-    'Learn about Preparedness for War.',
-    true
-)
-ON CONFLICT(slug) DO UPDATE SET
-title = EXCLUDED.title,
-    content = EXCLUDED.content,
-    meta_title = EXCLUDED.meta_title,
-    meta_description = EXCLUDED.meta_description,
-    updated_at = NOW();
+interface CodeEditorProps {
+    defaultValue?: string;
+    placeholder?: string;
+}
 
---Contact(empty template - add content in admin)
-INSERT INTO pages(slug, title, content, meta_title, meta_description, is_published)
-VALUES(
-    'contact',
-    'Contact Us',
-    '<div style="max-width: 800px; margin: 0 auto; padding: 2rem;">
-    < h1 > Contact Us</h1 >
-<p>Get in touch with us...</p>
-</div > ',
-  'Contact Us - Preparedness for War',
-    'Contact Preparedness for War.',
-    true
-)
-ON CONFLICT(slug) DO UPDATE SET
-title = EXCLUDED.title,
-    content = EXCLUDED.content,
-    meta_title = EXCLUDED.meta_title,
-    meta_description = EXCLUDED.meta_description,
-    updated_at = NOW();
+export interface CodeEditorHandle {
+    getValue: () => string;
+    setValue: (value: string) => void;
+}
+
+export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
+    ({ defaultValue = "", placeholder = "" }, ref) => {
+        const editorRef = useRef<HTMLDivElement>(null);
+        const viewRef = useRef<EditorView | null>(null);
+
+        useImperativeHandle(ref, () => ({
+            getValue: () => {
+                return viewRef.current?.state.doc.toString() || "";
+            },
+            setValue: (value: string) => {
+                if (viewRef.current) {
+                    viewRef.current.dispatch({
+                        changes: {
+                            from: 0,
+                            to: viewRef.current.state.doc.length,
+                            insert: value,
+                        },
+                    });
+                }
+            },
+        }));
+
+        useEffect(() => {
+            if (!editorRef.current) return;
+
+            const state = EditorState.create({
+                doc: defaultValue,
+                extensions: [
+                    basicSetup,
+                    html(),
+                    oneDark,
+                    EditorView.lineWrapping,
+                    EditorView.theme({
+                        "&": {
+                            fontSize: "13px",
+                            fontFamily: "monospace",
+                        },
+                        ".cm-scroller": {
+                            fontFamily: "monospace",
+                        },
+                    }),
+                ],
+            });
+
+            const view = new EditorView({
+                state,
+                parent: editorRef.current,
+            });
+
+            viewRef.current = view;
+
+            return () => {
+                view.destroy();
+            };
+        }, []);
+
+        return (
+            <div
+                ref={editorRef}
+                style={{
+                    border: "1px solid #374151",
+                    borderRadius: "6px",
+                    overflow: "hidden",
+                    minHeight: "400px",
+                }}
+            />
+        );
+    }
+);
+
+CodeEditor.displayName = "CodeEditor";
