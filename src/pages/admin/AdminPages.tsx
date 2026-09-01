@@ -52,10 +52,13 @@ export default function AdminPages() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Read textarea value directly at submit time
+      const contentValue = textareaRef.current?.value || "";
+
       const payload = {
         slug: formData.slug.toLowerCase().replace(/\s+/g, "-"),
         title: formData.title,
-        content: formData.content,
+        content: contentValue,
         meta_title: formData.meta_title || formData.title,
         meta_description: formData.meta_description || "",
         is_published: formData.is_published,
@@ -239,15 +242,15 @@ export default function AdminPages() {
               </div>
             </div>
 
-            {/* HTML + CSS editor — uncontrolled for better performance */}
+            {/* HTML + CSS editor — fully uncontrolled */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <Label>Page Content (HTML + CSS)</Label>
               </div>
               <textarea
                 ref={textareaRef}
+                key={editingPage?.id || 'new'}
                 defaultValue={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                 rows={24}
                 placeholder={`Paste your HTML and CSS here. Example:\n\n<style>\n  h1 { color: navy; font-size: 2rem; }\n  p  { font-size: 1rem; line-height: 1.7; }\n</style>\n\n<h1>Page Title</h1>\n<p>Your content here...</p>`}
                 className="w-full font-mono text-sm bg-gray-950 text-green-400 border border-gray-700 rounded-md p-3 resize-y leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -261,7 +264,7 @@ export default function AdminPages() {
               </p>
             </div>
 
-            {/* Live preview - toggle button instead of auto-preview */}
+            {/* Live preview - toggle button */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <Label>Live Preview</Label>
@@ -274,16 +277,11 @@ export default function AdminPages() {
                   {showPreview ? "Hide Preview" : "Show Preview"}
                 </Button>
               </div>
-              {showPreview && formData.content.trim() && (
+              {showPreview && (
                 <div
                   className="border border-gray-200 rounded-md p-4 bg-white min-h-[120px] max-h-[320px] overflow-auto"
-                  dangerouslySetInnerHTML={{ __html: formData.content }}
+                  dangerouslySetInnerHTML={{ __html: textareaRef.current?.value || "" }}
                 />
-              )}
-              {showPreview && !formData.content.trim() && (
-                <div className="border border-gray-200 rounded-md p-4 bg-gray-50 text-center text-gray-500 text-sm">
-                  No content to preview
-                </div>
               )}
             </div>
 
