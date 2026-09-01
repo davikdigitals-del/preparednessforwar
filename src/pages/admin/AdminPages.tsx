@@ -246,6 +246,19 @@ export default function AdminPages() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <Label>Page Content (HTML + CSS)</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (textareaRef.current) {
+                      textareaRef.current.value = "";
+                      textareaRef.current.focus();
+                    }
+                  }}
+                >
+                  Clear All
+                </Button>
               </div>
               <textarea
                 ref={textareaRef}
@@ -260,7 +273,7 @@ export default function AdminPages() {
                 autoCapitalize="off"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Paste HTML and CSS together — nothing is stripped or converted.
+                Paste HTML and CSS together — nothing is stripped or converted. Use "Clear All" button to reset.
               </p>
             </div>
 
