@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ export default function AdminPages() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPage, setEditingPage] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -255,16 +256,31 @@ export default function AdminPages() {
               </p>
             </div>
 
-            {/* Live preview */}
-            {formData.content.trim() && (
-              <div>
-                <Label className="mb-1 block">Live Preview</Label>
+            {/* Live preview - toggle button instead of auto-preview */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label>Live Preview</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowPreview(!showPreview)}
+                >
+                  {showPreview ? "Hide Preview" : "Show Preview"}
+                </Button>
+              </div>
+              {showPreview && formData.content.trim() && (
                 <div
                   className="border border-gray-200 rounded-md p-4 bg-white min-h-[120px] max-h-[320px] overflow-auto"
                   dangerouslySetInnerHTML={{ __html: formData.content }}
                 />
-              </div>
-            )}
+              )}
+              {showPreview && !formData.content.trim() && (
+                <div className="border border-gray-200 rounded-md p-4 bg-gray-50 text-center text-gray-500 text-sm">
+                  No content to preview
+                </div>
+              )}
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
