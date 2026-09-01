@@ -7,13 +7,28 @@ interface InteractiveWorldMapProps {
   highlightCountry?: string;
 }
 
+const SCRIPT_SRC = "/svg-world-map/svg-world-map.js";
+
+function loadScript(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error(`Failed to load: ${src}`));
+    document.head.appendChild(s);
+  });
+}
+
 export const InteractiveWorldMap = ({
   onCountryClick,
   height = "100%",
   highlightCountry,
 }: InteractiveWorldMapProps) => {
   const navigate = useNavigate();
-  const containerRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const activeNameRef = useRef<string | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
   const showTooltipAt = (name: string, clientX: number, clientY: number) => {
