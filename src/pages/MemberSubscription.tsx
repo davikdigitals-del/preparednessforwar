@@ -43,6 +43,7 @@ export default function MemberSubscription() {
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
 
   useEffect(() => {
     if (authLoading) return;
@@ -203,6 +204,16 @@ export default function MemberSubscription() {
 
   const freePlan = plans.find(p => p.slug === 'free');
   const paidPlans = plans.filter(p => p.slug !== 'free');
+
+  // Filter plans based on selected billing interval
+  const filteredPlans = paidPlans.filter(plan => plan.interval === billingInterval);
+
+  // Calculate yearly savings
+  const monthlyPlan = paidPlans.find(p => p.interval === 'month');
+  const yearlyPlan = paidPlans.find(p => p.interval === 'year');
+  const yearlySavings = monthlyPlan && yearlyPlan
+    ? (monthlyPlan.price * 12 - yearlyPlan.price).toFixed(2)
+    : null;
 
   return (
     <div className="container py-6 sm:py-8 max-w-6xl px-4 sm:px-6">
@@ -388,10 +399,37 @@ export default function MemberSubscription() {
         <p className="text-muted-foreground mb-6">
           Select the plan that best fits your needs
         </p>
+
+        {/* Billing Interval Toggle */}
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <button
+            onClick={() => setBillingInterval('month')}
+            className={`px-6 py-2 rounded-lg font-medium transition-colors ${billingInterval === 'month'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBillingInterval('year')}
+            className={`px-6 py-2 rounded-lg font-medium transition-colors relative ${billingInterval === 'year'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              }`}
+          >
+            Yearly
+            {yearlySavings && (
+              <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
+                Save £{yearlySavings}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {paidPlans.map((plan) => {
+        {filteredPlans.map((plan) => {
           const isCurrentPlan = subscription?.plan_id === plan.id;
           const isPopular = plan.slug === 'premium-monthly';
 

@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, Search, Eye, EyeOff, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { CodeEditor, type CodeEditorHandle } from "@/components/CodeEditor";
 
 export default function AdminPages() {
   const [pages, setPages] = useState<any[]>([]);
@@ -15,7 +15,7 @@ export default function AdminPages() {
   const [editingPage, setEditingPage] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showPreview, setShowPreview] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<CodeEditorHandle>(null);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -52,8 +52,7 @@ export default function AdminPages() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Read textarea value directly at submit time
-      const contentValue = textareaRef.current?.value || "";
+      const contentValue = editorRef.current?.getValue() || "";
 
       const payload = {
         slug: formData.slug.toLowerCase().replace(/\s+/g, "-"),
@@ -242,7 +241,7 @@ export default function AdminPages() {
               </div>
             </div>
 
-            {/* HTML + CSS editor — optimized workflow */}
+            {/* HTML + CSS editor with CodeMirror */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <Label>Page Content (HTML + CSS)</Label>
@@ -252,11 +251,9 @@ export default function AdminPages() {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      if (textareaRef.current) {
-                        const content = textareaRef.current.value;
-                        navigator.clipboard.writeText(content);
-                        toast({ title: "Copied!", description: "Content copied to clipboard" });
-                      }
+                      const content = editorRef.current?.getValue() || "";
+                      navigator.clipboard.writeText(content);
+                      toast({ title: "Copied!", description: "Content copied to clipboard" });
                     }}
                   >
                     Copy to Clipboard
@@ -266,59 +263,24 @@ export default function AdminPages() {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      if (textareaRef.current) {
-                        textareaRef.current.value = "";
-                      }
+                      editorRef.current?.setValue("");
                     }}
                   >
                     Clear All
                   </Button>
                 </div>
               </div>
-              <textarea
-                ref={textareaRef}
+              <CodeEditor
+                ref={editorRef}
                 key={editingPage?.id || 'new'}
                 defaultValue={formData.content}
-                rows={18}
-                disabled={false}
-                readOnly={false}
-                placeholder={`RECOMMENDED WORKFLOW FOR LARGE CONTENT:
-1. Click "Copy to Clipboard" to get existing content
-2. Edit in your preferred code editor (VS Code, Notepad++, etc.)
-3. Click "Clear All" button
-4. Paste your edited content here
-5. Click "Save Changes"
-
-For small edits, you can type directly here.`}
-                style={{
-                  width: '100%',
-                  fontFamily: 'monospace',
-                  fontSize: '13px',
-                  background: '#0a0a0a',
-                  color: '#4ade80',
-                  border: '1px solid #374151',
-                  borderRadius: '6px',
-                  padding: '12px',
-                  resize: 'vertical',
-                  lineHeight: '1.6',
-                  outline: 'none',
-                  pointerEvents: 'auto'
-                }}
-                spellCheck={false}
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
               />
-              <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded text-xs">
-                <strong className="text-amber-900">⚠️ Performance Notice:</strong>
-                <p className="text-amber-800 mt-1 mb-0">
-                  Browser textareas struggle with large HTML/CSS content (1000+ lines).
-                  For best experience: <strong>Copy → Edit in external editor → Clear → Paste → Save</strong>
-                </p>
-              </div>
+              <p className="text-xs text-green-600 mt-2">
+                ✓ Using CodeMirror editor - smooth, responsive editing for large HTML/CSS content
+              </p>
             </div>
 
-            {/* Live preview - toggle button */}
+            {/* Live preview */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <Label>Live Preview</Label>
@@ -334,7 +296,7 @@ For small edits, you can type directly here.`}
               {showPreview && (
                 <div
                   className="border border-gray-200 rounded-md p-4 bg-white min-h-[120px] max-h-[320px] overflow-auto"
-                  dangerouslySetInnerHTML={{ __html: textareaRef.current?.value || "" }}
+                  dangerouslySetInnerHTML={{ __html: editorRef.current?.getValue() || "" }}
                 />
               )}
             </div>
