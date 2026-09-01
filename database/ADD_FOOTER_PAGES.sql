@@ -1,152 +1,67 @@
--- Add standard footer pages to the admin panel
+-- Add About Us and Contact pages to the admin panel
 -- These pages will be editable in Admin > Pages Management
 
--- Privacy Policy
+-- About Us
 INSERT INTO pages (slug, title, content, meta_title, meta_description, is_published)
 VALUES (
-  'privacy',
-  'Privacy Policy',
+  'about',
+  'About Us',
   '<style>
-  .page-content { max-width: 800px; margin: 0 auto; padding: 2rem; }
-  .page-content h1 { font-size: 2rem; font-weight: bold; margin-bottom: 1rem; color: #1e293b; }
-  .page-content h2 { font-size: 1.5rem; font-weight: 600; margin-top: 2rem; margin-bottom: 1rem; color: #334155; }
-  .page-content p { line-height: 1.7; margin-bottom: 1rem; color: #475569; }
-  .page-content ul { margin-left: 1.5rem; margin-bottom: 1rem; }
-  .page-content li { margin-bottom: 0.5rem; color: #475569; }
+  .page-content { max-width: 900px; margin: 0 auto; padding: 2rem; }
+  .page-content h1 { font-size: 2.5rem; font-weight: bold; margin-bottom: 1.5rem; color: #1e293b; text-align: center; }
+  .page-content h2 { font-size: 1.75rem; font-weight: 600; margin-top: 2.5rem; margin-bottom: 1rem; color: #334155; }
+  .page-content p { line-height: 1.8; margin-bottom: 1.25rem; color: #475569; font-size: 1.05rem; }
+  .page-content ul { margin-left: 2rem; margin-bottom: 1.5rem; }
+  .page-content li { margin-bottom: 0.75rem; color: #475569; line-height: 1.7; }
+  .hero-section { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; padding: 3rem 2rem; border-radius: 12px; margin-bottom: 3rem; text-align: center; }
+  .hero-section h1 { color: white; }
+  .mission-box { background: #f8fafc; border-left: 4px solid #3b82f6; padding: 1.5rem; margin: 2rem 0; border-radius: 8px; }
   </style>
   
   <div class="page-content">
-    <h1>Privacy Policy</h1>
-    <p><strong>Last Updated:</strong> ' || to_char(CURRENT_DATE, 'Month DD, YYYY') || '</p>
-    
-    <h2>Information We Collect</h2>
-    <p>We collect information you provide directly to us, including:</p>
-    <ul>
-      <li>Account information (email, password)</li>
-      <li>Profile information</li>
-      <li>Content you create or share</li>
-      <li>Payment information (processed securely through Stripe)</li>
-    </ul>
-    
-    <h2>How We Use Your Information</h2>
-    <p>We use the information we collect to:</p>
-    <ul>
-      <li>Provide, maintain, and improve our services</li>
-      <li>Process transactions and send related information</li>
-      <li>Send you technical notices and support messages</li>
-      <li>Respond to your comments and questions</li>
-    </ul>
-    
-    <h2>Data Security</h2>
-    <p>We implement appropriate security measures to protect your personal information. However, no method of transmission over the Internet is 100% secure.</p>
-    
-    <h2>Contact Us</h2>
-    <p>If you have questions about this Privacy Policy, please contact us through our website.</p>
-  </div>',
-  'Privacy Policy - Preparedness for War',
-  'Learn how we collect, use, and protect your personal information.',
-  true
-)
-ON CONFLICT (slug) DO UPDATE SET
-  title = EXCLUDED.title,
-  content = EXCLUDED.content,
-  meta_title = EXCLUDED.meta_title,
-  meta_description = EXCLUDED.meta_description,
-  is_published = EXCLUDED.is_published,
-  updated_at = NOW();
-
--- Terms of Service
-INSERT INTO pages (slug, title, content, meta_title, meta_description, is_published)
-VALUES (
-  'terms',
-  'Terms of Service',
-  '<style>
-  .page-content { max-width: 800px; margin: 0 auto; padding: 2rem; }
-  .page-content h1 { font-size: 2rem; font-weight: bold; margin-bottom: 1rem; color: #1e293b; }
-  .page-content h2 { font-size: 1.5rem; font-weight: 600; margin-top: 2rem; margin-bottom: 1rem; color: #334155; }
-  .page-content p { line-height: 1.7; margin-bottom: 1rem; color: #475569; }
-  .page-content ul { margin-left: 1.5rem; margin-bottom: 1rem; }
-  .page-content li { margin-bottom: 0.5rem; color: #475569; }
-  </style>
-  
-  <div class="page-content">
-    <h1>Terms of Service</h1>
-    <p><strong>Last Updated:</strong> ' || to_char(CURRENT_DATE, 'Month DD, YYYY') || '</p>
-    
-    <h2>Acceptance of Terms</h2>
-    <p>By accessing and using Preparedness for War, you accept and agree to be bound by the terms and provision of this agreement.</p>
-    
-    <h2>Use License</h2>
-    <p>Permission is granted to temporarily access the materials on Preparedness for War for personal, non-commercial use only.</p>
-    
-    <h2>User Content</h2>
-    <p>You retain all rights to content you submit, post or display on or through the service. By submitting content, you grant us a license to use, modify, and display that content.</p>
-    
-    <h2>Prohibited Uses</h2>
-    <p>You may not use our service:</p>
-    <ul>
-      <li>For any unlawful purpose</li>
-      <li>To harass, abuse, or harm another person</li>
-      <li>To impersonate or attempt to impersonate another user</li>
-      <li>To upload viruses or malicious code</li>
-    </ul>
-    
-    <h2>Termination</h2>
-    <p>We may terminate or suspend your account at any time, without prior notice, for conduct that we believe violates these Terms of Service.</p>
-    
-    <h2>Changes to Terms</h2>
-    <p>We reserve the right to modify these terms at any time. Continued use of the service after changes constitutes acceptance of the new terms.</p>
-  </div>',
-  'Terms of Service - Preparedness for War',
-  'Read our terms of service and user agreement.',
-  true
-)
-ON CONFLICT (slug) DO UPDATE SET
-  title = EXCLUDED.title,
-  content = EXCLUDED.content,
-  meta_title = EXCLUDED.meta_title,
-  meta_description = EXCLUDED.meta_description,
-  is_published = EXCLUDED.is_published,
-  updated_at = NOW();
-
--- Disclaimer
-INSERT INTO pages (slug, title, content, meta_title, meta_description, is_published)
-VALUES (
-  'disclaimer',
-  'Disclaimer',
-  '<style>
-  .page-content { max-width: 800px; margin: 0 auto; padding: 2rem; }
-  .page-content h1 { font-size: 2rem; font-weight: bold; margin-bottom: 1rem; color: #1e293b; }
-  .page-content h2 { font-size: 1.5rem; font-weight: 600; margin-top: 2rem; margin-bottom: 1rem; color: #334155; }
-  .page-content p { line-height: 1.7; margin-bottom: 1rem; color: #475569; }
-  .page-content .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem; margin: 1.5rem 0; }
-  </style>
-  
-  <div class="page-content">
-    <h1>Disclaimer</h1>
-    <p><strong>Last Updated:</strong> ' || to_char(CURRENT_DATE, 'Month DD, YYYY') || '</p>
-    
-    <div class="warning">
-      <strong>Important:</strong> The information provided on this website is for educational and informational purposes only.
+    <div class="hero-section">
+      <h1>About Preparedness for War</h1>
+      <p style="font-size: 1.2rem; margin: 0;">Your trusted source for emergency preparedness and survival intelligence</p>
     </div>
     
-    <h2>No Professional Advice</h2>
-    <p>The content on Preparedness for War is not intended to be a substitute for professional advice, whether medical, legal, financial, or otherwise. Always seek the advice of qualified professionals regarding any questions you may have.</p>
+    <h2>Our Mission</h2>
+    <div class="mission-box">
+      <p style="font-size: 1.15rem; margin: 0;"><strong>We believe that preparedness is not paranoia—it''s responsibility.</strong></p>
+      <p style="margin: 1rem 0 0 0;">Our mission is to provide accurate, actionable, and up-to-date information to help individuals, families, and communities prepare for emergencies and crisis situations.</p>
+    </div>
     
-    <h2>Accuracy of Information</h2>
-    <p>While we strive to provide accurate and up-to-date information, we make no representations or warranties of any kind about the completeness, accuracy, reliability, or availability of the information on this website.</p>
+    <h2>What We Do</h2>
+    <p>Preparedness for War is a comprehensive platform dedicated to emergency preparedness, survival strategies, and geopolitical intelligence. We cover:</p>
+    <ul>
+      <li><strong>Emergency Preparedness:</strong> Practical guides for natural disasters, pandemics, and civil emergencies</li>
+      <li><strong>Survival Skills:</strong> Essential knowledge for self-reliance and resilience</li>
+      <li><strong>Geopolitical Analysis:</strong> Country-specific intelligence and regional threat assessments</li>
+      <li><strong>Resource Library:</strong> Curated collection of documents, guides, and educational materials</li>
+      <li><strong>Community Support:</strong> Connecting like-minded individuals committed to preparedness</li>
+    </ul>
     
-    <h2>External Links</h2>
-    <p>This website may contain links to external websites. We have no control over the content of those sites and accept no responsibility for them or for any loss or damage that may arise from your use of them.</p>
+    <h2>Why Preparedness Matters</h2>
+    <p>In an increasingly uncertain world, being prepared is no longer optional. From natural disasters to economic instability, from pandemics to geopolitical conflicts, the threats we face are real and evolving. Our platform empowers you with:</p>
+    <ul>
+      <li>Evidence-based preparedness strategies</li>
+      <li>Real-time updates on global events</li>
+      <li>Expert-curated content and resources</li>
+      <li>Community-driven knowledge sharing</li>
+    </ul>
     
-    <h2>Use at Your Own Risk</h2>
-    <p>Any action you take based on information found on this website is strictly at your own risk. We will not be liable for any losses or damages in connection with the use of this website.</p>
+    <h2>Our Commitment</h2>
+    <p>We are committed to providing reliable, non-sensationalized information that helps you make informed decisions about your safety and security. We believe in:</p>
+    <ul>
+      <li><strong>Accuracy:</strong> Fact-checked, sourced information</li>
+      <li><strong>Practicality:</strong> Actionable advice you can implement</li>
+      <li><strong>Accessibility:</strong> Making preparedness knowledge available to everyone</li>
+      <li><strong>Community:</strong> Building a network of prepared individuals</li>
+    </ul>
     
-    <h2>Emergency Situations</h2>
-    <p>In case of emergency, always contact local emergency services immediately. Do not rely solely on information from this website for emergency response.</p>
+    <p style="margin-top: 3rem; text-align: center; font-size: 1.1rem; color: #1e293b;"><strong>Stay informed. Stay prepared. Stay safe.</strong></p>
   </div>',
-  'Disclaimer - Preparedness for War',
-  'Important disclaimers about the use of information on this website.',
+  'About Us - Preparedness for War',
+  'Learn about our mission to provide emergency preparedness and survival intelligence.',
   true
 )
 ON CONFLICT (slug) DO UPDATE SET
@@ -157,39 +72,68 @@ ON CONFLICT (slug) DO UPDATE SET
   is_published = EXCLUDED.is_published,
   updated_at = NOW();
 
--- Newsletter page
+-- Contact Page
 INSERT INTO pages (slug, title, content, meta_title, meta_description, is_published)
 VALUES (
-  'newsletter',
-  'Newsletter',
+  'contact',
+  'Contact Us',
   '<style>
-  .page-content { max-width: 600px; margin: 0 auto; padding: 2rem; text-align: center; }
-  .page-content h1 { font-size: 2rem; font-weight: bold; margin-bottom: 1rem; color: #1e293b; }
-  .page-content p { line-height: 1.7; margin-bottom: 1.5rem; color: #475569; }
-  .benefits { text-align: left; max-width: 400px; margin: 2rem auto; }
-  .benefits li { padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0; color: #475569; }
-  .benefits li:last-child { border-bottom: none; }
-  .cta-box { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; padding: 2rem; margin-top: 2rem; }
+  .page-content { max-width: 800px; margin: 0 auto; padding: 2rem; }
+  .page-content h1 { font-size: 2.5rem; font-weight: bold; margin-bottom: 1rem; color: #1e293b; text-align: center; }
+  .page-content p { line-height: 1.8; margin-bottom: 1.25rem; color: #475569; font-size: 1.05rem; }
+  .contact-intro { text-align: center; margin-bottom: 3rem; color: #64748b; }
+  .contact-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin: 3rem 0; }
+  .contact-card { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 2rem; text-align: center; transition: all 0.3s; }
+  .contact-card:hover { border-color: #3b82f6; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15); }
+  .contact-card h3 { font-size: 1.5rem; font-weight: 600; color: #1e293b; margin-bottom: 0.75rem; }
+  .contact-card p { color: #64748b; margin-bottom: 1.5rem; font-size: 0.95rem; }
+  .contact-button { display: inline-block; padding: 0.75rem 2rem; background: #3b82f6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; transition: background 0.3s; }
+  .contact-button:hover { background: #2563eb; }
+  .info-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1.5rem; margin: 2rem 0; border-radius: 8px; }
+  .info-box p { color: #92400e; margin: 0; }
   </style>
   
   <div class="page-content">
-    <h1>📬 Stay Prepared</h1>
-    <p>Get the latest emergency preparedness news, survival tips, and critical updates delivered straight to your inbox.</p>
+    <h1>Get in Touch</h1>
+    <p class="contact-intro">Have questions, suggestions, or feedback? We''d love to hear from you.</p>
     
-    <ul class="benefits">
-      <li>✓ Weekly preparedness insights</li>
-      <li>✓ Early access to new content</li>
-      <li>✓ Exclusive survival guides</li>
-      <li>✓ Community updates</li>
-    </ul>
+    <div class="contact-cards">
+      <div class="contact-card">
+        <h3>📧 General Inquiries</h3>
+        <p>For general questions about our platform, content, or services.</p>
+        <a href="mailto:info@preparednessforwar.com" class="contact-button">Email Us</a>
+      </div>
+      
+      <div class="contact-card">
+        <h3>📝 Content Submissions</h3>
+        <p>Have valuable preparedness content or resources to share with the community?</p>
+        <a href="mailto:submissions@preparednessforwar.com" class="contact-button">Submit Content</a>
+      </div>
+      
+      <div class="contact-card">
+        <h3>🤝 Partnerships</h3>
+        <p>Interested in partnering with us or becoming an affiliate?</p>
+        <a href="mailto:partnerships@preparednessforwar.com" class="contact-button">Partner With Us</a>
+      </div>
+      
+      <div class="contact-card">
+        <h3>🛠️ Technical Support</h3>
+        <p>Experiencing technical issues or need help with your account?</p>
+        <a href="mailto:support@preparednessforwar.com" class="contact-button">Get Support</a>
+      </div>
+    </div>
     
-    <div class="cta-box">
-      <p><strong>Newsletter subscription coming soon!</strong></p>
-      <p style="font-size: 0.9rem; color: #64748b;">We''re working on bringing you the best emergency preparedness content. Check back soon or create an account to stay updated.</p>
+    <div class="info-box">
+      <p><strong>⚠️ Emergency Notice:</strong> This platform is for educational and informational purposes only. In case of immediate emergency, always contact your local emergency services (911 in the US).</p>
+    </div>
+    
+    <div style="text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #e2e8f0;">
+      <h3 style="color: #1e293b; margin-bottom: 1rem;">Response Time</h3>
+      <p style="color: #64748b;">We typically respond to all inquiries within 24-48 hours during business days. Thank you for your patience.</p>
     </div>
   </div>',
-  'Newsletter - Preparedness for War',
-  'Subscribe to our newsletter for emergency preparedness tips and updates.',
+  'Contact Us - Preparedness for War',
+  'Get in touch with us for inquiries, support, partnerships, or content submissions.',
   true
 )
 ON CONFLICT (slug) DO UPDATE SET
