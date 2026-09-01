@@ -155,7 +155,7 @@ export const InteractiveWorldMap = ({
         if (libContainer && wrapperRef.current) {
           console.log('🗺️ Appending container to wrapper...');
           wrapperRef.current.appendChild(libContainer);
-          libContainer.style.cssText = "position:absolute;inset:0;width:100%;height:100%;overflow:hidden;margin:0;padding:0;visibility:visible;";
+          libContainer.style.cssText = "position:absolute;inset:0;width:100%;height:100%;overflow:hidden;margin:0;padding:0;visibility:visible!important;z-index:1;";
           console.log('🗺️ Container appended and styled');
 
           if (svgObj) {
@@ -228,14 +228,14 @@ export const InteractiveWorldMap = ({
   return (
     <div ref={wrapperRef} className="relative w-full overflow-hidden bg-blue-50" style={{ height }}>
       {status === "loading" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-blue-50 z-10">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-blue-50" style={{ zIndex: 20 }}>
           <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-900 rounded-full animate-spin mb-3" />
           <p className="text-sm text-gray-500 font-medium">Loading world map…</p>
         </div>
       )}
 
       {status === "error" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-blue-50 z-10">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-blue-50" style={{ zIndex: 20 }}>
           <p className="text-sm text-gray-500 mb-3">Map unavailable</p>
           <button
             onClick={() => { setStatus("loading"); window.location.reload(); }}
