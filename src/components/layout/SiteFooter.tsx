@@ -53,7 +53,6 @@ export function SiteFooter() {
             <h4 className="text-sm font-semibold">Community</h4>
             <ul className="space-y-2 text-sm">
               <li><Link to="/newsletter" className="text-muted-foreground hover:text-primary transition-colors">Newsletter</Link></li>
-              <li><Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">About Us</Link></li>
             </ul>
           </div>
 
