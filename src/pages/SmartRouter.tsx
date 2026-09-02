@@ -6,47 +6,57 @@ import SectionPage from './SectionPage';
 
 export default function SmartRouter() {
     const { section } = useParams<{ section: string }>();
-    const [pageExists, setPageExists] = useState<boolean | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [isPage, setIsPage] = useState<boolean>(false);
+    const [isChecking, setIsChecking] = useState<boolean>(true);
 
     useEffect(() => {
-        if (!section) {
-            setPageExists(false);
-            setLoading(false);
-            return;
+        let mounted = true;
+
+        async function checkPage() {
+            if (!section) {
+                setIsPage(false);
+                setIsChecking(false);
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('pages')
+                    .select('id')
+                    .eq('slug', section)
+                    .eq('is_published', true)
+                    .maybeSingle();
+
+                if (!mounted) return;
+
+                if (error) {
+                    console.error('SmartRouter error:', error);
+                    setIsPage(false);
+                } else {
+                    setIsPage(!!data);
+                }
+            } catch (err) {
+                console.error('SmartRouter exception:', err);
+                if (mounted) setIsPage(false);
+            } finally {
+                if (mounted) setIsChecking(false);
+            }
         }
 
-        setLoading(true);
+        checkPage();
 
-        supabase
-            .from('pages')
-            .select('id')
-            .eq('slug', section)
-            .eq('is_published', true)
-            .maybeSingle()
-            .then(({ data, error }) => {
-                console.log('SmartRouter check for:', section, 'Result:', data, 'Error:', error);
-                setPageExists(!!data);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error('SmartRouter error:', err);
-                setPageExists(false);
-                setLoading(false);
-            });
+        return () => {
+            mounted = false;
+        };
     }, [section]);
 
-    if (loading) {
+    if (isChecking) {
         return (
-            <div className='min-h-screen flex items-center justify-center'>
-                <div className='w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin' />
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
         );
     }
 
-    if (pageExists) {
-        return <DynamicPage />;
-    }
-
-    return <SectionPage />;
+    return isPage ? <DynamicPage /> : <SectionPage />;
 }
