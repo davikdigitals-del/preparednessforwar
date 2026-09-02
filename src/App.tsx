@@ -22,6 +22,7 @@ const DynamicPage = lazy(() => import("./pages/DynamicPage"));
 
 // Lazy-loaded pages — only loaded when visited
 const SectionPage = lazy(() => import("./pages/SectionPage"));
+const SmartRouter = lazy(() => import("./pages/SmartRouter"));
 const CountriesPage = lazy(() => import("./pages/CountriesPage"));
 const CountryPostsPage = lazy(() => import("./pages/CountryPostsPage"));
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
@@ -199,7 +200,7 @@ const App = () => {
                         <Route path="/disclaimer" element={<LegalPage />} />
                         <Route path="/tag/:tag" element={<TagPage />} />
                         <Route path="/pages/:slug" element={<DynamicPage />} />
-                        <Route path="/:section" element={<SectionPage />} />
+                        <Route path="/:section" element={<SmartRouter />} />
                         <Route path="/:section/:category" element={<SectionPage />} />
                         <Route path="/:section/:category/:id" element={<ArticlePage />} />
                         <Route path="*" element={<NotFound />} />
