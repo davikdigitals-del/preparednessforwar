@@ -105,28 +105,36 @@ export default function ResetPasswordPage() {
 
     setLoading(true);
 
-    // Set session temporarily just to update the password, then sign out
-    const { error: sessionError } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
+    try {
+      // Set session temporarily just to update the password, then sign out
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
 
-    if (sessionError) {
-      setError("Session expired. Please request a new reset link.");
+      if (sessionError) {
+        setError("Session expired. Please request a new reset link.");
+        setLoading(false);
+        return;
+      }
+
+      const { error: updateError } = await supabase.auth.updateUser({ password });
+
+      // Always sign out after — user must log in manually with new password
+      await supabase.auth.signOut();
+
+      if (updateError) {
+        setError(updateError.message || "Failed to update password. Please request a new reset link.");
+        setLoading(false);
+      } else {
+        setLoading(false);
+        setDone(true);
+        setTimeout(() => navigate("/login"), 3000);
+      }
+    } catch (err: any) {
+      console.error('Password reset error:', err);
+      setError(err.message || "An unexpected error occurred. Please try again.");
       setLoading(false);
-      return;
-    }
-
-    const { error: updateError } = await supabase.auth.updateUser({ password });
-    // Always sign out after — user must log in manually with new password
-    await supabase.auth.signOut();
-    setLoading(false);
-
-    if (updateError) {
-      setError(updateError.message || "Failed to update password. Please request a new reset link.");
-    } else {
-      setDone(true);
-      setTimeout(() => navigate("/login"), 3000);
     }
   };
 
