@@ -81,7 +81,8 @@ app.get('/ping', (_req, res) => {
   res.send('pong');
 });
 
-app.get('/health', (_req, res) => {
+// Health check endpoint - moved to /api/health to avoid conflict with /health frontend route
+app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
@@ -203,7 +204,7 @@ app.get('/api/og-meta', async (req, res) => {
             const p = offers.price || offers.lowPrice || (Array.isArray(offers) && offers[0]?.price);
             if (p) { price = parseFloat(p); break; }
           }
-        } catch {}
+        } catch { }
       }
 
       return res.json({ title, description, images: [...new Set(images)].slice(0, 6), price, site_name: getMeta('og:site_name') });

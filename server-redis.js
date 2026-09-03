@@ -84,7 +84,8 @@ app.get('/ping', (_req, res) => {
   res.send('pong');
 });
 
-app.get('/health', async (_req, res) => {
+// Health check endpoint - moved to /api/health to avoid conflict with /health frontend route
+app.get('/api/health', async (_req, res) => {
   const redisHealthy = await checkRedisHealth();
   const health = {
     status: redisHealthy ? 'healthy' : 'degraded',

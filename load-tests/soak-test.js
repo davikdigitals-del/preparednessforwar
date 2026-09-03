@@ -30,7 +30,7 @@ const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
 
 export default function () {
   const res = http.get(`${BASE_URL}/`);
-  
+
   check(res, {
     'status is 200': (r) => r.status === 200,
     'no memory leak indicators': (r) => {
@@ -38,16 +38,16 @@ export default function () {
       return !r.headers['X-Memory-Warning'];
     },
   }) || errorRate.add(1);
-  
+
   // Periodically check health endpoint
   if (__ITER % 100 === 0) {
-    const healthRes = http.get(`${BASE_URL}/health`);
+    const healthRes = http.get(`${BASE_URL}/api/health`);
     const health = JSON.parse(healthRes.body);
-    
+
     if (health.metrics?.memoryUsage) {
       memoryTrend.add(health.metrics.memoryUsage);
     }
   }
-  
+
   sleep(Math.random() * 3 + 2);  // 2-5 seconds
 }
