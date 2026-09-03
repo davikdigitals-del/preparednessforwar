@@ -3,7 +3,7 @@ import { Mail, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 interface NewsletterSubscribeProps {
   variant?: "default" | "compact" | "inline";
@@ -11,7 +11,7 @@ interface NewsletterSubscribeProps {
   description?: string;
 }
 
-export function NewsletterSubscribe({ 
+export function NewsletterSubscribe({
   variant = "default",
   title = "Stay Informed with Our Newsletter",
   description = "Get the latest emergency preparedness updates, survival guides, and critical alerts delivered to your inbox."
@@ -23,12 +23,12 @@ export function NewsletterSubscribe({
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast({ 
-        title: "Invalid Email", 
-        description: "Please enter a valid email address.", 
-        variant: "destructive" 
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive"
       });
       return;
     }
@@ -47,9 +47,9 @@ export function NewsletterSubscribe({
             'Content-Type': 'application/json',
             'apikey': anonKey,
           },
-          body: JSON.stringify({ 
-            email, 
-            name: null, 
+          body: JSON.stringify({
+            email,
+            name: null,
             preferences: {
               emergencyNews: true,
               survivalGuides: true,
@@ -64,7 +64,7 @@ export function NewsletterSubscribe({
       }
 
       // Fallback: save directly to DB
-      const { error } = await supabase
+      const { error: dbError } = await supabase
         .from("newsletter_subscribers")
         .upsert({
           email,
@@ -76,35 +76,54 @@ export function NewsletterSubscribe({
           },
           subscribed_at: new Date().toISOString(),
           is_active: true,
-        }, { 
+        }, {
           onConflict: 'email',
-          ignoreDuplicates: false 
+          ignoreDuplicates: false
         });
 
-      if (error) {
+      if (dbError) {
         // Check if it's a duplicate email error
-        if (error.message?.includes('duplicate') || error.code === '23505') {
-          toast({ 
-            title: "Already Subscribed", 
-            description: "You're already on our mailing list!" 
+        if (dbError.message?.includes('duplicate') || dbError.code === '23505') {
+          toast({
+            title: "Already Subscribed",
+            description: "You're already on our mailing list!"
           });
           setSubscribed(true);
           return;
         }
-        throw error;
+        throw dbError;
+      }
+
+      // Send welcome email via Resend
+      try {
+        const emailRes = await fetch(`${supabaseUrl}/functions/v1/send-newsletter-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': anonKey,
+          },
+          body: JSON.stringify({ email, name: null }),
+        });
+
+        if (!emailRes.ok) {
+          console.warn('Welcome email failed to send, but subscription was successful');
+        }
+      } catch (emailError) {
+        console.warn('Welcome email error:', emailError);
+        // Don't fail the subscription if email fails
       }
 
       setSubscribed(true);
-      toast({ 
-        title: "Successfully Subscribed!", 
+      toast({
+        title: "Successfully Subscribed!",
         description: "Check your inbox for a confirmation email."
       });
     } catch (error: any) {
       console.error("Newsletter subscription error:", error);
-      toast({ 
-        title: "Subscription Failed", 
+      toast({
+        title: "Subscription Failed",
         description: error.message || "Please try again later.",
-        variant: "destructive" 
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
