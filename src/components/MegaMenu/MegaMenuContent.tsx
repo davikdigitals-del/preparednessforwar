@@ -35,6 +35,13 @@ export function MegaMenuContent({
 
   const hasFeatured = config.featured.items.length > 0;
 
+  console.log(`📋 MegaMenuContent for ${menuId}:`, {
+    isOpen,
+    hasFeatured,
+    featuredItemsCount: config.featured.items.length,
+    featuredItems: config.featured.items
+  });
+
   return (
     <div
       ref={contentRef}
@@ -53,11 +60,10 @@ export function MegaMenuContent({
       aria-labelledby={`trigger-${menuId}`}
     >
       <div className="container mx-auto px-4">
-        <div className={`grid gap-0 py-6 ${
-          hasFeatured 
-            ? 'grid-cols-1 lg:grid-cols-[1fr_1fr_1.2fr]' 
+        <div className={`grid gap-0 py-6 ${hasFeatured
+            ? 'grid-cols-1 lg:grid-cols-[1fr_1fr_1.2fr]'
             : 'grid-cols-1 md:grid-cols-2'
-        }`}>
+          }`}>
 
           {/* Column 1 — Categories */}
           <div className="pr-6 border-r border-gray-100 lg:border-r md:border-r border-b md:border-b-0 pb-4 md:pb-0">
