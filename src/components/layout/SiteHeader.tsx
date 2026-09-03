@@ -256,6 +256,11 @@ export function SiteHeader() {
               {/* Dropdown panels */}
               {mainNavItems.map((item) => {
                 const section = activeSections.find((s) => s.slug === item.section);
+                console.log(`🎯 Building menu for ${item.section}:`, {
+                  hasSection: !!section,
+                  featuredForThisSection: featuredMap[item.section],
+                  allFeaturedMap: featuredMap
+                });
                 const config = section ? buildMenuConfig(section, featuredMap[item.section]) : null;
                 return config ? (
                   <MegaMenuContent
