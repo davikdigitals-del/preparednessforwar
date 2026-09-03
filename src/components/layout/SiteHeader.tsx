@@ -127,7 +127,6 @@ export function SiteHeader() {
         })),
         // Then add static community items
         { id: "community-reports", label: "Community Reports", href: "/community-reports" },
-        { id: "about", label: "About Us", href: "/about" },
       ],
     },
     programmes: {

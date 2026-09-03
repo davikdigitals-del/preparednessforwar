@@ -190,7 +190,6 @@ const App = () => {
                         <Route path="/resources" element={<LibraryPage />} />
                         <Route path="/encyclopaedia" element={<EncyclopaediaPage />} />
                         <Route path="/media" element={<MediaHubPage />} />
-                        <Route path="/about" element={<AboutPage />} />
                         <Route path="/newsletter" element={<NewsletterPage />} />
                         <Route path="/legal/:page" element={<LegalPage />} />
                         <Route path="/about-us" element={<LegalPage />} />
