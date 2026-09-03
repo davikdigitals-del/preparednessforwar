@@ -1,0 +1,32 @@
+# Pod Disruption Budget
+# Ensures high availability during voluntary disruptions (node drains, upgrades, etc.)
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: preparednessforwar-pdb
+  namespace: production
+  labels:
+    app: preparednessforwar
+spec:
+  minAvailable: 80%  # Always keep at least 80% of pods running
+  selector:
+    matchLabels:
+      app: preparednessforwar
+      component: backend
+
+---
+# PDB for Redis
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: redis-pdb
+  namespace: production
+  labels:
+    app: redis
+spec:
+  minAvailable: 2  # Always keep at least 2 Redis nodes running
+  selector:
+    matchLabels:
+      app: redis
+      component: cache

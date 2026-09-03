@@ -1,0 +1,313 @@
+{
+  "dashboard": {
+    "title": "Preparedness For War - Performance Dashboard",
+    "description": "Real-time performance monitoring for 6M req/s infrastructure",
+    "tags": ["production", "nodejs", "performance"],
+    "timezone": "browser",
+    "schemaVersion": 27,
+    "version": 1,
+    "refresh": "10s",
+    
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate (req/s)",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[1m]))",
+            "legendFormat": "Total Requests/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(http_requests_total{status_code=~\"2..\"}[1m]))",
+            "legendFormat": "2xx (Success)",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(rate(http_requests_total{status_code=~\"4..\"}[1m]))",
+            "legendFormat": "4xx (Client Error)",
+            "refId": "C"
+          },
+          {
+            "expr": "sum(rate(http_requests_total{status_code=~\"5..\"}[1m]))",
+            "legendFormat": "5xx (Server Error)",
+            "refId": "D"
+          }
+        ],
+        "yaxes": [
+          { "format": "reqps", "label": "Requests/sec" },
+          { "show": false }
+        ]
+      },
+
+      {
+        "id": 2,
+        "title": "Response Time (P50, P95, P99)",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P99",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "label": "Response Time" },
+          { "show": false }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": { "params": [0.5], "type": "gt" },
+              "operator": { "type": "and" },
+              "query": { "params": ["B", "5m", "now"] },
+              "reducer": { "params": [], "type": "avg" },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "name": "Slow Response Time",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+
+      {
+        "id": 3,
+        "title": "Cache Hit Rate",
+        "type": "stat",
+        "gridPos": { "x": 0, "y": 8, "w": 6, "h": 4 },
+        "targets": [
+          {
+            "expr": "(sum(rate(cache_hits_total[5m])) / (sum(rate(cache_hits_total[5m])) + sum(rate(cache_misses_total[5m])))) * 100",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": 0 },
+              { "color": "yellow", "value": 70 },
+              { "color": "green", "value": 90 }
+            ]
+          }
+        }
+      },
+
+      {
+        "id": 4,
+        "title": "Error Rate",
+        "type": "stat",
+        "gridPos": { "x": 6, "y": 8, "w": 6, "h": 4 },
+        "targets": [
+          {
+            "expr": "(sum(rate(errors_total[5m])) / sum(rate(http_requests_total[5m]))) * 100",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        }
+      },
+
+      {
+        "id": 5,
+        "title": "Active Connections",
+        "type": "stat",
+        "gridPos": { "x": 12, "y": 8, "w": 6, "h": 4 },
+        "targets": [
+          {
+            "expr": "http_active_connections",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 5000 },
+              { "color": "red", "value": 10000 }
+            ]
+          }
+        }
+      },
+
+      {
+        "id": 6,
+        "title": "Memory Usage",
+        "type": "stat",
+        "gridPos": { "x": 18, "y": 8, "w": 6, "h": 4 },
+        "targets": [
+          {
+            "expr": "(nodejs_heap_size_used_bytes / nodejs_heap_size_total_bytes) * 100",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 75 },
+              { "color": "red", "value": 90 }
+            ]
+          }
+        }
+      },
+
+      {
+        "id": 7,
+        "title": "Database Query Performance",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(db_query_duration_seconds_bucket[5m])) by (le, operation))",
+            "legendFormat": "{{operation}} P95",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "label": "Query Duration" },
+          { "show": false }
+        ]
+      },
+
+      {
+        "id": 8,
+        "title": "Redis Performance",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(redis_command_duration_seconds_bucket[5m])) by (le, command))",
+            "legendFormat": "{{command}} P95",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "label": "Command Duration" },
+          { "show": false }
+        ]
+      },
+
+      {
+        "id": 9,
+        "title": "Request Rate by Route",
+        "type": "table",
+        "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "topk(10, sum(rate(http_requests_total[5m])) by (route, method))",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": { "Time": true },
+              "indexByName": {},
+              "renameByName": {
+                "route": "Route",
+                "method": "Method",
+                "Value": "Requests/sec"
+              }
+            }
+          }
+        ]
+      },
+
+      {
+        "id": 10,
+        "title": "Error Log",
+        "type": "logs",
+        "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "{job=\"nodejs-app\"} |= \"ERROR\"",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showTime": true,
+          "wrapLogMessage": true
+        }
+      }
+    ],
+
+    "templating": {
+      "list": [
+        {
+          "name": "instance",
+          "type": "query",
+          "label": "Instance",
+          "query": "label_values(http_requests_total, instance)",
+          "multi": true,
+          "includeAll": true
+        },
+        {
+          "name": "route",
+          "type": "query",
+          "label": "Route",
+          "query": "label_values(http_requests_total, route)",
+          "multi": true,
+          "includeAll": true
+        }
+      ]
+    },
+
+    "annotations": {
+      "list": [
+        {
+          "datasource": "Prometheus",
+          "enable": true,
+          "expr": "ALERTS{alertstate=\"firing\"}",
+          "iconColor": "rgba(255, 96, 96, 1)",
+          "name": "Alerts",
+          "tagKeys": "alertname,severity",
+          "textFormat": "{{alertname}}: {{annotations.summary}}",
+          "titleFormat": "Alert"
+        }
+      ]
+    }
+  }
+}

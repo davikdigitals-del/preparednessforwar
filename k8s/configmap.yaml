@@ -1,0 +1,178 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: production
+  labels:
+    app: preparednessforwar
+data:
+  # Node.js configuration
+  NODE_ENV: "production"
+  PORT: "3000"
+  
+  # Redis configuration
+  REDIS_MODE: "standalone"
+  REDIS_PORT: "6379"
+  
+  # Database configuration
+  SUPABASE_USE_POOLER: "true"
+  SUPABASE_POOL_MODE: "transaction"
+  DB_POOL_MIN: "2"
+  DB_POOL_MAX: "10"
+  DB_IDLE_TIMEOUT: "30000"
+  DB_CONNECTION_TIMEOUT: "5000"
+  
+  # Caching configuration
+  MEMORY_CACHE_SIZE: "1000"
+  MEMORY_CACHE_TTL: "60000"
+  ENABLE_MEMORY_CACHE: "true"
+  ENABLE_REDIS_CACHE: "true"
+  
+  # Rate limiting configuration
+  RATE_LIMIT_ANONYMOUS: "100"
+  RATE_LIMIT_AUTHENTICATED: "1000"
+  RATE_LIMIT_PREMIUM: "10000"
+  RATE_LIMIT_ADMIN: "100000"
+  RATE_LIMIT_API: "30"
+  
+  # Monitoring configuration
+  LOG_LEVEL: "info"
+  ENABLE_METRICS: "true"
+  METRICS_ENDPOINT: "/metrics"
+  HEALTH_CHECK_ENABLED: "true"
+  
+  # Alert thresholds
+  ALERT_ERROR_RATE_THRESHOLD: "1.0"
+  ALERT_RESPONSE_TIME_THRESHOLD: "200"
+  ALERT_CACHE_HIT_RATE_THRESHOLD: "70"
+  ALERT_MEMORY_USAGE_THRESHOLD: "75"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: production
+data:
+  nginx.conf: |
+    user nginx;
+    worker_processes auto;
+    worker_rlimit_nofile 65535;
+    
+    error_log /var/log/nginx/error.log warn;
+    pid /var/run/nginx.pid;
+    
+    events {
+        worker_connections 10000;
+        use epoll;
+        multi_accept on;
+    }
+    
+    http {
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+        
+        # Logging
+        log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                        '$status $body_bytes_sent "$http_referer" '
+                        '"$http_user_agent" "$http_x_forwarded_for" '
+                        'rt=$request_time uct="$upstream_connect_time" '
+                        'uht="$upstream_header_time" urt="$upstream_response_time"';
+        
+        access_log /var/log/nginx/access.log main;
+        
+        # Performance
+        sendfile on;
+        tcp_nopush on;
+        tcp_nodelay on;
+        keepalive_timeout 65;
+        keepalive_requests 1000;
+        types_hash_max_size 2048;
+        server_tokens off;
+        
+        # Gzip compression
+        gzip on;
+        gzip_vary on;
+        gzip_proxied any;
+        gzip_comp_level 6;
+        gzip_types text/plain text/css text/xml text/javascript 
+                   application/json application/javascript application/xml+rss
+                   application/rss+xml font/truetype font/opentype 
+                   application/vnd.ms-fontobject image/svg+xml;
+        
+        # Rate limiting zones
+        limit_req_zone $binary_remote_addr zone=api_limit:10m rate=100r/s;
+        limit_req_zone $binary_remote_addr zone=general_limit:10m rate=1000r/s;
+        
+        # Upstream backend
+        upstream backend {
+            least_conn;
+            keepalive 1000;
+            keepalive_requests 10000;
+            keepalive_timeout 60s;
+            
+            server preparednessforwar-internal:3000 max_fails=3 fail_timeout=30s;
+        }
+        
+        server {
+            listen 80 default_server;
+            listen [::]:80 default_server;
+            server_name _;
+            
+            # Security headers
+            add_header X-Frame-Options "DENY" always;
+            add_header X-Content-Type-Options "nosniff" always;
+            add_header X-XSS-Protection "1; mode=block" always;
+            add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+            
+            # Rate limiting
+            limit_req zone=general_limit burst=2000 nodelay;
+            limit_req_status 429;
+            
+            location /api/ {
+                limit_req zone=api_limit burst=200 nodelay;
+                
+                proxy_pass http://backend;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                
+                proxy_connect_timeout 10s;
+                proxy_send_timeout 30s;
+                proxy_read_timeout 30s;
+                
+                proxy_buffering off;
+                proxy_request_buffering off;
+            }
+            
+            location / {
+                proxy_pass http://backend;
+                proxy_http_version 1.1;
+                proxy_set_header Connection "";
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                
+                proxy_connect_timeout 10s;
+                proxy_send_timeout 30s;
+                proxy_read_timeout 30s;
+            }
+            
+            location /health {
+                access_log off;
+                proxy_pass http://backend/health;
+            }
+            
+            location /metrics {
+                access_log off;
+                allow 10.0.0.0/8;    # Allow from cluster
+                deny all;
+                proxy_pass http://backend/metrics;
+            }
+        }
+    }

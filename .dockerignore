@@ -1,0 +1,58 @@
+# Node modules
+node_modules
+npm-debug.log
+
+# Build outputs
+dist
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+!README.md
+
+# Tests
+test
+*.test.js
+*.spec.js
+coverage
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Database
+database/*.sql
+!database/SETUP_CONNECTION_POOLING.sql
+
+# Monitoring
+monitoring
+
+# CDN configs
+cdn
+
+# Kubernetes
+k8s
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore

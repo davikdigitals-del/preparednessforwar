@@ -10,6 +10,7 @@ import { navSections, formatDate, formatTimeAgo, formatDateTime } from "@/data/m
 import { PostCard } from "@/components/PostCard";
 import { PremiumGate } from "@/components/PremiumGate";
 import { ArticleVideoPlayer } from "@/components/ArticleVideoPlayer";
+import { NewsletterSubscribe } from "@/components/NewsletterSubscribe";
 import { useData } from "@/contexts/DataContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -514,6 +515,11 @@ const ArticlePage = () => {
                   ))}
                 </div>
               )}
+
+              {/* Newsletter Subscribe */}
+              <div className="px-4 pb-6">
+                <NewsletterSubscribe variant="inline" />
+              </div>
 
               {/* Related on mobile */}
               {relatedPosts.length > 0 && (

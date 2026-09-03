@@ -1,0 +1,86 @@
+# ServiceMonitor for Prometheus Operator
+# Automatically discovers and scrapes metrics from pods
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: preparednessforwar-metrics
+  namespace: production
+  labels:
+    app: preparednessforwar
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: preparednessforwar
+      component: backend
+  
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s
+      
+      # Relabeling
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+        
+        - sourceLabels: [__meta_kubernetes_pod_node_name]
+          targetLabel: node
+        
+        - sourceLabels: [__meta_kubernetes_namespace]
+          targetLabel: namespace
+
+---
+# PrometheusRule for application-specific alerts
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: preparednessforwar-alerts
+  namespace: production
+  labels:
+    app: preparednessforwar
+    prometheus: kube-prometheus
+spec:
+  groups:
+    - name: preparednessforwar.rules
+      interval: 30s
+      rules:
+        - alert: HighErrorRate
+          expr: |
+            (
+              sum(rate(http_requests_total{status_code=~"5.."}[5m]))
+              /
+              sum(rate(http_requests_total[5m]))
+            ) > 0.01
+          for: 5m
+          labels:
+            severity: critical
+            component: application
+          annotations:
+            summary: "High error rate on {{ $labels.namespace }}/{{ $labels.pod }}"
+            description: "Error rate is {{ $value | humanizePercentage }}"
+        
+        - alert: PodDown
+          expr: up{job="preparednessforwar"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.pod }} is down"
+            description: "Pod has been down for 2 minutes"
+        
+        - alert: HighMemoryUsage
+          expr: |
+            (
+              container_memory_working_set_bytes{pod=~"preparednessforwar-.*"}
+              /
+              container_spec_memory_limit_bytes{pod=~"preparednessforwar-.*"}
+            ) > 0.9
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High memory usage on {{ $labels.pod }}"
+            description: "Memory usage is {{ $value | humanizePercentage }}"

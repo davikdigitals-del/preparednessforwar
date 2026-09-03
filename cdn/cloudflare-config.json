@@ -1,0 +1,383 @@
+{
+  "description": "Cloudflare Configuration for Preparedness For War",
+  "note": "Apply these rules in Cloudflare Dashboard → Cache → Configuration",
+  "cache_rules": [
+    {
+      "id": "static-assets-immutable",
+      "description": "Cache static assets with long TTL (JS, CSS, fonts, images)",
+      "expression": "(http.request.uri.path matches \"^/assets/\" or http.request.uri.path matches \"\\.(js|css|woff2?|ttf|otf|eot|png|jpg|jpeg|gif|svg|webp|ico)$\")",
+      "action": "cache",
+      "priority": 1,
+      "cache_settings": {
+        "cache": true,
+        "edge_ttl": {
+          "mode": "override_origin",
+          "default": 31536000,
+          "status_code_ttl": [
+            {
+              "status_code_range": {
+                "from": 200,
+                "to": 299
+              },
+              "value": 31536000
+            },
+            {
+              "status_code_range": {
+                "from": 404,
+                "to": 404
+              },
+              "value": 3600
+            }
+          ]
+        },
+        "browser_ttl": {
+          "mode": "override_origin",
+          "default": 31536000
+        },
+        "cache_key": {
+          "cache_by_device_type": false,
+          "cache_deception_armor": true,
+          "ignore_query_strings": {
+            "all": true
+          }
+        },
+        "respect_strong_etags": true
+      }
+    },
+    {
+      "id": "html-short-cache",
+      "description": "Cache HTML pages with short TTL for freshness",
+      "expression": "(http.request.uri.path matches \"\\.html$\" or http.request.uri.path eq \"/\" or http.request.uri.path matches \"^/(index|about|contact|privacy|terms)\")",
+      "action": "cache",
+      "priority": 2,
+      "cache_settings": {
+        "cache": true,
+        "edge_ttl": {
+          "mode": "override_origin",
+          "default": 300,
+          "status_code_ttl": [
+            {
+              "status_code_range": {
+                "from": 200,
+                "to": 299
+              },
+              "value": 300
+            },
+            {
+              "status_code_range": {
+                "from": 404,
+                "to": 404
+              },
+              "value": 60
+            }
+          ]
+        },
+        "browser_ttl": {
+          "mode": "override_origin",
+          "default": 0
+        },
+        "cache_key": {
+          "cache_by_device_type": true,
+          "custom_key": {
+            "query_string": {
+              "include": [
+                "*"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "api-public-cache",
+      "description": "Cache public API endpoints (no auth required)",
+      "expression": "(http.request.uri.path matches \"^/api/(og-meta|health|ping|metrics)\" and not http.request.headers[\"authorization\"][*])",
+      "action": "cache",
+      "priority": 3,
+      "cache_settings": {
+        "cache": true,
+        "edge_ttl": {
+          "mode": "respect_origin",
+          "default": 60,
+          "status_code_ttl": [
+            {
+              "status_code_range": {
+                "from": 200,
+                "to": 299
+              },
+              "value": 60
+            },
+            {
+              "status_code_range": {
+                "from": 404,
+                "to": 404
+              },
+              "value": 30
+            }
+          ]
+        },
+        "browser_ttl": {
+          "mode": "respect_origin",
+          "default": 30
+        },
+        "cache_key": {
+          "custom_key": {
+            "query_string": {
+              "include": [
+                "*"
+              ]
+            },
+            "header": {
+              "include": [
+                "accept",
+                "accept-encoding"
+              ]
+            }
+          }
+        },
+        "serve_stale": {
+          "disable_stale_while_updating": false
+        }
+      }
+    },
+    {
+      "id": "api-bypass-auth",
+      "description": "Bypass cache for authenticated API requests",
+      "expression": "(http.request.uri.path matches \"^/api/\" and http.request.headers[\"authorization\"][*])",
+      "action": "bypass",
+      "priority": 4
+    }
+  ],
+  "page_rules": [
+    {
+      "url": "*.preparednessforwar.com/assets/*",
+      "actions": {
+        "cache_level": "cache_everything",
+        "edge_cache_ttl": 31536000,
+        "browser_cache_ttl": 31536000
+      }
+    },
+    {
+      "url": "preparednessforwar.com/*",
+      "actions": {
+        "cache_level": "standard",
+        "browser_cache_ttl": 300,
+        "edge_cache_ttl": 300
+      }
+    }
+  ],
+  "firewall_rules": [
+    {
+      "id": "rate-limit-api",
+      "description": "Rate limit API endpoints (10,000 req/min per IP)",
+      "expression": "(http.request.uri.path matches \"^/api/\")",
+      "action": "challenge",
+      "rate_limit": {
+        "threshold": 10000,
+        "period": 60,
+        "counting_expression": "ip.src"
+      }
+    },
+    {
+      "id": "block-bad-bots",
+      "description": "Block known bad bots and scrapers",
+      "expression": "(cf.client.bot and not cf.verified_bot_category in {\"Search Engine Crawler\" \"Monitoring & Analytics\"})",
+      "action": "block"
+    },
+    {
+      "id": "block-suspicious-paths",
+      "description": "Block common attack vectors",
+      "expression": "(http.request.uri.path contains \".php\" or http.request.uri.path contains \".asp\" or http.request.uri.path contains \"wp-admin\" or http.request.uri.path contains \".env\")",
+      "action": "block"
+    },
+    {
+      "id": "challenge-high-traffic-countries",
+      "description": "Challenge requests from high-bot countries (optional)",
+      "expression": "(ip.geoip.country in {\"CN\" \"RU\"} and cf.threat_score > 10)",
+      "action": "managed_challenge",
+      "enabled": false
+    }
+  ],
+  "transform_rules": [
+    {
+      "id": "add-security-headers",
+      "description": "Add security headers to all responses",
+      "expression": "true",
+      "actions": [
+        {
+          "action": "set_header",
+          "header_name": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "action": "set_header",
+          "header_name": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "action": "set_header",
+          "header_name": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "action": "set_header",
+          "header_name": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "action": "set_header",
+          "header_name": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
+      ]
+    },
+    {
+      "id": "remove-server-headers",
+      "description": "Remove server identification headers",
+      "expression": "true",
+      "actions": [
+        {
+          "action": "remove_header",
+          "header_name": "X-Powered-By"
+        },
+        {
+          "action": "remove_header",
+          "header_name": "Server"
+        }
+      ]
+    }
+  ],
+  "workers": {
+    "description": "Cloudflare Workers for edge computing (optional, for extreme scale)",
+    "scripts": [
+      {
+        "name": "cache-api-worker",
+        "route": "*/api/*",
+        "description": "Handle API caching and responses at the edge",
+        "script_path": "workers/cache-api.js"
+      },
+      {
+        "name": "geo-routing-worker",
+        "route": "*/*",
+        "description": "Route requests to nearest origin based on geo-location",
+        "script_path": "workers/geo-routing.js"
+      }
+    ]
+  },
+  "performance_settings": {
+    "auto_minify": {
+      "javascript": true,
+      "css": true,
+      "html": true
+    },
+    "brotli": true,
+    "http2": true,
+    "http3": true,
+    "early_hints": true,
+    "rocket_loader": false,
+    "mirage": true,
+    "polish": "lossless",
+    "webp": true,
+    "mobile_redirect": false
+  },
+  "dns_settings": {
+    "records": [
+      {
+        "type": "A",
+        "name": "@",
+        "content": "YOUR_ORIGIN_IP",
+        "proxied": true,
+        "ttl": 1
+      },
+      {
+        "type": "A",
+        "name": "www",
+        "content": "YOUR_ORIGIN_IP",
+        "proxied": true,
+        "ttl": 1
+      },
+      {
+        "type": "CNAME",
+        "name": "api",
+        "content": "origin.preparednessforwar.com",
+        "proxied": true,
+        "ttl": 1
+      }
+    ]
+  },
+  "load_balancing": {
+    "pools": [
+      {
+        "name": "us-east-pool",
+        "origins": [
+          {
+            "name": "us-east-1",
+            "address": "origin-us-east-1.preparednessforwar.com",
+            "weight": 1,
+            "enabled": true
+          },
+          {
+            "name": "us-east-2",
+            "address": "origin-us-east-2.preparednessforwar.com",
+            "weight": 1,
+            "enabled": true
+          }
+        ],
+        "monitor": {
+          "type": "https",
+          "path": "/health",
+          "interval": 60,
+          "timeout": 5,
+          "retries": 2
+        }
+      },
+      {
+        "name": "europe-pool",
+        "origins": [
+          {
+            "name": "eu-west-1",
+            "address": "origin-eu-west-1.preparednessforwar.com",
+            "weight": 1,
+            "enabled": true
+          }
+        ]
+      }
+    ],
+    "load_balancer": {
+      "name": "global-lb",
+      "default_pool_ids": [
+        "us-east-pool"
+      ],
+      "fallback_pool_id": "us-east-pool",
+      "region_pools": {
+        "WEUR": [
+          "europe-pool"
+        ],
+        "EEUR": [
+          "europe-pool"
+        ],
+        "NAM": [
+          "us-east-pool"
+        ],
+        "SAM": [
+          "us-east-pool"
+        ]
+      },
+      "steering_policy": "geo"
+    }
+  },
+  "deployment_instructions": [
+    "1. Add your domain to Cloudflare",
+    "2. Update nameservers at your registrar",
+    "3. Apply cache rules in Cache → Configuration",
+    "4. Configure firewall rules in Security → WAF",
+    "5. Set up transform rules in Rules → Transform Rules",
+    "6. Enable performance optimizations in Speed → Optimization",
+    "7. Configure SSL/TLS to Full (strict) mode",
+    "8. Enable Always Use HTTPS",
+    "9. Set up load balancing (if multi-region)",
+    "10. Deploy Workers (if using edge computing)",
+    "11. Test with: curl -I https://preparednessforwar.com/",
+    "12. Monitor cache hit rate in Analytics"
+  ]
+}

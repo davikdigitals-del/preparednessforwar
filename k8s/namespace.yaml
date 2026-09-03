@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+  labels:
+    name: production
+    environment: production
+    
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: preparednessforwar-sa
+  namespace: production
+  annotations:
+    # AWS IAM role for service account (IRSA)
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/preparednessforwar-role
+    
+    # GCP Workload Identity
+    iam.gke.io/gcp-service-account: preparednessforwar@PROJECT_ID.iam.gserviceaccount.com
+
+---
+# Role for accessing ConfigMaps and Secrets
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: preparednessforwar-role
+  namespace: production
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list", "watch"]
+  
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+
+---
+# RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: preparednessforwar-rolebinding
+  namespace: production
+subjects:
+  - kind: ServiceAccount
+    name: preparednessforwar-sa
+    namespace: production
+roleRef:
+  kind: Role
+  name: preparednessforwar-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Resource Quota for namespace
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: production-quota
+  namespace: production
+spec:
+  hard:
+    requests.cpu: "500"        # 500 CPU cores total
+    requests.memory: "1000Gi"  # 1TB RAM total
+    limits.cpu: "1000"         # 1000 CPU cores limit
+    limits.memory: "2000Gi"    # 2TB RAM limit
+    pods: "2000"               # Max 2000 pods
+    services: "50"             # Max 50 services
+    persistentvolumeclaims: "100"  # Max 100 PVCs
+
+---
+# LimitRange - default limits for pods
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: production-limitrange
+  namespace: production
+spec:
+  limits:
+    - max:
+        cpu: "2"
+        memory: "4Gi"
+      min:
+        cpu: "100m"
+        memory: "128Mi"
+      default:
+        cpu: "500m"
+        memory: "512Mi"
+      defaultRequest:
+        cpu: "250m"
+        memory: "256Mi"
+      type: Container

@@ -1,0 +1,486 @@
+{
+  "Description": "AWS CloudFront Configuration for Preparedness For War",
+  "Note": "Deploy using AWS CLI or CloudFormation template",
+  "Distribution": {
+    "CallerReference": "preparedness-for-war-2024",
+    "Comment": "Production CDN for Preparedness For War",
+    "Enabled": true,
+    "HttpVersion": "http2and3",
+    "IsIPV6Enabled": true,
+    "PriceClass": "PriceClass_All",
+    "Origins": [
+      {
+        "Id": "origin-primary",
+        "DomainName": "origin.preparednessforwar.com",
+        "CustomOriginConfig": {
+          "HTTPPort": 80,
+          "HTTPSPort": 443,
+          "OriginProtocolPolicy": "https-only",
+          "OriginSSLProtocols": [
+            "TLSv1.2"
+          ],
+          "OriginReadTimeout": 30,
+          "OriginKeepaliveTimeout": 5
+        },
+        "ConnectionAttempts": 3,
+        "ConnectionTimeout": 10,
+        "OriginShield": {
+          "Enabled": true,
+          "OriginShieldRegion": "us-east-1"
+        }
+      },
+      {
+        "Id": "origin-s3-assets",
+        "DomainName": "preparednessforwar-assets.s3.amazonaws.com",
+        "S3OriginConfig": {
+          "OriginAccessIdentity": "origin-access-identity/cloudfront/EXAMPLE"
+        }
+      }
+    ],
+    "DefaultCacheBehavior": {
+      "TargetOriginId": "origin-primary",
+      "ViewerProtocolPolicy": "redirect-to-https",
+      "AllowedMethods": [
+        "GET",
+        "HEAD",
+        "OPTIONS",
+        "PUT",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ],
+      "CachedMethods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "Compress": true,
+      "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+      "OriginRequestPolicyId": "216adef6-5c7f-47e4-b989-5492eafa07d3",
+      "ResponseHeadersPolicyId": "5cc3b908-e619-4b99-88e5-2cf7f45965bd",
+      "SmoothStreaming": false,
+      "TrustedSigners": {
+        "Enabled": false
+      }
+    },
+    "CacheBehaviors": [
+      {
+        "PathPattern": "/assets/*",
+        "TargetOriginId": "origin-s3-assets",
+        "ViewerProtocolPolicy": "redirect-to-https",
+        "AllowedMethods": [
+          "GET",
+          "HEAD",
+          "OPTIONS"
+        ],
+        "CachedMethods": [
+          "GET",
+          "HEAD",
+          "OPTIONS"
+        ],
+        "Compress": true,
+        "CachePolicyId": "STATIC_ASSETS_POLICY",
+        "MinTTL": 31536000,
+        "MaxTTL": 31536000,
+        "DefaultTTL": 31536000
+      },
+      {
+        "PathPattern": "/api/*",
+        "TargetOriginId": "origin-primary",
+        "ViewerProtocolPolicy": "https-only",
+        "AllowedMethods": [
+          "GET",
+          "HEAD",
+          "OPTIONS",
+          "PUT",
+          "POST",
+          "PATCH",
+          "DELETE"
+        ],
+        "CachedMethods": [
+          "GET",
+          "HEAD",
+          "OPTIONS"
+        ],
+        "Compress": true,
+        "CachePolicyId": "API_CACHE_POLICY",
+        "OriginRequestPolicyId": "API_ORIGIN_REQUEST_POLICY",
+        "MinTTL": 0,
+        "MaxTTL": 300,
+        "DefaultTTL": 60
+      },
+      {
+        "PathPattern": "*.html",
+        "TargetOriginId": "origin-primary",
+        "ViewerProtocolPolicy": "redirect-to-https",
+        "AllowedMethods": [
+          "GET",
+          "HEAD",
+          "OPTIONS"
+        ],
+        "CachedMethods": [
+          "GET",
+          "HEAD",
+          "OPTIONS"
+        ],
+        "Compress": true,
+        "CachePolicyId": "HTML_CACHE_POLICY",
+        "MinTTL": 0,
+        "MaxTTL": 300,
+        "DefaultTTL": 300
+      }
+    ],
+    "CustomErrorResponses": [
+      {
+        "ErrorCode": 404,
+        "ResponsePagePath": "/404.html",
+        "ResponseCode": "404",
+        "ErrorCachingMinTTL": 300
+      },
+      {
+        "ErrorCode": 500,
+        "ResponsePagePath": "/500.html",
+        "ResponseCode": "500",
+        "ErrorCachingMinTTL": 10
+      },
+      {
+        "ErrorCode": 503,
+        "ResponsePagePath": "/503.html",
+        "ResponseCode": "503",
+        "ErrorCachingMinTTL": 10
+      }
+    ],
+    "Logging": {
+      "Enabled": true,
+      "IncludeCookies": false,
+      "Bucket": "preparednessforwar-logs.s3.amazonaws.com",
+      "Prefix": "cloudfront/"
+    },
+    "WebACLId": "arn:aws:wafv2:us-east-1:ACCOUNT_ID:global/webacl/preparedness-for-war/ID",
+    "ViewerCertificate": {
+      "ACMCertificateArn": "arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/CERT_ID",
+      "SSLSupportMethod": "sni-only",
+      "MinimumProtocolVersion": "TLSv1.2_2021"
+    }
+  },
+  "CachePolicies": [
+    {
+      "Name": "STATIC_ASSETS_POLICY",
+      "Comment": "Long-term caching for immutable static assets",
+      "DefaultTTL": 31536000,
+      "MaxTTL": 31536000,
+      "MinTTL": 31536000,
+      "ParametersInCacheKeyAndForwardedToOrigin": {
+        "EnableAcceptEncodingGzip": true,
+        "EnableAcceptEncodingBrotli": true,
+        "HeadersConfig": {
+          "HeaderBehavior": "none"
+        },
+        "CookiesConfig": {
+          "CookieBehavior": "none"
+        },
+        "QueryStringsConfig": {
+          "QueryStringBehavior": "none"
+        }
+      }
+    },
+    {
+      "Name": "HTML_CACHE_POLICY",
+      "Comment": "Short-term caching for HTML pages",
+      "DefaultTTL": 300,
+      "MaxTTL": 300,
+      "MinTTL": 0,
+      "ParametersInCacheKeyAndForwardedToOrigin": {
+        "EnableAcceptEncodingGzip": true,
+        "EnableAcceptEncodingBrotli": true,
+        "HeadersConfig": {
+          "HeaderBehavior": "whitelist",
+          "Headers": [
+            "CloudFront-Viewer-Country",
+            "Accept-Language"
+          ]
+        },
+        "CookiesConfig": {
+          "CookieBehavior": "none"
+        },
+        "QueryStringsConfig": {
+          "QueryStringBehavior": "all"
+        }
+      }
+    },
+    {
+      "Name": "API_CACHE_POLICY",
+      "Comment": "API response caching with query string variation",
+      "DefaultTTL": 60,
+      "MaxTTL": 300,
+      "MinTTL": 0,
+      "ParametersInCacheKeyAndForwardedToOrigin": {
+        "EnableAcceptEncodingGzip": true,
+        "EnableAcceptEncodingBrotli": true,
+        "HeadersConfig": {
+          "HeaderBehavior": "whitelist",
+          "Headers": [
+            "Accept",
+            "Accept-Language",
+            "CloudFront-Viewer-Country"
+          ]
+        },
+        "CookiesConfig": {
+          "CookieBehavior": "none"
+        },
+        "QueryStringsConfig": {
+          "QueryStringBehavior": "all"
+        }
+      }
+    }
+  ],
+  "OriginRequestPolicies": [
+    {
+      "Name": "API_ORIGIN_REQUEST_POLICY",
+      "Comment": "Forward necessary headers to API origin",
+      "HeadersConfig": {
+        "HeaderBehavior": "whitelist",
+        "Headers": [
+          "Accept",
+          "Accept-Language",
+          "Authorization",
+          "CloudFront-Viewer-Country",
+          "CloudFront-Viewer-Country-Region",
+          "Origin",
+          "Referer",
+          "User-Agent"
+        ]
+      },
+      "CookiesConfig": {
+        "CookieBehavior": "all"
+      },
+      "QueryStringsConfig": {
+        "QueryStringBehavior": "all"
+      }
+    }
+  ],
+  "ResponseHeadersPolicies": [
+    {
+      "Name": "SECURITY_HEADERS_POLICY",
+      "Comment": "Security headers for all responses",
+      "SecurityHeadersConfig": {
+        "StrictTransportSecurity": {
+          "AccessControlMaxAgeSec": 63072000,
+          "IncludeSubdomains": true,
+          "Preload": true,
+          "Override": true
+        },
+        "ContentTypeOptions": {
+          "Override": true
+        },
+        "FrameOptions": {
+          "FrameOption": "DENY",
+          "Override": true
+        },
+        "XSSProtection": {
+          "ModeBlock": true,
+          "Protection": true,
+          "Override": true
+        },
+        "ReferrerPolicy": {
+          "ReferrerPolicy": "strict-origin-when-cross-origin",
+          "Override": true
+        },
+        "ContentSecurityPolicy": {
+          "ContentSecurityPolicy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:;",
+          "Override": false
+        }
+      },
+      "CustomHeadersConfig": {
+        "Items": [
+          {
+            "Header": "X-Cache-Status",
+            "Value": "CloudFront",
+            "Override": false
+          },
+          {
+            "Header": "Permissions-Policy",
+            "Value": "camera=(), microphone=(), geolocation=()",
+            "Override": true
+          }
+        ]
+      },
+      "RemoveHeadersConfig": {
+        "Items": [
+          {
+            "Header": "X-Powered-By"
+          },
+          {
+            "Header": "Server"
+          }
+        ]
+      }
+    }
+  ],
+  "WAF": {
+    "Name": "preparedness-for-war-waf",
+    "Scope": "CLOUDFRONT",
+    "DefaultAction": {
+      "Type": "ALLOW"
+    },
+    "Rules": [
+      {
+        "Name": "RateLimitRule",
+        "Priority": 1,
+        "Statement": {
+          "RateBasedStatement": {
+            "Limit": 10000,
+            "AggregateKeyType": "IP"
+          }
+        },
+        "Action": {
+          "Block": {}
+        },
+        "VisibilityConfig": {
+          "SampledRequestsEnabled": true,
+          "CloudWatchMetricsEnabled": true,
+          "MetricName": "RateLimitRule"
+        }
+      },
+      {
+        "Name": "AWSManagedRulesCommonRuleSet",
+        "Priority": 2,
+        "Statement": {
+          "ManagedRuleGroupStatement": {
+            "VendorName": "AWS",
+            "Name": "AWSManagedRulesCommonRuleSet"
+          }
+        },
+        "OverrideAction": {
+          "None": {}
+        },
+        "VisibilityConfig": {
+          "SampledRequestsEnabled": true,
+          "CloudWatchMetricsEnabled": true,
+          "MetricName": "AWSManagedRulesCommonRuleSet"
+        }
+      },
+      {
+        "Name": "AWSManagedRulesKnownBadInputsRuleSet",
+        "Priority": 3,
+        "Statement": {
+          "ManagedRuleGroupStatement": {
+            "VendorName": "AWS",
+            "Name": "AWSManagedRulesKnownBadInputsRuleSet"
+          }
+        },
+        "OverrideAction": {
+          "None": {}
+        },
+        "VisibilityConfig": {
+          "SampledRequestsEnabled": true,
+          "CloudWatchMetricsEnabled": true,
+          "MetricName": "KnownBadInputs"
+        }
+      },
+      {
+        "Name": "BlockSuspiciousPaths",
+        "Priority": 4,
+        "Statement": {
+          "OrStatement": {
+            "Statements": [
+              {
+                "ByteMatchStatement": {
+                  "FieldToMatch": {
+                    "UriPath": {}
+                  },
+                  "PositionalConstraint": "CONTAINS",
+                  "SearchString": ".php",
+                  "TextTransformations": [
+                    {
+                      "Type": "LOWERCASE",
+                      "Priority": 0
+                    }
+                  ]
+                }
+              },
+              {
+                "ByteMatchStatement": {
+                  "FieldToMatch": {
+                    "UriPath": {}
+                  },
+                  "PositionalConstraint": "CONTAINS",
+                  "SearchString": ".env",
+                  "TextTransformations": [
+                    {
+                      "Type": "LOWERCASE",
+                      "Priority": 0
+                    }
+                  ]
+                }
+              },
+              {
+                "ByteMatchStatement": {
+                  "FieldToMatch": {
+                    "UriPath": {}
+                  },
+                  "PositionalConstraint": "CONTAINS",
+                  "SearchString": "wp-admin",
+                  "TextTransformations": [
+                    {
+                      "Type": "LOWERCASE",
+                      "Priority": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "Action": {
+          "Block": {}
+        },
+        "VisibilityConfig": {
+          "SampledRequestsEnabled": true,
+          "CloudWatchMetricsEnabled": true,
+          "MetricName": "SuspiciousPaths"
+        }
+      }
+    ]
+  },
+  "Lambda@Edge": {
+    "Functions": [
+      {
+        "Name": "origin-request-auth",
+        "EventType": "origin-request",
+        "Description": "Add authentication headers to origin requests",
+        "Runtime": "nodejs20.x",
+        "Handler": "index.handler",
+        "FunctionPath": "lambda/origin-request-auth.js"
+      },
+      {
+        "Name": "viewer-response-security",
+        "EventType": "viewer-response",
+        "Description": "Add security headers to responses",
+        "Runtime": "nodejs20.x",
+        "Handler": "index.handler",
+        "FunctionPath": "lambda/viewer-response-security.js"
+      }
+    ]
+  },
+  "DeploymentSteps": [
+    "1. Create S3 bucket for static assets: preparednessforwar-assets",
+    "2. Create S3 bucket for logs: preparednessforwar-logs",
+    "3. Request ACM certificate for *.preparednessforwar.com",
+    "4. Create Origin Access Identity (OAI) for S3 access",
+    "5. Deploy WAF WebACL",
+    "6. Create cache policies using AWS CLI",
+    "7. Create CloudFront distribution",
+    "8. Deploy Lambda@Edge functions (optional)",
+    "9. Update DNS records to point to CloudFront",
+    "10. Test: curl -I https://preparednessforwar.com/",
+    "11. Monitor CloudFront metrics in CloudWatch"
+  ],
+  "AWSCLICommands": {
+    "create_distribution": "aws cloudfront create-distribution --cli-input-json file://cdn/aws-cloudfront-config.json",
+    "create_cache_policy": "aws cloudfront create-cache-policy --cache-policy-config file://cdn/cache-policy.json",
+    "create_waf": "aws wafv2 create-web-acl --cli-input-json file://cdn/waf-config.json --scope CLOUDFRONT --region us-east-1",
+    "invalidate_cache": "aws cloudfront create-invalidation --distribution-id DISTRIBUTION_ID --paths '/*'",
+    "get_distribution": "aws cloudfront get-distribution --id DISTRIBUTION_ID"
+  }
+}

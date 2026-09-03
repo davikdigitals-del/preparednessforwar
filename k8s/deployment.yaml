@@ -1,0 +1,260 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: preparednessforwar-app
+  namespace: production
+  labels:
+    app: preparednessforwar
+    version: v1
+    component: backend
+spec:
+  # Horizontal scaling - adjust based on load
+  replicas: 100
+  
+  # Rolling update strategy
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%        # Max 25% additional pods during update
+      maxUnavailable: 25%  # Max 25% unavailable during update
+  
+  selector:
+    matchLabels:
+      app: preparednessforwar
+      component: backend
+  
+  template:
+    metadata:
+      labels:
+        app: preparednessforwar
+        component: backend
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3000"
+        prometheus.io/path: "/metrics"
+    
+    spec:
+      # Spread pods across nodes and zones
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: preparednessforwar
+                topologyKey: kubernetes.io/hostname
+            - weight: 50
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: preparednessforwar
+                topologyKey: topology.kubernetes.io/zone
+      
+      # Use dedicated node pool for application workload
+      nodeSelector:
+        workload-type: application
+      
+      # Tolerate spot instances for cost savings
+      tolerations:
+        - key: "spot-instance"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+      
+      # Service account for AWS/GCP integrations
+      serviceAccountName: preparednessforwar-sa
+      
+      # Init container to wait for dependencies
+      initContainers:
+        - name: wait-for-redis
+          image: busybox:1.35
+          command: ['sh', '-c', 'until nc -z redis-service 6379; do echo waiting for redis; sleep 2; done;']
+      
+      containers:
+        - name: app
+          image: YOUR_REGISTRY/preparednessforwar:latest
+          imagePullPolicy: Always
+          
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          
+          # Environment variables
+          env:
+            - name: NODE_ENV
+              value: "production"
+            
+            - name: PORT
+              value: "3000"
+            
+            # Pod info
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            
+            # Redis configuration
+            - name: REDIS_HOST
+              value: "redis-service"
+            
+            - name: REDIS_PORT
+              value: "6379"
+            
+            - name: REDIS_MODE
+              value: "standalone"
+            
+            # Secrets from Kubernetes secrets
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: password
+                  optional: true
+            
+            # Supabase configuration
+            - name: VITE_SUPABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-secret
+                  key: url
+            
+            - name: VITE_SUPABASE_ANON_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-secret
+                  key: anon-key
+            
+            - name: SUPABASE_SERVICE_ROLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-secret
+                  key: service-role-key
+            
+            # Database pooling
+            - name: SUPABASE_USE_POOLER
+              value: "true"
+            
+            - name: DB_POOL_MIN
+              value: "2"
+            
+            - name: DB_POOL_MAX
+              value: "10"
+            
+            # Caching
+            - name: MEMORY_CACHE_SIZE
+              value: "1000"
+            
+            - name: ENABLE_MEMORY_CACHE
+              value: "true"
+            
+            - name: ENABLE_REDIS_CACHE
+              value: "true"
+            
+            # Rate limiting
+            - name: RATE_LIMIT_ANONYMOUS
+              value: "100"
+            
+            - name: RATE_LIMIT_AUTHENTICATED
+              value: "1000"
+            
+            # Monitoring
+            - name: LOG_LEVEL
+              value: "info"
+            
+            - name: ENABLE_METRICS
+              value: "true"
+          
+          # Resource limits and requests
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          
+          # Liveness probe - restart if unhealthy
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+              httpHeaders:
+                - name: X-Probe
+                  value: liveness
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+          
+          # Readiness probe - remove from load balancer if not ready
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3000
+              httpHeaders:
+                - name: X-Probe
+                  value: readiness
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 2
+          
+          # Startup probe - allow more time for initial startup
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 0
+            periodSeconds: 5
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 30
+          
+          # Security context
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+          
+          # Volume mounts
+          volumeMounts:
+            - name: logs
+              mountPath: /app/logs
+            - name: tmp
+              mountPath: /tmp
+      
+      # Volumes
+      volumes:
+        - name: logs
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+      
+      # Graceful shutdown
+      terminationGracePeriodSeconds: 30
+      
+      # DNS configuration for faster lookups
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"

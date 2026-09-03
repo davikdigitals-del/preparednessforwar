@@ -1,0 +1,262 @@
+# Prometheus Alerting Rules
+# Defines alerts for critical system conditions
+
+groups:
+  - name: application
+    interval: 30s
+    rules:
+      # High error rate
+      - alert: HighErrorRate
+        expr: rate(errors_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: critical
+          component: application
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanize }} errors/second (threshold: 10/s)"
+
+      # Slow response time
+      - alert: SlowResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "Slow response time (P95)"
+          description: "P95 response time is {{ $value | humanizeDuration }} (threshold: 500ms)"
+
+      # Very slow response time
+      - alert: VerySlowResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: critical
+          component: application
+        annotations:
+          summary: "Very slow response time (P95)"
+          description: "P95 response time is {{ $value | humanizeDuration }} (threshold: 2s)"
+
+      # Low cache hit rate
+      - alert: LowCacheHitRate
+        expr: |
+          (
+            sum(rate(cache_hits_total[5m]))
+            /
+            (sum(rate(cache_hits_total[5m])) + sum(rate(cache_misses_total[5m])))
+          ) < 0.7
+        for: 15m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} (threshold: 70%)"
+
+      # High rate limit violations
+      - alert: HighRateLimitViolations
+        expr: rate(rate_limit_exceeded_total[5m]) > 100
+        for: 10m
+        labels:
+          severity: warning
+          component: rate_limiter
+        annotations:
+          summary: "High rate of rate limit violations"
+          description: "{{ $value | humanize }} rate limit violations per second"
+
+      # No requests (service down?)
+      - alert: NoRequests
+        expr: rate(http_requests_total[5m]) == 0
+        for: 5m
+        labels:
+          severity: critical
+          component: application
+        annotations:
+          summary: "No HTTP requests received"
+          description: "Application has not received any requests for 5 minutes"
+
+  - name: system
+    interval: 30s
+    rules:
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: (nodejs_heap_size_used_bytes / nodejs_heap_size_total_bytes) > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }} (threshold: 90%)"
+
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total[5m]) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value | humanizePercentage }} (threshold: 80%)"
+
+      # Event loop lag
+      - alert: EventLoopLag
+        expr: histogram_quantile(0.95, rate(event_loop_lag_seconds_bucket[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High event loop lag"
+          description: "P95 event loop lag is {{ $value | humanizeDuration }} (threshold: 100ms)"
+
+      # Too many active connections
+      - alert: TooManyConnections
+        expr: http_active_connections > 10000
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Too many active connections"
+          description: "{{ $value }} active connections (threshold: 10,000)"
+
+  - name: database
+    interval: 30s
+    rules:
+      # Slow database queries
+      - alert: SlowDatabaseQueries
+        expr: histogram_quantile(0.95, rate(db_query_duration_seconds_bucket[5m])) > 1
+        for: 10m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Slow database queries"
+          description: "P95 database query time is {{ $value | humanizeDuration }} (threshold: 1s)"
+
+      # High database error rate
+      - alert: HighDatabaseErrorRate
+        expr: rate(db_queries_total{status="error"}[5m]) > 1
+        for: 5m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "High database error rate"
+          description: "{{ $value | humanize }} database errors per second"
+
+      # Database connection pool exhausted
+      - alert: DatabaseConnectionPoolExhausted
+        expr: db_connections_active / db_connections_max > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database connection pool near capacity"
+          description: "{{ $value | humanizePercentage }} of connection pool in use (threshold: 90%)"
+
+  - name: redis
+    interval: 30s
+    rules:
+      # Redis down
+      - alert: RedisDown
+        expr: redis_connected == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: redis
+        annotations:
+          summary: "Redis is down"
+          description: "Redis connection is unavailable"
+
+      # High Redis command latency
+      - alert: HighRedisLatency
+        expr: histogram_quantile(0.95, rate(redis_command_duration_seconds_bucket[5m])) > 0.01
+        for: 10m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "High Redis command latency"
+          description: "P95 Redis command latency is {{ $value | humanizeDuration }} (threshold: 10ms)"
+
+      # High Redis memory usage
+      - alert: HighRedisMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "High Redis memory usage"
+          description: "Redis memory usage is {{ $value | humanizePercentage }} (threshold: 90%)"
+
+  - name: availability
+    interval: 30s
+    rules:
+      # Service down
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: availability
+        annotations:
+          summary: "Service {{ $labels.instance }} is down"
+          description: "{{ $labels.job }} on {{ $labels.instance }} has been down for 2 minutes"
+
+      # High availability check
+      - alert: LowAvailability
+        expr: |
+          (
+            sum(rate(http_requests_total{status_code=~"2.."}[5m]))
+            /
+            sum(rate(http_requests_total[5m]))
+          ) < 0.99
+        for: 10m
+        labels:
+          severity: critical
+          component: availability
+        annotations:
+          summary: "Low service availability"
+          description: "Availability is {{ $value | humanizePercentage }} (threshold: 99%)"
+
+  - name: security
+    interval: 30s
+    rules:
+      # DDoS attack suspected
+      - alert: PossibleDDoSAttack
+        expr: rate(http_requests_total[1m]) > 100000
+        for: 2m
+        labels:
+          severity: critical
+          component: security
+        annotations:
+          summary: "Possible DDoS attack"
+          description: "Request rate is {{ $value | humanize }} req/s (threshold: 100K req/s)"
+
+      # Too many 4xx errors
+      - alert: HighClientErrorRate
+        expr: rate(http_requests_total{status_code=~"4.."}[5m]) / rate(http_requests_total[5m]) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "High client error rate"
+          description: "{{ $value | humanizePercentage }} of requests are returning 4xx errors"
+
+      # Too many 5xx errors
+      - alert: HighServerErrorRate
+        expr: rate(http_requests_total{status_code=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          component: availability
+        annotations:
+          summary: "High server error rate"
+          description: "{{ $value | humanizePercentage }} of requests are returning 5xx errors (threshold: 1%)"

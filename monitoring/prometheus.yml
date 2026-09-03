@@ -1,0 +1,120 @@
+# Prometheus Configuration for Preparedness For War
+# This file configures Prometheus to scrape metrics from application servers
+
+global:
+  scrape_interval: 15s      # Scrape targets every 15 seconds
+  evaluation_interval: 15s  # Evaluate rules every 15 seconds
+  external_labels:
+    cluster: 'preparednessforwar'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - 'alertmanager:9093'
+
+# Load alerting rules
+rule_files:
+  - 'alerts.yml'
+
+# Scrape configurations
+scrape_configs:
+  # Scrape application servers
+  - job_name: 'nodejs-app'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    metrics_path: '/metrics'
+    
+    # Service discovery for Kubernetes
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - production
+    
+    relabel_configs:
+      # Only scrape pods with app=preparednessforwar label
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: preparednessforwar
+      
+      # Set instance label to pod name
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: instance
+      
+      # Set node label
+      - source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: node
+
+    # Static config (if not using Kubernetes)
+    # static_configs:
+    #   - targets:
+    #       - 'app-server-1:3000'
+    #       - 'app-server-2:3000'
+    #       - 'app-server-3:3000'
+    #     labels:
+    #       environment: 'production'
+    #       region: 'us-east-1'
+
+  # Scrape Redis Exporter
+  - job_name: 'redis'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'redis-exporter:9121'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # Scrape PostgreSQL Exporter
+  - job_name: 'postgres'
+    scrape_interval: 30s
+    static_configs:
+      - targets:
+          - 'postgres-exporter:9187'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # Scrape Node Exporter (system metrics)
+  - job_name: 'node'
+    scrape_interval: 30s
+    static_configs:
+      - targets:
+          - 'node-exporter:9100'
+
+  # Scrape Prometheus itself
+  - job_name: 'prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets:
+          - 'localhost:9090'
+
+  # Scrape Cloudflare metrics (if using Cloudflare analytics)
+  - job_name: 'cloudflare'
+    scrape_interval: 60s
+    metrics_path: '/metrics/cloudflare'
+    static_configs:
+      - targets:
+          - 'metrics-collector:8080'
+
+  # Scrape AWS CloudWatch metrics
+  - job_name: 'cloudwatch'
+    scrape_interval: 60s
+    static_configs:
+      - targets:
+          - 'cloudwatch-exporter:9106'
+
+# Remote write configuration (for long-term storage)
+remote_write:
+  - url: 'https://prometheus-remote-write-endpoint.example.com/api/v1/write'
+    queue_config:
+      capacity: 10000
+      max_shards: 50
+      min_shards: 1
+      max_samples_per_send: 5000
+      batch_send_deadline: 5s
+      min_backoff: 30ms
+      max_backoff: 100ms
