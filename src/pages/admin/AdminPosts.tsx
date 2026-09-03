@@ -110,7 +110,7 @@ export default function AdminPosts() {
         image_url: formData.image_url || null,
         video_url: formData.video_url || null,
         is_premium: formData.is_premium,
-        is_published: formData.is_published,
+        status: formData.is_published ? 'published' : 'draft',  // FIX: Use status field
         is_pinned: formData.is_pinned,
         country_codes: formData.country_codes,
         quick_link_topic: formData.quick_link_topic === "none" ? null : formData.quick_link_topic || null,
@@ -152,7 +152,7 @@ export default function AdminPosts() {
       image_url: post.image_url || "",
       video_url: post.video_url || "",
       is_premium: post.is_premium || false,
-      is_published: post.is_published || false,
+      is_published: post.status === 'published',  // FIX: Read from status field
       is_pinned: post.is_pinned || false,
       country_codes: post.country_codes || [],
       quick_link_topic: post.quick_link_topic || "none",
