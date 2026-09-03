@@ -81,8 +81,7 @@ app.get('/ping', (_req, res) => {
   res.send('pong');
 });
 
-// Health check endpoint - moved to /api/health to avoid conflict with /health frontend route
-app.get('/api/health', (_req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
