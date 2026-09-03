@@ -60,30 +60,6 @@ function buildMenuConfig(
   };
 }
 
-// "More" mega menu config
-const moreMenuConfig: MegaMenuConfig = {
-  menuId: "more",
-  categories: {
-    heading: "Community",
-    items: [
-      { id: "community-reports", label: "Community Reports", href: "/community-reports" },
-      { id: "about", label: "About Us", href: "/about" },
-    ],
-  },
-  programmes: {
-    heading: "Learn & Shop",
-    groups: [
-      { id: "education", label: "Education", href: "/education" },
-      { id: "my-courses", label: "My Learning", href: "/my-courses" },
-      { id: "shop", label: "Essential Supplies", href: "/shop" },
-    ],
-  },
-  featured: {
-    heading: "",
-    items: [],
-  },
-};
-
 export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -126,11 +102,47 @@ export function SiteHeader() {
   const activeSections = (dbSections.length > 0 ? dbSections : navSections)
     .filter(s => s.is_active !== false); // Show all active sections including supplies
 
-  const mainNavItems = activeSections.map(s => ({
+  // Split sections: first 5 in main nav, rest in "More" menu
+  const MAX_MAIN_NAV_ITEMS = 5;
+  const mainNavSections = activeSections.slice(0, MAX_MAIN_NAV_ITEMS);
+  const moreMenuSections = activeSections.slice(MAX_MAIN_NAV_ITEMS);
+
+  const mainNavItems = mainNavSections.map(s => ({
     label: s.title,
     to: `/${s.slug}`,
     section: s.slug,
   }));
+
+  // Dynamic "More" menu config - includes overflow sections + static items
+  const moreMenuConfig: MegaMenuConfig = {
+    menuId: "more",
+    categories: {
+      heading: moreMenuSections.length > 0 ? "More Sections" : "Community",
+      items: [
+        // Add overflow sections first
+        ...moreMenuSections.map(s => ({
+          id: s.slug,
+          label: s.title,
+          href: `/${s.slug}`,
+        })),
+        // Then add static community items
+        { id: "community-reports", label: "Community Reports", href: "/community-reports" },
+        { id: "about", label: "About Us", href: "/about" },
+      ],
+    },
+    programmes: {
+      heading: "Learn & Shop",
+      groups: [
+        { id: "education", label: "Education", href: "/education" },
+        { id: "my-courses", label: "My Learning", href: "/my-courses" },
+        { id: "shop", label: "Essential Supplies", href: "/shop" },
+      ],
+    },
+    featured: {
+      heading: "",
+      items: [],
+    },
+  };
 
   return (
     <header ref={headerRef} className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm relative">
