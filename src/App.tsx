@@ -1,10 +1,9 @@
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DataProvider } from "@/contexts/DataContext";
@@ -12,6 +11,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { JWTRefreshHandler } from "@/components/auth/JWTRefreshHandler";
 import CookieConsent from "@/components/CookieConsent";
 import { useSecurity } from "@/hooks/useSecurity";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 // Core public pages — loaded immediately
 import Index from "./pages/Index";
@@ -107,6 +107,36 @@ const PageLoader = () => (
 const App = () => {
   // Initialize security protection
   useSecurity();
+
+  // Load site settings and update document title/meta
+  const { settings } = useSiteSettings();
+
+  useEffect(() => {
+    // Update page title
+    document.title = settings.site_name;
+
+    // Update meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', settings.site_description);
+    }
+
+    // Update OG tags
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) {
+      ogTitle.setAttribute('content', settings.site_name);
+    }
+
+    const ogDescription = document.querySelector('meta[property="og:description"]');
+    if (ogDescription) {
+      ogDescription.setAttribute('content', settings.site_description);
+    }
+
+    const ogSiteName = document.querySelector('meta[property="og:site_name"]');
+    if (ogSiteName) {
+      ogSiteName.setAttribute('content', settings.site_name);
+    }
+  }, [settings]);
 
   return (
     <QueryClientProvider client={queryClient}>
