@@ -302,7 +302,6 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         .ql-editor .image-with-caption {
           margin: 24px auto;
           max-width: 100%;
-          text-align: center;
         }
         .ql-editor .image-with-caption img {
           max-width: 100%;
@@ -312,14 +311,11 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           display: block;
         }
         .ql-editor .image-with-caption figcaption {
-          margin-top: 8px;
-          font-size: 14px;
-          color: #6b7280;
-          font-style: italic;
-          padding: 8px 12px;
-          background: #f9fafb;
-          border-radius: 4px;
-          text-align: center;
+          margin-top: 12px;
+          font-size: 15px;
+          color: #8B1538;
+          line-height: 1.6;
+          text-align: left;
         }
         
         .rich-text-editor .ql-toolbar {
