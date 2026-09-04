@@ -23,6 +23,7 @@ import {
   ExternalLink,
   GraduationCap,
   Mail,
+  Wrench,
 } from "lucide-react";
 
 export default function AdminLayout() {
@@ -158,6 +159,7 @@ export default function AdminLayout() {
         { icon: Mail, label: "Newsletter", path: "/admin/newsletter" },
         { icon: Globe, label: "Countries", path: "/admin/countries" },
         { icon: Settings, label: "Site Settings", path: "/admin/settings" },
+        { icon: Wrench, label: "Maintenance Mode", path: "/admin/maintenance" },
       ],
     },
   ];

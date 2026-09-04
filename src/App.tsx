@@ -77,6 +77,7 @@ const AdminLibrary = lazy(() => import("./pages/admin/AdminLibrary"));
 const AdminEncyclopaedia = lazy(() => import("./pages/admin/AdminEncyclopaedia"));
 const AdminBanner = lazy(() => import("./pages/admin/AdminBanner"));
 const AdminSiteSettings = lazy(() => import("./pages/admin/AdminSiteSettings"));
+const AdminMaintenance = lazy(() => import("./pages/admin/AdminMaintenance"));
 const AdminSubscriptions = lazy(() => import("./pages/admin/AdminSubscriptions"));
 const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 const AdminMembers = lazy(() => import("./pages/admin/AdminMembers"));
@@ -139,6 +140,7 @@ const App = () => {
                         <Route path="encyclopaedia" element={<AdminEncyclopaedia />} />
                         <Route path="pages" element={<AdminPages />} />
                         <Route path="settings" element={<AdminSiteSettings />} />
+                        <Route path="maintenance" element={<AdminMaintenance />} />
                         <Route path="subscriptions" element={<AdminSubscriptions />} />
                         <Route path="members" element={<AdminMembers />} />
                         <Route path="courses" element={<AdminCourses />} />
