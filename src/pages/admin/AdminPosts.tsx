@@ -357,7 +357,7 @@ export default function AdminPosts() {
                           try {
                             console.log("📌 Pin button clicked for post:", post.id, "Current is_pinned:", post.is_pinned);
 
-                            // If trying to pin, check if section already has 2 pinned posts
+                            // If trying to pin, check if section already has 3 pinned posts
                             if (!post.is_pinned) {
                               const { data: pinnedPosts, error: checkError } = await supabase
                                 .from("posts")
@@ -377,10 +377,10 @@ export default function AdminPosts() {
                                 return;
                               }
 
-                              if (pinnedPosts && pinnedPosts.length >= 2) {
+                              if (pinnedPosts && pinnedPosts.length >= 3) {
                                 toast({
                                   title: "Maximum Limit Reached",
-                                  description: `This section already has 2 featured posts in the menu. Please unpin one first.`,
+                                  description: `This section already has 3 featured posts in the menu. Please unpin one first.`,
                                   variant: "destructive",
                                 });
                                 return;

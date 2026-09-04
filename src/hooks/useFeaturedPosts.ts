@@ -32,14 +32,14 @@ export function useFeaturedPosts() {
         return;
       }
 
-      // Group posts by section, max 2 per section
+      // Group posts by section, max 3 per section
       const map: Record<string, FeaturedPost[]> = {};
       for (const post of data) {
         if (!map[post.section]) {
           map[post.section] = [];
         }
-        // Only add if section has less than 2 posts
-        if (map[post.section].length < 2) {
+        // Only add if section has less than 3 posts
+        if (map[post.section].length < 3) {
           map[post.section].push({
             id: post.id,
             title: post.title,

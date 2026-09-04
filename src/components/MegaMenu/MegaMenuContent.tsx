@@ -61,8 +61,8 @@ export function MegaMenuContent({
     >
       <div className="container mx-auto px-4">
         <div className={`grid gap-0 py-6 ${hasFeatured
-            ? 'grid-cols-1 lg:grid-cols-[1fr_1fr_1.2fr]'
-            : 'grid-cols-1 md:grid-cols-2'
+          ? 'grid-cols-1 lg:grid-cols-[1fr_1fr_1.2fr]'
+          : 'grid-cols-1 md:grid-cols-2'
           }`}>
 
           {/* Column 1 — Categories */}
@@ -126,7 +126,7 @@ export function MegaMenuContent({
                 {config.featured.heading}
               </p>
               <div className="space-y-3">
-                {config.featured.items.slice(0, 2).map((item) => (
+                {config.featured.items.slice(0, 3).map((item) => (
                   <Link
                     key={item.id}
                     to={item.href}
