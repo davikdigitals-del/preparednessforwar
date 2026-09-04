@@ -414,50 +414,96 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl, mediaId, type
   const [saved, setSaved] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
+  // Detect platform for targeted overlay positioning
+  const platform = originalUrl.includes('tiktok') ? 'tiktok'
+    : originalUrl.includes('youtube') || originalUrl.includes('youtu.be') ? 'youtube'
+      : originalUrl.includes('vimeo') ? 'vimeo'
+        : originalUrl.includes('spotify') ? 'spotify'
+          : 'other';
+
   return (
     <div className="relative bg-black w-full">
       <div className="w-full">
         {loadError ? (
           <div className="w-full min-h-[400px] aspect-video bg-gray-900 flex flex-col items-center justify-center text-white p-8">
             <div className="text-center">
-              <p className="text-lg font-semibold mb-2">Media Unavailable</p>
+              <p className="text-lg font-semibold mb-2">Video Unavailable</p>
               <p className="text-sm text-gray-400 mb-4">
-                This content cannot be embedded or is temporarily unavailable.
+                This content is currently unavailable. Please try again later.
               </p>
-              <a
-                href={originalUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
-              >
-                Open Original Link
-              </a>
             </div>
           </div>
         ) : (
-          <iframe
-            src={embedUrl}
-            title={title}
-            className="w-full min-h-[400px] aspect-video"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen={true}
-            onError={() => setLoadError(true)}
-            onLoad={(e) => {
-              // Check if iframe loaded successfully
-              try {
-                const iframe = e.target as HTMLIFrameElement;
-                // If we can't access contentDocument due to CORS, that's usually fine
-                // Only set error if there's an actual loading issue
-              } catch (error) {
-                // CORS errors are expected for external embeds, don't treat as error
-              }
-            }}
-          />
+          <div className="relative w-full overflow-hidden">
+            <iframe
+              src={embedUrl}
+              title={title}
+              className="w-full min-h-[400px] aspect-video border-0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen={true}
+              onError={() => setLoadError(true)}
+              style={{
+                border: 'none',
+                outline: 'none',
+                background: '#000'
+              }}
+            />
+
+            {/* Platform-specific overlay system to hide branding */}
+            {platform === 'tiktok' && (
+              <>
+                {/* TikTok logo - top right corner */}
+                <div className="absolute top-3 right-3 w-10 h-8 bg-black rounded opacity-90 pointer-events-none z-20" />
+
+                {/* TikTok watermark/username - left side */}
+                <div className="absolute bottom-20 left-4 w-28 h-6 bg-black rounded opacity-90 pointer-events-none z-20" />
+
+                {/* TikTok sound credit - bottom center */}
+                <div className="absolute bottom-4 left-4 right-4 h-8 bg-black/90 rounded pointer-events-none z-20" />
+
+                {/* TikTok promotional overlay - bottom area for "original sound" text */}
+                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-20" />
+
+                {/* Additional overlay for @username watermarks */}
+                <div className="absolute bottom-32 left-2 w-20 h-5 bg-black rounded opacity-90 pointer-events-none z-20" />
+              </>
+            )}
+
+            {platform === 'youtube' && (
+              <>
+                {/* YouTube logo - top left */}
+                <div className="absolute top-3 left-3 w-20 h-6 bg-black rounded opacity-90 pointer-events-none z-20" />
+
+                {/* YouTube watermark - bottom right */}
+                <div className="absolute bottom-3 right-3 w-16 h-5 bg-black rounded opacity-90 pointer-events-none z-20" />
+
+                {/* YouTube branding - top right */}
+                <div className="absolute top-3 right-3 w-12 h-8 bg-black rounded opacity-90 pointer-events-none z-20" />
+              </>
+            )}
+
+            {platform === 'vimeo' && (
+              <>
+                {/* Vimeo branding - top right */}
+                <div className="absolute top-3 right-3 w-12 h-6 bg-black rounded opacity-90 pointer-events-none z-20" />
+
+                {/* Vimeo logo - bottom right */}
+                <div className="absolute bottom-3 right-3 w-10 h-4 bg-black rounded opacity-90 pointer-events-none z-20" />
+              </>
+            )}
+
+            {/* Universal corner overlays for any remaining platform logos */}
+            <div className="absolute inset-0 pointer-events-none z-10">
+              <div className="absolute top-0 right-0 w-16 h-12 bg-gradient-to-bl from-black/70 to-transparent" />
+              <div className="absolute top-0 left-0 w-16 h-12 bg-gradient-to-br from-black/50 to-transparent" />
+              <div className="absolute bottom-0 right-0 w-20 h-10 bg-gradient-to-tl from-black/60 to-transparent" />
+            </div>
+          </div>
         )}
       </div>
       {!isPremium && (
         <div className="bg-gray-900 px-4 py-2 flex items-center justify-between">
-          <span className="text-gray-400 text-xs">Free content</span>
+          <span className="text-gray-400 text-xs">Premium content available</span>
           <button
             onClick={() => saveToDashboard(originalUrl, title, type || 'video', mediaId, setSaving, setSaved)}
             disabled={saving || saved}
@@ -466,7 +512,7 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl, mediaId, type
             {saving ? <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               : saved ? <Check className="w-3.5 h-3.5 text-green-300" />
                 : <Download className="w-3.5 h-3.5" />}
-            {saving ? 'Saving...' : saved ? 'Saved!' : 'Save to Dashboard'}
+            {saving ? 'Saving...' : saved ? 'Saved!' : 'Save to Library'}
           </button>
         </div>
       )}
@@ -487,23 +533,21 @@ export function MediaPlayer({ url, title, isPremium = false, type, thumbnail, me
   const directAudio = isDirectAudio(url) || type === "podcast" || type === "audio";
 
   if (ytId) {
-    const embedUrl = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&color=white`;
+    const embedUrl = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&color=white&controls=1&disablekb=1&fs=1&cc_load_policy=0&hl=en&loop=0&wmode=opaque&origin=${window.location.origin}&widget_referrer=${window.location.origin}`;
     return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
   }
   if (vimeoId) {
-    const embedUrl = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0&badge=0`;
+    const embedUrl = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0&badge=0&color=ffffff&transparent=0&loop=0&speed=0&keyboard=1&pip=1&playsInline=1&controls=1`;
     return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
   }
   if (tiktokId) {
-    // TikTok embed - handle both regular and short URLs
+    // TikTok embed - use minimal branding approach
     let embedUrl: string;
     if (tiktokId === 'shorturl') {
-      // For short URLs, fallback to direct embed attempt or just display the URL
-      // TikTok short URLs are problematic for embedding
       embedUrl = url; // Use original URL as fallback
     } else {
-      // Use TikTok's embed endpoint
-      embedUrl = `https://www.tiktok.com/embed/${tiktokId}`;
+      // Use TikTok's embed with minimal branding parameters
+      embedUrl = `https://www.tiktok.com/embed/${tiktokId}?hideCaption=1&hideCounts=1&transparent=1`;
     }
     return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
   }
@@ -516,7 +560,7 @@ export function MediaPlayer({ url, title, isPremium = false, type, thumbnail, me
     return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
   }
   if (spotifyId) {
-    const embedUrl = `https://open.spotify.com/embed/episode/${spotifyId}?utm_source=generator&theme=0`;
+    const embedUrl = `https://open.spotify.com/embed/episode/${spotifyId}?utm_source=generator&theme=0&t=0&utm_medium=embed_player_v1&show_artwork=true&frameborder=0`;
     return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
   }
   if (directVideo && type !== "podcast" && type !== "audio") {

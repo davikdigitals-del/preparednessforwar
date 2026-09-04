@@ -413,10 +413,10 @@ export default function AdminMedia() {
                 type="url"
                 value={formData.url}
                 onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                placeholder="https://example.com/media-file or YouTube/Vimeo/TikTok URL"
+                placeholder="https://example.com/media-file or video streaming URL"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Supports YouTube, Vimeo, TikTok, Dailymotion, direct links, or any embed URL
+                Supports video streaming platforms, direct links, or any embed URL
               </p>
             </div>
 

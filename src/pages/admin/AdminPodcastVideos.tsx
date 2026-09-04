@@ -455,8 +455,8 @@ export default function AdminPodcastVideos() {
                   }}
                   placeholder={
                     formData.type === "podcast"
-                      ? "Paste Spotify, Apple Podcasts, YouTube, or MP3 URL"
-                      : "Paste YouTube, Vimeo, TikTok, or direct video URL"
+                      ? "Paste streaming audio, podcast platform, or MP3 URL"
+                      : "Paste streaming video or direct video URL"
                   }
                   className="flex-1"
                 />
