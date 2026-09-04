@@ -11,6 +11,7 @@ import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { useLocation, Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
+import { useSocialMeta } from "@/hooks/useSocialMeta";
 
 export default function LibraryPage() {
   const { libraryItems } = useData();
@@ -28,6 +29,13 @@ export default function LibraryPage() {
   const pageDescription = isResourcesRoute
     ? "Download essential resources, guides, checklists, and documents for emergency preparedness."
     : "Browse, read, and download essential guides and manuals.";
+
+  // Set social meta
+  useSocialMeta({
+    title: pageTitle + " - Preparedness Guides",
+    description: pageDescription,
+    type: 'website',
+  });
 
   const visibleLibraryItems = libraryItems.filter((item) => {
     const countryCodes = item.countryCodes || [];

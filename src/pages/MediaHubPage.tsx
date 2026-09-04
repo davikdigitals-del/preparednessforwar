@@ -8,12 +8,21 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { MediaPlayer } from "@/components/MediaPlayer";
 import { Link } from "react-router-dom";
+import { useSocialMeta } from "@/hooks/useSocialMeta";
 
 /* ── Media player modal ── */
 function MediaModal({ item, onClose }: { item: MediaItem; onClose: () => void }) {
   const url = item.url || "";
   const { user } = useAuth();
   const { isPremium } = usePremiumStatus();
+
+  // Update social media meta tags for sharing
+  useSocialMeta({
+    title: item.title,
+    description: item.description || `Watch this ${item.type} on Preparedness for War`,
+    image: item.thumbnail,
+    type: 'video.other',
+  });
 
   // Premium gate — block if content is premium and user doesn't have subscription
   const isLocked = item.isPremium && !isPremium;
@@ -156,6 +165,13 @@ export default function MediaHubPage() {
   const [filter, setFilter] = useState<"all" | "video" | "podcast">("all");
   const [search, setSearch] = useState("");
   const [activeMedia, setActiveMedia] = useState<MediaItem | null>(null);
+
+  // Set default social meta for the page
+  useSocialMeta({
+    title: "Media Hub - Videos & Podcasts",
+    description: "Videos, podcasts, and broadcasts to keep you informed and prepared. Expert analysis, survival guides, and NATO intelligence.",
+    type: 'website',
+  });
 
   const filtered = mediaItems.filter((m) => {
     const matchType = filter === "all" || m.type === filter;

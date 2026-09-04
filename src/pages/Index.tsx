@@ -4,12 +4,20 @@ import { useData } from "@/contexts/DataContext";
 import { useNavSections } from "@/hooks/useNavSections";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight, CheckCircle, Crown, Loader2 } from "lucide-react";
+import { useSocialMeta } from "@/hooks/useSocialMeta";
 
 const Index = () => {
   const { loading } = useData();
   const { sections: dbSections } = useNavSections();
   const [plans, setPlans] = useState<{ id: string; name: string; price: number; currency: string; interval: string; features: string[] }[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
+
+  // Set social meta for homepage
+  useSocialMeta({
+    title: "Preparedness for War - UK Survival Company",
+    description: "UK survival company providing government advice, drone training, emergency supplies, and preparedness intelligence for NATO nations.",
+    type: 'website',
+  });
 
   useEffect(() => {
     document.title = "Preparedness For War - Latest News & Updates";

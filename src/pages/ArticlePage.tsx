@@ -20,6 +20,8 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { idb, STORES } from "@/services/IndexedDBService";
+import { parseContentWithCarousels, hasCarousels } from "@/utils/carouselParser";
+import { useSocialMeta } from "@/hooks/useSocialMeta";
 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    ARTICLE PAGE
@@ -59,6 +61,14 @@ const ArticlePage = () => {
   const post = publishedPosts.find((p: any) => p.id === id);
   const sectionData = navSections.find((s) => s.slug === section);
   const categoryData = sectionData?.categories.find((c) => c.slug === category);
+
+  // Update social media meta tags for sharing
+  useSocialMeta({
+    title: post?.title || 'Article',
+    description: post?.standfirst || post?.excerpt || 'Read the latest preparedness news and guides',
+    image: post?.image,
+    type: 'article',
+  });
 
   // Set page title to post title
   useEffect(() => {
@@ -484,8 +494,14 @@ const ArticlePage = () => {
                 >
                   <div className="prose prose-base max-w-none">
                     {post.body ? (
-                      <div className="text-base leading-relaxed text-gray-800 space-y-4"
-                        dangerouslySetInnerHTML={{ __html: post.body.replace(/\n/g, "<br/>") }} />
+                      hasCarousels(post.body) ? (
+                        <div className="text-base leading-relaxed text-gray-800 space-y-4">
+                          {parseContentWithCarousels(post.body.replace(/\n/g, "<br/>"))}
+                        </div>
+                      ) : (
+                        <div className="text-base leading-relaxed text-gray-800 space-y-4"
+                          dangerouslySetInnerHTML={{ __html: post.body.replace(/\n/g, "<br/>") }} />
+                      )
                     ) : (
                       <div className="space-y-4 text-base leading-relaxed text-gray-800">
                         <p>{post.standfirst}</p>
@@ -667,8 +683,14 @@ const ArticlePage = () => {
                 >
                   <div className="prose prose-lg max-w-none prose-img:rounded-lg prose-img:shadow-md prose-img:my-6">
                     {post.body ? (
-                      <div className="text-lg leading-relaxed text-gray-800 space-y-5"
-                        dangerouslySetInnerHTML={{ __html: post.body.replace(/\n/g, "<br/>") }} />
+                      hasCarousels(post.body) ? (
+                        <div className="text-lg leading-relaxed text-gray-800 space-y-5">
+                          {parseContentWithCarousels(post.body.replace(/\n/g, "<br/>"))}
+                        </div>
+                      ) : (
+                        <div className="text-lg leading-relaxed text-gray-800 space-y-5"
+                          dangerouslySetInnerHTML={{ __html: post.body.replace(/\n/g, "<br/>") }} />
+                      )
                     ) : (
                       <div className="space-y-6 text-lg leading-relaxed text-gray-800">
                         <p>{post.standfirst} This article provides comprehensive guidance on the topic of <strong>{post.title.toLowerCase()}</strong>. In an era of increasing uncertainty, being prepared is not just advisable â€” it's essential for every household.</p>
