@@ -23,6 +23,7 @@ import { idb, STORES } from "@/services/IndexedDBService";
 import { parseContentWithCarousels, hasCarousels } from "@/utils/carouselParser";
 import { useSocialMeta } from "@/hooks/useSocialMeta";
 import { formatNumber } from "@/utils/formatNumber";
+import { ImageLightbox } from "@/components/ImageLightbox";
 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    ARTICLE PAGE
@@ -40,6 +41,9 @@ const ArticlePage = () => {
   const [videoPlaying, setVideoPlaying] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarking, setBookmarking] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxInitialIndex, setLightboxInitialIndex] = useState(0);
   const shareRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -62,6 +66,21 @@ const ArticlePage = () => {
   const post = publishedPosts.find((p: any) => p.id === id);
   const sectionData = navSections.find((s) => s.slug === section);
   const categoryData = sectionData?.categories.find((c) => c.slug === category);
+
+  // Get post images (support both single image_url and multiple images array)
+  const postImages = post?.images && Array.isArray(post.images) && post.images.length > 0
+    ? post.images
+    : post?.image
+      ? [post.image]
+      : [];
+
+  // Handle image click to open lightbox
+  const handleImageClick = (index: number = 0) => {
+    if (postImages.length === 0) return;
+    setLightboxImages(postImages);
+    setLightboxInitialIndex(index);
+    setLightboxOpen(true);
+  };
 
   // Update social media meta tags for sharing
   useSocialMeta({
@@ -382,8 +401,21 @@ const ArticlePage = () => {
               {/* Full-width image â€” edge to edge */}
               {/* Post image - reduced size */}
               <div className="w-full max-w-2xl mx-auto bg-gray-100 overflow-hidden relative">
-                {post.image && (
-                  <img src={post.image} alt={post.title} className="w-full h-auto max-h-80 object-cover" />
+                {post.image && !((post as any).videoUrl || (post as any).video_url) && (
+                  <img
+                    src={post.image}
+                    alt={post.title}
+                    className="w-full h-auto max-h-80 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                    onClick={() => handleImageClick(0)}
+                    title="Click to preview"
+                  />
+                )}
+                {post.image && ((post as any).videoUrl || (post as any).video_url) && !videoPlaying && (
+                  <img
+                    src={post.image}
+                    alt={post.title}
+                    className="w-full h-auto max-h-80 object-cover"
+                  />
                 )}
                 {((post as any).videoUrl || (post as any).video_url) && !videoPlaying && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer"
@@ -399,6 +431,27 @@ const ArticlePage = () => {
                   </div>
                 )}
               </div>
+
+              {/* Additional images gallery - show if multiple images */}
+              {postImages.length > 1 && (
+                <div className="px-4 mt-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {postImages.slice(1).map((img, index) => (
+                      <img
+                        key={index}
+                        src={img}
+                        alt={`${post.title} - Image ${index + 2}`}
+                        className="w-full h-24 object-cover rounded cursor-pointer hover:opacity-90 transition-opacity border-2 border-gray-200"
+                        onClick={() => handleImageClick(index + 1)}
+                        title="Click to preview"
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    {postImages.length} images - Click any image to view full size
+                  </p>
+                </div>
+              )}
 
               {/* Author + date */}
               <div className="px-4 pt-3 pb-2 space-y-1">
@@ -649,8 +702,21 @@ const ArticlePage = () => {
 
               {/* Hero image - reduced size */}
               <div className="aspect-[3/2] max-w-xl mx-auto bg-gray-100 overflow-hidden relative mt-4 mx-6">
-                {post.image && (
-                  <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                {post.image && !((post as any).videoUrl || (post as any).video_url) && (
+                  <img
+                    src={post.image}
+                    alt={post.title}
+                    className="w-full h-full object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                    onClick={() => handleImageClick(0)}
+                    title="Click to preview"
+                  />
+                )}
+                {post.image && ((post as any).videoUrl || (post as any).video_url) && !videoPlaying && (
+                  <img
+                    src={post.image}
+                    alt={post.title}
+                    className="w-full h-full object-cover"
+                  />
                 )}
                 {((post as any).videoUrl || (post as any).video_url) && !videoPlaying && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer group hover:bg-black/50 transition-colors"
@@ -669,6 +735,27 @@ const ArticlePage = () => {
                   </div>
                 )}
               </div>
+
+              {/* Additional images gallery - show if multiple images (mobile) */}
+              {postImages.length > 1 && (
+                <div className="px-6 mt-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    {postImages.slice(1).map((img, index) => (
+                      <img
+                        key={index}
+                        src={img}
+                        alt={`${post.title} - Image ${index + 2}`}
+                        className="w-full h-24 object-cover rounded cursor-pointer hover:opacity-90 transition-opacity border-2 border-gray-200"
+                        onClick={() => handleImageClick(index + 1)}
+                        title="Click to preview"
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    {postImages.length} images - Tap any image to view full size
+                  </p>
+                </div>
+              )}
 
               {/* Article body */}
               <div className="p-6 md:p-8">
@@ -865,6 +952,14 @@ const ArticlePage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Image Lightbox for preview */}
+      <ImageLightbox
+        images={lightboxImages}
+        initialIndex={lightboxInitialIndex}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   );
 };
