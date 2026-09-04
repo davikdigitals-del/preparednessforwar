@@ -39,13 +39,13 @@ export default function AdminMedia() {
   const loadData = async () => {
     console.log("AdminMedia: Loading data...");
     setLoading(true);
-    
+
     try {
       const dataPromise = fetchMediaItems();
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Data load timeout")), 8000)
       );
-      
+
       await Promise.race([dataPromise, timeoutPromise]);
       console.log("AdminMedia: Data loaded successfully");
     } catch (error) {
@@ -71,6 +71,16 @@ export default function AdminMedia() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.url.trim()) {
+      toast({
+        title: "Missing URL",
+        description: "Please provide a URL or upload a file",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const tagsArray = formData.tags
         .split(",")
@@ -403,12 +413,21 @@ export default function AdminMedia() {
                 type="url"
                 value={formData.url}
                 onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                placeholder="https://example.com/media-file or YouTube/Vimeo URL"
-                required
+                placeholder="https://example.com/media-file or YouTube/Vimeo/TikTok URL"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Supports YouTube, Vimeo, Dailymotion, direct links, or any embed URL
+                Supports YouTube, Vimeo, TikTok, Dailymotion, direct links, or any embed URL
               </p>
+            </div>
+
+            <div className="border-t pt-4">
+              <p className="text-sm font-medium text-gray-700 mb-3">Or upload your own file:</p>
+              <FileUpload
+                type={formData.type === "image" ? "image" : formData.type === "video" ? "video" : "audio"}
+                currentUrl={formData.url}
+                onUrlChange={(url) => setFormData({ ...formData, url })}
+                label={`Upload ${formData.type === "image" ? "Image" : formData.type === "video" ? "Video" : "Audio"} File`}
+              />
             </div>
 
             <div>

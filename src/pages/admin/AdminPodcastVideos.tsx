@@ -39,13 +39,13 @@ export default function AdminPodcastVideos() {
   const loadData = async () => {
     console.log("AdminPodcastVideos: Loading data...");
     setLoading(true);
-    
+
     try {
       const dataPromise = fetchMediaItems();
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Data load timeout")), 8000)
       );
-      
+
       await Promise.race([dataPromise, timeoutPromise]);
       console.log("AdminPodcastVideos: Data loaded successfully");
     } catch (error) {
@@ -72,6 +72,16 @@ export default function AdminPodcastVideos() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.url.trim()) {
+      toast({
+        title: "Missing URL",
+        description: "Please provide a URL or upload a file",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const tagsArray = formData.tags
         .split(",")
@@ -446,9 +456,8 @@ export default function AdminPodcastVideos() {
                   placeholder={
                     formData.type === "podcast"
                       ? "Paste Spotify, Apple Podcasts, YouTube, or MP3 URL"
-                      : "Paste YouTube, Vimeo, or direct video URL"
+                      : "Paste YouTube, Vimeo, TikTok, or direct video URL"
                   }
-                  required
                   className="flex-1"
                 />
                 <Button
@@ -465,6 +474,16 @@ export default function AdminPodcastVideos() {
                 <Sparkles className="w-3 h-3" />
                 Paste a URL — title, thumbnail, author and duration auto-fill
               </p>
+            </div>
+
+            <div className="border-t pt-4">
+              <p className="text-sm font-medium text-gray-700 mb-3">Or upload your own file:</p>
+              <FileUpload
+                type={formData.type === "podcast" ? "audio" : "video"}
+                currentUrl={formData.url}
+                onUrlChange={(url) => setFormData({ ...formData, url })}
+                label={formData.type === "podcast" ? "Upload Audio/Podcast File" : "Upload Video File"}
+              />
             </div>
 
             <div>

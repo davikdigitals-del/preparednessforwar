@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Link2, X, Loader2, Image as ImageIcon, Video, FileText } from "lucide-react";
+import { Upload, Link2, X, Loader2, Image as ImageIcon, Video, FileText, Headphones } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface FileUploadProps {
-  type: "image" | "video" | "document";
+  type: "image" | "video" | "audio" | "document";
   currentUrl?: string;
   onUrlChange: (url: string) => void;
   label?: string;
@@ -22,33 +22,33 @@ interface FileUploadProps {
  */
 async function validateAndFetchDocumentUrl(url: string): Promise<string | null> {
   console.log('Validating document URL:', url);
-  
+
   try {
     // Check if URL is valid format
     const urlObj = new URL(url);
-    
+
     // Only allow https for security
     if (urlObj.protocol !== 'https:') {
       console.warn('Only HTTPS URLs are allowed');
       return null;
     }
-    
+
     // Try to fetch the document to validate it exists and is accessible
     const response = await fetch(url, {
       method: 'HEAD', // Only get headers, not full content
       signal: AbortSignal.timeout(10000), // 10 second timeout
       mode: 'cors'
     });
-    
+
     console.log('Document URL validation response:', {
       status: response.status,
       contentType: response.headers.get('content-type'),
       contentLength: response.headers.get('content-length')
     });
-    
+
     if (response.ok) {
       const contentType = response.headers.get('content-type') || '';
-      const isDocument = 
+      const isDocument =
         contentType.includes('application/pdf') ||
         contentType.includes('application/msword') ||
         contentType.includes('application/vnd.openxmlformats-officedocument') ||
@@ -56,7 +56,7 @@ async function validateAndFetchDocumentUrl(url: string): Promise<string | null> 
         contentType.includes('application/rtf') ||
         // Also allow if URL ends with document extensions
         /\.(pdf|doc|docx|txt|rtf)(\?.*)?$/i.test(url);
-      
+
       if (isDocument) {
         console.log('✅ Document URL validated successfully');
         return url;
@@ -70,13 +70,13 @@ async function validateAndFetchDocumentUrl(url: string): Promise<string | null> 
     }
   } catch (error) {
     console.warn('Document URL validation error:', error);
-    
+
     // If CORS error but URL looks valid, still allow it
     if (error instanceof TypeError && error.message.includes('CORS')) {
       console.log('CORS error but URL format is valid, allowing URL');
       return url;
     }
-    
+
     return null;
   }
 }
@@ -100,12 +100,17 @@ export function FileUpload({ type, currentUrl = "", onUrlChange, label, uploadId
     setPreview(currentUrl);
   }, [currentUrl]);
 
-  const bucket = type === "image" ? "post-images" : type === "video" ? "post-videos" : "content-files";
+  const bucket = type === "image" ? "post-images"
+    : type === "video" ? "post-videos"
+      : type === "audio" ? "post-audios"
+        : "content-files";
   const accept = type === "image"
     ? "image/jpeg,image/png,image/gif,image/webp"
     : type === "video"
-    ? "video/mp4,video/webm,video/ogg"
-    : "application/pdf,.pdf,.doc,.docx,.txt,.rtf";
+      ? "video/mp4,video/webm,video/ogg"
+      : type === "audio"
+        ? "audio/mp3,audio/wav,audio/ogg,audio/m4a,audio/aac,audio/mpeg"
+        : "application/pdf,.pdf,.doc,.docx,.txt,.rtf";
   const maxSize = type === "document" ? 50 * 1024 * 1024 : type === "image" ? 5 * 1024 * 1024 : 100 * 1024 * 1024;
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,7 +121,7 @@ export function FileUpload({ type, currentUrl = "", onUrlChange, label, uploadId
       const sizeLimit = type === "document" ? "50MB" : type === "image" ? "5MB" : "100MB";
       toast({
         title: "File Too Large",
-        description: `${type === "image" ? "Images" : type === "video" ? "Videos" : "Documents"} must be under ${sizeLimit}`,
+        description: `${type === "image" ? "Images" : type === "video" ? "Videos" : type === "audio" ? "Audio files" : "Documents"} must be under ${sizeLimit}`,
         variant: "destructive",
       });
       return;
@@ -149,36 +154,46 @@ export function FileUpload({ type, currentUrl = "", onUrlChange, label, uploadId
 
   const handleUrlSubmit = async () => {
     if (!urlInput.trim()) return;
-    
+
     console.log(`🔗 Starting URL validation for: ${urlInput.trim()}`);
     setUploading(true);
     try {
-      // Auto-fetch and validate the document URL
-      const validatedUrl = await validateAndFetchDocumentUrl(urlInput.trim());
-      if (validatedUrl) {
-        console.log(`✅ URL validation successful: ${validatedUrl}`);
-        setPreview(validatedUrl);
-        onUrlChange(validatedUrl);
-        toast({ title: "Document URL Added", description: "URL validated and ready to use" });
+      if (type === "document") {
+        // Auto-fetch and validate the document URL
+        const validatedUrl = await validateAndFetchDocumentUrl(urlInput.trim());
+        if (validatedUrl) {
+          console.log(`✅ URL validation successful: ${validatedUrl}`);
+          setPreview(validatedUrl);
+          onUrlChange(validatedUrl);
+          toast({ title: "Document URL Added", description: "URL validated and ready to use" });
+        } else {
+          console.log(`⚠️ URL validation failed, saving anyway: ${urlInput}`);
+          // Still allow the URL but show warning
+          setPreview(urlInput);
+          onUrlChange(urlInput);
+          toast({
+            title: "URL Added",
+            description: "Could not validate URL - it may still work",
+            variant: "destructive"
+          });
+        }
       } else {
-        console.log(`⚠️ URL validation failed, saving anyway: ${urlInput}`);
-        // Still allow the URL but show warning
-        setPreview(urlInput);
-        onUrlChange(urlInput);
-        toast({ 
-          title: "URL Added", 
-          description: "Could not validate URL - it may still work", 
-          variant: "destructive" 
+        // For video/audio/image, just save the URL directly
+        setPreview(urlInput.trim());
+        onUrlChange(urlInput.trim());
+        toast({
+          title: `${type === 'video' ? 'Video' : type === 'audio' ? 'Audio' : 'Image'} URL Added`,
+          description: "URL saved successfully"
         });
       }
     } catch (error) {
       console.warn('❌ URL validation error:', error);
       setPreview(urlInput);
       onUrlChange(urlInput);
-      toast({ 
-        title: "URL Added", 
-        description: "URL validation failed but URL was saved", 
-        variant: "destructive" 
+      toast({
+        title: "URL Added",
+        description: "URL validation failed but URL was saved",
+        variant: "destructive"
       });
     } finally {
       setUploading(false);
@@ -194,7 +209,7 @@ export function FileUpload({ type, currentUrl = "", onUrlChange, label, uploadId
 
   return (
     <div className="space-y-3">
-      <Label>{label || (type === "image" ? "Image" : type === "video" ? "Video" : "Document")}</Label>
+      <Label>{label || (type === "image" ? "Image" : type === "video" ? "Video" : type === "audio" ? "Audio" : "Document")}</Label>
 
       <Tabs defaultValue="upload" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
@@ -228,15 +243,19 @@ export function FileUpload({ type, currentUrl = "", onUrlChange, label, uploadId
                   {type === "image"
                     ? <ImageIcon className="w-8 h-8 text-muted-foreground" />
                     : type === "video"
-                    ? <Video className="w-8 h-8 text-muted-foreground" />
-                    : <FileText className="w-8 h-8 text-muted-foreground" />}
-                  <p className="text-sm font-medium">Click to upload {type === "image" ? "image" : type === "video" ? "video" : "document"}</p>
+                      ? <Video className="w-8 h-8 text-muted-foreground" />
+                      : type === "audio"
+                        ? <Headphones className="w-8 h-8 text-muted-foreground" />
+                        : <FileText className="w-8 h-8 text-muted-foreground" />}
+                  <p className="text-sm font-medium">Click to upload {type === "image" ? "image" : type === "video" ? "video" : type === "audio" ? "audio" : "document"}</p>
                   <p className="text-xs text-muted-foreground">
-                    {type === "image" 
-                      ? "PNG, JPG, GIF, WEBP up to 5MB" 
-                      : type === "video" 
-                      ? "MP4, WEBM, OGG up to 100MB"
-                      : "PDF, DOC, DOCX, TXT up to 50MB"}
+                    {type === "image"
+                      ? "PNG, JPG, GIF, WEBP up to 5MB"
+                      : type === "video"
+                        ? "MP4, WEBM, OGG up to 100MB"
+                        : type === "audio"
+                          ? "MP3, WAV, OGG, M4A up to 100MB"
+                          : "PDF, DOC, DOCX, TXT up to 50MB"}
                   </p>
                 </>
               )}
@@ -248,15 +267,15 @@ export function FileUpload({ type, currentUrl = "", onUrlChange, label, uploadId
           <div className="flex gap-2">
             <Input
               type="url"
-              placeholder={`Paste ${type === 'video' ? 'YouTube, Vimeo or direct video' : type === 'image' ? 'image' : 'document'} URL`}
+              placeholder={`Paste ${type === 'video' ? 'YouTube, Vimeo or direct video' : type === 'audio' ? 'Spotify, SoundCloud or direct audio' : type === 'image' ? 'image' : 'document'} URL`}
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleUrlSubmit()}
               disabled={uploading}
             />
-            <Button 
-              type="button" 
-              onClick={handleUrlSubmit} 
+            <Button
+              type="button"
+              onClick={handleUrlSubmit}
               variant="secondary"
               disabled={uploading || !urlInput.trim()}
             >
@@ -282,7 +301,10 @@ export function FileUpload({ type, currentUrl = "", onUrlChange, label, uploadId
             </div>
           )}
           {type === "video" && (
-            <p className="text-xs text-muted-foreground">Supports YouTube, Vimeo, and direct video URLs. Paste URL — it saves automatically.</p>
+            <p className="text-xs text-muted-foreground">Supports YouTube, Vimeo, TikTok and direct video URLs. Paste URL — it saves automatically.</p>
+          )}
+          {type === "audio" && (
+            <p className="text-xs text-muted-foreground">Supports Spotify, SoundCloud and direct audio URLs. Paste URL — it saves automatically.</p>
           )}
         </TabsContent>
       </Tabs>
@@ -300,15 +322,31 @@ export function FileUpload({ type, currentUrl = "", onUrlChange, label, uploadId
                 <p className="text-sm font-medium text-gray-900 mb-1">Document URL Ready</p>
                 <p className="text-xs text-gray-500 px-2 break-all">{preview}</p>
                 <div className="mt-2">
-                  <a 
-                    href={preview} 
-                    target="_blank" 
+                  <a
+                    href={preview}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-blue-600 hover:text-blue-800 underline"
                   >
                     Test document link →
                   </a>
                 </div>
+              </div>
+            </div>
+          ) : type === "audio" ? (
+            <div className="aspect-video bg-gray-900 flex items-center justify-center p-4">
+              <div className="text-center text-white">
+                <Headphones className="w-12 h-12 mx-auto mb-3 text-blue-400" />
+                <p className="text-sm font-medium text-white mb-1">Audio URL Ready</p>
+                <p className="text-xs text-gray-400 px-2 break-all">{preview}</p>
+                {/spotify|soundcloud|apple\.com\/.*podcast/i.test(preview) ? (
+                  <p className="text-xs text-green-400 mt-2">Streaming service detected</p>
+                ) : preview.match(/\.(mp3|wav|ogg|m4a|aac)(\?|$)/i) ? (
+                  <audio controls className="mt-3 w-full max-w-xs">
+                    <source src={preview} />
+                    Your browser does not support audio playback.
+                  </audio>
+                ) : null}
               </div>
             </div>
           ) : (

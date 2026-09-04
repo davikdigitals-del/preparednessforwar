@@ -22,6 +22,24 @@ function getVimeoId(url: string) {
   const m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
   return m ? m[1] : null;
 }
+function getTikTokId(url: string) {
+  // TikTok URLs: https://www.tiktok.com/@username/video/1234567890
+  // or vm.tiktok.com/XXX or mobile.tiktok.com
+  // Also handle short URLs like vm.tiktok.com/XXXXX
+  let m = url.match(/tiktok\.com\/@[\w.-]+\/video\/(\d+)/);
+  if (m) return m[1];
+
+  // Handle mobile and short URLs - extract video ID if present
+  m = url.match(/tiktok\.com\/v\/(\d+)/);
+  if (m) return m[1];
+
+  // For short URLs (vm.tiktok.com), we'll just return the URL itself as we need to embed the full URL
+  if (url.includes('vm.tiktok.com') || url.includes('vt.tiktok.com')) {
+    return 'shorturl';
+  }
+
+  return null;
+}
 function getDailymotionId(url: string) {
   const m = url.match(/dailymotion\.com\/video\/([^_?]+)/);
   return m ? m[1] : null;
@@ -175,7 +193,7 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
   const toggleFullscreen = () => {
     const el = containerRef.current;
     if (!el) return;
-    
+
     try {
       if (!document.fullscreenElement) {
         // Try to lock orientation to landscape on mobile
@@ -232,7 +250,7 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
     const handleFullscreenChange = () => {
       const isFullscreen = !!document.fullscreenElement;
       setFullscreen(isFullscreen);
-      
+
       // Unlock orientation when exiting fullscreen
       if (!isFullscreen && window.screen?.orientation?.unlock) {
         try {
@@ -242,10 +260,10 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
         }
       }
     };
-    
+
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    
+
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
@@ -263,9 +281,8 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
   return (
     <div
       ref={containerRef}
-      className={`relative bg-black select-none ${
-        isAudio ? "rounded-xl overflow-hidden" : "w-full"
-      }`}
+      className={`relative bg-black select-none ${isAudio ? "rounded-xl overflow-hidden" : "w-full"
+        }`}
       onMouseMove={resetHideTimer}
       onClick={isAudio ? undefined : togglePlay}
     >
@@ -371,7 +388,7 @@ function CustomPlayer({ url, title, isPremium, isAudio, thumbnail, mediaId, type
             >
               {saving ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin block" />
                 : saved ? <Check className="w-4 h-4 text-green-400" />
-                : <Download className="w-4 h-4" />}
+                  : <Download className="w-4 h-4" />}
             </button>
           )}
           {!isAudio && pipSupported && (
@@ -395,7 +412,7 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl, mediaId, type
 }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  
+
   return (
     <div className="relative bg-black w-full">
       <div className="w-full">
@@ -417,7 +434,7 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl, mediaId, type
           >
             {saving ? <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               : saved ? <Check className="w-3.5 h-3.5 text-green-300" />
-              : <Download className="w-3.5 h-3.5" />}
+                : <Download className="w-3.5 h-3.5" />}
             {saving ? 'Saving...' : saved ? 'Saved!' : 'Save to Dashboard'}
           </button>
         </div>
@@ -431,6 +448,7 @@ export function MediaPlayer({ url, title, isPremium = false, type, thumbnail, me
 
   const ytId = getYouTubeId(url);
   const vimeoId = getVimeoId(url);
+  const tiktokId = getTikTokId(url);
   const dailymotionId = getDailymotionId(url);
   const twitchId = getTwitchId(url);
   const spotifyId = getSpotifyId(url);
@@ -445,6 +463,19 @@ export function MediaPlayer({ url, title, isPremium = false, type, thumbnail, me
     const embedUrl = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0&badge=0`;
     return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
   }
+  if (tiktokId) {
+    // TikTok embed - handle both regular and short URLs
+    let embedUrl: string;
+    if (tiktokId === 'shorturl') {
+      // For short URLs, use oEmbed endpoint or direct iframe with the full URL
+      // TikTok doesn't support direct iframe embedding for short URLs well,
+      // so we'll create a custom component that handles TikTok's blockquote embed
+      embedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`;
+    } else {
+      embedUrl = `https://www.tiktok.com/embed/v2/${tiktokId}`;
+    }
+    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
+  }
   if (dailymotionId) {
     const embedUrl = `https://www.dailymotion.com/embed/video/${dailymotionId}?autoplay=1`;
     return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
@@ -455,7 +486,7 @@ export function MediaPlayer({ url, title, isPremium = false, type, thumbnail, me
   }
   if (spotifyId) {
     const embedUrl = `https://open.spotify.com/embed/episode/${spotifyId}?utm_source=generator&theme=0`;
-    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
+    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId=media{mediaId} type={type} />;
   }
   if (directVideo && type !== "podcast" && type !== "audio") {
     return <CustomPlayer url={url} title={title} isPremium={isPremium} isAudio={false} thumbnail={thumbnail} mediaId={mediaId} type={type} />;
