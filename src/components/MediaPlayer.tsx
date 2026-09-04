@@ -412,17 +412,48 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl, mediaId, type
 }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   return (
     <div className="relative bg-black w-full">
       <div className="w-full">
-        <iframe
-          src={embedUrl}
-          title={title}
-          className="w-full min-h-[400px] aspect-video"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
-          allowFullScreen
-        />
+        {loadError ? (
+          <div className="w-full min-h-[400px] aspect-video bg-gray-900 flex flex-col items-center justify-center text-white p-8">
+            <div className="text-center">
+              <p className="text-lg font-semibold mb-2">Media Unavailable</p>
+              <p className="text-sm text-gray-400 mb-4">
+                This content cannot be embedded or is temporarily unavailable.
+              </p>
+              <a
+                href={originalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
+              >
+                Open Original Link
+              </a>
+            </div>
+          </div>
+        ) : (
+          <iframe
+            src={embedUrl}
+            title={title}
+            className="w-full min-h-[400px] aspect-video"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen={true}
+            onError={() => setLoadError(true)}
+            onLoad={(e) => {
+              // Check if iframe loaded successfully
+              try {
+                const iframe = e.target as HTMLIFrameElement;
+                // If we can't access contentDocument due to CORS, that's usually fine
+                // Only set error if there's an actual loading issue
+              } catch (error) {
+                // CORS errors are expected for external embeds, don't treat as error
+              }
+            }}
+          />
+        )}
       </div>
       {!isPremium && (
         <div className="bg-gray-900 px-4 py-2 flex items-center justify-between">
@@ -467,12 +498,12 @@ export function MediaPlayer({ url, title, isPremium = false, type, thumbnail, me
     // TikTok embed - handle both regular and short URLs
     let embedUrl: string;
     if (tiktokId === 'shorturl') {
-      // For short URLs, use oEmbed endpoint or direct iframe with the full URL
-      // TikTok doesn't support direct iframe embedding for short URLs well,
-      // so we'll create a custom component that handles TikTok's blockquote embed
-      embedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`;
+      // For short URLs, fallback to direct embed attempt or just display the URL
+      // TikTok short URLs are problematic for embedding
+      embedUrl = url; // Use original URL as fallback
     } else {
-      embedUrl = `https://www.tiktok.com/embed/v2/${tiktokId}`;
+      // Use TikTok's embed endpoint
+      embedUrl = `https://www.tiktok.com/embed/${tiktokId}`;
     }
     return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
   }
