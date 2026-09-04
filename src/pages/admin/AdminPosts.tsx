@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Edit, Trash2, Search, Video } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/FileUpload";
+import { MultiImageUpload } from "@/components/MultiImageUpload";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { navSections, natoCountries } from "@/data/mockData";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -53,6 +54,7 @@ export default function AdminPosts() {
     section: "",
     category: "",
     image_url: "",
+    images: [] as string[],
     video_url: "",
     is_premium: false,
     is_published: true,
@@ -107,7 +109,8 @@ export default function AdminPosts() {
         author: formData.author,
         section: formData.section,
         category: formData.category,
-        image_url: formData.image_url || null,
+        image_url: formData.images.length > 0 ? formData.images[0] : (formData.image_url || null),
+        images: formData.images.length > 0 ? formData.images : null,
         video_url: formData.video_url || null,
         is_premium: formData.is_premium,
         status: formData.is_published ? 'published' : 'draft',  // FIX: Use status field
@@ -150,6 +153,7 @@ export default function AdminPosts() {
       section: post.section || "",
       category: post.category || "",
       image_url: post.image_url || "",
+      images: post.images || [],
       video_url: post.video_url || "",
       is_premium: post.is_premium || false,
       is_published: post.status === 'published',  // FIX: Read from status field
@@ -167,8 +171,16 @@ export default function AdminPosts() {
       // First get the post to check for uploaded files
       const post = posts.find(p => p.id === id);
 
-      // Delete uploaded image from storage if it's a Supabase storage URL
-      if (post?.image_url && post.image_url.includes('/storage/v1/object/public/post-images/')) {
+      // Delete all images from storage if they're Supabase storage URLs
+      if (post?.images && Array.isArray(post.images)) {
+        for (const imageUrl of post.images) {
+          if (imageUrl.includes('/storage/v1/object/public/post-images/')) {
+            const path = imageUrl.split('/post-images/')[1];
+            if (path) await supabase.storage.from('post-images').remove([path]);
+          }
+        }
+      } else if (post?.image_url && post.image_url.includes('/storage/v1/object/public/post-images/')) {
+        // Fallback to single image_url
         const path = post.image_url.split('/post-images/')[1];
         if (path) await supabase.storage.from('post-images').remove([path]);
       }
@@ -200,6 +212,7 @@ export default function AdminPosts() {
       section: "",
       category: "",
       image_url: "",
+      images: [],
       video_url: "",
       is_premium: false,
       is_published: true,
@@ -560,12 +573,15 @@ export default function AdminPosts() {
                 </div>
 
                 <div>
-                  <FileUpload
-                    type="image"
-                    currentUrl={formData.image_url}
-                    onUrlChange={(url) => setFormData({ ...formData, image_url: url })}
-                    label="Cover Image"
+                  <Label>Post Images (Featured Images)</Label>
+                  <MultiImageUpload
+                    images={formData.images}
+                    onImagesChange={(images) => setFormData({ ...formData, images })}
+                    maxImages={10}
                   />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Upload multiple featured images. First image will be the primary cover image.
+                  </p>
                 </div>
 
                 <div>

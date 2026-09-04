@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Clock, Eye, Radio } from "lucide-react";
+import { formatNumber } from "@/utils/formatNumber";
 import { formatTimeAgo } from "@/data/mockData";
 import { useData } from "@/contexts/DataContext";
 import { useNavSections } from "@/hooks/useNavSections";
@@ -114,7 +115,7 @@ export default function LatestPage() {
                     <span>{post.readTime}</span>
                     <span className="flex items-center gap-1 ml-auto">
                       <Eye className="w-2.5 h-2.5" />
-                      {post.viewCount?.toLocaleString()}
+                      {formatNumber(post.viewCount)}
                     </span>
                   </div>
                 </div>

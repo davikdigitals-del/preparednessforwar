@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Play, Clock, Eye, Headphones, Video, Search, Crown, Lock } from "lucide-react";
+import { formatNumber } from "@/utils/formatNumber";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -143,7 +144,7 @@ function MediaCard({ item, onClick }: { item: MediaItem; onClick: () => void }) 
           <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{item.description}</p>
           <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground flex-wrap">
             <span className="font-semibold text-foreground/70 truncate max-w-[80px]">{item.author}</span>
-            <span className="flex items-center gap-1"><Eye className="w-2.5 h-2.5" />{(item.views / 1000).toFixed(1)}k</span>
+            <span className="flex items-center gap-1"><Eye className="w-2.5 h-2.5" />{formatNumber(item.views)}</span>
             <span className="flex items-center gap-1 md:hidden"><Clock className="w-2.5 h-2.5" />{item.duration}</span>
           </div>
           {/* Mobile play hint */}

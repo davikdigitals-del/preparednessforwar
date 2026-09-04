@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { idb, STORES } from "@/services/IndexedDBService";
 import { parseContentWithCarousels, hasCarousels } from "@/utils/carouselParser";
 import { useSocialMeta } from "@/hooks/useSocialMeta";
+import { formatNumber } from "@/utils/formatNumber";
 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    ARTICLE PAGE
@@ -590,7 +591,7 @@ const ArticlePage = () => {
                 </span>
                 <span className="flex items-center gap-1.5 text-gray-600"><Clock className="w-4 h-4 text-blue-900" />{formatDateTime(post.publishedAt)}</span>
                 {post.readTime && <span className="text-gray-500 text-xs">{post.readTime} read</span>}
-                <span className="flex items-center gap-1.5 text-gray-600"><Eye className="w-4 h-4 text-blue-900" />{post.viewCount?.toLocaleString()} views</span>
+                <span className="flex items-center gap-1.5 text-gray-600"><Eye className="w-4 h-4 text-blue-900" />{formatNumber(post.viewCount)} views</span>
 
                 {/* Share dropdown */}
                 <div ref={shareRef} className="ml-auto relative">

@@ -11,6 +11,7 @@ import { Eye, ThumbsUp, MapPin, Search, TrendingUp, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { MemberReport, ReportCategory } from "@/types/memberPortal";
 import { PortalBreadcrumb } from "@/components/PortalBreadcrumb";
+import { formatNumber } from "@/utils/formatNumber";
 
 export default function CommunityReports() {
   const { user } = useAuth();
@@ -113,7 +114,7 @@ export default function CommunityReports() {
 
   const filteredReports = reports.filter(report => {
     const matchesSearch = report.title.toLowerCase().includes(search.toLowerCase()) ||
-                         report.content.toLowerCase().includes(search.toLowerCase());
+      report.content.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || report.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -165,7 +166,7 @@ export default function CommunityReports() {
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Eye className="w-4 h-4" />
-                          {report.views_count}
+                          {formatNumber(report.views_count)}
                         </span>
                         <span className="flex items-center gap-1">
                           <ThumbsUp className="w-4 h-4" />
@@ -253,7 +254,7 @@ export default function CommunityReports() {
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Eye className="w-4 h-4" />
-                        {report.views_count}
+                        {formatNumber(report.views_count)}
                       </span>
                       <button
                         onClick={() => handleUpvote(report.id)}

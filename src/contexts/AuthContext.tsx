@@ -155,9 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
     let debounceTimer: NodeJS.Timeout | null = null;
     let lastProcessedUserId: string | null = null;
-    // Temporarily disable JWT checking to fix course table issue
-    // let jwtCheckInterval: NodeJS.Timeout | null = null;
-    let jwtCheckInterval: NodeJS.Timeout | null = null; // FIX: Declare it even if not used
+    let jwtCheckInterval: NodeJS.Timeout | null = null;
 
     // Function to check JWT expiration and handle automatic logout
     const checkJWTExpiration = async () => {
@@ -264,8 +262,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        // Temporarily disable JWT checking - it may be causing course table errors
-        /*
         // Start JWT expiration checking when user is signed in
         if (!jwtCheckInterval) {
           // Check JWT expiration every 30 seconds
@@ -273,7 +269,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Also check immediately
           checkJWTExpiration();
         }
-        */
 
         // When a user signs in via OAuth, cache their provider and ensure member role
         if (event === "SIGNED_IN" && session.user.email) {
@@ -353,14 +348,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Temporarily disable JWT checking in initial session 
-      /*
       // Start JWT checking for initial session
       if (!jwtCheckInterval) {
         jwtCheckInterval = setInterval(checkJWTExpiration, 30000);
         checkJWTExpiration();
       }
-      */
 
       const built = await buildUser(session.user);
       if (mounted) {

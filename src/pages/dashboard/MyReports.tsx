@@ -10,6 +10,7 @@ import { FileText, Eye, ThumbsUp, Clock, CheckCircle, XCircle, Edit, Plus } from
 import { useToast } from "@/hooks/use-toast";
 import type { MemberReport } from "@/types/memberPortal";
 import { PortalBreadcrumb } from "@/components/PortalBreadcrumb";
+import { formatNumber } from "@/utils/formatNumber";
 
 export default function MyReports() {
   const { user } = useAuth();
@@ -89,7 +90,7 @@ export default function MyReports() {
           <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
             <div className="flex items-center gap-1">
               <Eye className="w-4 h-4" />
-              {report.views_count} views
+              {formatNumber(report.views_count)} views
             </div>
             <div className="flex items-center gap-1">
               <ThumbsUp className="w-4 h-4" />

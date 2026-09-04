@@ -17,7 +17,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
   const { toast } = useToast();
   const [isUploadingCarousel, setIsUploadingCarousel] = useState(false);
 
-  // Single image upload handler
+  // Single image upload handler with caption support
   const imageHandler = async () => {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
@@ -48,7 +48,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         // Upload to Supabase storage
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-        const filePath = `content-images/${fileName}`;
+        const filePath = `${fileName}`; // Just filename, bucket handles the rest
 
         const { data, error } = await supabase.storage
           .from('post-images')
@@ -66,23 +66,33 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
 
         const imageUrl = urlData.publicUrl;
 
-        // Insert image into editor
+        // Insert image into editor - caption can be added as regular text below
         const quill = quillRef.current?.getEditor();
         if (quill) {
           const range = quill.getSelection(true);
           quill.insertEmbed(range.index, 'image', imageUrl);
           quill.setSelection(range.index + 1, 0);
+
+          // Insert a new line after image for user to add caption
+          quill.insertText(range.index + 1, '\n');
+          quill.setSelection(range.index + 2, 0);
         }
 
         toast({
           title: 'Image uploaded',
-          description: 'Image added to content',
+          description: 'Image added - add caption below if needed',
         });
       } catch (error: any) {
         console.error('Error uploading image:', error);
+        console.error('Error details:', {
+          message: error.message,
+          statusCode: error.statusCode,
+          error: error.error,
+          full: error
+        });
         toast({
           title: 'Upload failed',
-          description: error.message || 'Failed to upload image',
+          description: error.message || error.error || 'Failed to upload image',
           variant: 'destructive',
         });
       }
@@ -123,7 +133,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         const uploadPromises = files.map(async (file) => {
           const fileExt = file.name.split('.').pop();
           const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-          const filePath = `content-images/${fileName}`;
+          const filePath = `${fileName}`; // Just filename, bucket handles the rest
 
           const { error } = await supabase.storage
             .from('post-images')
@@ -276,6 +286,31 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           border-radius: 8px;
           margin: 16px 0;
         }
+        
+        /* Image with caption styling */
+        .ql-editor .image-with-caption {
+          margin: 24px auto;
+          max-width: 100%;
+          text-align: center;
+        }
+        .ql-editor .image-with-caption img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 8px;
+          margin: 0;
+          display: block;
+        }
+        .ql-editor .image-with-caption figcaption {
+          margin-top: 8px;
+          font-size: 14px;
+          color: #6b7280;
+          font-style: italic;
+          padding: 8px 12px;
+          background: #f9fafb;
+          border-radius: 4px;
+          text-align: center;
+        }
+        
         .rich-text-editor .ql-toolbar {
           background: #f8f9fa;
           border: 1px solid #e2e8f0;
