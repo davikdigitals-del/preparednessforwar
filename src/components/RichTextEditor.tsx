@@ -66,21 +66,32 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
 
         const imageUrl = urlData.publicUrl;
 
-        // Insert image into editor - caption can be added as regular text below
+        // Prompt for caption
+        const caption = prompt('Add image caption (optional):');
+
+        // Insert image with caption as a figure element
         const quill = quillRef.current?.getEditor();
         if (quill) {
           const range = quill.getSelection(true);
-          quill.insertEmbed(range.index, 'image', imageUrl);
-          quill.setSelection(range.index + 1, 0);
 
-          // Insert a new line after image for user to add caption
-          quill.insertText(range.index + 1, '\n');
-          quill.setSelection(range.index + 2, 0);
+          // Create HTML structure for image with caption
+          const figureHTML = caption
+            ? `<figure class="image-with-caption">
+                 <img src="${imageUrl}" alt="${caption}" />
+                 <figcaption>${caption}</figcaption>
+               </figure>`
+            : `<img src="${imageUrl}" alt="Article image" />`;
+
+          // Insert the HTML
+          quill.clipboard.dangerouslyPasteHTML(range.index, figureHTML);
+
+          // Move cursor after the inserted content
+          quill.setSelection(range.index + 1, 0);
         }
 
         toast({
           title: 'Image uploaded',
-          description: 'Image added - add caption below if needed',
+          description: caption ? 'Image with caption added' : 'Image added',
         });
       } catch (error: any) {
         console.error('Error uploading image:', error);
