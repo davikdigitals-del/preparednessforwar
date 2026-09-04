@@ -251,7 +251,7 @@ const Index = () => {
             {[
               { title: "Emergency News", desc: "Live updates and critical alerts", href: "/emergency-news", img: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=400&q=80" },
               { title: "Survival Guides", desc: "Step-by-step preparedness guides", href: "/survival-guides", img: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=400&q=80" },
-              { title: "Health & Wellness", desc: "Medical and vaccination info", href: "/health", img: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=400&q=80" },
+              { title: "Health & Wellness", desc: "Medical and vaccination info", href: "/health-wellness", img: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=400&q=80" },
               { title: "Official Directives", desc: "Government and NATO guidance", href: "/directives", img: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=400&q=80" },
               { title: "Resources", desc: "Checklists, templates & downloads", href: "/resources", img: "https://images.unsplash.com/photo-1568667256549-094345857637?auto=format&fit=crop&w=400&q=80" },
               { title: "Media Hub", desc: "Videos, podcasts & documentaries", href: "/media", img: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?auto=format&fit=crop&w=400&q=80" },

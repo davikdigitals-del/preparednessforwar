@@ -486,7 +486,7 @@ export function MediaPlayer({ url, title, isPremium = false, type, thumbnail, me
   }
   if (spotifyId) {
     const embedUrl = `https://open.spotify.com/embed/episode/${spotifyId}?utm_source=generator&theme=0`;
-    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId=media{mediaId} type={type} />;
+    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
   }
   if (directVideo && type !== "podcast" && type !== "audio") {
     return <CustomPlayer url={url} title={title} isPremium={isPremium} isAudio={false} thumbnail={thumbnail} mediaId={mediaId} type={type} />;

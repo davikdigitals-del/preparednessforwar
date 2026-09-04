@@ -40,7 +40,7 @@ export const navSections: NavSection[] = [
   },
   {
     title: "Health & Wellness",
-    slug: "health",
+    slug: "health-wellness",
     color: "category-health",
     categories: [
       { title: "Child Safety", slug: "child-safety" },
