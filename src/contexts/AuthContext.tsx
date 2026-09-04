@@ -157,6 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let lastProcessedUserId: string | null = null;
     // Temporarily disable JWT checking to fix course table issue
     // let jwtCheckInterval: NodeJS.Timeout | null = null;
+    let jwtCheckInterval: NodeJS.Timeout | null = null; // FIX: Declare it even if not used
 
     // Function to check JWT expiration and handle automatic logout
     const checkJWTExpiration = async () => {
