@@ -4,9 +4,6 @@ import 'react-quill/dist/quill.snow.css';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Images, Video } from 'lucide-react';
 
 interface RichTextEditorProps {
@@ -19,8 +16,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
   const quillRef = useRef<ReactQuill>(null);
   const { toast } = useToast();
   const [isUploadingCarousel, setIsUploadingCarousel] = useState(false);
-  const [videoDialogOpen, setVideoDialogOpen] = useState(false);
-  const [videoUrl, setVideoUrl] = useState('');
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
 
   // Single image upload handler with caption support
   const imageHandler = async () => {
@@ -215,6 +211,91 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
       description: 'Video has been embedded in the content',
     });
   };
+
+  // Video upload handler
+  const videoHandler = async () => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'video/*');
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      // Check file size (max 100MB)
+      if (file.size > 100 * 1024 * 1024) {
+        toast({
+          title: 'File too large',
+          description: 'Please select a video smaller than 100MB',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      try {
+        setIsUploadingVideo(true);
+        toast({
+          title: 'Uploading video...',
+          description: 'Please wait',
+        });
+
+        // Upload to Supabase storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`; // Just filename, bucket handles the rest
+
+        const { data, error } = await supabase.storage
+          .from('post-videos')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (error) throw error;
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('post-videos')
+          .getPublicUrl(filePath);
+
+        const videoUrl = urlData.publicUrl;
+
+        // Insert video into editor
+        const quill = quillRef.current?.getEditor();
+        if (quill) {
+          const range = quill.getSelection(true);
+
+          // Create video element for rich text
+          const videoHTML = `<video controls style="width: 100%; max-width: 600px; height: auto; margin: 16px 0; border-radius: 8px;">
+                               <source src="${videoUrl}" type="video/${fileExt}">
+                               Your browser does not support the video tag.
+                             </video>`;
+
+          // Insert the video HTML
+          quill.clipboard.dangerouslyPasteHTML(range.index, videoHTML);
+
+          // Move cursor after the inserted content
+          quill.setSelection(range.index + 1, 0);
+        }
+
+        toast({
+          title: 'Video uploaded',
+          description: 'Video has been added to your content',
+        });
+      } catch (error: any) {
+        console.error('Error uploading video:', error);
+        toast({
+          title: 'Upload failed',
+          description: error.message || 'Failed to upload video',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsUploadingVideo(false);
+      }
+    };
+  };
+
   const carouselHandler = async () => {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
@@ -382,10 +463,11 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           variant="outline"
           size="sm"
           onClick={videoHandler}
+          disabled={isUploadingVideo}
           className="gap-2"
         >
           <Video className="h-4 w-4" />
-          Embed Video
+          {isUploadingVideo ? 'Uploading...' : 'Upload Video'}
         </Button>
       </div>
       <ReactQuill

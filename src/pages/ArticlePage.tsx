@@ -9,7 +9,7 @@ import { FaXTwitter, FaFacebook, FaWhatsapp, FaTelegram } from "react-icons/fa6"
 import { navSections, formatDate, formatTimeAgo, formatDateTime } from "@/data/mockData";
 import { PostCard } from "@/components/PostCard";
 import { PremiumGate } from "@/components/PremiumGate";
-import { ArticleVideoPlayer } from "@/components/ArticleVideoPlayer";
+import { ArticleVideo } from "@/components/ArticleVideo";
 import { NewsletterSubscribe } from "@/components/NewsletterSubscribe";
 import { useData } from "@/contexts/DataContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +21,7 @@ import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { idb, STORES } from "@/services/IndexedDBService";
 import { parseContentWithCarousels, hasCarousels } from "@/utils/carouselParser";
+import { parseContentWithVideos, hasVideos } from "@/utils/videoParser";
 import { MediaPlayer } from "@/components/MediaPlayer";
 import { useSocialMeta } from "@/hooks/useSocialMeta";
 import { formatNumber } from "@/utils/formatNumber";
@@ -428,7 +429,7 @@ const ArticlePage = () => {
                 )}
                 {((post as any).videoUrl || (post as any).video_url) && videoPlaying && (
                   <div className="aspect-video bg-black">
-                    <ArticleVideoPlayer url={(post as any).videoUrl || (post as any).video_url} title={post.title} />
+                    <ArticleVideo url={(post as any).videoUrl || (post as any).video_url} title={post.title} />
                   </div>
                 )}
               </div>
@@ -552,6 +553,10 @@ const ArticlePage = () => {
                       hasCarousels(post.body) ? (
                         <div className="text-base leading-relaxed text-gray-800 space-y-4">
                           {parseContentWithCarousels(post.body.replace(/\n/g, "<br/>"))}
+                        </div>
+                      ) : hasVideos(post.body) ? (
+                        <div className="text-base leading-relaxed text-gray-800 space-y-4">
+                          {parseContentWithVideos(post.body.replace(/\n/g, "<br/>"))}
                         </div>
                       ) : (
                         <div className="text-base leading-relaxed text-gray-800 space-y-4"
@@ -732,7 +737,7 @@ const ArticlePage = () => {
                 )}
                 {((post as any).videoUrl || (post as any).video_url) && videoPlaying && (
                   <div className="absolute inset-0 bg-black">
-                    <ArticleVideoPlayer url={(post as any).videoUrl || (post as any).video_url} title={post.title} />
+                    <ArticleVideo url={(post as any).videoUrl || (post as any).video_url} title={post.title} />
                   </div>
                 )}
               </div>
@@ -775,6 +780,10 @@ const ArticlePage = () => {
                       hasCarousels(post.body) ? (
                         <div className="text-lg leading-relaxed text-gray-800 space-y-5">
                           {parseContentWithCarousels(post.body.replace(/\n/g, "<br/>"))}
+                        </div>
+                      ) : hasVideos(post.body) ? (
+                        <div className="text-lg leading-relaxed text-gray-800 space-y-5">
+                          {parseContentWithVideos(post.body.replace(/\n/g, "<br/>"))}
                         </div>
                       ) : (
                         <div className="text-lg leading-relaxed text-gray-800 space-y-5"

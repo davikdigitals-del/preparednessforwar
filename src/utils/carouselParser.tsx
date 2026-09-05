@@ -1,5 +1,5 @@
 import { ImageCarousel } from '@/components/ImageCarousel';
-import { MediaPlayer } from '@/components/MediaPlayer';
+import { ArticleVideo } from '@/components/ArticleVideo';
 import React from 'react';
 
 /**
@@ -12,14 +12,15 @@ export function parseContentWithCarousels(htmlContent: string): React.ReactNode[
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = htmlContent;
 
-  // Find all carousel elements
+  // Find all carousel elements and video elements
   const carousels = tempDiv.querySelectorAll('.image-carousel');
+  const videoElements = tempDiv.querySelectorAll('video[src], video source[src]');
 
   // Find video URLs in text content and video placeholders
   const videoUrls = extractVideoUrls(htmlContent);
   const videoPlaceholders = tempDiv.querySelectorAll('.video-placeholder');
 
-  if (carousels.length === 0 && videoUrls.length === 0 && videoPlaceholders.length === 0) {
+  if (carousels.length === 0 && videoUrls.length === 0 && videoPlaceholders.length === 0 && videoElements.length === 0) {
     // No carousels or videos, return original HTML
     return [<div key="content" dangerouslySetInnerHTML={{ __html: htmlContent }} />];
   }
@@ -64,6 +65,32 @@ export function parseContentWithCarousels(htmlContent: string): React.ReactNode[
     }
   });
 
+  // Replace HTML5 video elements from rich text editor
+  videoElements.forEach((videoElement) => {
+    let videoUrl = '';
+
+    // Check if it's a video tag with src attribute
+    if (videoElement.tagName === 'VIDEO') {
+      // Look for src attribute or source child elements
+      videoUrl = videoElement.getAttribute('src') || '';
+      if (!videoUrl) {
+        const sourceElement = videoElement.querySelector('source[src]');
+        if (sourceElement) {
+          videoUrl = sourceElement.getAttribute('src') || '';
+        }
+      }
+    }
+
+    if (videoUrl) {
+      mediaItems.push({ type: 'video', data: { url: videoUrl, title: 'Video' } });
+      const placeholderElement = document.createTextNode(`${placeholder}${mediaItems.length - 1}${placeholder}`);
+      videoElement.replaceWith(placeholderElement);
+    }
+  });
+
+  // Update processedHTML after all replacements
+  processedHTML = tempDiv.innerHTML;
+
   // Split by placeholders and reconstruct with React components
   mediaItems.forEach((item, index) => {
     const parts = processedHTML.split(`${placeholder}${index}${placeholder}`);
@@ -84,10 +111,9 @@ export function parseContentWithCarousels(htmlContent: string): React.ReactNode[
       } else if (item.type === 'video') {
         elements.push(
           <div key={`video-${index}`} className="my-6">
-            <MediaPlayer
+            <ArticleVideo
               url={item.data.url}
-              title={item.data.title}
-              type="video"
+              title={item.data.title || 'Video'}
             />
           </div>
         );
@@ -114,6 +140,7 @@ export function parseContentWithCarousels(htmlContent: string): React.ReactNode[
 export function hasCarousels(htmlContent: string): boolean {
   return htmlContent.includes('class="image-carousel"') ||
     htmlContent.includes('class="video-placeholder"') ||
+    htmlContent.includes('<video') ||
     hasVideoUrls(htmlContent);
 }
 
