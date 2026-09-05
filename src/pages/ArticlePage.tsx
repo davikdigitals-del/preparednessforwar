@@ -21,6 +21,7 @@ import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { idb, STORES } from "@/services/IndexedDBService";
 import { parseContentWithCarousels, hasCarousels } from "@/utils/carouselParser";
+import { MediaPlayer } from "@/components/MediaPlayer";
 import { useSocialMeta } from "@/hooks/useSocialMeta";
 import { formatNumber } from "@/utils/formatNumber";
 import { ImageLightbox } from "@/components/ImageLightbox";
