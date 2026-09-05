@@ -122,9 +122,16 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
 export function MediaPlayer({ url, title, isPremium = false, type, thumbnail, mediaId }: MediaPlayerProps) {
   if (!url) return null;
 
-  // For audio/podcast content, keep the original custom player
-  if (type === "podcast" || type === "audio") {
-    return <AudioPlayer url={url} title={title} isPremium={isPremium} thumbnail={thumbnail} mediaId={mediaId} type={type} />;
+  // Enhanced type detection - check both explicit type and URL patterns
+  const isAudioContent = type === "podcast" || type === "audio" ||
+    /\.(mp3|wav|ogg|aac|m4a|flac)(\?|$)/i.test(url) ||
+    // Additional podcast/audio platform detection
+    url.includes('spotify') || url.includes('soundcloud') ||
+    url.includes('anchor.fm') || url.includes('podcast');
+
+  // For audio/podcast content, use the AudioPlayer
+  if (isAudioContent) {
+    return <AudioPlayer url={url} title={title} isPremium={isPremium} thumbnail={thumbnail} mediaId={mediaId} type={type || 'podcast'} />;
   }
 
   // For all video content, use the new ArticleVideo component

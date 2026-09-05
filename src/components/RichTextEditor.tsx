@@ -4,7 +4,7 @@ import 'react-quill/dist/quill.snow.css';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Images, Video } from 'lucide-react';
+import { Images, Video, Headphones } from 'lucide-react';
 
 interface RichTextEditorProps {
   value: string;
@@ -17,6 +17,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
   const { toast } = useToast();
   const [isUploadingCarousel, setIsUploadingCarousel] = useState(false);
   const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
 
   // Single image upload handler with caption support
   const imageHandler = async () => {
@@ -193,6 +194,90 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         });
       } finally {
         setIsUploadingVideo(false);
+      }
+    };
+  };
+
+  // Audio upload handler
+  const audioHandler = async () => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'audio/*');
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      // Check file size (max 50MB for audio)
+      if (file.size > 50 * 1024 * 1024) {
+        toast({
+          title: 'File too large',
+          description: 'Please select an audio file smaller than 50MB',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      try {
+        setIsUploadingAudio(true);
+
+        // Show uploading toast
+        toast({
+          title: 'Uploading audio...',
+          description: 'Please wait while your audio is being uploaded',
+        });
+
+        // Upload to Supabase storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `audio_${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `rich-text-audios/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('media')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('media')
+          .getPublicUrl(filePath);
+
+        const audioUrl = urlData.publicUrl;
+
+        // Insert audio HTML into editor
+        const quill = quillRef.current?.getEditor();
+        if (quill) {
+          const range = quill.getSelection(true);
+
+          const audioHTML = `
+            <div class="audio-player-container" style="margin: 16px 0; padding: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc;">
+              <audio controls style="width: 100%;" preload="metadata">
+                <source src="${audioUrl}" type="${file.type}">
+                Your browser does not support the audio element.
+              </audio>
+              <p style="margin: 8px 0 0 0; font-size: 12px; color: #64748b; text-align: center;">${file.name}</p>
+            </div>
+          `;
+
+          quill.clipboard.dangerouslyPasteHTML(range.index, audioHTML);
+          quill.setSelection(range.index + 1, 0);
+        }
+
+        toast({
+          title: 'Audio uploaded',
+          description: 'Audio has been added to your content',
+        });
+      } catch (error: any) {
+        console.error('Audio upload error:', error);
+        toast({
+          title: 'Upload failed',
+          description: error.message || 'Failed to upload audio',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsUploadingAudio(false);
       }
     };
   };

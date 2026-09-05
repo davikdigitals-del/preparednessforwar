@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, PictureInPicture2, Share2, SkipBack, SkipForward, Settings, ClosedCaptioning } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, PictureInPicture2, Share2, SkipBack, SkipForward, Settings, Captions } from 'lucide-react';
 
 interface ArticleVideoProps {
   url: string;
@@ -229,7 +229,7 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
               </div>
 
               <button className="text-white hover:text-gray-300 transition-colors">
-                <ClosedCaptioning className="w-5 h-5" />
+                <Captions className="w-5 h-5" />
               </button>
 
               <div className="relative">
