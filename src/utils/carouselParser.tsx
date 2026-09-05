@@ -143,7 +143,10 @@ function isVideoUrl(url: string): boolean {
     /twitch\.tv/i,
     /spotify\.com\/episode/i,
     /vm\.tiktok\.com/i,
-    /vt\.tiktok\.com/i,
+    /sky.*\.com/i,
+    /bitchute\.com/i,
+    /rumble\.com/i,
+    /odysee\.com/i,
     /\.(mp4|webm|ogg|mov)(\?|$)/i
   ];
 

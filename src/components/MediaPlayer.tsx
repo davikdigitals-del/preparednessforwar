@@ -48,8 +48,21 @@ function getTwitchId(url: string) {
   const m = url.match(/twitch\.tv\/videos\/(\d+)/);
   return m ? m[1] : null;
 }
-function getSpotifyId(url: string) {
-  const m = url.match(/spotify\.com\/episode\/([a-zA-Z0-9]+)/);
+function getSkyNewsId(url: string) {
+  // Sky News URLs: https://news.sky.com/video/... or https://www.skynews.com.au/...
+  const m = url.match(/sky.*\.com.*\/video\/[^\/]*\/(\d+)/i) || url.match(/skynews\.com\.au.*\/video\/[^\/]*\/(\w+)/i);
+  return m ? m[1] : null;
+}
+function getBitChuteId(url: string) {
+  const m = url.match(/bitchute\.com\/video\/([a-zA-Z0-9]+)/);
+  return m ? m[1] : null;
+}
+function getRumbleId(url: string) {
+  const m = url.match(/rumble\.com\/([a-zA-Z0-9]+)/);
+  return m ? m[1] : null;
+}
+function getOdyseeId(url: string) {
+  const m = url.match(/odysee\.com\/@[^\/]+\/([^:]+):/);
   return m ? m[1] : null;
 }
 function isDirectVideo(url: string) {
@@ -419,7 +432,11 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl, mediaId, type
     : originalUrl.includes('youtube') || originalUrl.includes('youtu.be') ? 'youtube'
       : originalUrl.includes('vimeo') ? 'vimeo'
         : originalUrl.includes('spotify') ? 'spotify'
-          : 'other';
+          : originalUrl.includes('sky') ? 'skynews'
+            : originalUrl.includes('bitchute') ? 'bitchute'
+              : originalUrl.includes('rumble') ? 'rumble'
+                : originalUrl.includes('odysee') ? 'odysee'
+                  : 'other';
 
   return (
     <div className="relative bg-black w-full">
@@ -492,6 +509,46 @@ function EmbeddedPlayer({ embedUrl, title, isPremium, originalUrl, mediaId, type
               </>
             )}
 
+            {platform === 'skynews' && (
+              <>
+                {/* Sky News logo - top left */}
+                <div className="absolute top-3 left-3 w-16 h-6 bg-black rounded opacity-90 pointer-events-none z-20" />
+
+                {/* Sky News branding - bottom */}
+                <div className="absolute bottom-3 left-3 right-3 h-6 bg-black rounded opacity-90 pointer-events-none z-20" />
+              </>
+            )}
+
+            {platform === 'bitchute' && (
+              <>
+                {/* BitChute logo - top right */}
+                <div className="absolute top-3 right-3 w-14 h-6 bg-black rounded opacity-90 pointer-events-none z-20" />
+
+                {/* BitChute watermark */}
+                <div className="absolute bottom-3 right-3 w-12 h-5 bg-black rounded opacity-90 pointer-events-none z-20" />
+              </>
+            )}
+
+            {platform === 'rumble' && (
+              <>
+                {/* Rumble logo - top left */}
+                <div className="absolute top-3 left-3 w-16 h-6 bg-black rounded opacity-90 pointer-events-none z-20" />
+
+                {/* Rumble branding */}
+                <div className="absolute bottom-3 left-3 w-14 h-5 bg-black rounded opacity-90 pointer-events-none z-20" />
+              </>
+            )}
+
+            {platform === 'odysee' && (
+              <>
+                {/* Odysee logo - top right */}
+                <div className="absolute top-3 right-3 w-12 h-6 bg-black rounded opacity-90 pointer-events-none z-20" />
+
+                {/* Odysee branding */}
+                <div className="absolute bottom-3 right-3 w-10 h-4 bg-black rounded opacity-90 pointer-events-none z-20" />
+              </>
+            )}
+
             {/* Universal corner overlays for any remaining platform logos */}
             <div className="absolute inset-0 pointer-events-none z-10">
               <div className="absolute top-0 right-0 w-16 h-12 bg-gradient-to-bl from-black/70 to-transparent" />
@@ -529,6 +586,10 @@ export function MediaPlayer({ url, title, isPremium = false, type, thumbnail, me
   const dailymotionId = getDailymotionId(url);
   const twitchId = getTwitchId(url);
   const spotifyId = getSpotifyId(url);
+  const skyNewsId = getSkyNewsId(url);
+  const bitchuteId = getBitChuteId(url);
+  const rumbleId = getRumbleId(url);
+  const odyseeId = getOdyseeId(url);
   const directVideo = isDirectVideo(url);
   const directAudio = isDirectAudio(url) || type === "podcast" || type === "audio";
 
@@ -561,6 +622,25 @@ export function MediaPlayer({ url, title, isPremium = false, type, thumbnail, me
   }
   if (spotifyId) {
     const embedUrl = `https://open.spotify.com/embed/episode/${spotifyId}?utm_source=generator&theme=0&t=0&utm_medium=embed_player_v1&show_artwork=true&frameborder=0`;
+    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
+  }
+  if (skyNewsId) {
+    // For Sky News, try to embed directly or fallback to iframe with the full URL
+    const embedUrl = url.includes('skynews.com.au')
+      ? `https://www.skynews.com.au/embed/${skyNewsId}`
+      : `https://news.sky.com/embed/${skyNewsId}`;
+    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
+  }
+  if (bitchuteId) {
+    const embedUrl = `https://www.bitchute.com/embed/${bitchuteId}/`;
+    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
+  }
+  if (rumbleId) {
+    const embedUrl = `https://rumble.com/embed/${rumbleId}/`;
+    return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
+  }
+  if (odyseeId) {
+    const embedUrl = `https://odysee.com/$/embed/${odyseeId}`;
     return <EmbeddedPlayer embedUrl={embedUrl} title={title} isPremium={isPremium} originalUrl={url} mediaId={mediaId} type={type} />;
   }
   if (directVideo && type !== "podcast" && type !== "audio") {

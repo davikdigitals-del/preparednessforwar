@@ -19,6 +19,8 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
   const quillRef = useRef<ReactQuill>(null);
   const { toast } = useToast();
   const [isUploadingCarousel, setIsUploadingCarousel] = useState(false);
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false);
+  const [videoUrl, setVideoUrl] = useState('');
 
   // Single image upload handler with caption support
   const imageHandler = async () => {
@@ -113,7 +115,55 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
     };
   };
 
-  // Multiple images upload handler for carousel
+  // Video embed handler
+  const videoHandler = () => {
+    setVideoDialogOpen(true);
+  };
+
+  const insertVideo = () => {
+    if (!videoUrl.trim()) {
+      toast({
+        title: 'URL Required',
+        description: 'Please enter a valid video URL',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const quill = quillRef.current?.getEditor();
+    if (quill) {
+      const range = quill.getSelection(true);
+
+      // Check if it's a direct video URL or embed URL
+      const isDirectVideo = /\.(mp4|webm|ogg|mov)(\?|$)/i.test(videoUrl);
+
+      let videoHTML = '';
+      if (isDirectVideo) {
+        // For direct video files, create a video tag
+        videoHTML = `<video controls style="width: 100%; max-width: 600px; height: auto; margin: 16px 0;">
+                       <source src="${videoUrl}" type="video/${videoUrl.split('.').pop()?.split('?')[0]}">
+                       Your browser does not support the video tag.
+                     </video>`;
+      } else {
+        // For platform URLs, just insert the URL - it will be processed by our parser
+        videoHTML = `<p><a href="${videoUrl}" target="_blank">${videoUrl}</a></p>`;
+      }
+
+      // Insert the video HTML
+      quill.clipboard.dangerouslyPasteHTML(range.index, videoHTML);
+
+      // Move cursor after the inserted content
+      quill.setSelection(range.index + 1, 0);
+    }
+
+    setVideoUrl('');
+    setVideoDialogOpen(false);
+
+    toast({
+      title: 'Video added',
+      description: 'Video has been embedded in the content',
+    });
+  };
   const carouselHandler = async () => {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
@@ -232,6 +282,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         ],
         handlers: {
           image: imageHandler,
+          video: videoHandler,
         },
       },
       clipboard: {
@@ -262,7 +313,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
 
   return (
     <div className="rich-text-editor">
-      <div className="mb-2">
+      <div className="mb-2 flex gap-2">
         <Button
           type="button"
           variant="outline"
@@ -273,6 +324,17 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         >
           <Images className="h-4 w-4" />
           {isUploadingCarousel ? 'Uploading...' : 'Add Image Carousel'}
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={videoHandler}
+          className="gap-2"
+        >
+          <Video className="h-4 w-4" />
+          Embed Video
         </Button>
       </div>
       <ReactQuill
@@ -416,6 +478,46 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           height: 12px;
         }
       `}</style>
+
+      {/* Video Embed Dialog */}
+      <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Embed Video</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="video-url">Video URL</Label>
+              <Input
+                id="video-url"
+                type="url"
+                placeholder="https://youtube.com/watch?v=... or https://youtu.be/..."
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && insertVideo()}
+              />
+              <p className="text-sm text-gray-500 mt-2">
+                Supports: YouTube, TikTok, Vimeo, Sky News, BitChute, Rumble, Odysee, and direct video files (.mp4, .webm, etc.)
+              </p>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setVideoDialogOpen(false);
+                  setVideoUrl('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="button" onClick={insertVideo}>
+                Embed Video
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
