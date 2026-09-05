@@ -15,10 +15,11 @@ export function parseContentWithCarousels(htmlContent: string): React.ReactNode[
   // Find all carousel elements
   const carousels = tempDiv.querySelectorAll('.image-carousel');
 
-  // Find video URLs in text content
+  // Find video URLs in text content and video placeholders
   const videoUrls = extractVideoUrls(htmlContent);
+  const videoPlaceholders = tempDiv.querySelectorAll('.video-placeholder');
 
-  if (carousels.length === 0 && videoUrls.length === 0) {
+  if (carousels.length === 0 && videoUrls.length === 0 && videoPlaceholders.length === 0) {
     // No carousels or videos, return original HTML
     return [<div key="content" dangerouslySetInnerHTML={{ __html: htmlContent }} />];
   }
@@ -51,6 +52,16 @@ export function parseContentWithCarousels(htmlContent: string): React.ReactNode[
   videoUrls.forEach(url => {
     mediaItems.push({ type: 'video', data: { url, title: 'Video' } });
     processedHTML = processedHTML.replace(url, `${placeholder}${mediaItems.length - 1}${placeholder}`);
+  });
+
+  // Replace video placeholders 
+  videoPlaceholders.forEach((placeholder_elem) => {
+    const videoUrl = placeholder_elem.getAttribute('data-video-url');
+    if (videoUrl) {
+      mediaItems.push({ type: 'video', data: { url: videoUrl, title: 'Video' } });
+      const placeholderElement = document.createTextNode(`${placeholder}${mediaItems.length - 1}${placeholder}`);
+      placeholder_elem.replaceWith(placeholderElement);
+    }
   });
 
   // Split by placeholders and reconstruct with React components
@@ -101,7 +112,9 @@ export function parseContentWithCarousels(htmlContent: string): React.ReactNode[
  * Check if content contains carousels or videos
  */
 export function hasCarousels(htmlContent: string): boolean {
-  return htmlContent.includes('class="image-carousel"') || hasVideoUrls(htmlContent);
+  return htmlContent.includes('class="image-carousel"') ||
+    htmlContent.includes('class="video-placeholder"') ||
+    hasVideoUrls(htmlContent);
 }
 
 /**

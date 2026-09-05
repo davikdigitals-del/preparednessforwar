@@ -145,8 +145,59 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
                        Your browser does not support the video tag.
                      </video>`;
       } else {
-        // For platform URLs, just insert the URL - it will be processed by our parser
-        videoHTML = `<p><a href="${videoUrl}" target="_blank">${videoUrl}</a></p>`;
+        // For platform URLs, create a visual video placeholder
+        const videoTitle = videoUrl.includes('youtube') ? 'YouTube Video'
+          : videoUrl.includes('tiktok') ? 'TikTok Video'
+            : videoUrl.includes('vimeo') ? 'Vimeo Video'
+              : videoUrl.includes('sky') ? 'Sky News Video'
+                : videoUrl.includes('bitchute') ? 'BitChute Video'
+                  : videoUrl.includes('rumble') ? 'Rumble Video'
+                    : videoUrl.includes('odysee') ? 'Odysee Video'
+                      : 'Video';
+
+        videoHTML = `
+          <div class="video-placeholder" data-video-url="${videoUrl}" style="
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 16px 0;
+            text-align: center;
+            background: #f7fafc;
+            position: relative;
+          ">
+            <div style="
+              width: 48px;
+              height: 48px;
+              margin: 0 auto 12px;
+              background: #4299e1;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-size: 20px;
+            ">▶</div>
+            <p style="
+              margin: 0 0 8px 0;
+              font-weight: bold;
+              color: #2d3748;
+              font-size: 14px;
+            ">${videoTitle}</p>
+            <p style="
+              margin: 0;
+              font-size: 12px;
+              color: #718096;
+              word-break: break-all;
+            ">${videoUrl}</p>
+            <p style="
+              margin: 8px 0 0 0;
+              font-size: 10px;
+              color: #a0aec0;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            ">Video will display as player on frontend</p>
+          </div>
+        `;
       }
 
       // Insert the video HTML
@@ -476,6 +527,16 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           background: #4299e1;
           width: 12px;
           height: 12px;
+        }
+
+        /* Video placeholder styling */
+        .ql-editor .video-placeholder {
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .ql-editor .video-placeholder:hover {
+          border-color: #4299e1 !important;
+          background: #ebf8ff !important;
         }
       `}</style>
 

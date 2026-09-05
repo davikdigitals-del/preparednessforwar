@@ -48,6 +48,10 @@ function getTwitchId(url: string) {
   const m = url.match(/twitch\.tv\/videos\/(\d+)/);
   return m ? m[1] : null;
 }
+function getSpotifyId(url: string) {
+  const m = url.match(/spotify\.com\/episode\/([a-zA-Z0-9]+)/);
+  return m ? m[1] : null;
+}
 function getSkyNewsId(url: string) {
   // Sky News URLs: https://news.sky.com/video/... or https://www.skynews.com.au/...
   const m = url.match(/sky.*\.com.*\/video\/[^\/]*\/(\d+)/i) || url.match(/skynews\.com\.au.*\/video\/[^\/]*\/(\w+)/i);
