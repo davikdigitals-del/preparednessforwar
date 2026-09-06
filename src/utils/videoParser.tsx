@@ -93,32 +93,15 @@ export function parseContentWithVideos(htmlContent: string): React.ReactNode[] {
       processedHTML = parts[1];
     }
   });
-  <div key={`before-${index}`} dangerouslySetInnerHTML={{ __html: parts[0] }} />
-      );
-}
 
-// Add ArticleVideo component
-elements.push(
-  <ArticleVideo
-    key={`video-${index}`}
-    url={video.url}
-    title={video.title}
-  />
-);
-
-// Continue with remaining content
-processedHTML = parts[1];
+  // Add remaining content after last video
+  if (processedHTML.trim()) {
+    elements.push(
+      <div key="after" dangerouslySetInnerHTML={{ __html: processedHTML }} />
+    );
   }
-});
 
-// Add remaining content after last video
-if (processedHTML.trim()) {
-  elements.push(
-    <div key="after" dangerouslySetInnerHTML={{ __html: processedHTML }} />
-  );
-}
-
-return elements;
+  return elements;
 }
 
 /**
