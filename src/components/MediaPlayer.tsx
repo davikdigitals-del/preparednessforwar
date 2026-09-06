@@ -71,9 +71,9 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
     if (inputUrl.includes('-') && inputUrl.includes('.')) {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       if (supabaseUrl) {
-        // Try different bucket names based on the file pattern or name
-        if (inputUrl.startsWith('qekb0ob93c') || inputUrl.match(/^[a-z0-9]+-\d+\.(mp3|wav|ogg|aac|m4a|flac)$/i)) {
-          return `${supabaseUrl}/storage/v1/object/public/post-audios/${inputUrl}`;
+        // Audio files are now stored in content-files bucket
+        if (inputUrl.match(/\.(mp3|wav|ogg|aac|m4a|flac)$/i)) {
+          return `${supabaseUrl}/storage/v1/object/public/content-files/${inputUrl}`;
         } else {
           return `${supabaseUrl}/storage/v1/object/public/media/${inputUrl}`;
         }

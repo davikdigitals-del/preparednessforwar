@@ -102,7 +102,7 @@ export function FileUpload({ type, currentUrl = "", onUrlChange, label, uploadId
 
   const bucket = type === "image" ? "post-images"
     : type === "video" ? "post-videos"
-      : type === "audio" ? "post-audios"
+      : type === "audio" ? "content-files"  // Use existing content-files bucket for audio
         : "content-files";
   const accept = type === "image"
     ? "image/jpeg,image/png,image/gif,image/webp"
