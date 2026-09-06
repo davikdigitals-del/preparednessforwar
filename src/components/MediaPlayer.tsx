@@ -52,6 +52,14 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
   const [duration, setDuration] = useState(0);
   const [audioError, setAudioError] = useState(false);
 
+  // Helper function to format time - moved to top to avoid hoisting issues
+  const formatTime = (time: number) => {
+    if (isNaN(time)) return '0:00';
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   // Check if it's a direct audio file vs external podcast link
   const isDirectAudio = /\.(mp3|wav|ogg|aac|m4a|flac)(\?|$)/i.test(url);
   const isExternalPodcast = !isDirectAudio && (
@@ -138,13 +146,6 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
   const handleAudioError = () => {
     setAudioError(true);
     setPlaying(false);
-  };
-
-  const formatTime = (time: number) => {
-    if (isNaN(time)) return '0:00';
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   return (
