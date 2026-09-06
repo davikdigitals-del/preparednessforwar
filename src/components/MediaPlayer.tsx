@@ -42,7 +42,7 @@ async function saveToDashboard(
   }
 }
 
-// Simple audio player for podcasts and audio content
+// Spotify-like audio player for podcasts and audio content
 function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
   url: string; title: string; isPremium?: boolean; thumbnail?: string; mediaId?: string; type?: string;
 }) {
@@ -67,38 +67,54 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
   // For external podcast platforms that don't allow direct streaming
   if (isExternalPodcast) {
     return (
-      <div className="bg-gradient-to-b from-gray-900 to-black rounded-xl p-6">
-        <div className="flex flex-col items-center gap-4">
-          {thumbnail ? (
-            <img src={thumbnail} alt={title} className="w-40 h-40 rounded-xl object-cover shadow-2xl" />
-          ) : (
-            <div className="w-40 h-40 rounded-xl bg-gray-800 flex items-center justify-center">
-              <Volume2 className="w-16 h-16 text-gray-600" />
-            </div>
-          )}
-          <p className="text-white font-semibold text-center text-sm line-clamp-2">{title}</p>
-        </div>
-
-        <div className="mt-6 bg-black/30 rounded-lg p-4 text-center">
-          <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-3">
-            <Play className="w-6 h-6 text-primary fill-primary" />
+      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-8 shadow-2xl">
+        <div className="flex items-center gap-6">
+          {/* Album Art */}
+          <div className="flex-shrink-0">
+            {thumbnail ? (
+              <img src={thumbnail} alt={title} className="w-32 h-32 rounded-xl object-cover shadow-xl" />
+            ) : (
+              <div className="w-32 h-32 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-xl">
+                <Volume2 className="w-16 h-16 text-white/80" />
+              </div>
+            )}
           </div>
-          <p className="text-white text-sm mb-1">External Podcast</p>
-          <p className="text-gray-400 text-xs mb-4 line-clamp-1">
-            {new URL(url).hostname}
-          </p>
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
-          >
-            <Play className="w-4 h-4 fill-white" />
-            Listen on Platform
-          </a>
-          <p className="text-xs text-gray-500 mt-2">
-            Opens in podcast platform
-          </p>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="mb-4">
+              <p className="text-white/80 text-sm font-medium mb-1">Introducing...</p>
+              <h3 className="text-white text-xl font-bold line-clamp-2 mb-2">{title}</h3>
+              <p className="text-white/70 text-sm">
+                Trailer • {formatTime(duration || 0)} • The Wargame
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4 mb-4">
+              <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full transition-colors">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                </svg>
+                Save on Spotify
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-white/70 text-sm font-mono">
+                {formatTime(currentTime)}
+              </span>
+              <button className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+                <Play className="w-5 h-5 text-blue-600 ml-0.5 fill-blue-600" />
+              </button>
+            </div>
+          </div>
+
+          {/* Spotify Logo */}
+          <div className="flex-shrink-0">
+            <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.062 14.25c-.175.287-.55.375-.875.2-2.4-1.463-5.425-1.788-8.988-.975-.363.075-.725-.15-.8-.513-.075-.363.15-.725.513-.8 3.9-.888 7.238-.513 10.013 1.125.337.2.45.637.237.963zm1.25-2.788c-.213.363-.663.475-1.025.262-2.75-1.687-6.938-2.175-10.188-1.188-.438.125-.888-.125-1.013-.563-.125-.438.125-.888.563-1.013 3.738-1.125 8.413-.588 11.538 1.375.362.213.487.662.275 1.025zm.113-2.9c-3.3-1.963-8.738-2.138-11.888-1.188-.525.15-1.075-.15-1.225-.675-.15-.525.15-1.075.675-1.225 3.6-1.088 9.6-.888 13.425 1.375.425.25.563.8.313 1.225-.25.425-.8.563-1.225.313z" />
+            </svg>
+          </div>
         </div>
       </div>
     );
@@ -132,72 +148,108 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
   };
 
   return (
-    <div className="bg-gradient-to-b from-gray-900 to-black rounded-xl p-6">
-      <div className="flex flex-col items-center gap-4">
-        {thumbnail ? (
-          <img src={thumbnail} alt={title} className="w-40 h-40 rounded-xl object-cover shadow-2xl" />
-        ) : (
-          <div className="w-40 h-40 rounded-xl bg-gray-800 flex items-center justify-center">
-            <Volume2 className="w-16 h-16 text-gray-600" />
-          </div>
-        )}
-        <p className="text-white font-semibold text-center text-sm line-clamp-2">{title}</p>
-      </div>
-
-      <audio
-        ref={audioRef}
-        src={url}
-        onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
-        onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
-        onEnded={() => setPlaying(false)}
-        onError={handleAudioError}
-      />
-
-      {audioError ? (
-        <div className="mt-4 bg-black/30 rounded-lg p-4 text-center">
-          <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-            <Volume2 className="w-6 h-6 text-red-400" />
-          </div>
-          <p className="text-white text-sm mb-1">Cannot play audio</p>
-          <p className="text-gray-400 text-xs mb-4">
-            Audio source may not be accessible
-          </p>
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
-          >
-            <Play className="w-4 h-4 fill-white" />
-            Open Link
-          </a>
+    <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-8 shadow-2xl">
+      <div className="flex items-center gap-6">
+        {/* Album Art */}
+        <div className="flex-shrink-0">
+          {thumbnail ? (
+            <img src={thumbnail} alt={title} className="w-32 h-32 rounded-xl object-cover shadow-xl" />
+          ) : (
+            <div className="w-32 h-32 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-xl">
+              <Volume2 className="w-16 h-16 text-white/80" />
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="mt-4 bg-black/30 rounded-lg p-3">
-          <div className="flex items-center gap-3 mb-3">
-            <button onClick={togglePlay} className="text-white hover:text-primary transition-colors">
-              {playing ? <Pause className="w-8 h-8 fill-white" /> : <Play className="w-8 h-8 fill-white ml-1" />}
-            </button>
-            <span className="text-white/70 text-sm font-mono flex-1">
-              {formatTime(currentTime)} / {formatTime(duration)}
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="mb-4">
+            <p className="text-white/80 text-sm font-medium mb-1">Now Playing</p>
+            <h3 className="text-white text-xl font-bold line-clamp-2 mb-2">{title}</h3>
+            <p className="text-white/70 text-sm">
+              Podcast • {formatTime(duration)} • Preparedness
+            </p>
+          </div>
+
+          <audio
+            ref={audioRef}
+            src={url}
+            onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
+            onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
+            onEnded={() => setPlaying(false)}
+            onError={handleAudioError}
+          />
+
+          {audioError ? (
+            <div className="flex items-center gap-4 mb-4">
+              <button className="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-white px-4 py-2 rounded-full transition-colors">
+                <Volume2 className="w-4 h-4" />
+                Audio Error
+              </button>
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/70 hover:text-white text-sm underline"
+              >
+                Open Direct Link
+              </a>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4 mb-4">
+              <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full transition-colors">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                </svg>
+                Save to Library
+              </button>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <span className="text-white/70 text-sm font-mono">
+              {formatTime(currentTime)}
             </span>
-          </div>
 
-          <div
-            className="w-full h-2 bg-white/20 rounded-full cursor-pointer"
-            onClick={(e) => {
-              const audio = audioRef.current;
-              const bar = e.currentTarget;
-              if (!audio || !bar) return;
-              const rect = bar.getBoundingClientRect();
-              const percent = (e.clientX - rect.left) / rect.width;
-              audio.currentTime = percent * duration;
-            }}>
-            <div className="h-full bg-primary rounded-full"
-              style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }} />
+            {/* Progress Bar */}
+            <div className="flex-1 mx-4">
+              <div
+                className="w-full h-1 bg-white/20 rounded-full cursor-pointer"
+                onClick={(e) => {
+                  const audio = audioRef.current;
+                  const bar = e.currentTarget;
+                  if (!audio || !bar) return;
+                  const rect = bar.getBoundingClientRect();
+                  const percent = (e.clientX - rect.left) / rect.width;
+                  audio.currentTime = percent * duration;
+                }}>
+                <div
+                  className="h-full bg-white rounded-full transition-all"
+                  style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={togglePlay}
+              className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+            >
+              {playing ? (
+                <Pause className="w-5 h-5 text-blue-600 fill-blue-600" />
+              ) : (
+                <Play className="w-5 h-5 text-blue-600 ml-0.5 fill-blue-600" />
+              )}
+            </button>
           </div>
         </div>
-      )}
+
+        {/* Spotify Logo */}
+        <div className="flex-shrink-0">
+          <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.062 14.25c-.175.287-.55.375-.875.2-2.4-1.463-5.425-1.788-8.988-.975-.363.075-.725-.15-.8-.513-.075-.363.15-.725.513-.8 3.9-.888 7.238-.513 10.013 1.125.337.2.45.637.237.963zm1.25-2.788c-.213.363-.663.475-1.025.262-2.75-1.687-6.938-2.175-10.188-1.188-.438.125-.888-.125-1.013-.563-.125-.438.125-.888.563-1.013 3.738-1.125 8.413-.588 11.538 1.375.362.213.487.662.275 1.025zm.113-2.9c-3.3-1.963-8.738-2.138-11.888-1.188-.525.15-1.075-.15-1.225-.675-.15-.525.15-1.075.675-1.225 3.6-1.088 9.6-.888 13.425 1.375.425.25.563.8.313 1.225-.25.425-.8.563-1.225.313z" />
+          </svg>
+        </div>
+      </div>
     </div>
   );
 }
