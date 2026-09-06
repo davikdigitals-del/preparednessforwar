@@ -22,6 +22,52 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
   // Check if it's a direct video file or needs embedding
   const isDirectVideo = /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
 
+  // Check if it's a non-embeddable external URL (like Sky News, BBC, etc.)
+  const isExternalVideo = !isDirectVideo && (
+    url.includes('sky') ||
+    url.includes('bbc') ||
+    url.includes('cnn') ||
+    url.includes('reuters') ||
+    url.includes('news') ||
+    // If it's not a known embeddable platform, treat as external
+    (!url.includes('youtube') && !url.includes('youtu.be') &&
+      !url.includes('vimeo') && !url.includes('tiktok') &&
+      !url.includes('facebook') && !url.includes('instagram'))
+  );
+
+  // For external videos that can't be embedded, show a link preview
+  if (isExternalVideo) {
+    return (
+      <div className="my-6">
+        <div className="relative aspect-video bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg overflow-hidden border border-gray-700">
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6">
+            <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4">
+              <Play className="w-8 h-8 text-primary fill-primary" />
+            </div>
+            <h3 className="text-lg font-bold text-center mb-2 line-clamp-2">
+              {title || 'External Video'}
+            </h3>
+            <p className="text-sm text-gray-400 text-center mb-6 line-clamp-1">
+              {new URL(url).hostname}
+            </p>
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            >
+              <Play className="w-5 h-5 fill-white" />
+              Watch Video
+            </a>
+            <p className="text-xs text-gray-500 mt-3 text-center">
+              Opens in new tab - some videos cannot be embedded
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const togglePlay = () => {
     const video = videoRef.current;
     if (!video) return;
