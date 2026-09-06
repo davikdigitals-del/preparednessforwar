@@ -196,6 +196,7 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
         </div>
       )}
     </div>
+    </div >
   );
 }
 

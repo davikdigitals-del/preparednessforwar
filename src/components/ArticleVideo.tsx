@@ -35,6 +35,9 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
       !url.includes('facebook') && !url.includes('instagram'))
   );
 
+  // Check if it's an incomplete or invalid URL
+  const isIncompleteUrl = url.includes('/share') || url.endsWith('/share') || url.length < 10;
+
   // For external videos that can't be embedded, show a link preview
   if (isExternalVideo) {
     return (
@@ -47,20 +50,42 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
             <h3 className="text-lg font-bold text-center mb-2 line-clamp-2">
               {title || 'External Video'}
             </h3>
-            <p className="text-sm text-gray-400 text-center mb-6 line-clamp-1">
-              {new URL(url).hostname}
-            </p>
+            {isIncompleteUrl ? (
+              <div className="text-center">
+                <p className="text-sm text-red-400 mb-2">⚠️ Incomplete URL</p>
+                <p className="text-xs text-gray-400 mb-4">
+                  Sky News URLs should be full story links like:<br />
+                  https://news.sky.com/story/title-12345
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400 text-center mb-6 line-clamp-1">
+                {(() => {
+                  try {
+                    return new URL(url).hostname;
+                  } catch {
+                    return url.length > 50 ? url.substring(0, 50) + '...' : url;
+                  }
+                })()}
+              </p>
+            )}
             <a
-              href={url}
-              target="_blank"
+              href={isIncompleteUrl ? '#' : url}
+              target={isIncompleteUrl ? '_self' : '_blank'}
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+              className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors ${isIncompleteUrl
+                  ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                  : 'bg-primary hover:bg-primary/90 text-white'
+                }`}
+              onClick={isIncompleteUrl ? (e) => e.preventDefault() : undefined}
             >
-              <Play className="w-5 h-5 fill-white" />
-              Watch Video
+              <Play className="w-5 h-5 fill-current" />
+              {isIncompleteUrl ? 'Invalid URL' : 'Watch Video'}
             </a>
             <p className="text-xs text-gray-500 mt-3 text-center">
-              Opens in new tab - some videos cannot be embedded
+              {isIncompleteUrl
+                ? 'Please provide a complete Sky News story URL'
+                : 'Opens in new tab - some videos cannot be embedded'}
             </p>
           </div>
         </div>
