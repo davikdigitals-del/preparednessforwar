@@ -50,18 +50,78 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [audioError, setAudioError] = useState(false);
+
+  // Check if it's a direct audio file vs external podcast link
+  const isDirectAudio = /\.(mp3|wav|ogg|aac|m4a|flac)(\?|$)/i.test(url);
+  const isExternalPodcast = !isDirectAudio && (
+    url.includes('spotify') ||
+    url.includes('apple') ||
+    url.includes('anchor') ||
+    url.includes('soundcloud') ||
+    url.includes('podcast') ||
+    url.includes('spreaker') ||
+    url.includes('buzzsprout')
+  );
+
+  // For external podcast platforms that don't allow direct streaming
+  if (isExternalPodcast) {
+    return (
+      <div className="bg-gradient-to-b from-gray-900 to-black rounded-xl p-6">
+        <div className="flex flex-col items-center gap-4">
+          {thumbnail ? (
+            <img src={thumbnail} alt={title} className="w-40 h-40 rounded-xl object-cover shadow-2xl" />
+          ) : (
+            <div className="w-40 h-40 rounded-xl bg-gray-800 flex items-center justify-center">
+              <Volume2 className="w-16 h-16 text-gray-600" />
+            </div>
+          )}
+          <p className="text-white font-semibold text-center text-sm line-clamp-2">{title}</p>
+        </div>
+
+        <div className="mt-6 bg-black/30 rounded-lg p-4 text-center">
+          <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Play className="w-6 h-6 text-primary fill-primary" />
+          </div>
+          <p className="text-white text-sm mb-1">External Podcast</p>
+          <p className="text-gray-400 text-xs mb-4 line-clamp-1">
+            {new URL(url).hostname}
+          </p>
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+          >
+            <Play className="w-4 h-4 fill-white" />
+            Listen on Platform
+          </a>
+          <p className="text-xs text-gray-500 mt-2">
+            Opens in podcast platform
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const togglePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
 
     if (audio.paused) {
-      audio.play();
+      audio.play().catch(() => {
+        setAudioError(true);
+      });
       setPlaying(true);
     } else {
       audio.pause();
       setPlaying(false);
     }
+  };
+
+  const handleAudioError = () => {
+    setAudioError(true);
+    setPlaying(false);
   };
 
   const formatTime = (time: number) => {
@@ -90,9 +150,29 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
         onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
         onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
         onEnded={() => setPlaying(false)}
+        onError={handleAudioError}
       />
 
-      <div className="mt-4 bg-black/30 rounded-lg p-3">
+      {audioError ? (
+        <div className="mt-4 bg-black/30 rounded-lg p-4 text-center">
+          <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Volume2 className="w-6 h-6 text-red-400" />
+          </div>
+          <p className="text-white text-sm mb-1">Cannot play audio</p>
+          <p className="text-gray-400 text-xs mb-4">
+            Audio source may not be accessible
+          </p>
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+          >
+            <Play className="w-4 h-4 fill-white" />
+            Open Link
+          </a>
+        </div>
+      ) : (
         <div className="flex items-center gap-3 mb-3">
           <button onClick={togglePlay} className="text-white hover:text-primary transition-colors">
             {playing ? <Pause className="w-8 h-8 fill-white" /> : <Play className="w-8 h-8 fill-white ml-1" />}
@@ -114,7 +194,7 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
           <div className="h-full bg-primary rounded-full"
             style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }} />
         </div>
-      </div>
+      )}
     </div>
   );
 }
