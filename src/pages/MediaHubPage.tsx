@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Play, Clock, Eye, Headphones, Video, Search, Crown, Lock } from "lucide-react";
 import { formatNumber } from "@/utils/formatNumber";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,52 @@ function MediaModal({ item, onClose }: { item: MediaItem; onClose: () => void })
   const url = item.url || "";
   const { user } = useAuth();
   const { isPremium } = usePremiumStatus();
+  const [isPiPActive, setIsPiPActive] = useState(false);
+
+  // Track PiP state and handle restoration
+  useEffect(() => {
+    const handleEnterPiP = () => setIsPiPActive(true);
+    const handleLeavePiP = () => {
+      setIsPiPActive(false);
+      // Check if we need to restore the modal after PiP exit
+      const pipItem = (window as any).pipMediaItem;
+      if (pipItem) {
+        // Clear the stored item
+        delete (window as any).pipMediaItem;
+        // Reopen the modal with the same item
+        setTimeout(() => {
+          (window as any).reopenMediaModal?.(pipItem);
+        }, 100);
+      }
+    };
+
+    document.addEventListener('enterpictureinpicture', handleEnterPiP);
+    document.addEventListener('leavepictureinpicture', handleLeavePiP);
+
+    return () => {
+      document.removeEventListener('enterpictureinpicture', handleEnterPiP);
+      document.removeEventListener('leavepictureinpicture', handleLeavePiP);
+    };
+  }, []);
+
+  // Handle modal close - store item if PiP is active
+  const handleClose = () => {
+    if (isPiPActive) {
+      // Store the media item for restoration after PiP exits
+      (window as any).pipMediaItem = item;
+    }
+    onClose();
+  };
+
+  // Exit picture-in-picture when modal closes
+  useEffect(() => {
+    return () => {
+      // Cleanup: Exit PiP when component unmounts
+      if (document.pictureInPictureElement) {
+        document.exitPictureInPicture().catch(console.error);
+      }
+    };
+  }, []);
 
   // Update social media meta tags for sharing
   useSocialMeta({
@@ -29,7 +75,7 @@ function MediaModal({ item, onClose }: { item: MediaItem; onClose: () => void })
   const isLocked = item.isPremium && !isPremium;
 
   return (
-    <Dialog open onOpenChange={onClose}>
+    <Dialog open onOpenChange={handleClose}>
       <DialogContent className="max-w-3xl p-0 overflow-hidden gap-0 bg-black border-gray-800" aria-describedby={undefined}>
         <DialogHeader className="px-5 pt-4 pb-3 border-b border-gray-800 bg-gray-900">
           <DialogTitle className="text-sm font-bold line-clamp-1 pr-8 text-white flex items-center gap-2">
@@ -166,6 +212,17 @@ export default function MediaHubPage() {
   const [filter, setFilter] = useState<"all" | "video" | "podcast">("all");
   const [search, setSearch] = useState("");
   const [activeMedia, setActiveMedia] = useState<MediaItem | null>(null);
+
+  // Set up global PiP restoration function
+  useEffect(() => {
+    (window as any).reopenMediaModal = (item: MediaItem) => {
+      setActiveMedia(item);
+    };
+
+    return () => {
+      delete (window as any).reopenMediaModal;
+    };
+  }, []);
 
   // Set default social meta for the page
   useSocialMeta({

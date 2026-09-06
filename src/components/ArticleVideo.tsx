@@ -17,6 +17,7 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
   const [showControls, setShowControls] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
+  const [isPiPActive, setIsPiPActive] = useState(false);
 
   // Check if it's a direct video file or needs embedding
   const isDirectVideo = /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
@@ -115,6 +116,34 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
       console.error('Picture-in-Picture error:', error);
     }
   };
+
+  // Handle PiP events
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleEnterPiP = () => {
+      setIsPiPActive(true);
+    };
+
+    const handleLeavePiP = () => {
+      setIsPiPActive(false);
+      // Ensure video is still playing and visible in main player
+      if (!video.paused) {
+        setPlaying(true);
+      }
+      // Force re-render to show video back in main container
+      setShowControls(true);
+    };
+
+    video.addEventListener('enterpictureinpicture', handleEnterPiP);
+    video.addEventListener('leavepictureinpicture', handleLeavePiP);
+
+    return () => {
+      video.removeEventListener('enterpictureinpicture', handleEnterPiP);
+      video.removeEventListener('leavepictureinpicture', handleLeavePiP);
+    };
+  }, []);
 
   const shareVideo = async () => {
     if (navigator.share) {
@@ -256,7 +285,7 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
                 )}
               </div>
 
-              <button onClick={togglePictureInPicture} className="text-white hover:text-gray-300 transition-colors">
+              <button onClick={togglePictureInPicture} className={`text-white hover:text-gray-300 transition-colors ${isPiPActive ? 'bg-white/20 rounded p-1' : ''}`}>
                 <PictureInPicture2 className="w-5 h-5" />
               </button>
 
