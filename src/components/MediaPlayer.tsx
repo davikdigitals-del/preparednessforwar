@@ -71,7 +71,12 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
     if (inputUrl.includes('-') && inputUrl.includes('.')) {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       if (supabaseUrl) {
-        return `${supabaseUrl}/storage/v1/object/public/media/${inputUrl}`;
+        // Try different bucket names based on the file pattern or name
+        if (inputUrl.startsWith('qekb0ob93c') || inputUrl.match(/^[a-z0-9]+-\d+\.(mp3|wav|ogg|aac|m4a|flac)$/i)) {
+          return `${supabaseUrl}/storage/v1/object/public/post-audios/${inputUrl}`;
+        } else {
+          return `${supabaseUrl}/storage/v1/object/public/media/${inputUrl}`;
+        }
       }
     }
 
