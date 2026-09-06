@@ -60,16 +60,40 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // Helper function to construct proper Supabase URL if needed
+  const getValidUrl = (inputUrl: string): string => {
+    // If it's already a full URL, return as-is
+    if (inputUrl.startsWith('http')) {
+      return inputUrl;
+    }
+
+    // If it looks like a Supabase storage filename, construct the full URL
+    if (inputUrl.includes('-') && inputUrl.includes('.')) {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (supabaseUrl) {
+        return `${supabaseUrl}/storage/v1/object/public/media/${inputUrl}`;
+      }
+    }
+
+    return inputUrl;
+  };
+
+  // Get the properly formatted URL
+  const validUrl = getValidUrl(url);
+
+  // Debug logging for URL issues
+  console.log('MediaPlayer AudioPlayer:', { originalUrl: url, validUrl, isDirectAudio: /\.(mp3|wav|ogg|aac|m4a|flac)(\?|$)/i.test(validUrl) });
+
   // Check if it's a direct audio file vs external podcast link
-  const isDirectAudio = /\.(mp3|wav|ogg|aac|m4a|flac)(\?|$)/i.test(url);
+  const isDirectAudio = /\.(mp3|wav|ogg|aac|m4a|flac)(\?|$)/i.test(validUrl);
   const isExternalPodcast = !isDirectAudio && (
-    url.includes('spotify') ||
-    url.includes('apple') ||
-    url.includes('anchor') ||
-    url.includes('soundcloud') ||
-    url.includes('podcast') ||
-    url.includes('spreaker') ||
-    url.includes('buzzsprout')
+    validUrl.includes('spotify') ||
+    validUrl.includes('apple') ||
+    validUrl.includes('anchor') ||
+    validUrl.includes('soundcloud') ||
+    validUrl.includes('podcast') ||
+    validUrl.includes('spreaker') ||
+    validUrl.includes('buzzsprout')
   );
 
   // For external podcast platforms that don't allow direct streaming
@@ -143,7 +167,8 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
     }
   };
 
-  const handleAudioError = () => {
+  const handleAudioError = (event?: any) => {
+    console.error('Audio loading error:', { url, validUrl, error: event?.target?.error });
     setAudioError(true);
     setPlaying(false);
   };
@@ -174,7 +199,7 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
 
           <audio
             ref={audioRef}
-            src={url}
+            src={validUrl}
             onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
             onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
             onEnded={() => setPlaying(false)}
@@ -188,7 +213,7 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
                 Audio Error
               </button>
               <a
-                href={url}
+                href={validUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/70 hover:text-white text-sm underline"

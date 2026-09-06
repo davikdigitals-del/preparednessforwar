@@ -429,7 +429,17 @@ const ArticlePage = () => {
                 )}
                 {((post as any).videoUrl || (post as any).video_url) && videoPlaying && (
                   <div className="aspect-video bg-black">
-                    <ArticleVideo url={(post as any).videoUrl || (post as any).video_url} title={post.title} />
+                    <MediaPlayer
+                      url={(post as any).videoUrl || (post as any).video_url}
+                      title={post.title}
+                      type={(post as any).videoUrl || (post as any).video_url ?
+                        ((post as any).videoUrl || (post as any).video_url).includes('podcast') ||
+                          ((post as any).videoUrl || (post as any).video_url).includes('mp3') ||
+                          ((post as any).videoUrl || (post as any).video_url).includes('audio') ? 'podcast' : 'video'
+                        : 'video'
+                      }
+                      thumbnail={post.image}
+                    />
                   </div>
                 )}
               </div>
@@ -737,7 +747,17 @@ const ArticlePage = () => {
                 )}
                 {((post as any).videoUrl || (post as any).video_url) && videoPlaying && (
                   <div className="absolute inset-0 bg-black">
-                    <ArticleVideo url={(post as any).videoUrl || (post as any).video_url} title={post.title} />
+                    <MediaPlayer
+                      url={(post as any).videoUrl || (post as any).video_url}
+                      title={post.title}
+                      type={(post as any).videoUrl || (post as any).video_url ?
+                        ((post as any).videoUrl || (post as any).video_url).includes('podcast') ||
+                          ((post as any).videoUrl || (post as any).video_url).includes('mp3') ||
+                          ((post as any).videoUrl || (post as any).video_url).includes('audio') ? 'podcast' : 'video'
+                        : 'video'
+                      }
+                      thumbnail={post.image}
+                    />
                   </div>
                 )}
               </div>
