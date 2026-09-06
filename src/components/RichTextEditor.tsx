@@ -4,7 +4,11 @@ import 'react-quill/dist/quill.snow.css';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Images, Video, Headphones } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Images, Video, Headphones, Link2 } from 'lucide-react';
 
 interface RichTextEditorProps {
   value: string;
@@ -18,6 +22,9 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
   const [isUploadingCarousel, setIsUploadingCarousel] = useState(false);
   const [isUploadingVideo, setIsUploadingVideo] = useState(false);
   const [isUploadingAudio, setIsUploadingAudio] = useState(false);
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [isProcessingUrl, setIsProcessingUrl] = useState(false);
 
   // Single image upload handler with caption support
   const imageHandler = async () => {
@@ -114,8 +121,13 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
 
   // Single image upload handler with caption support
 
-  // Video upload handler
-  const videoHandler = async () => {
+  // Video handler - opens dialog with upload and link options
+  const videoHandler = () => {
+    setVideoDialogOpen(true);
+  };
+
+  // Video upload handler (for dialog tab)
+  const handleVideoUpload = async () => {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
     input.setAttribute('accept', 'video/*');
@@ -145,7 +157,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         // Upload to Supabase storage
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-        const filePath = `${fileName}`; // Just filename, bucket handles the rest
+        const filePath = `${fileName}`;
 
         const { data, error } = await supabase.storage
           .from('post-videos')
@@ -164,27 +176,15 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         const videoUrl = urlData.publicUrl;
 
         // Insert video into editor
-        const quill = quillRef.current?.getEditor();
-        if (quill) {
-          const range = quill.getSelection(true);
-
-          // Create video element for rich text
-          const videoHTML = `<video controls style="width: 100%; max-width: 600px; height: auto; margin: 16px 0; border-radius: 8px;">
-                               <source src="${videoUrl}" type="video/${fileExt}">
-                               Your browser does not support the video tag.
-                             </video>`;
-
-          // Insert the video HTML
-          quill.clipboard.dangerouslyPasteHTML(range.index, videoHTML);
-
-          // Move cursor after the inserted content
-          quill.setSelection(range.index + 1, 0);
-        }
+        insertVideoIntoEditor(videoUrl, 'direct', file.name);
 
         toast({
           title: 'Video uploaded',
           description: 'Video has been added to your content',
         });
+
+        // Close dialog
+        setVideoDialogOpen(false);
       } catch (error: any) {
         console.error('Error uploading video:', error);
         toast({
@@ -196,6 +196,161 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         setIsUploadingVideo(false);
       }
     };
+  };
+
+  // Process video URL and determine type
+  const processVideoURL = (url: string) => {
+    const trimmedUrl = url.trim();
+
+    // Direct video files
+    if (/\.(mp4|webm|ogg|mov)(\?|$)/i.test(trimmedUrl)) {
+      return { type: 'direct', url: trimmedUrl };
+    }
+
+    // YouTube
+    if (trimmedUrl.includes('youtube.com') || trimmedUrl.includes('youtu.be')) {
+      return { type: 'youtube', url: trimmedUrl };
+    }
+
+    // Vimeo
+    if (trimmedUrl.includes('vimeo.com')) {
+      return { type: 'vimeo', url: trimmedUrl };
+    }
+
+    // External videos (Sky News, BBC, etc.)
+    if (trimmedUrl.includes('sky') || trimmedUrl.includes('bbc') ||
+      trimmedUrl.includes('cnn') || trimmedUrl.includes('news')) {
+      return { type: 'external', url: trimmedUrl };
+    }
+
+    // Default to external for unknown URLs
+    return { type: 'external', url: trimmedUrl };
+  };
+
+  // Insert video HTML into editor
+  const insertVideoIntoEditor = (url: string, type: string, title?: string) => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
+
+    const range = quill.getSelection(true);
+    let videoHTML = '';
+
+    switch (type) {
+      case 'direct':
+        videoHTML = `
+          <video controls style="width: 100%; max-width: 600px; height: auto; margin: 16px 0; border-radius: 8px;">
+            <source src="${url}" type="video/${url.split('.').pop()?.split('?')[0]}">
+            Your browser does not support the video tag.
+          </video>
+        `;
+        break;
+
+      case 'youtube':
+      case 'vimeo':
+        videoHTML = `
+          <div class="video-embed" data-video-url="${url}" style="
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 16px 0;
+            text-align: center;
+            background: #f7fafc;
+          ">
+            <div style="
+              width: 48px;
+              height: 48px;
+              margin: 0 auto 12px;
+              background: #4299e1;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-size: 20px;
+            ">▶</div>
+            <p style="margin: 0 0 8px 0; font-weight: bold; color: #2d3748; font-size: 14px;">
+              ${type === 'youtube' ? 'YouTube' : 'Vimeo'} Video
+            </p>
+            <p style="margin: 0; font-size: 12px; color: #718096; word-break: break-all;">${url}</p>
+            <p style="margin: 8px 0 0 0; font-size: 10px; color: #a0aec0; text-transform: uppercase;">
+              Video will display as player on frontend
+            </p>
+          </div>
+        `;
+        break;
+
+      default: // external
+        videoHTML = `
+          <div class="external-video" data-video-url="${url}" style="
+            border: 2px dashed #f56565;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 16px 0;
+            text-align: center;
+            background: #fed7d7;
+          ">
+            <div style="
+              width: 48px;
+              height: 48px;
+              margin: 0 auto 12px;
+              background: #e53e3e;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-size: 20px;
+            ">▶</div>
+            <p style="margin: 0 0 8px 0; font-weight: bold; color: #2d3748; font-size: 14px;">
+              External Video Link
+            </p>
+            <p style="margin: 0; font-size: 12px; color: #718096; word-break: break-all;">${url}</p>
+            <p style="margin: 8px 0 0 0; font-size: 10px; color: #a0aec0; text-transform: uppercase;">
+              Will open as external link on frontend
+            </p>
+          </div>
+        `;
+    }
+
+    // Insert the video HTML
+    quill.clipboard.dangerouslyPasteHTML(range.index, videoHTML);
+    quill.setSelection(range.index + 1, 0);
+  };
+
+  // Handle video URL insertion
+  const handleVideoUrlInsert = () => {
+    if (!videoUrl.trim()) {
+      toast({
+        title: 'URL Required',
+        description: 'Please enter a valid video URL',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsProcessingUrl(true);
+
+    try {
+      const { type, url } = processVideoURL(videoUrl);
+      insertVideoIntoEditor(url, type);
+
+      toast({
+        title: 'Video added',
+        description: 'Video link has been embedded in the content',
+      });
+
+      // Reset and close dialog
+      setVideoUrl('');
+      setVideoDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to process video URL',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessingUrl(false);
+    }
   };
 
   // Audio upload handler
@@ -607,6 +762,97 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           background: #ebf8ff !important;
         }
       `}</style>
+
+      {/* Video Dialog */}
+      <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Video</DialogTitle>
+          </DialogHeader>
+
+          <Tabs defaultValue="upload" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="upload">Upload Video</TabsTrigger>
+              <TabsTrigger value="link">Video Link</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="upload" className="space-y-4">
+              <div>
+                <Label>Upload Video File</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleVideoUpload}
+                  disabled={isUploadingVideo}
+                  className="w-full mt-2"
+                >
+                  {isUploadingVideo ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Video className="w-4 h-4 mr-2" />
+                      Choose Video File
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-gray-500 mt-2">
+                  Supports MP4, WebM, OGG up to 100MB
+                </p>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="link" className="space-y-4">
+              <div>
+                <Label htmlFor="video-url">Video URL</Label>
+                <Input
+                  id="video-url"
+                  type="url"
+                  placeholder="https://youtube.com/watch?v=... or https://news.sky.com/story/..."
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleVideoUrlInsert()}
+                  className="mt-2"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  Supports YouTube, Vimeo, Sky News, BBC, direct video files (.mp4, .webm, etc.)
+                </p>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setVideoDialogOpen(false);
+                    setVideoUrl('');
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleVideoUrlInsert}
+                  disabled={isProcessingUrl || !videoUrl.trim()}
+                >
+                  {isProcessingUrl ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Link2 className="w-4 h-4 mr-2" />
+                      Insert Video
+                    </>
+                  )}
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
