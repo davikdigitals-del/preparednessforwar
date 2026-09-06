@@ -173,26 +173,29 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
           </a>
         </div>
       ) : (
-        <div className="flex items-center gap-3 mb-3">
-          <button onClick={togglePlay} className="text-white hover:text-primary transition-colors">
-            {playing ? <Pause className="w-8 h-8 fill-white" /> : <Play className="w-8 h-8 fill-white ml-1" />}
-          </button>
-          <span className="text-white/70 text-sm font-mono flex-1">
-            {formatTime(currentTime)} / {formatTime(duration)}
-          </span>
-        </div>
+        <div className="mt-4 bg-black/30 rounded-lg p-3">
+          <div className="flex items-center gap-3 mb-3">
+            <button onClick={togglePlay} className="text-white hover:text-primary transition-colors">
+              {playing ? <Pause className="w-8 h-8 fill-white" /> : <Play className="w-8 h-8 fill-white ml-1" />}
+            </button>
+            <span className="text-white/70 text-sm font-mono flex-1">
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </span>
+          </div>
 
-        <div className="w-full h-2 bg-white/20 rounded-full cursor-pointer"
-          onClick={(e) => {
-            const audio = audioRef.current;
-            const bar = e.currentTarget;
-            if (!audio || !bar) return;
-            const rect = bar.getBoundingClientRect();
-            const percent = (e.clientX - rect.left) / rect.width;
-            audio.currentTime = percent * duration;
-          }}>
-          <div className="h-full bg-primary rounded-full"
-            style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }} />
+          <div
+            className="w-full h-2 bg-white/20 rounded-full cursor-pointer"
+            onClick={(e) => {
+              const audio = audioRef.current;
+              const bar = e.currentTarget;
+              if (!audio || !bar) return;
+              const rect = bar.getBoundingClientRect();
+              const percent = (e.clientX - rect.left) / rect.width;
+              audio.currentTime = percent * duration;
+            }}>
+            <div className="h-full bg-primary rounded-full"
+              style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }} />
+          </div>
         </div>
       )}
     </div>
