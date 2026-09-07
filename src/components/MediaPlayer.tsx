@@ -150,6 +150,7 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
   const spotifyEmbedUrl = getSpotifyEmbedUrl(validUrl);
   const soundcloudEmbedUrl = getSoundCloudEmbedUrl(validUrl);
   const appleEmbedUrl = getAppleEmbedUrl(validUrl);
+  const skyNewsEmbedUrl = getSkyNewsEmbedUrl(validUrl);
 
   const isEmbeddablePodcast = spotifyEmbedUrl || soundcloudEmbedUrl || appleEmbedUrl || skyNewsEmbedUrl || validUrl.includes('anchor.fm');
 
