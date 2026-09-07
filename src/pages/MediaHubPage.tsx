@@ -183,19 +183,37 @@ function MediaCard({ item, onClick }: { item: MediaItem; onClick: () => void }) 
         </div>
 
         {/* Text content */}
-        <div className="p-3 md:p-4 flex-1 min-w-0 flex flex-col justify-center">
-          <h3 className="font-bold text-sm line-clamp-2 group-hover:text-primary transition-colors leading-snug">
-            {item.title}
-          </h3>
-          <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{item.description}</p>
-          <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground flex-wrap">
-            <span className="font-semibold text-foreground/70 truncate max-w-[80px]">{item.author}</span>
-            <span className="flex items-center gap-1"><Eye className="w-2.5 h-2.5" />{formatNumber(item.views)}</span>
-            <span className="flex items-center gap-1 md:hidden"><Clock className="w-2.5 h-2.5" />{item.duration}</span>
+        <div className="p-3 md:p-4 flex-1 min-w-0 flex flex-col justify-between md:justify-center">
+          <div>
+            <h3 className="font-bold text-sm line-clamp-2 group-hover:text-primary transition-colors leading-snug mb-1">
+              {item.title}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{item.description}</p>
           </div>
-          {/* Mobile play hint */}
-          <div className="flex items-center gap-1 mt-2 text-[10px] text-primary font-semibold md:hidden">
-            <Play className="w-3 h-3 fill-primary" /> Play
+
+          {/* Stats - always visible on mobile */}
+          <div className="mt-2 space-y-1">
+            {/* Author */}
+            <div className="text-xs text-muted-foreground">
+              <span className="font-semibold text-foreground/70 truncate">{item.author}</span>
+            </div>
+
+            {/* Views and Duration */}
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1 shrink-0">
+                <Eye className="w-3 h-3" />
+                <span className="font-medium">{formatNumber(item.views)} views</span>
+              </span>
+              <span className="flex items-center gap-1 shrink-0">
+                <Clock className="w-3 h-3" />
+                <span>{item.duration}</span>
+              </span>
+            </div>
+
+            {/* Mobile play hint */}
+            <div className="flex items-center gap-1 text-[10px] text-primary font-semibold md:hidden">
+              <Play className="w-3 h-3 fill-primary" /> Tap to Play
+            </div>
           </div>
         </div>
       </div>
