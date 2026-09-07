@@ -128,21 +128,31 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
             </div>
 
             <div className="flex items-center gap-4 mb-4">
-              <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full transition-colors">
+              <a
+                href={validUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full transition-colors"
+              >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                 </svg>
-                Save on Spotify
-              </button>
+                Open in {validUrl.includes('spotify') ? 'Spotify' : validUrl.includes('apple') ? 'Apple Podcasts' : 'Platform'}
+              </a>
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-white/70 text-sm font-mono">
-                {formatTime(currentTime)}
+                External Link
               </span>
-              <button className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+              <a
+                href={validUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+              >
                 <Play className="w-5 h-5 text-blue-600 ml-0.5 fill-blue-600" />
-              </button>
+              </a>
             </div>
           </div>
 
@@ -290,10 +300,24 @@ export function MediaPlayer({ url, title, isPremium = false, type, thumbnail, me
 
   // Enhanced type detection - check both explicit type and URL patterns
   const isAudioContent = type === "podcast" || type === "audio" ||
-    /\.(mp3|wav|ogg|aac|m4a|flac)(\?|$)/i.test(url) ||
-    // Additional podcast/audio platform detection
-    url.includes('spotify') || url.includes('soundcloud') ||
-    url.includes('anchor.fm') || url.includes('podcast');
+    // Only consider audio if it's explicitly set as podcast/audio OR has audio file extension
+    (/\.(mp3|wav|ogg|aac|m4a|flac)(\?|$)/i.test(url) && type !== "video") ||
+    // Additional podcast/audio platform detection (but only if type isn't explicitly video)
+    (type !== "video" && (
+      url.includes('spotify.com') ||
+      url.includes('soundcloud.com') ||
+      url.includes('anchor.fm') ||
+      url.includes('podcasts.apple.com') ||
+      url.includes('podcast')
+    ));
+
+  console.log('MediaPlayer type detection:', {
+    url,
+    type,
+    isAudioContent,
+    hasAudioExtension: /\.(mp3|wav|ogg|aac|m4a|flac)(\?|$)/i.test(url),
+    hasVideoExtension: /\.(mp4|webm|mov|avi|mkv)(\?|$)/i.test(url)
+  });
 
   // For audio/podcast content, use the AudioPlayer
   if (isAudioContent) {
