@@ -6,6 +6,153 @@ interface ArticleVideoProps {
   title?: string;
 }
 
+interface SkyNewsVideoPlayerProps {
+  url: string;
+  originalUrl: string;
+  title?: string;
+}
+
+// Custom Sky News video player with cover image and play overlay
+function SkyNewsVideoPlayer({ url, originalUrl, title }: SkyNewsVideoPlayerProps) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showCoverImage, setShowCoverImage] = useState(true);
+
+  // Generate a cover image URL based on Sky News story ID
+  const getCoverImageUrl = (skyUrl: string) => {
+    // Extract story ID from the URL
+    const storyIdMatch = skyUrl.match(/(\d+)/);
+    const storyId = storyIdMatch ? storyIdMatch[1] : '12345678';
+
+    // Use a placeholder image service with Sky News branding colors
+    return `https://via.placeholder.com/800x450/0078d4/ffffff?text=Sky+News+Video+${storyId}`;
+  };
+
+  const handlePlayClick = () => {
+    setIsPlaying(true);
+    setShowCoverImage(false);
+  };
+
+  if (showCoverImage && !isPlaying) {
+    return (
+      <div className="my-6">
+        <div className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden group cursor-pointer" onClick={handlePlayClick}>
+          {/* Cover Image */}
+          <img
+            src={getCoverImageUrl(originalUrl)}
+            alt={title || 'Sky News Video'}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // Fallback to gradient background if image fails to load
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
+
+          {/* Sky News Logo/Badge */}
+          <div className="absolute top-4 left-4 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold uppercase tracking-wide rounded">
+            Sky News
+          </div>
+
+          {/* Play Button Overlay */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform duration-200">
+              <Play className="w-8 h-8 text-blue-600 fill-blue-600 ml-1" />
+            </div>
+          </div>
+
+          {/* Title Overlay */}
+          {title && (
+            <div className="absolute bottom-0 left-0 right-0 p-4">
+              <h3 className="text-white font-semibold text-lg line-clamp-2 drop-shadow-md">
+                {title}
+              </h3>
+            </div>
+          )}
+
+          {/* Hover Info */}
+          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="bg-black/70 text-white text-xs px-2 py-1 rounded">
+              Click to play
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Once clicked, show the embedded iframe
+  return (
+    <div className="my-6">
+      <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden group">
+        <iframe
+          src={url}
+          title={title || 'Sky News Video'}
+          className="w-full h-full border-0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          style={{
+            border: 'none',
+            outline: 'none'
+          }}
+        />
+
+        {/* Platform badge */}
+        <div className="absolute top-4 right-4 px-3 py-1.5 bg-black/70 text-white text-xs font-bold uppercase tracking-wide rounded">
+          Sky News
+        </div>
+
+        {/* Overlay controls */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => {
+                setIsPlaying(false);
+                setShowCoverImage(true);
+              }}
+              className="text-white hover:text-gray-300 transition-colors text-sm"
+            >
+              ← Back to cover
+            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: title || 'Sky News Video',
+                      url: window.location.href
+                    });
+                  } else {
+                    navigator.clipboard.writeText(window.location.href);
+                  }
+                }}
+                className="text-white hover:text-gray-300 transition-colors"
+              >
+                <Share2 className="w-5 h-5" />
+              </button>
+              <a href={originalUrl} target="_blank" rel="noopener noreferrer" className="text-white hover:text-gray-300 transition-colors">
+                <Maximize className="w-5 h-5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {title && (
+        <p className="text-sm text-gray-600 mt-2 text-center italic">
+          {title}
+        </p>
+      )}
+    </div>
+  );
+}
+
+interface ArticleVideoProps {
+  url: string;
+  title?: string;
+}
+
 export function ArticleVideo({ url, title }: ArticleVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -156,13 +303,17 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
   // News platforms that might have embed support
   const getNewsEmbedUrl = (url: string): string | null => {
     // Sky News embeds - handle both regular and share links
-    if (url.includes('news.sky.com') || url.includes('sky.com/share/')) {
-      // Handle Sky News share links
-      if (url.includes('sky.com/share/')) {
+    if (url.includes('sky.com')) {
+      console.log('Sky News URL detected:', url); // Debug log
+
+      // Handle Sky News share links: https://news.sky.com/share/12345678
+      if (url.includes('/share/')) {
         const shareRegex = /sky\.com\/share\/(\d+)/;
         const match = url.match(shareRegex);
         if (match) {
           const storyId = match[1];
+          console.log('Sky News share ID:', storyId); // Debug log
+          // Return a Sky News embed URL format
           return `https://www.skynews.com/embed/video/${storyId}`;
         }
       }
@@ -180,6 +331,15 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
       const videoMatch = url.match(skyVideoRegex);
       if (videoMatch) {
         const videoId = videoMatch[1];
+        return `https://www.skynews.com/embed/video/${videoId}`;
+      }
+
+      // Generic Sky News URLs - extract any number at the end
+      const genericSkyRegex = /sky\.com\/.*?(\d+)$/;
+      const genericMatch = url.match(genericSkyRegex);
+      if (genericMatch) {
+        const videoId = genericMatch[1];
+        // Convert to Sky News embed URL
         return `https://www.skynews.com/embed/video/${videoId}`;
       }
     }
@@ -254,6 +414,11 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
       }
       return 'Video';
     };
+
+    // Special handling for Sky News videos - show cover image with play overlay
+    if (url.includes('sky')) {
+      return <SkyNewsVideoPlayer url={embedUrl} originalUrl={url} title={title} />;
+    }
 
     return (
       <div className="my-6">

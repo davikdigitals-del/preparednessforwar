@@ -7,13 +7,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Wrench, Eye } from "lucide-react";
+import { AlertTriangle, Wrench, Eye, Bug } from "lucide-react";
 import MaintenancePage from "@/pages/MaintenancePage";
+import { MaintenanceDebug } from "@/components/MaintenanceDebug";
 
 export default function AdminMaintenance() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
   const { toast } = useToast();
 
   const [config, setConfig] = useState({
@@ -32,9 +34,13 @@ export default function AdminMaintenance() {
       const { data, error } = await supabase
         .from("maintenance_mode")
         .select("*")
+        .limit(1)
         .single();
 
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') {
+        // PGRST116 = no rows returned
+        throw error;
+      }
 
       if (data) {
         setConfig({
@@ -42,12 +48,26 @@ export default function AdminMaintenance() {
           message: data.message || "Site is under maintenance. We will be back soon.",
           estimated_back: data.estimated_back || "",
         });
+      } else {
+        // No data found, use defaults
+        setConfig({
+          enabled: false,
+          message: "Site is under maintenance. We will be back soon.",
+          estimated_back: "",
+        });
       }
     } catch (error: any) {
+      console.error("Error fetching maintenance config:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to fetch maintenance configuration",
         variant: "destructive",
+      });
+      // Set default values on error
+      setConfig({
+        enabled: false,
+        message: "Site is under maintenance. We will be back soon.",
+        estimated_back: "",
       });
     } finally {
       setLoading(false);
@@ -58,17 +78,43 @@ export default function AdminMaintenance() {
     try {
       setSaving(true);
 
-      const { error } = await supabase
+      // First check if there are any rows in the maintenance_mode table
+      const { data: existingData, error: fetchError } = await supabase
         .from("maintenance_mode")
-        .update({
-          enabled: config.enabled,
-          message: config.message,
-          estimated_back: config.estimated_back || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", (await supabase.from("maintenance_mode").select("id").single()).data?.id);
+        .select("id")
+        .limit(1)
+        .single();
 
-      if (error) throw error;
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        // PGRST116 = no rows returned, which is fine
+        throw fetchError;
+      }
+
+      let updateResult;
+
+      if (existingData?.id) {
+        // Update existing row
+        updateResult = await supabase
+          .from("maintenance_mode")
+          .update({
+            enabled: config.enabled,
+            message: config.message,
+            estimated_back: config.estimated_back || null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existingData.id);
+      } else {
+        // Insert new row if none exists
+        updateResult = await supabase
+          .from("maintenance_mode")
+          .insert({
+            enabled: config.enabled,
+            message: config.message,
+            estimated_back: config.estimated_back || null,
+          });
+      }
+
+      if (updateResult.error) throw updateResult.error;
 
       toast({
         title: "Success",
@@ -79,9 +125,10 @@ export default function AdminMaintenance() {
 
       fetchMaintenanceConfig();
     } catch (error: any) {
+      console.error("Error saving maintenance config:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to save maintenance configuration",
         variant: "destructive",
       });
     } finally {
@@ -106,6 +153,25 @@ export default function AdminMaintenance() {
           </Button>
         </div>
         <MaintenancePage message={config.message} estimatedBack={config.estimated_back} />
+      </div>
+    );
+  }
+
+  if (showDebug) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Maintenance Mode Debug</h1>
+            <p className="text-muted-foreground">
+              Diagnose maintenance mode issues
+            </p>
+          </div>
+          <Button onClick={() => setShowDebug(false)} variant="outline">
+            Back to Settings
+          </Button>
+        </div>
+        <MaintenanceDebug />
       </div>
     );
   }
@@ -207,8 +273,8 @@ export default function AdminMaintenance() {
               {saving
                 ? "Saving..."
                 : config.enabled
-                ? "Save & Keep Site Offline"
-                : "Save Settings"}
+                  ? "Save & Keep Site Offline"
+                  : "Save Settings"}
             </Button>
             <Button
               onClick={() => setShowPreview(true)}
@@ -217,6 +283,14 @@ export default function AdminMaintenance() {
             >
               <Eye className="w-4 h-4" />
               Preview
+            </Button>
+            <Button
+              onClick={() => setShowDebug(true)}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Bug className="w-4 h-4" />
+              Debug
             </Button>
           </div>
         </CardContent>

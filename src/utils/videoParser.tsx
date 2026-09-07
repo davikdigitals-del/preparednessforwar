@@ -17,7 +17,7 @@ export function parseContentWithVideos(htmlContent: string): React.ReactNode[] {
 
   if (videoElements.length === 0) {
     // Check for Sky News and other external video URLs in plain text or links
-    const skyNewsPattern = /https?:\/\/news\.sky\.com\/story\/[^\s<>]+/gi;
+    const skyNewsPattern = /https?:\/\/(news\.sky\.com\/(story\/[^\s<>]+|share\/\d+))/gi;
     const bbcPattern = /https?:\/\/www\.bbc\.co\.uk\/news\/[^\s<>]+/gi;
     const cnnPattern = /https?:\/\/(www\.)?cnn\.com\/[^\s<>]+/gi;
     const newsPattern = /https?:\/\/[^\s<>]*news[^\s<>]*/gi;
@@ -161,7 +161,6 @@ export function parseContentWithVideos(htmlContent: string): React.ReactNode[] {
           key={`video-${index}`}
           url={video.url}
           title={video.title}
-          type={video.type === 'external' ? undefined : video.type}
         />
       );
 
@@ -188,6 +187,6 @@ export function hasVideos(htmlContent: string): boolean {
     htmlContent.includes('video-embed') ||
     htmlContent.includes('external-video') ||
     htmlContent.includes('inline-video') ||
-    /https?:\/\/news\.sky\.com\/story\//.test(htmlContent) ||
+    /https?:\/\/news\.sky\.com\/(story\/|share\/)/.test(htmlContent) ||
     /https?:\/\/www\.bbc\.co\.uk\/news\//.test(htmlContent);
 }
