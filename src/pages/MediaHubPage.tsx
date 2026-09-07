@@ -76,35 +76,35 @@ function MediaModal({ item, onClose }: { item: MediaItem; onClose: () => void })
 
   return (
     <Dialog open onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl p-0 overflow-hidden gap-0 bg-black border-gray-800" aria-describedby={undefined}>
-        <DialogHeader className="px-5 pt-4 pb-3 border-b border-gray-800 bg-gray-900">
-          <DialogTitle className="text-sm font-bold line-clamp-1 pr-8 text-white flex items-center gap-2">
+      <DialogContent className="max-w-full md:max-w-3xl w-full mx-4 md:mx-auto p-0 overflow-hidden gap-0 bg-black border-gray-800" aria-describedby={undefined}>
+        <DialogHeader className="px-3 md:px-5 pt-3 md:pt-4 pb-2 md:pb-3 border-b border-gray-800 bg-gray-900">
+          <DialogTitle className="text-xs md:text-sm font-bold line-clamp-1 pr-8 text-white flex items-center gap-2">
             {item.title}
-            {item.isPremium && <Crown className="w-3.5 h-3.5 text-yellow-400 shrink-0" />}
+            {item.isPremium && <Crown className="w-3 h-3 md:w-3.5 md:h-3.5 text-yellow-400 shrink-0" />}
           </DialogTitle>
           <p className="text-xs text-gray-400 mt-0.5">{item.author} · {item.duration}</p>
         </DialogHeader>
 
         {isLocked ? (
           /* Premium gate UI */
-          <div className="aspect-video bg-gray-900 flex flex-col items-center justify-center gap-4 px-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-yellow-500/10 flex items-center justify-center">
-              <Lock className="w-8 h-8 text-yellow-400" />
+          <div className="aspect-video bg-gray-900 flex flex-col items-center justify-center gap-3 md:gap-4 px-4 md:px-8 py-8 text-center">
+            <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-yellow-500/10 flex items-center justify-center">
+              <Lock className="w-6 h-6 md:w-8 md:h-8 text-yellow-400" />
             </div>
             <div>
-              <h3 className="text-white font-bold text-lg mb-1">Premium Content</h3>
-              <p className="text-gray-400 text-sm mb-4">
+              <h3 className="text-white font-bold text-base md:text-lg mb-1">Premium Content</h3>
+              <p className="text-gray-400 text-xs md:text-sm mb-3 md:mb-4">
                 Subscribe to access this {item.type === "podcast" ? "podcast" : "video"} and all premium content.
               </p>
             </div>
             {user ? (
-              <Button asChild className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold">
+              <Button asChild className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-xs md:text-sm">
                 <Link to="/subscribe" onClick={onClose}>
-                  <Crown className="w-4 h-4 mr-2" /> Upgrade to Premium
+                  <Crown className="w-3 h-3 md:w-4 md:h-4 mr-2" /> Upgrade to Premium
                 </Link>
               </Button>
             ) : (
-              <Button asChild className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold">
+              <Button asChild className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-xs md:text-sm">
                 <Link to="/login?redirect=/media" onClick={onClose}>
                   Sign In to Subscribe
                 </Link>

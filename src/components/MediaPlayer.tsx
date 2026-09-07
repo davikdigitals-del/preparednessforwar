@@ -185,10 +185,10 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
 
     return (
       <div className="my-6">
-        <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-6 shadow-2xl">
+        <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-4 md:p-6 shadow-2xl">
           <div className="mb-4">
-            <h3 className="text-white text-lg font-bold mb-2">{title}</h3>
-            <p className="text-white/70 text-sm mb-4">
+            <h3 className="text-white text-base md:text-lg font-bold mb-2 line-clamp-2">{title}</h3>
+            <p className="text-white/70 text-xs md:text-sm mb-4">
               {spotifyEmbedUrl ? '🎵 Spotify' : soundcloudEmbedUrl ? '🎧 SoundCloud' : appleEmbedUrl ? '🍎 Apple Podcasts' : skyNewsEmbedUrl ? '🏛️ Sky News' : validUrl.includes('anchor') ? '⚓ Anchor' : 'Podcast'}
             </p>
           </div>
@@ -210,9 +210,9 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
             <div className="mt-4 flex justify-center">
               <button
                 onClick={() => saveToDashboard(validUrl, title, type || 'podcast', mediaId)}
-                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full transition-colors text-sm"
+                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-3 md:px-4 py-2 rounded-full transition-colors text-xs md:text-sm"
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <svg className="w-3 h-3 md:w-4 md:h-4" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                 </svg>
                 Save to Library
@@ -227,54 +227,54 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
   // For external podcast platforms that can't be embedded (Apple Podcasts, etc.)
   if (isExternalPodcast) {
     return (
-      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-8 shadow-2xl">
-        <div className="flex items-center gap-6">
+      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-4 md:p-8 shadow-2xl">
+        <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
           {/* Album Art */}
           <div className="flex-shrink-0">
             {thumbnail ? (
-              <img src={thumbnail} alt={title} className="w-32 h-32 rounded-xl object-cover shadow-xl" />
+              <img src={thumbnail} alt={title} className="w-24 h-24 md:w-32 md:h-32 rounded-xl object-cover shadow-xl" />
             ) : (
-              <div className="w-32 h-32 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-xl">
-                <Volume2 className="w-16 h-16 text-white/80" />
+              <div className="w-24 h-24 md:w-32 md:h-32 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-xl">
+                <Volume2 className="w-12 h-12 md:w-16 md:h-16 text-white/80" />
               </div>
             )}
           </div>
 
           {/* Content */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 text-center md:text-left">
             <div className="mb-4">
-              <p className="text-white/80 text-sm font-medium mb-1">{validUrl.includes('spotify') ? 'Available on Spotify' : validUrl.includes('apple') ? 'Available on Apple Podcasts' : 'External Podcast'}</p>
-              <h3 className="text-white text-xl font-bold line-clamp-2 mb-2">{title}</h3>
-              <p className="text-white/70 text-sm">
+              <p className="text-white/80 text-xs md:text-sm font-medium mb-1">{validUrl.includes('spotify') ? 'Available on Spotify' : validUrl.includes('apple') ? 'Available on Apple Podcasts' : 'External Podcast'}</p>
+              <h3 className="text-white text-lg md:text-xl font-bold line-clamp-2 mb-2">{title}</h3>
+              <p className="text-white/70 text-xs md:text-sm">
                 Podcast • {formatTime(duration || 0)} • {validUrl.includes('spotify') ? 'Spotify' : validUrl.includes('apple') ? 'Apple Podcasts' : 'External Platform'}
               </p>
             </div>
 
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 mb-4">
               <a
                 href={validUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full transition-colors"
+                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-3 md:px-4 py-2 rounded-full transition-colors text-xs md:text-sm w-full sm:w-auto justify-center"
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <svg className="w-3 h-3 md:w-4 md:h-4" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                 </svg>
-                Open in {validUrl.includes('spotify') ? 'Spotify' : validUrl.includes('apple') ? 'Apple Podcasts' : 'Platform'}
+                <span className="truncate">Open in {validUrl.includes('spotify') ? 'Spotify' : validUrl.includes('apple') ? 'Apple Podcasts' : 'Platform'}</span>
               </a>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-white/70 text-sm font-mono">
+              <span className="text-white/70 text-xs md:text-sm font-mono">
                 External Link
               </span>
               <a
                 href={validUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+                className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
               >
-                <Play className="w-5 h-5 text-blue-600 ml-0.5 fill-blue-600" />
+                <Play className="w-4 h-4 md:w-5 md:h-5 text-blue-600 ml-0.5 fill-blue-600" />
               </a>
             </div>
           </div>
@@ -321,25 +321,25 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-8 shadow-2xl">
-      <div className="flex items-center gap-6">
+    <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-4 md:p-8 shadow-2xl">
+      <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
         {/* Album Art */}
         <div className="flex-shrink-0">
           {thumbnail ? (
-            <img src={thumbnail} alt={title} className="w-32 h-32 rounded-xl object-cover shadow-xl" />
+            <img src={thumbnail} alt={title} className="w-24 h-24 md:w-32 md:h-32 rounded-xl object-cover shadow-xl" />
           ) : (
-            <div className="w-32 h-32 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-xl">
-              <Volume2 className="w-16 h-16 text-white/80" />
+            <div className="w-24 h-24 md:w-32 md:h-32 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-xl">
+              <Volume2 className="w-12 h-12 md:w-16 md:h-16 text-white/80" />
             </div>
           )}
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 w-full text-center md:text-left">
           <div className="mb-4">
-            <p className="text-white/80 text-sm font-medium mb-1">Now Playing</p>
-            <h3 className="text-white text-xl font-bold line-clamp-2 mb-2">{title}</h3>
-            <p className="text-white/70 text-sm">
+            <p className="text-white/80 text-xs md:text-sm font-medium mb-1">Now Playing</p>
+            <h3 className="text-white text-lg md:text-xl font-bold line-clamp-2 mb-2">{title}</h3>
+            <p className="text-white/70 text-xs md:text-sm">
               Podcast • {formatTime(duration)} • {validUrl.includes('spotify') ? 'Spotify' : validUrl.includes('apple') ? 'Apple Podcasts' : 'Audio Content'}
             </p>
           </div>
@@ -354,24 +354,24 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
           />
 
           {audioError ? (
-            <div className="flex items-center gap-4 mb-4">
-              <button className="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-white px-4 py-2 rounded-full transition-colors">
-                <Volume2 className="w-4 h-4" />
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 mb-4">
+              <button className="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-white px-3 md:px-4 py-2 rounded-full transition-colors text-xs md:text-sm">
+                <Volume2 className="w-3 h-3 md:w-4 md:h-4" />
                 Audio Error
               </button>
               <a
                 href={validUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white/70 hover:text-white text-sm underline"
+                className="text-white/70 hover:text-white text-xs md:text-sm underline"
               >
                 Open Direct Link
               </a>
             </div>
           ) : (
-            <div className="flex items-center gap-4 mb-4">
-              <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full transition-colors">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 mb-4">
+              <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-3 md:px-4 py-2 rounded-full transition-colors text-xs md:text-sm">
+                <svg className="w-3 h-3 md:w-4 md:h-4" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                 </svg>
                 Save to Library
@@ -379,15 +379,15 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
             </div>
           )}
 
-          <div className="flex items-center justify-between">
-            <span className="text-white/70 text-sm font-mono">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0">
+            <span className="text-white/70 text-xs md:text-sm font-mono order-2 sm:order-1">
               {formatTime(currentTime)}
             </span>
 
             {/* Progress Bar */}
-            <div className="flex-1 mx-4">
+            <div className="flex-1 w-full sm:mx-4 order-1 sm:order-2">
               <div
-                className="w-full h-1 bg-white/20 rounded-full cursor-pointer"
+                className="w-full h-2 md:h-1 bg-white/20 rounded-full cursor-pointer"
                 onClick={(e) => {
                   const audio = audioRef.current;
                   const bar = e.currentTarget;
@@ -405,12 +405,12 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
 
             <button
               onClick={togglePlay}
-              className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+              className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform order-3"
             >
               {playing ? (
-                <Pause className="w-5 h-5 text-blue-600 fill-blue-600" />
+                <Pause className="w-4 h-4 md:w-5 md:h-5 text-blue-600 fill-blue-600" />
               ) : (
-                <Play className="w-5 h-5 text-blue-600 ml-0.5 fill-blue-600" />
+                <Play className="w-4 h-4 md:w-5 md:h-5 text-blue-600 ml-0.5 fill-blue-600" />
               )}
             </button>
           </div>

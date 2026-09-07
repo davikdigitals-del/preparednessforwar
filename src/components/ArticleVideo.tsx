@@ -448,16 +448,81 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
 
   const toggleFullscreen = () => {
     const container = videoRef.current?.parentElement;
-    if (!container) return;
+    const video = videoRef.current;
+    if (!container || !video) return;
+
+    // Check if we're on mobile
+    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     if (!document.fullscreenElement) {
-      container.requestFullscreen().then(() => {
+      // Enter fullscreen
+      const enterFullscreen = () => {
         setFullscreen(true);
-      }).catch(console.error);
+
+        // Try to rotate to landscape on mobile
+        if (isMobile && screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape-primary').catch(() => {
+            // Fallback to any landscape orientation if primary fails
+            screen.orientation.lock('landscape').catch(() => {
+              console.log('Screen rotation not supported or denied');
+            });
+          });
+        }
+      };
+
+      // Try different fullscreen methods for better mobile compatibility
+      if (container.requestFullscreen) {
+        container.requestFullscreen().then(enterFullscreen).catch(console.error);
+      } else if ((container as any).webkitRequestFullscreen) {
+        // Safari
+        (container as any).webkitRequestFullscreen();
+        enterFullscreen();
+      } else if ((container as any).mozRequestFullScreen) {
+        // Firefox
+        (container as any).mozRequestFullScreen();
+        enterFullscreen();
+      } else if ((container as any).msRequestFullscreen) {
+        // Edge/IE
+        (container as any).msRequestFullscreen();
+        enterFullscreen();
+      } else if (isMobile && (video as any).webkitEnterFullscreen) {
+        // iOS Safari fallback - use video's native fullscreen
+        (video as any).webkitEnterFullscreen();
+        enterFullscreen();
+      } else {
+        // Fallback: just rotate to landscape without fullscreen
+        if (isMobile && screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(() => {
+            console.log('Screen rotation not supported');
+          });
+        }
+        setFullscreen(true);
+      }
     } else {
-      document.exitFullscreen().then(() => {
+      // Exit fullscreen
+      const exitFullscreen = () => {
         setFullscreen(false);
-      }).catch(console.error);
+
+        // Unlock screen orientation when exiting fullscreen
+        if (screen.orientation && screen.orientation.unlock) {
+          screen.orientation.unlock();
+        }
+      };
+
+      if (document.exitFullscreen) {
+        document.exitFullscreen().then(exitFullscreen).catch(console.error);
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+        exitFullscreen();
+      } else if ((document as any).mozCancelFullScreen) {
+        (document as any).mozCancelFullScreen();
+        exitFullscreen();
+      } else if ((document as any).msExitFullscreen) {
+        (document as any).msExitFullscreen();
+        exitFullscreen();
+      } else {
+        exitFullscreen();
+      }
     }
   };
 
@@ -503,6 +568,47 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
       video.removeEventListener('leavepictureinpicture', handleLeavePiP);
     };
   }, []);
+
+  // Handle orientation and fullscreen changes
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      // If user manually rotates to landscape, consider going fullscreen
+      if (screen.orientation) {
+        const isLandscape = screen.orientation.angle === 90 || screen.orientation.angle === -90;
+
+        if (isLandscape && !document.fullscreenElement && playing) {
+          // Auto-suggest fullscreen when rotated to landscape during playback
+          // This could be enhanced with a toast notification
+          console.log('Landscape detected - consider fullscreen');
+        }
+      }
+    };
+
+    const handleFullscreenChange = () => {
+      // Update fullscreen state when user exits via browser controls or gesture
+      setFullscreen(!!document.fullscreenElement);
+
+      // Unlock orientation when exiting fullscreen via browser/gesture
+      if (!document.fullscreenElement && screen.orientation && screen.orientation.unlock) {
+        screen.orientation.unlock();
+      }
+    };
+
+    // Listen for orientation changes
+    if (screen.orientation) {
+      screen.orientation.addEventListener('change', handleOrientationChange);
+    }
+
+    // Listen for fullscreen changes (browser controls, gestures, etc.)
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+    return () => {
+      if (screen.orientation) {
+        screen.orientation.removeEventListener('change', handleOrientationChange);
+      }
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, [playing]);
 
   const shareVideo = async () => {
     if (navigator.share) {
@@ -578,31 +684,31 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
             </div>
 
             {/* Control Buttons */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4 flex-wrap">
               {/* Left controls */}
               <button onClick={() => skipTime(-10)} className="text-white hover:text-gray-300 transition-colors">
-                <SkipBack className="w-6 h-6" />
+                <SkipBack className="w-4 h-4 md:w-6 md:h-6" />
               </button>
 
               <button onClick={togglePlay} className="text-white hover:text-gray-300 transition-colors">
-                {playing ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8" />}
+                {playing ? <Pause className="w-6 h-6 md:w-8 md:h-8" /> : <Play className="w-6 h-6 md:w-8 md:h-8" />}
               </button>
 
               <button onClick={() => skipTime(10)} className="text-white hover:text-gray-300 transition-colors">
-                <SkipForward className="w-6 h-6" />
+                <SkipForward className="w-4 h-4 md:w-6 md:h-6" />
               </button>
 
               {/* Time display */}
-              <span className="text-white text-sm font-mono">
+              <span className="text-white text-xs md:text-sm font-mono">
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
 
               <div className="flex-1" />
 
               {/* Right controls */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 md:gap-2">
                 <button onClick={toggleMute} className="text-white hover:text-gray-300 transition-colors">
-                  {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                  {muted ? <VolumeX className="w-4 h-4 md:w-5 md:h-5" /> : <Volume2 className="w-4 h-4 md:w-5 md:h-5" />}
                 </button>
 
                 <input
@@ -612,15 +718,15 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
                   step={0.1}
                   value={muted ? 0 : volume}
                   onChange={handleVolumeChange}
-                  className="w-20 h-1 accent-white cursor-pointer"
+                  className="w-12 md:w-20 h-1 accent-white cursor-pointer"
                 />
               </div>
 
-              <button className="text-white hover:text-gray-300 transition-colors">
+              <button className="text-white hover:text-gray-300 transition-colors hidden md:block">
                 <Captions className="w-5 h-5" />
               </button>
 
-              <div className="relative">
+              <div className="relative hidden md:block">
                 <button
                   onClick={() => setShowSettings(!showSettings)}
                   className="text-white hover:text-gray-300 transition-colors"
@@ -645,15 +751,15 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
               </div>
 
               <button onClick={togglePictureInPicture} className={`text-white hover:text-gray-300 transition-colors ${isPiPActive ? 'bg-white/20 rounded p-1' : ''}`}>
-                <PictureInPicture2 className="w-5 h-5" />
+                <PictureInPicture2 className="w-4 h-4 md:w-5 md:h-5" />
               </button>
 
               <button onClick={shareVideo} className="text-white hover:text-gray-300 transition-colors">
-                <Share2 className="w-5 h-5" />
+                <Share2 className="w-4 h-4 md:w-5 md:h-5" />
               </button>
 
               <button onClick={toggleFullscreen} className="text-white hover:text-gray-300 transition-colors">
-                {fullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+                {fullscreen ? <Minimize className="w-4 h-4 md:w-5 md:h-5" /> : <Maximize className="w-4 h-4 md:w-5 md:h-5" />}
               </button>
             </div>
           </div>
