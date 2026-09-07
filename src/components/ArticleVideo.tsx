@@ -44,7 +44,7 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
     const isSkynews = url.includes('sky');
     const isBBC = url.includes('bbc');
     const isCNN = url.includes('cnn');
-    
+
     return (
       <div className="my-6">
         <div className="relative aspect-video bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg overflow-hidden border border-gray-700">
@@ -66,18 +66,18 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
             ) : (
               <div className="text-center mb-6">
                 <p className="text-sm text-gray-400 mb-2">
-                  {isSkynews ? '🏛️ Sky News' : isBBC ? '🏛️ BBC News' : isCNN ? '📺 CNN' : 
-                   (() => {
-                     try {
-                       return new URL(url).hostname;
-                     } catch {
-                       return url.length > 50 ? url.substring(0, 50) + '...' : url;
-                     }
-                   })()}
+                  {isSkynews ? '🏛️ Sky News' : isBBC ? '🏛️ BBC News' : isCNN ? '📺 CNN' :
+                    (() => {
+                      try {
+                        return new URL(url).hostname;
+                      } catch {
+                        return url.length > 50 ? url.substring(0, 50) + '...' : url;
+                      }
+                    })()}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {isSkynews || isBBC ? 'Opens on news website - videos cannot be embedded due to licensing' : 
-                   'External video link'}
+                  {isSkynews || isBBC ? 'Opens on news website - videos cannot be embedded due to licensing' :
+                    'External video link'}
                 </p>
               </div>
             )}
@@ -86,42 +86,23 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
               target={isIncompleteUrl ? '_self' : '_blank'}
               rel="noopener noreferrer"
               className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors ${isIncompleteUrl
-                  ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                  : isSkynews ? 'bg-blue-600 hover:bg-blue-500 text-white' :
-                    isBBC ? 'bg-red-600 hover:bg-red-500 text-white' :
+                ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                : isSkynews ? 'bg-blue-600 hover:bg-blue-500 text-white' :
+                  isBBC ? 'bg-red-600 hover:bg-red-500 text-white' :
                     'bg-primary hover:bg-primary/90 text-white'
                 }`}
               onClick={isIncompleteUrl ? (e) => e.preventDefault() : undefined}
             >
               <Play className="w-5 h-5 fill-current" />
-              {isIncompleteUrl ? 'Invalid URL' : 
-               isSkynews ? 'Watch on Sky News' :
-               isBBC ? 'Watch on BBC' :
-               'Watch Video'}
+              {isIncompleteUrl ? 'Invalid URL' :
+                isSkynews ? 'Watch on Sky News' :
+                  isBBC ? 'Watch on BBC' :
+                    'Watch Video'}
             </a>
             <p className="text-xs text-gray-500 mt-3 text-center">
               {isIncompleteUrl
                 ? 'Please provide a complete news story URL'
                 : 'Opens in new tab - videos cannot be embedded due to copyright restrictions'}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-              className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors ${isIncompleteUrl
-                  ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                  : 'bg-primary hover:bg-primary/90 text-white'
-                }`}
-              onClick={isIncompleteUrl ? (e) => e.preventDefault() : undefined}
-            >
-              <Play className="w-5 h-5 fill-current" />
-              {isIncompleteUrl ? 'Invalid URL' : 'Watch Video'}
-            </a>
-            <p className="text-xs text-gray-500 mt-3 text-center">
-              {isIncompleteUrl
-                ? 'Please provide a complete Sky News story URL'
-                : 'Opens in new tab - some videos cannot be embedded'}
             </p>
           </div>
         </div>

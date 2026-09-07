@@ -41,6 +41,24 @@ const ArticlePage = () => {
   const [reportReason, setReportReason] = useState("");
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);
+
+  // Helper function to detect if URL is a podcast/audio
+  const isAudioContent = (url: string): boolean => {
+    if (!url) return false;
+
+    // Check for direct audio file extensions
+    if (/\.(mp3|wav|ogg|aac|m4a|flac)(\?|$)/i.test(url)) return true;
+
+    // Check for known podcast platforms
+    return url.includes('spotify') ||
+      url.includes('apple') ||
+      url.includes('anchor') ||
+      url.includes('soundcloud') ||
+      url.includes('podcast') ||
+      url.includes('spreaker') ||
+      url.includes('buzzsprout') ||
+      url.toLowerCase().includes('audio');
+  };
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarking, setBookmarking] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -412,14 +430,14 @@ const ArticlePage = () => {
                     title="Click to preview"
                   />
                 )}
-                {post.image && ((post as any).videoUrl || (post as any).video_url) && !videoPlaying && (
+                {post.image && ((post as any).videoUrl || (post as any).video_url) && !videoPlaying && !isAudioContent((post as any).videoUrl || (post as any).video_url) && (
                   <img
                     src={post.image}
                     alt={post.title}
                     className="w-full h-auto max-h-80 object-cover"
                   />
                 )}
-                {((post as any).videoUrl || (post as any).video_url) && !videoPlaying && (
+                {((post as any).videoUrl || (post as any).video_url) && !videoPlaying && !isAudioContent((post as any).videoUrl || (post as any).video_url) && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer"
                     onClick={() => setVideoPlaying(true)}>
                     <div className="w-16 h-16 rounded-full bg-blue-900 flex items-center justify-center shadow-2xl">
@@ -427,17 +445,12 @@ const ArticlePage = () => {
                     </div>
                   </div>
                 )}
-                {((post as any).videoUrl || (post as any).video_url) && videoPlaying && (
-                  <div className="aspect-video bg-black">
+                {((post as any).videoUrl || (post as any).video_url) && (videoPlaying || isAudioContent((post as any).videoUrl || (post as any).video_url)) && (
+                  <div className={isAudioContent((post as any).videoUrl || (post as any).video_url) ? "" : "aspect-video bg-black"}>
                     <MediaPlayer
                       url={(post as any).videoUrl || (post as any).video_url}
                       title={post.title}
-                      type={(post as any).videoUrl || (post as any).video_url ?
-                        ((post as any).videoUrl || (post as any).video_url).includes('podcast') ||
-                          ((post as any).videoUrl || (post as any).video_url).includes('mp3') ||
-                          ((post as any).videoUrl || (post as any).video_url).includes('audio') ? 'podcast' : 'video'
-                        : 'video'
-                      }
+                      type={isAudioContent((post as any).videoUrl || (post as any).video_url) ? 'podcast' : 'video'}
                       thumbnail={post.image}
                     />
                   </div>
@@ -727,14 +740,14 @@ const ArticlePage = () => {
                     title="Click to preview"
                   />
                 )}
-                {post.image && ((post as any).videoUrl || (post as any).video_url) && !videoPlaying && (
+                {post.image && ((post as any).videoUrl || (post as any).video_url) && !videoPlaying && !isAudioContent((post as any).videoUrl || (post as any).video_url) && (
                   <img
                     src={post.image}
                     alt={post.title}
                     className="w-full h-full object-cover"
                   />
                 )}
-                {((post as any).videoUrl || (post as any).video_url) && !videoPlaying && (
+                {((post as any).videoUrl || (post as any).video_url) && !videoPlaying && !isAudioContent((post as any).videoUrl || (post as any).video_url) && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer group hover:bg-black/50 transition-colors"
                     onClick={() => setVideoPlaying(true)}>
                     <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-blue-900 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
@@ -745,17 +758,12 @@ const ArticlePage = () => {
                     </div>
                   </div>
                 )}
-                {((post as any).videoUrl || (post as any).video_url) && videoPlaying && (
-                  <div className="absolute inset-0 bg-black">
+                {((post as any).videoUrl || (post as any).video_url) && (videoPlaying || isAudioContent((post as any).videoUrl || (post as any).video_url)) && (
+                  <div className={isAudioContent((post as any).videoUrl || (post as any).video_url) ? "absolute inset-0" : "absolute inset-0 bg-black"}>
                     <MediaPlayer
                       url={(post as any).videoUrl || (post as any).video_url}
                       title={post.title}
-                      type={(post as any).videoUrl || (post as any).video_url ?
-                        ((post as any).videoUrl || (post as any).video_url).includes('podcast') ||
-                          ((post as any).videoUrl || (post as any).video_url).includes('mp3') ||
-                          ((post as any).videoUrl || (post as any).video_url).includes('audio') ? 'podcast' : 'video'
-                        : 'video'
-                      }
+                      type={isAudioContent((post as any).videoUrl || (post as any).video_url) ? 'podcast' : 'video'}
                       thumbnail={post.image}
                     />
                   </div>
