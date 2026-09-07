@@ -91,17 +91,112 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
 
   // Check if it's a direct audio file vs external podcast link
   const isDirectAudio = /\.(mp3|wav|ogg|aac|m4a|flac)(\?|$)/i.test(validUrl);
-  const isExternalPodcast = !isDirectAudio && (
-    validUrl.includes('spotify') ||
-    validUrl.includes('apple') ||
-    validUrl.includes('anchor') ||
-    validUrl.includes('soundcloud') ||
+
+  // Helper function to convert Spotify share URLs to embed URLs
+  const getSpotifyEmbedUrl = (url: string): string | null => {
+    // Convert open.spotify.com to embed format
+    if (url.includes('open.spotify.com') && !url.includes('/embed/')) {
+      return url.replace('open.spotify.com', 'open.spotify.com/embed');
+    }
+    if (url.includes('open.spotify.com/embed/')) {
+      return url;
+    }
+    return null;
+  };
+
+  // Helper function to get SoundCloud embed URL
+  const getSoundCloudEmbedUrl = (url: string): string | null => {
+    if (url.includes('soundcloud.com') && !url.includes('widget')) {
+      const trackUrl = encodeURIComponent(url);
+      return `https://w.soundcloud.com/player/?url=${trackUrl}&auto_play=false&show_artwork=true`;
+    }
+    return url.includes('soundcloud.com') ? url : null;
+  };
+
+  // Helper function to get Apple Podcasts embed URL
+  const getAppleEmbedUrl = (url: string): string | null => {
+    if (url.includes('podcasts.apple.com')) {
+      // Apple Podcasts can be embedded using their embed format
+      return url.replace('podcasts.apple.com', 'embed.podcasts.apple.com');
+    }
+    return null;
+  };
+
+  // Check for embeddable platforms
+  const spotifyEmbedUrl = getSpotifyEmbedUrl(validUrl);
+  const soundcloudEmbedUrl = getSoundCloudEmbedUrl(validUrl);
+  const appleEmbedUrl = getAppleEmbedUrl(validUrl);
+
+  const isEmbeddablePodcast = spotifyEmbedUrl || soundcloudEmbedUrl || appleEmbedUrl || validUrl.includes('anchor.fm');
+
+  const isExternalPodcast = !isDirectAudio && !isEmbeddablePodcast && (
     validUrl.includes('podcast') ||
     validUrl.includes('spreaker') ||
     validUrl.includes('buzzsprout')
   );
 
-  // For external podcast platforms that don't allow direct streaming
+  // For embeddable podcast platforms (Spotify, SoundCloud, Anchor)
+  if (isEmbeddablePodcast) {
+    let embedUrl = validUrl;
+    let height = '152'; // Default Spotify height
+
+    if (spotifyEmbedUrl) {
+      embedUrl = spotifyEmbedUrl;
+      height = '152';
+    } else if (soundcloudEmbedUrl) {
+      embedUrl = soundcloudEmbedUrl;
+      height = '166';
+    } else if (appleEmbedUrl) {
+      embedUrl = appleEmbedUrl;
+      height = '175';
+    } else if (validUrl.includes('anchor.fm')) {
+      // Anchor.fm episodes can often be embedded directly
+      embedUrl = validUrl;
+      height = '102';
+    }
+
+    return (
+      <div className="my-6">
+        <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-6 shadow-2xl">
+          <div className="mb-4">
+            <h3 className="text-white text-lg font-bold mb-2">{title}</h3>
+            <p className="text-white/70 text-sm mb-4">
+              {spotifyEmbedUrl ? '🎵 Spotify' : soundcloudEmbedUrl ? '🎧 SoundCloud' : appleEmbedUrl ? '🍎 Apple Podcasts' : validUrl.includes('anchor') ? '⚓ Anchor' : 'Podcast'}
+            </p>
+          </div>
+
+          <div className="bg-black/20 rounded-xl overflow-hidden">
+            <iframe
+              src={embedUrl}
+              width="100%"
+              height={height}
+              frameBorder="0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              title={title}
+              className="w-full"
+            />
+          </div>
+
+          {isPremium && (
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={() => saveToDashboard(validUrl, title, type || 'podcast', mediaId)}
+                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full transition-colors text-sm"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                </svg>
+                Save to Library
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // For external podcast platforms that can't be embedded (Apple Podcasts, etc.)
   if (isExternalPodcast) {
     return (
       <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-8 shadow-2xl">
