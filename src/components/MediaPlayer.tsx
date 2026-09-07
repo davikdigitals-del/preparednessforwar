@@ -94,10 +94,19 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
 
   // Helper function to convert Spotify share URLs to embed URLs
   const getSpotifyEmbedUrl = (url: string): string | null => {
-    // Convert open.spotify.com to embed format
+    // Handle Spotify share links: https://open.spotify.com/episode/... or https://spotify.link/...
+    if (url.includes('spotify.link/') || url.includes('open.spotify.com/share/')) {
+      // These are share links that typically redirect - we'll try to convert them
+      // For now, assume they follow similar patterns to regular Spotify URLs
+      return url.replace('spotify.link/', 'open.spotify.com/embed/')
+        .replace('/share/', '/embed/');
+    }
+
+    // Convert regular Spotify URLs to embed format
     if (url.includes('open.spotify.com') && !url.includes('/embed/')) {
       return url.replace('open.spotify.com', 'open.spotify.com/embed');
     }
+
     if (url.includes('open.spotify.com/embed/')) {
       return url;
     }
@@ -122,12 +131,27 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
     return null;
   };
 
+  // Helper function to get Sky News podcast embed URL
+  const getSkyNewsEmbedUrl = (url: string): string | null => {
+    if (url.includes('news.sky.com') && url.includes('podcast')) {
+      // Sky News podcast URLs can often be embedded
+      const podcastRegex = /news\.sky\.com\/.*podcast.*\/([^\/]+)/;
+      const match = url.match(podcastRegex);
+      if (match) {
+        return `https://www.skynews.com/embed/podcast/${match[1]}`;
+      }
+      // If no specific match, try generic Sky News embed
+      return url.replace('news.sky.com', 'www.skynews.com/embed');
+    }
+    return null;
+  };
+
   // Check for embeddable platforms
   const spotifyEmbedUrl = getSpotifyEmbedUrl(validUrl);
   const soundcloudEmbedUrl = getSoundCloudEmbedUrl(validUrl);
   const appleEmbedUrl = getAppleEmbedUrl(validUrl);
 
-  const isEmbeddablePodcast = spotifyEmbedUrl || soundcloudEmbedUrl || appleEmbedUrl || validUrl.includes('anchor.fm');
+  const isEmbeddablePodcast = spotifyEmbedUrl || soundcloudEmbedUrl || appleEmbedUrl || skyNewsEmbedUrl || validUrl.includes('anchor.fm');
 
   const isExternalPodcast = !isDirectAudio && !isEmbeddablePodcast && (
     validUrl.includes('podcast') ||
@@ -149,6 +173,9 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
     } else if (appleEmbedUrl) {
       embedUrl = appleEmbedUrl;
       height = '175';
+    } else if (skyNewsEmbedUrl) {
+      embedUrl = skyNewsEmbedUrl;
+      height = '200';
     } else if (validUrl.includes('anchor.fm')) {
       // Anchor.fm episodes can often be embedded directly
       embedUrl = validUrl;
@@ -161,7 +188,7 @@ function AudioPlayer({ url, title, isPremium, thumbnail, mediaId, type }: {
           <div className="mb-4">
             <h3 className="text-white text-lg font-bold mb-2">{title}</h3>
             <p className="text-white/70 text-sm mb-4">
-              {spotifyEmbedUrl ? '🎵 Spotify' : soundcloudEmbedUrl ? '🎧 SoundCloud' : appleEmbedUrl ? '🍎 Apple Podcasts' : validUrl.includes('anchor') ? '⚓ Anchor' : 'Podcast'}
+              {spotifyEmbedUrl ? '🎵 Spotify' : soundcloudEmbedUrl ? '🎧 SoundCloud' : appleEmbedUrl ? '🍎 Apple Podcasts' : skyNewsEmbedUrl ? '🏛️ Sky News' : validUrl.includes('anchor') ? '⚓ Anchor' : 'Podcast'}
             </p>
           </div>
 

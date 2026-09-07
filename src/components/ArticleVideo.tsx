@@ -19,24 +19,295 @@ export function ArticleVideo({ url, title }: ArticleVideoProps) {
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isPiPActive, setIsPiPActive] = useState(false);
 
-  // Check if it's a direct video file or needs embedding
+  // Helper functions to convert URLs to embed formats
+  const getYouTubeEmbedUrl = (url: string): string | null => {
+    // Handle YouTube share links: https://youtu.be/VIDEO_ID
+    if (url.includes('youtu.be/')) {
+      const shareRegex = /youtu\.be\/([a-zA-Z0-9_-]{11})/;
+      const match = url.match(shareRegex);
+      if (match) {
+        const videoId = match[1];
+        return `https://www.youtube.com/embed/${videoId}?rel=0`;
+      }
+    }
+
+    // Handle regular YouTube URLs
+    const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const match = url.match(youtubeRegex);
+    if (match) {
+      const videoId = match[1];
+      return `https://www.youtube.com/embed/${videoId}?rel=0`;
+    }
+    return null;
+  };
+
+  const getVimeoEmbedUrl = (url: string): string | null => {
+    const vimeoRegex = /(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(\d+)/;
+    const match = url.match(vimeoRegex);
+    if (match) {
+      const videoId = match[1];
+      return `https://player.vimeo.com/video/${videoId}`;
+    }
+    return null;
+  };
+
+  const getTikTokEmbedUrl = (url: string): string | null => {
+    if (url.includes('tiktok.com')) {
+      // Handle TikTok share links: https://vm.tiktok.com/...
+      if (url.includes('vm.tiktok.com') || url.includes('tiktok.com/t/')) {
+        // For share links, we need to get the actual video URL first
+        // For now, try to extract any video ID pattern
+        const shareRegex = /(?:vm\.tiktok\.com\/|tiktok\.com\/t\/)([a-zA-Z0-9]+)/;
+        const match = url.match(shareRegex);
+        if (match) {
+          // Share links need to be resolved to full URLs first
+          return `https://www.tiktok.com/embed/v2/${match[1]}`;
+        }
+      }
+
+      // Handle regular TikTok URLs
+      const tiktokRegex = /tiktok\.com\/@[^\/]+\/video\/(\d+)/;
+      const match = url.match(tiktokRegex);
+      if (match) {
+        const videoId = match[1];
+        return `https://www.tiktok.com/embed/v2/${videoId}`;
+      }
+    }
+    return null;
+  };
+
+  const getTwitterEmbedUrl = (url: string): string | null => {
+    if (url.includes('twitter.com') || url.includes('x.com')) {
+      // Handle Twitter share links and regular links
+      const tweetRegex = /(?:twitter\.com|x\.com)\/[^\/]+\/status\/(\d+)/;
+      const match = url.match(tweetRegex);
+      if (match) {
+        const tweetId = match[1];
+        return `https://platform.twitter.com/embed/Tweet.html?id=${tweetId}`;
+      }
+    }
+    return null;
+  };
+
+  const getDailymotionEmbedUrl = (url: string): string | null => {
+    if (url.includes('dailymotion.com')) {
+      const dailymotionRegex = /dailymotion\.com\/video\/([a-zA-Z0-9]+)/;
+      const match = url.match(dailymotionRegex);
+      if (match) {
+        const videoId = match[1];
+        return `https://www.dailymotion.com/embed/video/${videoId}`;
+      }
+    }
+    return null;
+  };
+
+  const getTwitchEmbedUrl = (url: string): string | null => {
+    if (url.includes('twitch.tv')) {
+      const twitchRegex = /twitch\.tv\/videos\/(\d+)|twitch\.tv\/([^\/]+)\/clip\/([a-zA-Z0-9-_]+)/;
+      const match = url.match(twitchRegex);
+      if (match) {
+        if (match[1]) { // Video
+          const videoId = match[1];
+          return `https://player.twitch.tv/?video=${videoId}&parent=${window.location.hostname}`;
+        } else if (match[2] && match[3]) { // Clip
+          const clipSlug = match[3];
+          return `https://clips.twitch.tv/embed?clip=${clipSlug}&parent=${window.location.hostname}`;
+        }
+      }
+    }
+    return null;
+  };
+
+  const getFacebookEmbedUrl = (url: string): string | null => {
+    if (url.includes('facebook.com') || url.includes('fb.watch')) {
+      // Handle Facebook share links (fb.watch/...)
+      if (url.includes('fb.watch/')) {
+        const shareRegex = /fb\.watch\/([a-zA-Z0-9_-]+)/;
+        const match = url.match(shareRegex);
+        if (match) {
+          const videoId = match[1];
+          const fullUrl = `https://www.facebook.com/watch/?v=${videoId}`;
+          const encodedUrl = encodeURIComponent(fullUrl);
+          return `https://www.facebook.com/plugins/video.php?href=${encodedUrl}&show_text=false&width=734&height=411&appId`;
+        }
+      }
+
+      // Handle regular Facebook video URLs
+      if (url.includes('/videos/') || url.includes('/watch/')) {
+        const encodedUrl = encodeURIComponent(url);
+        return `https://www.facebook.com/plugins/video.php?href=${encodedUrl}&show_text=false&width=734&height=411&appId`;
+      }
+    }
+    return null;
+  };
+
+  const getInstagramEmbedUrl = (url: string): string | null => {
+    if (url.includes('instagram.com')) {
+      // Handle Instagram share links (instagram.com/p/... or instagram.com/reel/...)
+      if (url.includes('/p/') || url.includes('/reel/')) {
+        // Remove any query parameters from share links
+        const cleanUrl = url.split('?')[0];
+        return `${cleanUrl}embed/`;
+      }
+    }
+    return null;
+  };
+
+  // News platforms that might have embed support
+  const getNewsEmbedUrl = (url: string): string | null => {
+    // Sky News embeds - handle both regular and share links
+    if (url.includes('news.sky.com') || url.includes('sky.com/share/')) {
+      // Handle Sky News share links
+      if (url.includes('sky.com/share/')) {
+        const shareRegex = /sky\.com\/share\/(\d+)/;
+        const match = url.match(shareRegex);
+        if (match) {
+          const storyId = match[1];
+          return `https://www.skynews.com/embed/video/${storyId}`;
+        }
+      }
+
+      // Sky News story URLs: https://news.sky.com/story/title-12345678
+      const skyRegex = /news\.sky\.com\/story\/[^\/]+-(\d+)/;
+      const match = url.match(skyRegex);
+      if (match) {
+        const storyId = match[1];
+        return `https://www.skynews.com/embed/video/${storyId}`;
+      }
+
+      // Sky News video URLs: https://news.sky.com/video/title-12345678
+      const skyVideoRegex = /news\.sky\.com\/video\/[^\/]+-(\d+)/;
+      const videoMatch = url.match(skyVideoRegex);
+      if (videoMatch) {
+        const videoId = videoMatch[1];
+        return `https://www.skynews.com/embed/video/${videoId}`;
+      }
+    }
+
+    // CNN embeds
+    if (url.includes('cnn.com') && url.includes('/videos/')) {
+      return url.replace('/videos/', '/embed/videos/');
+    }
+
+    // BBC iPlayer embeds (UK only typically)
+    if (url.includes('bbc.co.uk/iplayer')) {
+      const episodeRegex = /iplayer\/episode\/([a-zA-Z0-9]+)/;
+      const match = url.match(episodeRegex);
+      if (match) {
+        return `https://www.bbc.co.uk/iplayer/embed/${match[1]}`;
+      }
+    }
+
+    // Reuters video embeds
+    if (url.includes('reuters.com') && url.includes('/video/')) {
+      return url.replace('reuters.com/video/', 'reuters.com/video/embed/');
+    }
+
+    return null;
+  };
+
+  // Check what type of URL we're dealing with
+  const youtubeEmbed = getYouTubeEmbedUrl(url);
+  const vimeoEmbed = getVimeoEmbedUrl(url);
+  const tiktokEmbed = getTikTokEmbedUrl(url);
+  const twitterEmbed = getTwitterEmbedUrl(url);
+  const dailymotionEmbed = getDailymotionEmbedUrl(url);
+  const twitchEmbed = getTwitchEmbedUrl(url);
+  const facebookEmbed = getFacebookEmbedUrl(url);
+  const instagramEmbed = getInstagramEmbedUrl(url);
+  const newsEmbed = getNewsEmbedUrl(url);
+
+  const embedUrl = youtubeEmbed || vimeoEmbed || tiktokEmbed || twitterEmbed || dailymotionEmbed || twitchEmbed || facebookEmbed || instagramEmbed || newsEmbed;
+
+  // Check if it's a direct video file
   const isDirectVideo = /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
 
-  // Check if it's a non-embeddable external URL (like Sky News, BBC, etc.)
-  const isExternalVideo = !isDirectVideo && (
-    url.includes('sky') ||
+  // Check if it's an embeddable platform
+  const isEmbeddableVideo = embedUrl !== null;
+
+  // Check if it's a non-embeddable external URL (reduced to only truly non-embeddable platforms)
+  const isExternalVideo = !isDirectVideo && !isEmbeddableVideo && (
     url.includes('bbc') ||
-    url.includes('cnn') ||
-    url.includes('reuters') ||
-    url.includes('news') ||
-    // If it's not a known embeddable platform, treat as external
-    (!url.includes('youtube') && !url.includes('youtu.be') &&
-      !url.includes('vimeo') && !url.includes('tiktok') &&
-      !url.includes('facebook') && !url.includes('instagram'))
+    (url.includes('news') && !url.includes('cnn') && !url.includes('reuters') && !url.includes('sky'))
   );
 
   // Check if it's an incomplete or invalid URL
   const isIncompleteUrl = url.includes('/share') || url.endsWith('/share') || url.length < 10;
+
+  // For embeddable videos (YouTube, Vimeo, TikTok, Twitter, CNN, Reuters, etc.)
+  if (isEmbeddableVideo && embedUrl) {
+    const getPlatformName = () => {
+      if (youtubeEmbed) return 'YouTube';
+      if (vimeoEmbed) return 'Vimeo';
+      if (tiktokEmbed) return 'TikTok';
+      if (twitterEmbed) return 'Twitter/X';
+      if (dailymotionEmbed) return 'Dailymotion';
+      if (twitchEmbed) return 'Twitch';
+      if (facebookEmbed) return 'Facebook';
+      if (instagramEmbed) return 'Instagram';
+      if (newsEmbed) {
+        if (url.includes('sky')) return 'Sky News';
+        if (url.includes('cnn')) return 'CNN';
+        if (url.includes('reuters')) return 'Reuters';
+        if (url.includes('bbc')) return 'BBC';
+        return 'News Video';
+      }
+      return 'Video';
+    };
+
+    return (
+      <div className="my-6">
+        <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden group">
+          <iframe
+            src={embedUrl}
+            title={title || `${getPlatformName()} Video`}
+            className="w-full h-full border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            style={{
+              border: 'none',
+              outline: 'none'
+            }}
+          />
+
+          {/* Platform badge */}
+          <div className="absolute top-4 right-4 px-3 py-1.5 bg-black/70 text-white text-xs font-bold uppercase tracking-wide rounded">
+            {getPlatformName()}
+          </div>
+
+          {/* Overlay controls for embedded videos */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: title || `${getPlatformName()} Video`,
+                      url: window.location.href
+                    });
+                  } else {
+                    navigator.clipboard.writeText(window.location.href);
+                  }
+                }}
+                className="text-white hover:text-gray-300 transition-colors"
+              >
+                <Share2 className="w-5 h-5" />
+              </button>
+              <a href={url} target="_blank" rel="noopener noreferrer" className="text-white hover:text-gray-300 transition-colors">
+                <Maximize className="w-5 h-5" />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {title && (
+          <p className="text-sm text-gray-600 mt-2 text-center italic">
+            {title}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   // For external videos that can't be embedded, show a link preview
   if (isExternalVideo) {
