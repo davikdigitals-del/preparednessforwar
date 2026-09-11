@@ -7,15 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Wrench, Eye, Bug } from "lucide-react";
+import { AlertTriangle, Wrench, Eye } from "lucide-react";
 import MaintenancePage from "@/pages/MaintenancePage";
-import { MaintenanceDebug } from "@/components/MaintenanceDebug";
 
 export default function AdminMaintenance() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [showDebug, setShowDebug] = useState(false);
   const { toast } = useToast();
 
   const [config, setConfig] = useState({
@@ -31,14 +29,42 @@ export default function AdminMaintenance() {
   const fetchMaintenanceConfig = async () => {
     try {
       setLoading(true);
+
+      // Try to get the maintenance config with fixed ID first
       const { data, error } = await supabase
         .from("maintenance_mode")
         .select("*")
-        .limit(1)
+        .eq('id', '00000000-0000-0000-0000-000000000001')
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        // PGRST116 = no rows returned
+      if (error && error.code === 'PGRST116') {
+        // No row with fixed ID found, try to get any row
+        const { data: anyData, error: anyError } = await supabase
+          .from("maintenance_mode")
+          .select("*")
+          .limit(1)
+          .single();
+
+        if (anyError && anyError.code === 'PGRST116') {
+          // No rows at all, use defaults
+          console.log("No maintenance_mode rows found, using defaults");
+          setConfig({
+            enabled: false,
+            message: "Site is under maintenance. We will be back soon.",
+            estimated_back: "",
+          });
+          return;
+        } else if (anyError) {
+          throw anyError;
+        } else if (anyData) {
+          setConfig({
+            enabled: anyData.enabled || false,
+            message: anyData.message || "Site is under maintenance. We will be back soon.",
+            estimated_back: anyData.estimated_back || "",
+          });
+          return;
+        }
+      } else if (error) {
         throw error;
       }
 
@@ -78,43 +104,28 @@ export default function AdminMaintenance() {
     try {
       setSaving(true);
 
-      // First check if there are any rows in the maintenance_mode table
-      const { data: existingData, error: fetchError } = await supabase
+      // Use upsert to avoid race conditions - this will update if exists, insert if not
+      const { data, error } = await supabase
         .from("maintenance_mode")
-        .select("id")
-        .limit(1)
+        .upsert({
+          // Set a fixed id to ensure we always work with the same row
+          id: '00000000-0000-0000-0000-000000000001',
+          enabled: config.enabled,
+          message: config.message,
+          estimated_back: config.estimated_back || null,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'id'
+        })
+        .select()
         .single();
 
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        // PGRST116 = no rows returned, which is fine
-        throw fetchError;
+      if (error) {
+        console.error("Upsert error:", error);
+        throw error;
       }
 
-      let updateResult;
-
-      if (existingData?.id) {
-        // Update existing row
-        updateResult = await supabase
-          .from("maintenance_mode")
-          .update({
-            enabled: config.enabled,
-            message: config.message,
-            estimated_back: config.estimated_back || null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", existingData.id);
-      } else {
-        // Insert new row if none exists
-        updateResult = await supabase
-          .from("maintenance_mode")
-          .insert({
-            enabled: config.enabled,
-            message: config.message,
-            estimated_back: config.estimated_back || null,
-          });
-      }
-
-      if (updateResult.error) throw updateResult.error;
+      console.log("Maintenance mode saved successfully:", data);
 
       toast({
         title: "Success",
@@ -123,7 +134,11 @@ export default function AdminMaintenance() {
           : "✅ Maintenance mode disabled - Site is back online",
       });
 
-      fetchMaintenanceConfig();
+      // Small delay to ensure database changes propagate before fetching
+      setTimeout(() => {
+        fetchMaintenanceConfig();
+      }, 500);
+
     } catch (error: any) {
       console.error("Error saving maintenance config:", error);
       toast({
@@ -153,25 +168,6 @@ export default function AdminMaintenance() {
           </Button>
         </div>
         <MaintenancePage message={config.message} estimatedBack={config.estimated_back} />
-      </div>
-    );
-  }
-
-  if (showDebug) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Maintenance Mode Debug</h1>
-            <p className="text-muted-foreground">
-              Diagnose maintenance mode issues
-            </p>
-          </div>
-          <Button onClick={() => setShowDebug(false)} variant="outline">
-            Back to Settings
-          </Button>
-        </div>
-        <MaintenanceDebug />
       </div>
     );
   }
@@ -283,14 +279,6 @@ export default function AdminMaintenance() {
             >
               <Eye className="w-4 h-4" />
               Preview
-            </Button>
-            <Button
-              onClick={() => setShowDebug(true)}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Bug className="w-4 h-4" />
-              Debug
             </Button>
           </div>
         </CardContent>

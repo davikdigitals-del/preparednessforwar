@@ -25,13 +25,20 @@ export default function PublicLayout() {
   const [loading, setLoading] = useState(true);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
 
+  // Debounce maintenance check to prevent race conditions
+  let maintenanceCheckTimeout: NodeJS.Timeout;
+  const debouncedCheckMaintenance = () => {
+    clearTimeout(maintenanceCheckTimeout);
+    maintenanceCheckTimeout = setTimeout(checkMaintenanceMode, 300);
+  };
+
   useEffect(() => {
     checkMaintenanceMode();
     if (user) {
       checkIfUserIsAdmin();
     }
 
-    // Subscribe to maintenance mode changes
+    // Subscribe to maintenance mode changes with debouncing
     const channel = supabase
       .channel("maintenance-changes")
       .on(
@@ -41,28 +48,65 @@ export default function PublicLayout() {
           schema: "public",
           table: "maintenance_mode",
         },
-        () => {
-          checkMaintenanceMode();
+        (payload) => {
+          console.log("Maintenance mode change detected:", payload);
+          debouncedCheckMaintenance();
         }
       )
       .subscribe();
 
     return () => {
+      clearTimeout(maintenanceCheckTimeout);
       supabase.removeChannel(channel);
     };
   }, [user]);
 
   const checkMaintenanceMode = async () => {
     try {
+      // Try to get the maintenance config with fixed ID first
       const { data, error } = await supabase
         .from("maintenance_mode")
         .select("*")
-        .limit(1)
+        .eq('id', '00000000-0000-0000-0000-000000000001')
         .single();
 
-      if (error) {
+      if (error && error.code === 'PGRST116') {
+        // No row with fixed ID found, try to get any row
+        const { data: anyData, error: anyError } = await supabase
+          .from("maintenance_mode")
+          .select("*")
+          .limit(1)
+          .single();
+
+        if (anyError && anyError.code === 'PGRST116') {
+          // No rows at all - default to not in maintenance mode
+          console.log("No maintenance_mode rows found, defaulting to disabled");
+          setMaintenance({
+            enabled: false,
+            message: "Site is under maintenance. We will be back soon.",
+            estimated_back: null,
+          });
+          return;
+        } else if (anyError) {
+          console.error("Error fetching any maintenance mode:", anyError);
+          // Default to not in maintenance mode on error
+          setMaintenance({
+            enabled: false,
+            message: "Site is under maintenance. We will be back soon.",
+            estimated_back: null,
+          });
+          return;
+        } else if (anyData) {
+          setMaintenance({
+            enabled: anyData.enabled || false,
+            message: anyData.message || "Site is under maintenance. We will be back soon.",
+            estimated_back: anyData.estimated_back || null,
+          });
+          return;
+        }
+      } else if (error) {
         console.error("Error fetching maintenance mode:", error);
-        // If there's an error (like table doesn't exist), default to not in maintenance mode
+        // Default to not in maintenance mode on error
         setMaintenance({
           enabled: false,
           message: "Site is under maintenance. We will be back soon.",
@@ -72,6 +116,7 @@ export default function PublicLayout() {
       }
 
       if (data) {
+        console.log("Maintenance mode data:", data);
         setMaintenance({
           enabled: data.enabled || false,
           message: data.message || "Site is under maintenance. We will be back soon.",

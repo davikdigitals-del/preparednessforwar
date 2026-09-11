@@ -12,34 +12,24 @@ CREATE TABLE IF NOT EXISTS public.maintenance_mode (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 2. Ensure there's at least one row (required for .single() queries)
-INSERT INTO maintenance_mode (enabled, message)
-VALUES (false, 'Site is under maintenance. We will be back soon.')
-ON CONFLICT (id) DO NOTHING;
+-- 2. Clean up any existing rows to avoid conflicts
+DELETE FROM maintenance_mode;
 
--- 3. If no rows exist due to missing conflict resolution, force insert one
-INSERT INTO maintenance_mode (enabled, message)
-SELECT false, 'Site is under maintenance. We will be back soon.'
-WHERE NOT EXISTS (SELECT 1 FROM maintenance_mode)
-LIMIT 1;
+-- 3. Insert the fixed maintenance mode row with predictable ID
+INSERT INTO maintenance_mode (id, enabled, message, updated_at)
+VALUES ('00000000-0000-0000-0000-000000000001', false, 'Site is under maintenance. We will be back soon.', now())
+ON CONFLICT (id) DO UPDATE SET
+  message = EXCLUDED.message,
+  updated_at = EXCLUDED.updated_at;
 
--- 4. Clean up any duplicate rows (keep only the first one)
-DELETE FROM maintenance_mode 
-WHERE id NOT IN (
-  SELECT id 
-  FROM maintenance_mode 
-  ORDER BY updated_at DESC 
-  LIMIT 1
-);
-
--- 5. Enable RLS
+-- 4. Enable RLS
 ALTER TABLE public.maintenance_mode ENABLE ROW LEVEL SECURITY;
 
--- 6. Drop existing policies to recreate them
+-- 5. Drop existing policies to recreate them
 DROP POLICY IF EXISTS "anyone_can_read_maintenance" ON public.maintenance_mode;
 DROP POLICY IF EXISTS "authenticated_can_update_maintenance" ON public.maintenance_mode;
 
--- 7. Create proper policies
+-- 6. Create proper policies
 CREATE POLICY "anyone_can_read_maintenance"
 ON public.maintenance_mode FOR SELECT
 USING (true);
@@ -50,29 +40,41 @@ TO authenticated
 USING (true)
 WITH CHECK (true);
 
--- 8. Grant necessary permissions
+CREATE POLICY "authenticated_can_insert_maintenance"
+ON public.maintenance_mode FOR INSERT
+TO authenticated
+WITH CHECK (true);
+
+-- 7. Grant necessary permissions
 GRANT SELECT ON public.maintenance_mode TO anon;
 GRANT SELECT ON public.maintenance_mode TO authenticated;
 GRANT UPDATE ON public.maintenance_mode TO authenticated;
+GRANT INSERT ON public.maintenance_mode TO authenticated;
 
--- 9. Verify the setup
+-- 8. Verify the setup
 DO $$
 DECLARE
   row_count INTEGER;
   maintenance_enabled BOOLEAN;
+  fixed_id_exists BOOLEAN;
 BEGIN
-  SELECT COUNT(*), COALESCE(bool_or(enabled), false) 
-  INTO row_count, maintenance_enabled
-  FROM maintenance_mode;
+  SELECT COUNT(*) INTO row_count FROM maintenance_mode;
+  SELECT enabled INTO maintenance_enabled FROM maintenance_mode WHERE id = '00000000-0000-0000-0000-000000000001';
+  SELECT EXISTS(SELECT 1 FROM maintenance_mode WHERE id = '00000000-0000-0000-0000-000000000001') INTO fixed_id_exists;
   
   RAISE NOTICE '============================================';
   RAISE NOTICE '✅ Maintenance Mode Setup Complete';
   RAISE NOTICE '📊 Rows in maintenance_mode table: %', row_count;
+  RAISE NOTICE '🆔 Fixed ID row exists: %', fixed_id_exists;
   RAISE NOTICE '🔧 Maintenance mode currently: %', 
     CASE WHEN maintenance_enabled THEN 'ENABLED (Site offline)' ELSE 'DISABLED (Site online)' END;
   RAISE NOTICE '============================================';
   
   IF row_count = 0 THEN
-    RAISE WARNING '❌ No rows found in maintenance_mode table! This will cause .single() queries to fail.';
+    RAISE WARNING '❌ No rows found in maintenance_mode table! This should not happen.';
+  END IF;
+  
+  IF NOT fixed_id_exists THEN
+    RAISE WARNING '❌ Fixed ID row not found! Maintenance mode may not work correctly.';
   END IF;
 END $$;
